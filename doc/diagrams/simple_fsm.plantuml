@@ -1,0 +1,22 @@
+@startuml
+scale 350 width
+
+[*] --> NotInitialized
+NotInitialized --> Initializing: REQ_START
+Initializing --> Idle: ON_INIT_DONE
+Idle --> NotInitialized: ON_STOP_DONE
+
+state Idle {
+  [*] --> WaitingForRequest
+  WaitingForRequest --> Stopping : REQ_STOP
+  WaitingForRequest --> HandlingRequest: REQ_CONFIG
+  WaitingForRequest --> HandlingRequest: REQ_DO_WORK
+  HandlingRequest --> WaitingForRequest: ON_REQ_DONE
+
+  state HandlingRequest {
+    [*] -> Configuring: REQ_CONFIG
+    [*] -> Calculating: REQ_DO_WORK
+  }
+}
+
+@enduml

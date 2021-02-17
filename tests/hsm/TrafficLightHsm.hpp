@@ -8,6 +8,9 @@ enum class TrafficLightState
 {
     OFF,
     STARTING,
+
+    OPERABLE,
+
     RED,
     YELLOW,
     GREEN
@@ -23,35 +26,14 @@ enum class TrafficLightEvent
 class TrafficLightHsm: public testing::Test
                      , public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent, TrafficLightHsm>
 {
-protected:
-    void SetUp() override;
-    void TearDown() override;
-
 public:
-    TrafficLightHsm() : HierarchicalStateMachine(TrafficLightState::OFF)
-    {
-    }
+    TrafficLightHsm();
+    virtual ~TrafficLightHsm();
 
-    virtual ~TrafficLightHsm(){}
+    void setupDefault();
 
-    void setupDefault()
-    {
-        registerState(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, nullptr, nullptr);
-        registerState(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, nullptr, nullptr);
-        registerState(TrafficLightState::RED, this, &TrafficLightHsm::onRed, nullptr, nullptr);
-        registerState(TrafficLightState::YELLOW, this, &TrafficLightHsm::onYellow, nullptr, nullptr);
-        registerState(TrafficLightState::GREEN, this, &TrafficLightHsm::onGreen, nullptr, nullptr);
-
-        registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, nullptr, nullptr);
-        registerTransition(TrafficLightState::STARTING, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE, this, &TrafficLightHsm::onNextStateTransition);
-        registerTransition(TrafficLightState::RED, TrafficLightState::YELLOW, TrafficLightEvent::NEXT_STATE, this, &TrafficLightHsm::onNextStateTransition);
-        registerTransition(TrafficLightState::YELLOW, TrafficLightState::GREEN, TrafficLightEvent::NEXT_STATE, this, &TrafficLightHsm::onNextStateTransition);
-        registerTransition(TrafficLightState::GREEN, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE, this, &TrafficLightHsm::onNextStateTransition);
-    }
-
-    void onNextStateTransition(const VariantList_t& args)
-    {
-    }
+    void onNextStateTransition(const VariantList_t& args){}
+    void onTurnOffTransition(const VariantList_t& args){ ++mStateCounterTurnOff; printf("----> onTurnOffTransition\n"); }
 
     void onOff(const VariantList_t& args){ ++mStateCounterOff; printf("----> OFF\n"); }
     void onStarting(const VariantList_t& args){ ++mStateCounterStarting; printf("----> onStarting\n"); }
@@ -61,6 +43,14 @@ public:
 
     void onDummyAction(const VariantList_t& args){ ++mStateCounterDummy; printf("----> DUMMY\n"); }
     void onArgsTest(const VariantList_t& args){ ++mStateCounterArgsTest; printf("----> ArgsTest\n"); mArgsTest = args; }
+    bool onExitCancel(){ ++mStateCounterOnExit; printf("----> onExitCancel\n"); return false; }
+    bool onEnterCancel(const VariantList_t& args){ ++mStateCounterOnEnter; printf("----> onEnterCancel\n"); mArgsTest = args; return false; }
+    bool onExit(){ ++mStateCounterOnExit; printf("----> onExit\n"); return true; }
+    bool onEnter(const VariantList_t& args){ ++mStateCounterOnEnter; printf("----> onEnter\n"); mArgsTest = args; return true; }
+
+protected:
+    void SetUp() override;
+    void TearDown() override;
 
 public:
     int mStateCounterOff = 0;
@@ -70,6 +60,9 @@ public:
     int mStateCounterGreen = 0;
     int mStateCounterDummy = 0;
     int mStateCounterArgsTest = 0;
+    int mStateCounterOnExit = 0;
+    int mStateCounterOnEnter = 0;
+    int mStateCounterTurnOff = 0;
     VariantList_t mArgsTest;
 };
 

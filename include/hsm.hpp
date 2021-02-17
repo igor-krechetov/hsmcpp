@@ -5,15 +5,24 @@
 #define __HSMCPP_HSM_HPP__
 
 #include <glibmm.h>
+#include <algorithm>
 #include <atomic>
 #include <map>
+#include <list>
 #include <mutex>
 #include <condition_variable>
 #include "variant.hpp"
 #include "logging.hpp"
 
+// If defined, HSM will performe safety checks during states and substates registration.
+// Normally HSM structure should be static, so this feature is usefull only
+// during development since it reduces performance a bit
+#define HSM_ENABLE_SAFE_STRUCTURE               1
+
 #undef __TRACE_CLASS__
 #define __TRACE_CLASS__                         "HierarchicalStateMachine"
+
+// if state has substates it can't have callbacks registered to it
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
 class HierarchicalStateMachine
@@ -74,7 +83,7 @@ public:
                        HsmStateEnterCallback_t onEntering,
                        HsmStateExitCallback_t onExiting);
 
-    void registerSubstate(const HsmStateEnum substate, const HsmStateEnum childState);
+    bool registerSubstate(const HsmStateEnum substate, const HsmStateEnum childState);
 
     void registerTransition(const HsmStateEnum from,
                             const HsmStateEnum to,
@@ -113,10 +122,16 @@ private:
     bool doTransition(const PendingEventInfo& event);
     void clearPendingEvents();
 
+    bool isTopState(const HsmStateEnum state) const;
+    bool isSubstate(const HsmStateEnum state) const;
+    bool hasSubstates(const HsmStateEnum state) const;
+    bool hasParentState(const HsmStateEnum state, HsmStateEnum &outParent) const;
+
 private:
     HsmStateEnum mCurrentState;
     std::map<std::pair<HsmStateEnum, HsmEventEnum>, TransitionInfo> mTransitionsByEvent; // FROM_STATE, EVENT => TO
-    std::map<HsmStateEnum, StateCallbacks> mCallbacks;
+    std::list<HsmStateEnum> mTopLevelStates; // list of states which are not substates and dont have substates of their own
+    std::map<HsmStateEnum, StateCallbacks> mRegisteredStates;
     std::multimap<HsmStateEnum, HsmStateEnum> mSubstates;
     std::multimap<HsmStateEnum, HsmStateEnum> mSubstateEntryPoint;
     std::list<PendingEventInfo> mPendingEvents;
@@ -144,6 +159,13 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::regi
                                                                                           HsmStateEnterCallback_t onEntering,
                                                                                           HsmStateExitCallback_t onExiting)
 {
+#ifdef HSM_ENABLE_SAFE_STRUCTURE
+    if ((false == isSubstate(state)) && (false == isTopState(state)))
+    {
+        mTopLevelStates.push_back(state);
+    }
+#endif // HSM_ENABLE_SAFE_STRUCTURE
+
     if ((nullptr != handler) &&
         ((nullptr != onStateChanged) || (nullptr != onEntering) || (nullptr != onExiting)))
     {
@@ -153,17 +175,58 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::regi
         cb.onStateChanged = onStateChanged;
         cb.onEntering = onEntering;
         cb.onExiting = onExiting;
-        mCallbacks[state] = cb;
+        mRegisteredStates[state] = cb;
 
-        __TRACE_CALL_DEBUG_ARGS__("mCallbacks.size=%ld", mCallbacks.size());
+        __TRACE_CALL_DEBUG_ARGS__("mRegisteredStates.size=%ld", mRegisteredStates.size());
     }
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
-void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::registerSubstate(const HsmStateEnum substate,
-                                                                                             const HsmStateEnum childState)
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::registerSubstate(const HsmStateEnum parent,
+                                                                                             const HsmStateEnum substate)
 {
-    mSubstates.insert(std::make_pair(substate, childState));
+    bool registrationAllowed = false;
+
+#ifdef HSM_ENABLE_SAFE_STRUCTURE
+    // do a simple sanity check
+    if (parent != substate)
+    {
+        HsmStateEnum curState = parent;
+        HsmStateEnum prevState;
+
+        if (false == hasParentState(substate, prevState))
+        {
+            registrationAllowed = true;
+
+            while (true == hasParentState(curState, prevState))
+            {
+                if (substate == prevState)
+                {
+                    registrationAllowed = false;
+                    break;
+                }
+
+                curState = prevState;
+            }
+        }
+    }
+#else
+    registrationAllowed = true;
+#endif // HSM_ENABLE_SAFE_STRUCTURE
+
+    if (registrationAllowed)
+    {
+        mSubstates.insert(std::make_pair(parent, substate));
+
+#ifdef HSM_ENABLE_SAFE_STRUCTURE
+        if (isTopState(substate))
+        {
+            mTopLevelStates.remove(substate);
+        }
+#endif // HSM_ENABLE_SAFE_STRUCTURE
+    }
+
+    return registrationAllowed;
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
@@ -314,9 +377,9 @@ template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::onStateExiting(const HsmStateEnum state)
 {
     bool res = true;
-    auto it = mCallbacks.find(state);
+    auto it = mRegisteredStates.find(state);
 
-    if ((mCallbacks.end() != it) && (nullptr != it->second.onExiting))
+    if ((mRegisteredStates.end() != it) && (nullptr != it->second.onExiting))
     {
         res = ((it->second.handler)->*(it->second.onExiting))();
     }
@@ -329,9 +392,9 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::onSt
                                                                                             const VariantList_t& args)
 {
     bool res = true;
-    auto it = mCallbacks.find(state);
+    auto it = mRegisteredStates.find(state);
 
-    if ((mCallbacks.end() != it) && (nullptr != it->second.onEntering))
+    if ((mRegisteredStates.end() != it) && (nullptr != it->second.onEntering))
     {
         res = ((it->second.handler)->*(it->second.onEntering))(args);
     }
@@ -344,9 +407,9 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::onSt
                                                                                            const VariantList_t& args)
 {
     __TRACE_CALL_DEBUG_ARGS__("onStateChanged with state <%d>", static_cast<int>(state));
-    auto it = mCallbacks.find(state);
+    auto it = mRegisteredStates.find(state);
 
-    if ((mCallbacks.end() != it) && (nullptr != it->second.onStateChanged))
+    if ((mRegisteredStates.end() != it) && (nullptr != it->second.onStateChanged))
     {
         ((it->second.handler)->*(it->second.onStateChanged))(args);
     }
@@ -554,6 +617,55 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::Pend
     {
         __TRACE_DEBUG__("A-SYNC object");
     }
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::isTopState(const HsmStateEnum state) const
+{
+    auto it = std::find(mTopLevelStates.begin(), mTopLevelStates.end(), state);
+
+    return (it == mTopLevelStates.end());
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::isSubstate(const HsmStateEnum state) const
+{
+    bool result = false;
+
+    for (auto itSubstate = mSubstates.begin(); itSubstate != mSubstates.end(); ++itSubstate)
+    {
+        if (itSubstate->second == state)
+        {
+            result = true;
+            break;
+        }
+    }
+
+    return result;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::hasSubstates(const HsmStateEnum state) const
+{
+    return (mSubstates.find(state) != mSubstates.end());
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::hasParentState(const HsmStateEnum state, HsmStateEnum &outParent) const
+{
+    bool hasParent = false;
+
+    for (auto it = mSubstates.begin(); it != mSubstates.end(); ++it)
+    {
+        if (state == it->second)
+        {
+            hasParent = true;
+            outParent = it->first;
+            break;
+        }
+    }
+
+    return hasParent;
 }
 
 #endif  // __HSMCPP_HSM_HPP__

@@ -27,7 +27,7 @@ TEST_F(TrafficLightHsm, transition_with_args)
     // PRECONDITIONS
     registerState(TrafficLightState::OFF, nullptr, nullptr, nullptr, nullptr);
     registerState(TrafficLightState::STARTING, nullptr, nullptr, nullptr, nullptr);
-    registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onArgsTest);
+    registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition);
 
     //-------------------------------------------
     // ACTIONS
@@ -36,21 +36,21 @@ TEST_F(TrafficLightHsm, transition_with_args)
     //-------------------------------------------
     // VALIDATION
     EXPECT_EQ(getCurrentState(), TrafficLightState::STARTING);
-    EXPECT_EQ(mStateCounterArgsTest, 1);
+    EXPECT_EQ(mTransitionCounterNextState, 1);
 
-    EXPECT_EQ(mArgsTest.size(), 4);
+    EXPECT_EQ(mTransitionArgsNextState.size(), 4);
 
-    EXPECT_TRUE(mArgsTest[0].isNumeric());
-    EXPECT_EQ(mArgsTest[0].toInt64(), 12);
+    EXPECT_TRUE(mTransitionArgsNextState[0].isNumeric());
+    EXPECT_EQ(mTransitionArgsNextState[0].toInt64(), 12);
 
-    EXPECT_TRUE(mArgsTest[1].isString());
-    EXPECT_STREQ(mArgsTest[1].toString().c_str(), "string");
+    EXPECT_TRUE(mTransitionArgsNextState[1].isString());
+    EXPECT_STREQ(mTransitionArgsNextState[1].toString().c_str(), "string");
 
-    EXPECT_TRUE(mArgsTest[2].isNumeric());
-    EXPECT_FLOAT_EQ(mArgsTest[2].toDouble(), 12.75);
+    EXPECT_TRUE(mTransitionArgsNextState[2].isNumeric());
+    EXPECT_FLOAT_EQ(mTransitionArgsNextState[2].toDouble(), 12.75);
 
-    EXPECT_TRUE(mArgsTest[3].isBool());
-    EXPECT_FALSE(mArgsTest[3].toBool());
+    EXPECT_TRUE(mTransitionArgsNextState[3].isBool());
+    EXPECT_FALSE(mTransitionArgsNextState[3].toBool());
 }
 
 TEST_F(TrafficLightHsm, transition_non_existent)
@@ -91,8 +91,9 @@ TEST_F(TrafficLightHsm, transition_cancel_on_exit)
     //-------------------------------------------
     // VALIDATION
     EXPECT_EQ(getCurrentState(), TrafficLightState::OFF);
-    EXPECT_EQ(mStateCounterOnExit, 1);
-    EXPECT_EQ(mStateCounterOnEnter, 0);
+    EXPECT_EQ(mStateCounterExitCancel, 1);
+    EXPECT_EQ(mStateCounterExit, 0);
+    EXPECT_EQ(mStateCounterEnter, 0);
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 0);
 }
@@ -115,8 +116,9 @@ TEST_F(TrafficLightHsm, transition_cancel_on_enter)
     // VALIDATION
 
     EXPECT_EQ(getCurrentState(), TrafficLightState::OFF);
-    EXPECT_EQ(mStateCounterOnExit, 1);
-    EXPECT_EQ(mStateCounterOnEnter, 2);
+    EXPECT_EQ(mStateCounterExit, 1);
+    EXPECT_EQ(mStateCounterEnter, 1);
+    EXPECT_EQ(mStateCounterEnterCancel, 1);
     EXPECT_EQ(mStateCounterOff, 1);
     EXPECT_EQ(mStateCounterStarting, 0);
 }
@@ -130,7 +132,7 @@ TEST_F(TrafficLightHsm, transition_self)
     registerState(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
     registerState(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
 
-    registerTransition(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::NEXT_STATE, this, &TrafficLightHsm::onArgsTest);
+    registerTransition(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::NEXT_STATE, this, &TrafficLightHsm::onNextStateTransition);
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, nullptr, nullptr);
 
     //-------------------------------------------
@@ -140,9 +142,30 @@ TEST_F(TrafficLightHsm, transition_self)
     //-------------------------------------------
     // VALIDATION
     EXPECT_EQ(getCurrentState(), TrafficLightState::OFF);
-    EXPECT_EQ(mStateCounterOnExit, 0);
-    EXPECT_EQ(mStateCounterOnEnter, 0);
+    EXPECT_EQ(mStateCounterExit, 0);
+    EXPECT_EQ(mStateCounterEnter, 0);
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 0);
-    EXPECT_EQ(mStateCounterArgsTest, 1);
+    EXPECT_EQ(mTransitionCounterNextState, 1);
+}
+
+TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition)
+{
+    TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be cancled");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    setupDefault();
+
+    //-------------------------------------------
+    // ACTIONS
+    TrafficLightState prevState = getCurrentState();
+
+    ASSERT_FALSE(transitionEx(TrafficLightEvent::NEXT_STATE, false, true));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_EQ(getCurrentState(), prevState);
+    EXPECT_EQ(mStateCounterOff, 0);
+    EXPECT_EQ(mStateCounterStarting, 0);
 }

@@ -23,6 +23,46 @@ enum class TrafficLightEvent
     NEXT_STATE
 };
 
+#define DEF_STATE_ACTION_IMPL(_state)                                   \
+    int mStateCounter##_state = 0;                                      \
+    VariantList_t mArgs##_state;                                        \
+    void on##_state(const VariantList_t& args)                          \
+    {                                                                   \
+        ++mStateCounter##_state;                                        \
+        printf("----> on" #_state "\n");                                \
+        mArgs##_state = args;                                           \
+    }
+
+#define DEF_EXIT_ACTION_IMPL(_state, _ret)                              \
+    int mStateCounter##_state = 0;                                      \
+    bool on##_state()                                                   \
+    {                                                                   \
+        ++mStateCounter##_state;                                        \
+        printf("----> on" #_state "\n");                                \
+        return (_ret);                                                  \
+    }
+
+#define DEF_ENTER_ACTION_IMPL(_state, _ret)                             \
+    int mStateCounter##_state = 0;                                      \
+    VariantList_t mArgs##_state;                                        \
+    bool on##_state(const VariantList_t& args)                          \
+    {                                                                   \
+        ++mStateCounter##_state;                                        \
+        printf("----> on" #_state "\n");                                \
+        mArgs##_state = args;                                           \
+        return (_ret);                                                  \
+    }
+
+#define DEF_TRANSITION_IMPL(_name)                                     \
+    int mTransitionCounter##_name = 0;                                 \
+    VariantList_t mTransitionArgs##_name;                              \
+    void on##_name##Transition(const VariantList_t& args)              \
+    {                                                                  \
+        ++mTransitionCounter##_name;                                   \
+        printf("----> on" #_name "Transition\n");                      \
+        mTransitionArgs##_name = args;                                 \
+    }
+
 class TrafficLightHsm: public testing::Test
                      , public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent, TrafficLightHsm>
 {
@@ -32,38 +72,26 @@ public:
 
     void setupDefault();
 
-    void onNextStateTransition(const VariantList_t& args){}
-    void onTurnOffTransition(const VariantList_t& args){ ++mStateCounterTurnOff; printf("----> onTurnOffTransition\n"); }
+    DEF_TRANSITION_IMPL(NextState);
+    DEF_TRANSITION_IMPL(TurnOff);
 
-    void onOff(const VariantList_t& args){ ++mStateCounterOff; printf("----> OFF\n"); }
-    void onStarting(const VariantList_t& args){ ++mStateCounterStarting; printf("----> onStarting\n"); }
-    void onRed(const VariantList_t& args){ ++mStateCounterRed; printf("----> onRed\n"); }
-    void onYellow(const VariantList_t& args){ ++mStateCounterYellow; printf("----> onYellow\n"); }
-    void onGreen(const VariantList_t& args){ ++mStateCounterGreen; printf("----> onGreen\n"); }
+    DEF_STATE_ACTION_IMPL(Off)
+    DEF_STATE_ACTION_IMPL(Starting)
+    DEF_STATE_ACTION_IMPL(Red)
+    DEF_STATE_ACTION_IMPL(Yellow)
+    DEF_STATE_ACTION_IMPL(Green)
 
-    void onDummyAction(const VariantList_t& args){ ++mStateCounterDummy; printf("----> DUMMY\n"); }
-    void onArgsTest(const VariantList_t& args){ ++mStateCounterArgsTest; printf("----> ArgsTest\n"); mArgsTest = args; }
-    bool onExitCancel(){ ++mStateCounterOnExit; printf("----> onExitCancel\n"); return false; }
-    bool onEnterCancel(const VariantList_t& args){ ++mStateCounterOnEnter; printf("----> onEnterCancel\n"); mArgsTest = args; return false; }
-    bool onExit(){ ++mStateCounterOnExit; printf("----> onExit\n"); return true; }
-    bool onEnter(const VariantList_t& args){ ++mStateCounterOnEnter; printf("----> onEnter\n"); mArgsTest = args; return true; }
+    DEF_STATE_ACTION_IMPL(Dummy)
+
+    DEF_EXIT_ACTION_IMPL(ExitCancel, false)
+    DEF_EXIT_ACTION_IMPL(Exit, true)
+
+    DEF_ENTER_ACTION_IMPL(EnterCancel, false)
+    DEF_ENTER_ACTION_IMPL(Enter, true)
 
 protected:
     void SetUp() override;
     void TearDown() override;
-
-public:
-    int mStateCounterOff = 0;
-    int mStateCounterStarting = 0;
-    int mStateCounterRed = 0;
-    int mStateCounterYellow = 0;
-    int mStateCounterGreen = 0;
-    int mStateCounterDummy = 0;
-    int mStateCounterArgsTest = 0;
-    int mStateCounterOnExit = 0;
-    int mStateCounterOnEnter = 0;
-    int mStateCounterTurnOff = 0;
-    VariantList_t mArgsTest;
 };
 
 #endif // __HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP__

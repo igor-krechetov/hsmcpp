@@ -11,6 +11,7 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 # add_definitions(-DLOGGING_MODE_STRICT_VERBOSE)
 add_definitions(-DLOGGING_MODE_OFF)
+add_definitions(-DHSM_ENABLE_SAFE_STRUCTURE)
 
 # ================================================
 # Common modules

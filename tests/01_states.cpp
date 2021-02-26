@@ -72,7 +72,7 @@ TEST_F(TrafficLightHsm, register_same_state_twice)
 
     //-------------------------------------------
     // ACTIONS
-    registerState(TrafficLightState::STARTING, this, &TrafficLightHsm::onDummyAction, nullptr, nullptr);
+    registerState(TrafficLightState::STARTING, this, &TrafficLightHsm::onDummy, nullptr, nullptr);
 
     //-------------------------------------------
     // VALIDATION
@@ -111,7 +111,7 @@ TEST_F(TrafficLightHsm, state_args_test)
     //-------------------------------------------
     // ACTIONS
     registerState(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, nullptr, nullptr);
-    registerState(TrafficLightState::STARTING, this, &TrafficLightHsm::onArgsTest, nullptr, nullptr);
+    registerState(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, nullptr, nullptr);
 
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, nullptr, nullptr);
 
@@ -119,19 +119,19 @@ TEST_F(TrafficLightHsm, state_args_test)
     // VALIDATION
     ASSERT_TRUE(transitionEx(TrafficLightEvent::TURN_ON, false, true, 12, "string", 12.75, false));
     EXPECT_EQ(getCurrentState(), TrafficLightState::STARTING);
-    EXPECT_EQ(mStateCounterArgsTest, 1);
+    EXPECT_EQ(mStateCounterStarting, 1);
 
-    EXPECT_EQ(mArgsTest.size(), 4);
+    EXPECT_EQ(mArgsStarting.size(), 4);
 
-    EXPECT_TRUE(mArgsTest[0].isNumeric());
-    EXPECT_EQ(mArgsTest[0].toInt64(), 12);
+    EXPECT_TRUE(mArgsStarting[0].isNumeric());
+    EXPECT_EQ(mArgsStarting[0].toInt64(), 12);
 
-    EXPECT_TRUE(mArgsTest[1].isString());
-    EXPECT_STREQ(mArgsTest[1].toString().c_str(), "string");
+    EXPECT_TRUE(mArgsStarting[1].isString());
+    EXPECT_STREQ(mArgsStarting[1].toString().c_str(), "string");
 
-    EXPECT_TRUE(mArgsTest[2].isNumeric());
-    EXPECT_FLOAT_EQ(mArgsTest[2].toDouble(), 12.75);
+    EXPECT_TRUE(mArgsStarting[2].isNumeric());
+    EXPECT_FLOAT_EQ(mArgsStarting[2].toDouble(), 12.75);
 
-    EXPECT_TRUE(mArgsTest[3].isBool());
-    EXPECT_FALSE(mArgsTest[3].toBool());
+    EXPECT_TRUE(mArgsStarting[3].isBool());
+    EXPECT_FALSE(mArgsStarting[3].toBool());
 }

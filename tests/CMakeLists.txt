@@ -9,8 +9,10 @@ set(SRC_UNITTESTS main.cpp
                   01_states.cpp
                   02_substates.cpp
                   03_transitions.cpp
+                  04_multithreaded.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/hsm/ABCHsm.cpp
+                  ${CMAKE_CURRENT_SOURCE_DIR}/hsm/AsyncHsm.cpp
 )
 
 add_executable(${TEST_BIN_NAME} ${SRC_UNITTESTS})

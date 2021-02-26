@@ -40,7 +40,7 @@ TEST_F(TrafficLightHsm, substate_exit_single)
     EXPECT_EQ(mStateCounterStarting, 1);
     EXPECT_EQ(mStateCounterRed, 1);
     EXPECT_EQ(mStateCounterOff, 1);
-    EXPECT_EQ(mStateCounterTurnOff, 1);
+    EXPECT_EQ(mTransitionCounterTurnOff, 1);
 }
 
 TEST_F(TrafficLightHsm, substate_exit_multiple_layers)
@@ -66,7 +66,7 @@ TEST_F(TrafficLightHsm, substate_exit_multiple_layers)
     EXPECT_EQ(mStateCounterStarting, 1);
     EXPECT_EQ(mStateCounterRed, 1);
     EXPECT_EQ(mStateCounterOff, 1);
-    EXPECT_EQ(mStateCounterTurnOff, 1);
+    EXPECT_EQ(mTransitionCounterTurnOff, 1);
 
     // TODO: implement multiple depth check
 
@@ -84,25 +84,25 @@ TEST_F(ABCHsm, substate_safe_registration)
     registerState(AbcState::B, this, &ABCHsm::onB, nullptr, nullptr);
     registerState(AbcState::C, this, &ABCHsm::onC, nullptr, nullptr);
 
-    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::A) );
+    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::A, true) );
 
     //-------------------------------------------
     // ACTIONS
 
     // each state can be a part of only one substate
-    EXPECT_FALSE( registerSubstate(AbcState::P2, AbcState::A) );// A is already part of P1
+    EXPECT_FALSE( registerSubstate(AbcState::P2, AbcState::A, true) );// A is already part of P1
 
     // prevent recursion
     EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::B) );
     EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::P2) );
-    EXPECT_FALSE( registerSubstate(AbcState::P2, AbcState::P1) );// P1 -> B2 -X P1
+    EXPECT_FALSE( registerSubstate(AbcState::P2, AbcState::P1, true) );// P1 -> B2 -X P1
 
-    EXPECT_TRUE( registerSubstate(AbcState::P4, AbcState::C) );
+    EXPECT_TRUE( registerSubstate(AbcState::P4, AbcState::C, true) );
     EXPECT_TRUE( registerSubstate(AbcState::P4, AbcState::P3) );
-    EXPECT_FALSE( registerSubstate(AbcState::P3, AbcState::P4) );// P3 -X P4 -> P3
+    EXPECT_FALSE( registerSubstate(AbcState::P3, AbcState::P4, true) );// P3 -X P4 -> P3
 
-    EXPECT_TRUE( registerSubstate(AbcState::P3, AbcState::P1) );
-    EXPECT_FALSE( registerSubstate(AbcState::P2, AbcState::P4) );// prevent recursion: (P4) -> P3 -> P1 -> P2 -X (P4)
+    EXPECT_TRUE( registerSubstate(AbcState::P3, AbcState::P1, true) );
+    EXPECT_FALSE( registerSubstate(AbcState::P2, AbcState::P4, true) );// prevent recursion: (P4) -> P3 -> P1 -> P2 -X (P4)
 
     //-------------------------------------------
     // VALIDATION

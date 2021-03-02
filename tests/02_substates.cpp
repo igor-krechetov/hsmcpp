@@ -1,21 +1,60 @@
 #include "hsm/TrafficLightHsm.hpp"
 #include "hsm/ABCHsm.hpp"
 
-TEST_F(TrafficLightHsm, substate_enter)
+TEST_F(ABCHsm, substate_entrypoint)
 {
     TEST_DESCRIPTION("");
 
     //-------------------------------------------
     // PRECONDITIONS
-    setupDefault();
+    registerState(AbcState::A, this, &ABCHsm::onA, nullptr, nullptr);
+    registerState(AbcState::B, this, &ABCHsm::onB, nullptr, nullptr);
+    registerState(AbcState::C, this, &ABCHsm::onC, nullptr, nullptr);
+
+    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::B, true) );
+    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::C) );
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1, nullptr, nullptr);
 
     //-------------------------------------------
     // ACTIONS
+    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true));
 
     //-------------------------------------------
     // VALIDATION
-    GTEST_SKIP() << "NOT IMPLEMENTED";
+    EXPECT_EQ(getCurrentState(), AbcState::B);
 }
+
+
+TEST_F(ABCHsm, substate_entrypoint_substate)
+{
+    TEST_DESCRIPTION("entry point of a substate could be another state with substates");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState(AbcState::A, this, &ABCHsm::onA, nullptr, nullptr);
+    registerState(AbcState::B, this, &ABCHsm::onB, nullptr, nullptr);
+    registerState(AbcState::C, this, &ABCHsm::onC, nullptr, nullptr);
+
+    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::P2, true) );
+    EXPECT_TRUE( registerSubstate(AbcState::P2, AbcState::P3, true) );
+    EXPECT_TRUE( registerSubstate(AbcState::P3, AbcState::B, true) );
+    EXPECT_TRUE( registerSubstate(AbcState::P3, AbcState::C) );
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1, nullptr, nullptr);
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_EQ(getCurrentState(), AbcState::B);
+    EXPECT_EQ(mStateCounterA, 0);
+    EXPECT_EQ(mStateCounterB, 1);
+    EXPECT_EQ(mStateCounterC, 0);
+}
+
 
 TEST_F(TrafficLightHsm, substate_exit_single)
 {
@@ -43,34 +82,48 @@ TEST_F(TrafficLightHsm, substate_exit_single)
     EXPECT_EQ(mTransitionCounterTurnOff, 1);
 }
 
-TEST_F(TrafficLightHsm, substate_exit_multiple_layers)
+TEST_F(ABCHsm, substate_exit_multiple_layers)
 {
-    TEST_DESCRIPTION("");
+    TEST_DESCRIPTION("Validate that exiting from multiple depth states on a top level transition is correctly handled");
 
     //-------------------------------------------
     // PRECONDITIONS
-    setupDefault();
+    registerState(AbcState::A, this, &ABCHsm::onA, nullptr, nullptr);
+    registerState(AbcState::B, this, &ABCHsm::onB, nullptr, nullptr);
+    registerState(AbcState::C, this, &ABCHsm::onC, nullptr, nullptr);
+    registerState(AbcState::D, this, &ABCHsm::onD, nullptr, nullptr);
 
-    ASSERT_TRUE(transitionEx(TrafficLightEvent::TURN_ON, false, true));
-    ASSERT_EQ(getCurrentState(), TrafficLightState::STARTING);
-    ASSERT_TRUE(transitionEx(TrafficLightEvent::NEXT_STATE, false, true));
-    ASSERT_EQ(getCurrentState(), TrafficLightState::RED);
+    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::B, true) );
+    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::P2) );
+    EXPECT_TRUE( registerSubstate(AbcState::P2, AbcState::C, true) );
+    EXPECT_TRUE( registerSubstate(AbcState::P2, AbcState::P3) );
+    EXPECT_TRUE( registerSubstate(AbcState::P3, AbcState::D, true) );
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1, nullptr, nullptr);
+    registerTransition(AbcState::B, AbcState::P2, AbcEvent::E1, nullptr, nullptr);
+    registerTransition(AbcState::C, AbcState::P3, AbcEvent::E1, nullptr, nullptr);
+    registerTransition(AbcState::P1, AbcState::A, AbcEvent::E2, nullptr, nullptr);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionEx(TrafficLightEvent::TURN_OFF, false, true));
+    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true));
+    ASSERT_EQ(getCurrentState(), AbcState::B);
+
+    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true));
+    ASSERT_EQ(getCurrentState(), AbcState::C);
+
+    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true));
+    ASSERT_EQ(getCurrentState(), AbcState::D);
+
+    ASSERT_TRUE(transitionEx(AbcEvent::E2, false, true));
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::OFF);
-    EXPECT_EQ(mStateCounterStarting, 1);
-    EXPECT_EQ(mStateCounterRed, 1);
-    EXPECT_EQ(mStateCounterOff, 1);
-    EXPECT_EQ(mTransitionCounterTurnOff, 1);
-
-    // TODO: implement multiple depth check
-
-    GTEST_SKIP() << "NOT IMPLEMENTED";
+    EXPECT_EQ(getCurrentState(), AbcState::A);
+    EXPECT_EQ(mStateCounterA, 1);
+    EXPECT_EQ(mStateCounterB, 1);
+    EXPECT_EQ(mStateCounterC, 1);
+    EXPECT_EQ(mStateCounterD, 1);
 }
 
 TEST_F(ABCHsm, substate_safe_registration)

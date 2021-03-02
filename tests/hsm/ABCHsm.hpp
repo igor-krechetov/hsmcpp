@@ -6,7 +6,7 @@
 
 enum class AbcState
 {
-    A, B, C,
+    A, B, C, D, E,
     P1, P2, P3, P4
 };
 
@@ -15,8 +15,6 @@ enum class AbcEvent
     E1, E2, E3
 };
 
-#define GEN_STATE_ACTION(_name)         void on##_name(const VariantList_t& args){ printf("----> " #_name "\n"); }
-
 class ABCHsm: public testing::Test
             , public HierarchicalStateMachine<AbcState, AbcEvent, ABCHsm>
 {
@@ -24,9 +22,11 @@ public:
     ABCHsm();
     virtual ~ABCHsm();
 
-    GEN_STATE_ACTION(A)
-    GEN_STATE_ACTION(B)
-    GEN_STATE_ACTION(C)
+    DEF_STATE_ACTION_IMPL(A)
+    DEF_STATE_ACTION_IMPL(B)
+    DEF_STATE_ACTION_IMPL(C)
+    DEF_STATE_ACTION_IMPL(D)
+    DEF_STATE_ACTION_IMPL(E)
 
 protected:
     void SetUp() override;

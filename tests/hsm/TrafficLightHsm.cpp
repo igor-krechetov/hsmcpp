@@ -27,6 +27,36 @@ void TrafficLightHsm::setupDefault()
     registerTransition(TrafficLightState::GREEN, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE, this, &TrafficLightHsm::onNextStateTransition);
 }
 
+bool TrafficLightHsm::checkConditionOff2Off(const VariantList_t& args)
+{
+    bool result = false;
+
+    if (args.size() > 0)
+    {
+        if (args[0].isString())
+        {
+            result = (args[0].toString() == "turn off") || (args[0].toString() == "any");
+        }
+    }
+
+    return result;
+}
+
+bool TrafficLightHsm::checkConditionOff2On(const VariantList_t& args)
+{
+    bool result = false;
+
+    if (args.size() > 0)
+    {
+        if (args[0].isString())
+        {
+            result = (args[0].toString() == "turn on") || (args[0].toString() == "any");
+        }
+    }
+
+    return result;
+}
+
 void TrafficLightHsm::SetUp()
 {
 }

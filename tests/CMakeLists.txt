@@ -10,6 +10,7 @@ set(SRC_UNITTESTS main.cpp
                   02_substates.cpp
                   03_transitions.cpp
                   04_multithreaded.cpp
+                  05_callbacks.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/hsm/ABCHsm.cpp
                   ${CMAKE_CURRENT_SOURCE_DIR}/hsm/AsyncHsm.cpp

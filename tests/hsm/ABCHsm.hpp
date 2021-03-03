@@ -28,9 +28,17 @@ public:
     DEF_STATE_ACTION_IMPL(D)
     DEF_STATE_ACTION_IMPL(E)
 
+    DEF_TRANSITION_IMPL(E1)
+
+    bool conditionTrue(const VariantList_t& args);
+
 protected:
     void SetUp() override;
     void TearDown() override;
+
+protected:
+    int mConditionTrueCounter = 0;
+    VariantList_t mArgsConditionTrue;
 };
 
 #endif // __HSMCPP_TESTS_HSM_ABCHSM_HPP__

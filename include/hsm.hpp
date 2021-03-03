@@ -6,6 +6,7 @@
 
 #include <glibmm.h>
 #include <algorithm>
+#include <functional>
 #include <atomic>
 #include <map>
 #include <list>
@@ -36,16 +37,22 @@ class HierarchicalStateMachine
 {
 public:
     typedef std::vector<Variant> VariantList_t;
-    typedef void (HsmHandlerClass::*HsmTransitionCallback_t)(const VariantList_t&);
-    typedef bool (HsmHandlerClass::*HsmTransitionConditionCallback_t)(const VariantList_t&);
-    typedef void (HsmHandlerClass::*HsmStateChangedCallback_t)(const VariantList_t&);
-    typedef bool (HsmHandlerClass::*HsmStateEnterCallback_t)(const VariantList_t&);
-    typedef bool (HsmHandlerClass::*HsmStateExitCallback_t)();
+
+    typedef std::function<void(const VariantList_t&)> HsmTransitionCallback_t;
+    typedef std::function<bool(const VariantList_t&)> HsmTransitionConditionCallback_t;
+    typedef std::function<void(const VariantList_t&)> HsmStateChangedCallback_t;
+    typedef std::function<bool(const VariantList_t&)> HsmStateEnterCallback_t;
+    typedef std::function<bool(void)>                 HsmStateExitCallback_t;
+
+    typedef void (HsmHandlerClass::*HsmTransitionCallbackPtr_t)(const VariantList_t&);
+    typedef bool (HsmHandlerClass::*HsmTransitionConditionCallbackPtr_t)(const VariantList_t&);
+    typedef void (HsmHandlerClass::*HsmStateChangedCallbackPtr_t)(const VariantList_t&);
+    typedef bool (HsmHandlerClass::*HsmStateEnterCallbackPtr_t)(const VariantList_t&);
+    typedef bool (HsmHandlerClass::*HsmStateExitCallbackPtr_t)();
 
 private:
     struct StateCallbacks
     {
-        HsmHandlerClass* handler = nullptr;
         HsmStateChangedCallback_t onStateChanged = nullptr;
         HsmStateEnterCallback_t onEntering = nullptr;
         HsmStateExitCallback_t onExiting = nullptr;
@@ -54,7 +61,6 @@ private:
     struct TransitionInfo
     {
         HsmStateEnum destinationState;
-        HsmHandlerClass* handler = nullptr;
         HsmTransitionCallback_t onTransition = nullptr;
         HsmTransitionConditionCallback_t checkCondition = nullptr;
     };
@@ -82,6 +88,11 @@ public:
 
     void registerState(const HsmStateEnum state,
                        HsmHandlerClass* handler,
+                       HsmStateChangedCallbackPtr_t onStateChanged,
+                       HsmStateEnterCallbackPtr_t onEntering,
+                       HsmStateExitCallbackPtr_t onExiting);
+
+    void registerState(const HsmStateEnum state,
                        HsmStateChangedCallback_t onStateChanged,
                        HsmStateEnterCallback_t onEntering,
                        HsmStateExitCallback_t onExiting);
@@ -93,6 +104,12 @@ public:
                             const HsmStateEnum to,
                             const HsmEventEnum onEvent,
                             HsmHandlerClass* handler = nullptr,
+                            HsmTransitionCallbackPtr_t transitionCallback = nullptr,
+                            HsmTransitionConditionCallbackPtr_t conditionCallback = nullptr);
+
+    void registerTransition(const HsmStateEnum from,
+                            const HsmStateEnum to,
+                            const HsmEventEnum onEvent,
                             HsmTransitionCallback_t transitionCallback = nullptr,
                             HsmTransitionConditionCallback_t conditionCallback = nullptr);
 
@@ -167,6 +184,37 @@ HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::~Hierarch
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::registerState(const HsmStateEnum state,
                                                                                           HsmHandlerClass* handler,
+                                                                                          HsmStateChangedCallbackPtr_t onStateChanged,
+                                                                                          HsmStateEnterCallbackPtr_t onEntering,
+                                                                                          HsmStateExitCallbackPtr_t onExiting)
+{
+    HsmStateChangedCallback_t funcStateChanged;
+    HsmStateEnterCallback_t funcEntering;
+    HsmStateExitCallback_t funcExiting;
+
+    if (nullptr != handler)
+    {
+        if (nullptr != onStateChanged)
+        {
+            funcStateChanged = std::bind(onStateChanged, handler, std::placeholders::_1);
+        }
+
+        if (nullptr != onEntering)
+        {
+            funcEntering = std::bind(onEntering, handler, std::placeholders::_1);
+        }
+
+        if (nullptr != onExiting)
+        {
+            funcExiting = std::bind(onExiting, handler);
+        }
+    }
+
+    registerState(state, funcStateChanged, funcEntering, funcExiting);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::registerState(const HsmStateEnum state,
                                                                                           HsmStateChangedCallback_t onStateChanged,
                                                                                           HsmStateEnterCallback_t onEntering,
                                                                                           HsmStateExitCallback_t onExiting)
@@ -178,12 +226,10 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::regi
     }
 #endif // HSM_ENABLE_SAFE_STRUCTURE
 
-    if ((nullptr != handler) &&
-        ((nullptr != onStateChanged) || (nullptr != onEntering) || (nullptr != onExiting)))
+    if (onStateChanged || onEntering || onExiting)
     {
         StateCallbacks cb;
 
-        cb.handler = handler;
         cb.onStateChanged = onStateChanged;
         cb.onEntering = onEntering;
         cb.onExiting = onExiting;
@@ -277,10 +323,36 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::regi
                                                                                                const HsmStateEnum to,
                                                                                                const HsmEventEnum onEvent,
                                                                                                HsmHandlerClass* handler,
+                                                                                               HsmTransitionCallbackPtr_t transitionCallback,
+                                                                                               HsmTransitionConditionCallbackPtr_t conditionCallback)
+{
+    HsmTransitionCallback_t funcTransitionCallback;
+    HsmTransitionConditionCallback_t funcConditionCallback;
+
+    if (nullptr != handler)
+    {
+        if (nullptr != transitionCallback)
+        {
+            funcTransitionCallback = std::bind(transitionCallback, handler, std::placeholders::_1);
+        }
+
+        if (nullptr != conditionCallback)
+        {
+            funcConditionCallback = std::bind(conditionCallback, handler, std::placeholders::_1);
+        }
+    }
+
+    registerTransition(from, to, onEvent, funcTransitionCallback, funcConditionCallback);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::registerTransition(const HsmStateEnum from,
+                                                                                               const HsmStateEnum to,
+                                                                                               const HsmEventEnum onEvent,
                                                                                                HsmTransitionCallback_t transitionCallback,
                                                                                                HsmTransitionConditionCallback_t conditionCallback)
 {
-    mTransitionsByEvent.emplace(std::make_pair(from, onEvent), TransitionInfo{to, handler, transitionCallback, conditionCallback});
+    mTransitionsByEvent.emplace(std::make_pair(from, onEvent), TransitionInfo{to, /*handler,*/ transitionCallback, conditionCallback});
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
@@ -429,9 +501,9 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::onSt
     bool res = true;
     auto it = mRegisteredStates.find(state);
 
-    if ((mRegisteredStates.end() != it) && (nullptr != it->second.onExiting))
+    if ((mRegisteredStates.end() != it) && it->second.onExiting)
     {
-        res = ((it->second.handler)->*(it->second.onExiting))();
+        res = it->second.onExiting();
     }
 
     return res;
@@ -444,9 +516,9 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::onSt
     bool res = true;
     auto it = mRegisteredStates.find(state);
 
-    if ((mRegisteredStates.end() != it) && (nullptr != it->second.onEntering))
+    if ((mRegisteredStates.end() != it) && it->second.onEntering)
     {
-        res = ((it->second.handler)->*(it->second.onEntering))(args);
+        res = it->second.onEntering(args);
     }
 
     return res;
@@ -459,9 +531,9 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::onSt
     __TRACE_CALL_DEBUG_ARGS__("onStateChanged with state <%d>", static_cast<int>(state));
     auto it = mRegisteredStates.find(state);
 
-    if ((mRegisteredStates.end() != it) && (nullptr != it->second.onStateChanged))
+    if ((mRegisteredStates.end() != it) && it->second.onStateChanged)
     {
-        ((it->second.handler)->*(it->second.onStateChanged))(args);
+        it->second.onStateChanged(args);
     }
     else
     {
@@ -534,9 +606,9 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::find
                     wasFound = true;
                     break;
                 }
-                else if (nullptr != it->second.handler)
+                else
                 {
-                    if (true == ((it->second.handler)->*(it->second.checkCondition))(transitionArgs))
+                    if (true == it->second.checkCondition(transitionArgs))
                     {
                         outTransition = it->second;
                         wasFound = true;
@@ -577,9 +649,9 @@ HsmEventStatus HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerCl
             // NOTE: Decide if we need functionality to cancel ongoing transition
             if (true == onStateExiting(mCurrentState))
             {
-                if ((nullptr != transitionInfo.handler) && (transitionInfo.onTransition))
+                if (transitionInfo.onTransition)
                 {
-                    ((transitionInfo.handler)->*(transitionInfo.onTransition))(event.args);
+                    transitionInfo.onTransition(event.args);
                 }
 
                 if (true == onStateEntering(transitionInfo.destinationState, event.args))
@@ -618,9 +690,9 @@ HsmEventStatus HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerCl
                 }
             }
         }
-        else if (nullptr != transitionInfo.onTransition)
+        else if (transitionInfo.onTransition)
         {
-            ((transitionInfo.handler)->*(transitionInfo.onTransition))(event.args);
+            transitionInfo.onTransition(event.args);
             res = HsmEventStatus::DONE_OK;
         }
     }

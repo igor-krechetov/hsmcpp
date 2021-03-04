@@ -68,7 +68,7 @@ extern int g_traces_pid;
 #endif  // EXIT_ON_FATAL
 
 #define __TRACE_CALL__()                    __TRACE_CALL_COMMON__(); \
-                                            __TRACE__(" was called", 0)
+                                            __TRACE__(" was called")
 #define __TRACE_CALL_ARGS__(msg, ...)       __TRACE_CALL_COMMON__(); \
                                             __TRACE__(msg,## __VA_ARGS__)
 #define __TRACE_DEF__()                     __TRACE_CALL_COMMON__()
@@ -77,7 +77,7 @@ extern int g_traces_pid;
 #define __TRACE_DEBUG__(msg, ...) __TRACE_COMMON__("[DEBUG] " msg,## __VA_ARGS__)
 // Should be a first line in any function that needs traces
 #define __TRACE_CALL_DEBUG__()              __TRACE_CALL_COMMON__(); \
-                                            __TRACE_DEBUG__(" was called", 0)
+                                            __TRACE_DEBUG__(" was called")
 
 #define __TRACE_CALL_DEBUG_ARGS__(msg, ...) __TRACE_CALL_COMMON__(); \
                                             __TRACE_DEBUG__(msg,## __VA_ARGS__)

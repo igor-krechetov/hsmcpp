@@ -2,6 +2,7 @@
 #include <thread>
 #include <unistd.h>
 #include "logging.hpp"
+#include "HsmEventDispatcherGLib.hpp"
 
 #undef __TRACE_CLASS__
 #define __TRACE_CLASS__                         "01_trafficlight"
@@ -27,7 +28,7 @@ enum class TrafficLightEvent
 class TrafficLight: public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent, TrafficLight>
 {
 public:
-    TrafficLight() : HierarchicalStateMachine(TrafficLightState::OFF)
+    TrafficLight() : HierarchicalStateMachine(TrafficLightState::OFF, std::make_shared<HsmEventDispatcherGLib>())
     {
         registerState(TrafficLightState::OFF, this, &TrafficLight::onOff, nullptr, nullptr);
         registerState(TrafficLightState::STARTING, this, &TrafficLight::onStarting, nullptr, nullptr);
@@ -64,7 +65,7 @@ public:
 };
 
 Glib::RefPtr<Glib::MainLoop> mMainLoop;
-TrafficLight tl;
+TrafficLight* tl = nullptr;
 
 void simulate()
 {
@@ -74,12 +75,12 @@ void simulate()
     sleep(2);
     printf("[T0] starting work...\n");
 
-    tl.transition(TrafficLightEvent::TURN_ON);
+    tl->transition(TrafficLightEvent::TURN_ON);
     sleep(2);
 
     while(true)
     {
-        tl.transition(TrafficLightEvent::NEXT_STATE);
+        tl->transition(TrafficLightEvent::NEXT_STATE);
         index++;
         sleep(1);
     }
@@ -93,7 +94,7 @@ void simulateSync1()
     sleep(2);
     printf("[T1] starting work...\n");
 
-    tl.transition(TrafficLightEvent::TURN_ON);
+    tl->transition(TrafficLightEvent::TURN_ON);
     sleep(2);
 
     while(true)
@@ -101,7 +102,7 @@ void simulateSync1()
         bool status;
 
         printf("[T1] BEFORE transition\n");
-        status = tl.transitionEx(TrafficLightEvent::NEXT_STATE, true, true, 1, index);
+        status = tl->transitionEx(TrafficLightEvent::NEXT_STATE, true, true, 1, index);
         printf("[T1] AFTER transition: %d\n", (int)status);
         index++;
         sleep(3);
@@ -116,7 +117,7 @@ void simulateSync2()
     sleep(2);
     printf("[T2] starting work...\n");
 
-    tl.transition(TrafficLightEvent::TURN_ON);
+    tl->transition(TrafficLightEvent::TURN_ON);
     sleep(2);
 
     while(true)
@@ -124,7 +125,7 @@ void simulateSync2()
         bool status;
 
         printf("[T2] BEFORE transition\n");
-        status = tl.transitionEx(TrafficLightEvent::NEXT_STATE, true, true, 2, index);
+        status = tl->transitionEx(TrafficLightEvent::NEXT_STATE, true, true, 2, index);
         printf("[T2] AFTER transition: %d\n", (int)status);
         index++;
         sleep(3);
@@ -137,14 +138,17 @@ int main(const int argc, const char**argv)
     __TRACE_CALL_ARGS__("01_trafficlight");
 
     Glib::init();
-    // Gio::init();
     mMainLoop = Glib::MainLoop::create();
+    tl = new TrafficLight();
 
     std::thread threadSimulate0(simulate);
     std::thread threadSimulate1(simulateSync1);
     std::thread threadSimulate2(simulateSync2);
 
     mMainLoop->run();
+
+    delete tl;
+    tl = nullptr;
 
     return 0;
 }

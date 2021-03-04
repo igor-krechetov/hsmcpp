@@ -1,6 +1,7 @@
 #include "ABCHsm.hpp"
+#include "HsmEventDispatcherGLib.hpp"
 
-ABCHsm::ABCHsm() : HierarchicalStateMachine(AbcState::A)
+ABCHsm::ABCHsm() : HierarchicalStateMachine(AbcState::A, std::make_shared<HsmEventDispatcherGLib>())
 {
 }
 

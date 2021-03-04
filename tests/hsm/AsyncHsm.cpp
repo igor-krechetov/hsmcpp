@@ -1,11 +1,12 @@
 #include "AsyncHsm.hpp"
 #include "logging.hpp"
+#include "HsmEventDispatcherGLib.hpp"
 #include <chrono>
 
 #undef __TRACE_CLASS__
 #define __TRACE_CLASS__                         "AsyncHsm"
 
-AsyncHsm::AsyncHsm() : HierarchicalStateMachine(AsyncHsmState::A)
+AsyncHsm::AsyncHsm() : HierarchicalStateMachine(AsyncHsmState::A, std::make_shared<HsmEventDispatcherGLib>())
 {
 }
 

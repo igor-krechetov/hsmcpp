@@ -9,9 +9,16 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
-# add_definitions(-DLOGGING_MODE_STRICT_VERBOSE)
-add_definitions(-DLOGGING_MODE_OFF)
-add_definitions(-DHSM_ENABLE_SAFE_STRUCTURE)
+option(VERBOSE "Enable/disable HSM verbosity [feature for DEBUG]" OFF)
+option(STRUCTURE_VALIDATION "Enable/disable HSM structure validation" ON)
+option(DISPATCHER_GLIB "Enable/disable GLib dispatcher" ON)
+
+message("--------------------------------------")
+message("HSM build settings:\n")
+message("VERBOSE = ${VERBOSE}")
+message("STRUCTURE_VALIDATION = ${STRUCTURE_VALIDATION}")
+message("DISPATCHER_GLIB = ${DISPATCHER_GLIB}")
+message("--------------------------------------")
 
 # ================================================
 # Common modules
@@ -34,9 +41,28 @@ set (GLIB_PKG_LDFLAGS
 # HSMCPP library
 set(HSM_LIBRARY_NAME "hsmcpp")
 
+if (VERBOSE)
+    add_definitions(-DLOGGING_MODE_STRICT_VERBOSE)
+else()
+    add_definitions(-DLOGGING_MODE_OFF)
+endif()
+
+if (STRUCTURE_VALIDATION)
+    add_definitions(-DHSM_ENABLE_SAFE_STRUCTURE)
+endif()
+
 file (GLOB SRC_LIBRARY
     ${CMAKE_CURRENT_SOURCE_DIR}/src/variant.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherBase.cpp
 )
+
+if (DISPATCHER_GLIB)
+    add_definitions(-DHSM_BUILD_DISPATCHER_GLIB)
+
+    file (GLOB SRC_LIBRARY ${SRC_LIBRARY}
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLib.cpp)
+endif()
+
 
 add_library(${HSM_LIBRARY_NAME} STATIC ${SRC_LIBRARY})
 

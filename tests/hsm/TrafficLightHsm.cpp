@@ -1,6 +1,7 @@
 #include "TrafficLightHsm.hpp"
+#include "HsmEventDispatcherGLib.hpp"
 
-TrafficLightHsm::TrafficLightHsm() : HierarchicalStateMachine(TrafficLightState::OFF)
+TrafficLightHsm::TrafficLightHsm() : HierarchicalStateMachine(TrafficLightState::OFF, std::make_shared<HsmEventDispatcherGLib>())
 {
 }
 

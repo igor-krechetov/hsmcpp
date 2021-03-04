@@ -4,14 +4,15 @@
 #ifndef __HSMCPP_HSM_HPP__
 #define __HSMCPP_HSM_HPP__
 
-#include <glibmm.h>
 #include <algorithm>
 #include <functional>
 #include <atomic>
 #include <map>
 #include <list>
+#include <vector>
 #include <mutex>
 #include <condition_variable>
+#include "IHsmEventDispatcher.hpp"
 #include "variant.hpp"
 #include "logging.hpp"
 
@@ -83,7 +84,7 @@ private:
     };
 
 public:
-    HierarchicalStateMachine(const HsmStateEnum initialState);
+    HierarchicalStateMachine(const HsmStateEnum initialState, const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
     virtual ~HierarchicalStateMachine();
 
     void registerState(const HsmStateEnum state,
@@ -164,22 +165,40 @@ private:
     std::multimap<HsmStateEnum, HsmStateEnum> mSubstates;
     std::map<HsmStateEnum, HsmStateEnum> mSubstateEntryPoint;
     std::list<PendingEventInfo> mPendingEvents;
-    Glib::Dispatcher mSignalTransition;
+    std::shared_ptr<IHsmEventDispatcher> mDispatcher;
+    int mDispatcherHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
 };
 
 // ============================================================================
 // PUBLIC
 // ============================================================================
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
-HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::HierarchicalStateMachine(const HsmStateEnum initialState)
+HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::HierarchicalStateMachine(const HsmStateEnum initialState,
+                                                                                                const std::shared_ptr<IHsmEventDispatcher>& dispatcher)
     : mCurrentState(initialState)
+    , mDispatcher(dispatcher)
 {
-    mSignalTransition.connect(sigc::mem_fun(this, &HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::dispatchEvents));
+    if (mDispatcher)
+    {
+        mDispatcherHandlerId = mDispatcher->registerEventHandler(std::bind(&HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::dispatchEvents,
+                                                                 this));
+    }
+    else
+    {
+        // TODO: error/assert? HSM will not be operable
+    }
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
 HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::~HierarchicalStateMachine()
-{}
+{
+    __TRACE_CALL_DEBUG__();
+    if (mDispatcher)
+    {
+        mDispatcher->unregisterEventHandler(mDispatcherHandlerId);
+        mDispatcherHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
+    }
+}
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::registerState(const HsmStateEnum state,
@@ -388,7 +407,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::tran
 
     mPendingEvents.push_back(eventInfo);
     __TRACE_DEBUG__("transitionEx: emit");
-    mSignalTransition.emit();
+    mDispatcher->emit();
 
     if (true == sync)
     {
@@ -488,7 +507,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::disp
 
     if (false == mPendingEvents.empty())
     {
-        mSignalTransition.emit();
+        mDispatcher->emit();
     }
     else
     {
@@ -674,7 +693,6 @@ HsmEventStatus HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerCl
                         entryPointTransitionEvent.transitionStatus = event.transitionStatus;
 
                         mPendingEvents.push_front(entryPointTransitionEvent);
-                        mSignalTransition.emit();
                         res = HsmEventStatus::PENDING;
                     }
                     else
@@ -797,7 +815,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::Pend
     }
     else
     {
-        __TRACE_DEBUG__("A-SYNC object");
+        __TRACE_DEBUG__("ASYNC object");
     }
 }
 

@@ -6,9 +6,8 @@
 
 #include "HsmEventDispatcherBase.hpp"
 #include <glibmm.h>
-// #include <glibmm/main.h>
-// #include <glibmm/dispatcher.h>
 #include <memory>
+#include <map>
 
 class HsmEventDispatcherGLib: public HsmEventDispatcherBase
 {

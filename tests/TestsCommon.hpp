@@ -34,6 +34,19 @@ using ::testing::_;
         EXPECT_CALL(_obj_, _call_).WillOnce(DoAll(_obj_.getDefaultAsyncAction(), __VA_ARGS__))
 
 // ======================================================
+// HSM initialization
+#if defined(TEST_HSM_GLIB)
+    #include "HsmEventDispatcherGLib.hpp"
+
+    #define INITIALIZE_HSM()              ASSERT_TRUE(initialize(std::make_shared<HsmEventDispatcherGLib>()));
+#elif defined(TEST_HSM_STD)
+    #include "HsmEventDispatcherSTD.hpp"
+    #define INITIALIZE_HSM()              ASSERT_TRUE(initialize(std::make_shared<HsmEventDispatcherSTD>()));
+#else
+    #error HSM Dispatcher not specified
+#endif
+
+// ======================================================
 #define DEF_EXIT_ACTION_IMPL(_state, _ret)                              \
     int mStateCounter##_state = 0;                                      \
     bool on##_state()                                                   \

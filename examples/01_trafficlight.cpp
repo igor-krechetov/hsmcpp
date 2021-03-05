@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "logging.hpp"
 #include "HsmEventDispatcherGLib.hpp"
+#include "HsmEventDispatcherSTD.hpp"
 
 #undef __TRACE_CLASS__
 #define __TRACE_CLASS__                         "01_trafficlight"
@@ -28,8 +29,10 @@ enum class TrafficLightEvent
 class TrafficLight: public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent, TrafficLight>
 {
 public:
-    TrafficLight() : HierarchicalStateMachine(TrafficLightState::OFF, std::make_shared<HsmEventDispatcherGLib>())
+    TrafficLight() : HierarchicalStateMachine(TrafficLightState::OFF)
     {
+        initialize(std::make_shared<HsmEventDispatcherSTD>());
+
         registerState(TrafficLightState::OFF, this, &TrafficLight::onOff, nullptr, nullptr);
         registerState(TrafficLightState::STARTING, this, &TrafficLight::onStarting, nullptr, nullptr);
         registerState(TrafficLightState::RED, this, &TrafficLight::onRed, nullptr, nullptr);

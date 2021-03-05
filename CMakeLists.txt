@@ -11,13 +11,19 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 option(VERBOSE "Enable/disable HSM verbosity [feature for DEBUG]" OFF)
 option(STRUCTURE_VALIDATION "Enable/disable HSM structure validation" ON)
-option(DISPATCHER_GLIB "Enable/disable GLib dispatcher" ON)
+option(DISPATCHER_GLIB "Enable GLib dispatcher" ON)
+option(DISPATCHER_STD "Enable std::thread based dispatcher" ON)
+option(BUILD_TESTS "Build unittets" ON)
+option(BUILD_EXAMPLES "Build examples" ON)
 
 message("--------------------------------------")
 message("HSM build settings:\n")
 message("VERBOSE = ${VERBOSE}")
 message("STRUCTURE_VALIDATION = ${STRUCTURE_VALIDATION}")
 message("DISPATCHER_GLIB = ${DISPATCHER_GLIB}")
+message("DISPATCHER_STD = ${DISPATCHER_STD}")
+message("BUILD_TESTS = ${BUILD_TESTS}")
+message("BUILD_EXAMPLES = ${BUILD_EXAMPLES}")
 message("--------------------------------------")
 
 # ================================================
@@ -63,6 +69,12 @@ if (DISPATCHER_GLIB)
                            ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLib.cpp)
 endif()
 
+if (DISPATCHER_STD)
+    add_definitions(-DHSM_BUILD_DISPATCHER_STD)
+
+    file (GLOB SRC_LIBRARY ${SRC_LIBRARY}
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherSTD.cpp)
+endif()
 
 add_library(${HSM_LIBRARY_NAME} STATIC ${SRC_LIBRARY})
 
@@ -89,5 +101,10 @@ install(FILES "${PROJECT_BINARY_DIR}/hsmcpp.pc"
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 
 # ================================================
-add_subdirectory(examples)
-add_subdirectory(tests)
+if (BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+if (BUILD_TESTS)
+    add_subdirectory(tests)
+endif()

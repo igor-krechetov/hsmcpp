@@ -4,6 +4,7 @@
 #include "TestsCommon.hpp"
 #include "hsm.hpp"
 #include <mutex>
+#include <atomic>
 #include <condition_variable>
 
 enum class AsyncHsmState
@@ -40,6 +41,7 @@ public:
 protected:
     std::mutex mSyncLock;
     std::condition_variable mSyncVariable;
+    std::atomic<bool> mSyncVariableCheck;
 
     std::mutex mSyncBlockNextStep;
     std::condition_variable mBlockNextStep;

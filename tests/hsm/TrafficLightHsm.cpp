@@ -1,7 +1,7 @@
 #include "TrafficLightHsm.hpp"
 #include "HsmEventDispatcherGLib.hpp"
 
-TrafficLightHsm::TrafficLightHsm() : HierarchicalStateMachine(TrafficLightState::OFF, std::make_shared<HsmEventDispatcherGLib>())
+TrafficLightHsm::TrafficLightHsm() : HierarchicalStateMachine(TrafficLightState::OFF)
 {
 }
 
@@ -60,6 +60,7 @@ bool TrafficLightHsm::checkConditionOff2On(const VariantList_t& args)
 
 void TrafficLightHsm::SetUp()
 {
+    INITIALIZE_HSM();
 }
 
 void TrafficLightHsm::TearDown()

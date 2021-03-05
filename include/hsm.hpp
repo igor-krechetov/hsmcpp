@@ -84,8 +84,10 @@ private:
     };
 
 public:
-    HierarchicalStateMachine(const HsmStateEnum initialState, const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
+    HierarchicalStateMachine(const HsmStateEnum initialState);
     virtual ~HierarchicalStateMachine();
+
+    bool initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
 
     void registerState(const HsmStateEnum state,
                        HsmHandlerClass* handler,
@@ -173,20 +175,9 @@ private:
 // PUBLIC
 // ============================================================================
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
-HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::HierarchicalStateMachine(const HsmStateEnum initialState,
-                                                                                                const std::shared_ptr<IHsmEventDispatcher>& dispatcher)
+HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::HierarchicalStateMachine(const HsmStateEnum initialState)
     : mCurrentState(initialState)
-    , mDispatcher(dispatcher)
 {
-    if (mDispatcher)
-    {
-        mDispatcherHandlerId = mDispatcher->registerEventHandler(std::bind(&HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::dispatchEvents,
-                                                                 this));
-    }
-    else
-    {
-        // TODO: error/assert? HSM will not be operable
-    }
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
@@ -198,6 +189,35 @@ HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::~Hierarch
         mDispatcher->unregisterEventHandler(mDispatcherHandlerId);
         mDispatcherHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
     }
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher)
+{
+    __TRACE_CALL_DEBUG__();
+    bool result = false;
+
+    if (dispatcher)
+    {
+        if (true == dispatcher->start())
+        {
+            mDispatcher = dispatcher;
+            mDispatcherHandlerId = mDispatcher->registerEventHandler(std::bind(&HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::dispatchEvents,
+                                                                     this));
+
+            result = (INVALID_HSM_DISPATCHER_HANDLER_ID != mDispatcherHandlerId);
+        }
+        else
+        {
+            __TRACE_ERROR__("failed to start dispatcher");
+        }
+    }
+    else
+    {
+        __TRACE_ERROR__("dispatcher is NULL");
+    }
+
+    return result;
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>

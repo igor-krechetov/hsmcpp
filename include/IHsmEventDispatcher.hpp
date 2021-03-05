@@ -13,6 +13,11 @@ class IHsmEventDispatcher
 public:
     virtual ~IHsmEventDispatcher() {}
 
+    // Used to start event dispatching. Implementation is optional and depends
+    // on individual dispatcher. But it should be non blocking.
+    // Returns TRUE if dispatching was successfully started or if it is already running (calling multiple times will have no effect)
+    virtual bool start() = 0;
+
     // As a general rule registerEventHandler and unregisterEventHandler are
     // not expected to be thread-safe and should to be used from the same thread.
     // But this depends on specific Dispatcher implementation.

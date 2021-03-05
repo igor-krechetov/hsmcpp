@@ -1,7 +1,6 @@
 #include "ABCHsm.hpp"
-#include "HsmEventDispatcherGLib.hpp"
 
-ABCHsm::ABCHsm() : HierarchicalStateMachine(AbcState::A, std::make_shared<HsmEventDispatcherGLib>())
+ABCHsm::ABCHsm() : HierarchicalStateMachine(AbcState::A)
 {
 }
 
@@ -17,6 +16,7 @@ bool ABCHsm::conditionTrue(const VariantList_t& args)
 
 void ABCHsm::SetUp()
 {
+    INITIALIZE_HSM();
 }
 
 void ABCHsm::TearDown()

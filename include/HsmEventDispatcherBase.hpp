@@ -11,10 +11,6 @@ class HsmEventDispatcherBase: public IHsmEventDispatcher
 public:
     virtual ~HsmEventDispatcherBase();
 
-    // Used to start event dispatching. Implementation is optional and depends
-    // on individual dispatcher. But it should be non blocking.
-    virtual bool start() = 0;
-
 protected:
     virtual int getNextHandlerID();
     // For internal usage. Must be called in destructor by all dispatchers.

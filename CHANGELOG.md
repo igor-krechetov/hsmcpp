@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2021-03-08
+### Updated
+- thread safety for HSM
+### Build
+- New CMake build options: THREAD_SAFETY
+
 ## [0.4.0] - 2021-03-05
 ### Added
 - sts::thread based event dispatcher

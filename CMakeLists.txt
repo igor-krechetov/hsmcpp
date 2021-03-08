@@ -11,6 +11,7 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 option(VERBOSE "Enable/disable HSM verbosity [feature for DEBUG]" OFF)
 option(STRUCTURE_VALIDATION "Enable/disable HSM structure validation" ON)
+option(THREAD_SAFETY "Enable/disable HSM thread safety" ON)
 option(DISPATCHER_GLIB "Enable GLib dispatcher" ON)
 option(DISPATCHER_STD "Enable std::thread based dispatcher" ON)
 option(BUILD_TESTS "Build unittets" ON)
@@ -20,6 +21,7 @@ message("--------------------------------------")
 message("HSM build settings:\n")
 message("VERBOSE = ${VERBOSE}")
 message("STRUCTURE_VALIDATION = ${STRUCTURE_VALIDATION}")
+message("THREAD_SAFETY = ${THREAD_SAFETY}")
 message("DISPATCHER_GLIB = ${DISPATCHER_GLIB}")
 message("DISPATCHER_STD = ${DISPATCHER_STD}")
 message("BUILD_TESTS = ${BUILD_TESTS}")
@@ -55,6 +57,10 @@ endif()
 
 if (STRUCTURE_VALIDATION)
     add_definitions(-DHSM_ENABLE_SAFE_STRUCTURE)
+endif()
+
+if (NOT THREAD_SAFETY)
+    add_definitions(-DHSM_DISABLE_THREADSAFETY)
 endif()
 
 file (GLOB SRC_LIBRARY

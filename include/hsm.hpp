@@ -21,17 +21,19 @@
 // during development since it reduces performance a bit
 // #define HSM_ENABLE_SAFE_STRUCTURE               1
 
+// Thread safety is enabled by default, but it adds some overhead related with mutex usage.
+// If performance is critical and it's ensured that HSM is used only from a single thread,
+// then synchronization could be disabled during compilation.
+#define HSM_DISABLE_THREADSAFETY                    1
+
+#ifdef HSM_DISABLE_THREADSAFETY
+  #define _HSM_SYNC_EVENTS_QUEUE()
+#else
+  #define _HSM_SYNC_EVENTS_QUEUE()                std::lock_guard<std::mutex> lck(mEventsSync)
+#endif // HSM_DISABLE_THREADSAFETY
+
 #undef __TRACE_CLASS__
 #define __TRACE_CLASS__                         "HierarchicalStateMachine"
-
-// if state has substates it can't have callbacks registered to it
-
-enum class HsmEventStatus
-{
-    PENDING,
-    DONE_OK,
-    DONE_FAILED
-};
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
 class HierarchicalStateMachine
@@ -52,6 +54,16 @@ public:
     typedef bool (HsmHandlerClass::*HsmStateExitCallbackPtr_t)();
 
 private:
+    enum class HsmEventStatus
+    {
+        PENDING,
+        DONE_OK,
+        DONE_FAILED
+    };
+
+    // NOTE: just an alias to make code more readable
+    #define HsmEventStatus_t   HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::HsmEventStatus
+
     struct StateCallbacks
     {
         HsmStateChangedCallback_t onStateChanged = nullptr;
@@ -89,6 +101,7 @@ public:
 
     bool initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
 
+    // if state has substates its callbacks will be ignored
     void registerState(const HsmStateEnum state,
                        HsmHandlerClass* handler,
                        HsmStateChangedCallbackPtr_t onStateChanged,
@@ -169,6 +182,10 @@ private:
     std::list<PendingEventInfo> mPendingEvents;
     std::shared_ptr<IHsmEventDispatcher> mDispatcher;
     int mDispatcherHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
+
+#ifndef HSM_DISABLE_THREADSAFETY
+    std::mutex mEventsSync;
+#endif// HSM_DISABLE_THREADSAFETY
 };
 
 // ============================================================================
@@ -415,17 +432,22 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::tran
     eventInfo.type = event;
     makeVariantList(eventInfo.args, args...);
 
-    if (true == clearQueue)
-    {
-        clearPendingEvents();
-    }
-
     if (true == sync)
     {
         eventInfo.initLock();
     }
 
-    mPendingEvents.push_back(eventInfo);
+    {
+        _HSM_SYNC_EVENTS_QUEUE();
+
+        if (true == clearQueue)
+        {
+            clearPendingEvents();
+        }
+
+        mPendingEvents.push_back(eventInfo);
+    }
+
     __TRACE_DEBUG__("transitionEx: emit");
     mDispatcher->emit();
 
@@ -433,7 +455,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::tran
     {
         __TRACE_DEBUG__("transitionEx: wait...");
         eventInfo.wait();
-        status = (HsmEventStatus::DONE_OK == *eventInfo.transitionStatus);
+        status = (HsmEventStatus_t::DONE_OK == *eventInfo.transitionStatus);
     }
     else
     {
@@ -478,14 +500,18 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::isTr
 
     makeVariantList(transitionArgs, args...);
 
-    for (auto it = mPendingEvents.begin(); (it != mPendingEvents.end()) && (true == possible); ++it)
     {
-        nextEvent = it->type;
-        possible = findTransitionTarget(stateFrom, nextEvent, transitionArgs, possibleTransition);
+        _HSM_SYNC_EVENTS_QUEUE();
 
-        if (true == possible)
+        for (auto it = mPendingEvents.begin(); (it != mPendingEvents.end()) && (true == possible); ++it)
         {
-            stateFrom = possibleTransition.destinationState;
+            nextEvent = it->type;
+            possible = findTransitionTarget(stateFrom, nextEvent, transitionArgs, possibleTransition);
+
+            if (true == possible)
+            {
+                stateFrom = possibleTransition.destinationState;
+            }
         }
     }
 
@@ -516,11 +542,17 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::disp
 
     if (false == mPendingEvents.empty())
     {
-        PendingEventInfo pendingEvent = mPendingEvents.front();
-        HsmEventStatus transitiontStatus;
+        PendingEventInfo pendingEvent;
 
-        mPendingEvents.pop_front();
-        transitiontStatus = doTransition(pendingEvent);
+        {
+            _HSM_SYNC_EVENTS_QUEUE();
+            pendingEvent = mPendingEvents.front();
+
+            mPendingEvents.pop_front();
+        }
+
+        HsmEventStatus_t transitiontStatus = doTransition(pendingEvent);
+
         __TRACE_DEBUG__("dispatchEvents: unlock with status %d", static_cast<int>(transitiontStatus));
         pendingEvent.unlock(transitiontStatus);
     }
@@ -662,10 +694,10 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::find
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
-HsmEventStatus HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::doTransition(const PendingEventInfo& event)
+typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::doTransition(const PendingEventInfo& event)
 {
     __TRACE_CALL_DEBUG_ARGS__("event=%d, entryPointTransition=%s", static_cast<int>(event.type), BOOL2STR(event.entryPointTransition));
-    HsmEventStatus res = HsmEventStatus::DONE_FAILED;
+    HsmEventStatus_t res = HsmEventStatus_t::DONE_FAILED;
     TransitionInfo transitionInfo;
     bool correctTransition = false;
 
@@ -712,12 +744,15 @@ HsmEventStatus HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerCl
                         entryPointTransitionEvent.syncProcessed = event.syncProcessed;
                         entryPointTransitionEvent.transitionStatus = event.transitionStatus;
 
-                        mPendingEvents.push_front(entryPointTransitionEvent);
-                        res = HsmEventStatus::PENDING;
+                        {
+                            _HSM_SYNC_EVENTS_QUEUE();
+                            mPendingEvents.push_front(entryPointTransitionEvent);
+                        }
+                        res = HsmEventStatus_t::PENDING;
                     }
                     else
                     {
-                        res = HsmEventStatus::DONE_OK;
+                        res = HsmEventStatus_t::DONE_OK;
                     }
                 }
                 else
@@ -731,11 +766,11 @@ HsmEventStatus HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerCl
         else if (transitionInfo.onTransition)
         {
             transitionInfo.onTransition(event.args);
-            res = HsmEventStatus::DONE_OK;
+            res = HsmEventStatus_t::DONE_OK;
         }
     }
 
-    if (HsmEventStatus::DONE_FAILED == res)
+    if (HsmEventStatus_t::DONE_FAILED == res)
     {
         __TRACE_DEBUG__("event <%d> in state <%d> was ignored.", static_cast<int>(event.type), static_cast<int>(mCurrentState));
     }
@@ -750,7 +785,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::clea
 
     for (auto it = mPendingEvents.begin(); (it != mPendingEvents.end()) ; ++it)
     {
-        // since ongoing transitions can't be canceled we need to make entry point transitions atomic
+        // since ongoing transitions can't be canceled we need to treat entry point transitions as atomic
         if (false == it->entryPointTransition)
         {
             it->releaseLock();
@@ -769,7 +804,7 @@ HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::PendingEv
     if (true == cvLock.unique())
     {
         __TRACE_CALL_DEBUG_ARGS__("event=%d was deleted. releasing lock", static_cast<int>(type));
-        unlock(HsmEventStatus::DONE_FAILED);
+        unlock(HsmEventStatus_t::DONE_FAILED);
         cvLock.reset();
         syncProcessed.reset();
     }
@@ -782,8 +817,8 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::Pend
     {
         cvLock = std::make_shared<std::mutex>();
         syncProcessed = std::make_shared<std::condition_variable>();
-        transitionStatus = std::make_shared<HsmEventStatus>();
-        *transitionStatus = HsmEventStatus::PENDING;
+        transitionStatus = std::make_shared<HsmEventStatus_t>();
+        *transitionStatus = HsmEventStatus_t::PENDING;
     }
 }
 
@@ -793,7 +828,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::Pend
     if (isSync())
     {
         __TRACE_CALL_DEBUG_ARGS__("releaseLock");
-        unlock(HsmEventStatus::DONE_FAILED);
+        unlock(HsmEventStatus_t::DONE_FAILED);
         cvLock.reset();
         syncProcessed.reset();
     }
@@ -813,13 +848,13 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::Pend
         std::unique_lock<std::mutex> lck(*cvLock);
 
         __TRACE_CALL_DEBUG_ARGS__("trying to wait... (current status=%d, %p)", static_cast<int>(*transitionStatus), transitionStatus.get());
-        syncProcessed->wait(lck, [=](){return (HsmEventStatus::PENDING != *transitionStatus);});
+        syncProcessed->wait(lck, [=](){return (HsmEventStatus_t::PENDING != *transitionStatus);});
         __TRACE_DEBUG__("unlocked! transitionStatus=%d", (int)*transitionStatus);
     }
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum, class HsmHandlerClass>
-void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::PendingEventInfo::unlock(const HsmEventStatus status)
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::PendingEventInfo::unlock(const HsmEventStatus_t status)
 {
     __TRACE_CALL_DEBUG_ARGS__("try to unlock with status=%d", (int)status);
 
@@ -828,7 +863,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum, HsmHandlerClass>::Pend
         __TRACE_DEBUG__("SYNC object (%p)", transitionStatus.get());
         *transitionStatus = status;
 
-        if (status != HsmEventStatus::PENDING)
+        if (status != HsmEventStatus_t::PENDING)
         {
             syncProcessed->notify_one();
         }

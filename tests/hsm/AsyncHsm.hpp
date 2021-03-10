@@ -21,7 +21,7 @@ enum class AsyncHsmEvent
 };
 
 class AsyncHsm: public testing::Test
-              , public HierarchicalStateMachine<AsyncHsmState, AsyncHsmEvent, AsyncHsm>
+              , public HierarchicalStateMachine<AsyncHsmState, AsyncHsmEvent>
 {
 public:
     AsyncHsm();

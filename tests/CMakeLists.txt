@@ -18,22 +18,22 @@ PRIVATE
 )
 
 # ================================================
-# SOURCE CODE (Dispatcher: GLib)
-set(TEST_BIN_GLIB ${TEST_BIN_NAME_TEMPLATE}GLib)
+# SOURCE CODE (Dispatcher: GLibmm)
+set(TEST_BIN_GLIBMM ${TEST_BIN_NAME_TEMPLATE}GLibmm)
 
-set(SRC_UNITTESTS_GLIB mainGLib.cpp
-                       01_states.cpp
-                       02_substates.cpp
-                       03_transitions.cpp
-                       04_multithreaded.cpp
-                       05_callbacks.cpp
-                       ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp
-                       ${CMAKE_CURRENT_SOURCE_DIR}/hsm/ABCHsm.cpp
-                       ${CMAKE_CURRENT_SOURCE_DIR}/hsm/AsyncHsm.cpp
+set(SRC_UNITTESTS_GLIBMM mainGLibmm.cpp
+                         01_states.cpp
+                         02_substates.cpp
+                         03_transitions.cpp
+                         04_multithreaded.cpp
+                         05_callbacks.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/hsm/ABCHsm.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/hsm/AsyncHsm.cpp
 )
 
-add_executable(${TEST_BIN_GLIB} ${SRC_UNITTESTS_GLIB})
-target_compile_definitions(${TEST_BIN_GLIB} PUBLIC -DTEST_HSM_GLIB)
+add_executable(${TEST_BIN_GLIBMM} ${SRC_UNITTESTS_GLIBMM})
+target_compile_definitions(${TEST_BIN_GLIBMM} PUBLIC -DTEST_HSM_GLIBMM)
 
 # ================================================
 # SOURCE CODE (Dispatcher: STD)
@@ -55,7 +55,7 @@ target_compile_definitions(${TEST_BIN_STD} PUBLIC -DTEST_HSM_STD)
 
 # ================================================
 # LIBRARIES
-target_link_libraries(${TEST_BIN_GLIB}
+target_link_libraries(${TEST_BIN_GLIBMM}
 PUBLIC
     ${GLIB_LDFLAGS}
     ${GLIBMM_LDFLAGS}

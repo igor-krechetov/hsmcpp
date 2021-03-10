@@ -1,0 +1,13 @@
+@startuml
+
+[*] --> StateA
+StateA --> ParentState: EVENT_1
+ParentState --> StateA: EVENT_CANCEL
+
+state ParentState {
+    [*] --> StateB
+    StateB -right-> StateC: EVENT_2
+    StateC -left-> StateB: EVENT_3
+}
+
+@enduml

@@ -6,26 +6,26 @@ TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState(AsyncHsmState::A, this, &AsyncHsm::onStateChanged, nullptr, &AsyncHsm::onExit);
-    registerState(AsyncHsmState::B, this, &AsyncHsm::onStateChanged, nullptr, nullptr);
-    registerState(AsyncHsmState::C, this, &AsyncHsm::onStateChanged, nullptr, nullptr);
+    registerState<AsyncHsm>(AsyncHsmState::A, this, &AsyncHsm::onStateChanged, nullptr, &AsyncHsm::onExit);
+    registerState<AsyncHsm>(AsyncHsmState::B, this, &AsyncHsm::onStateChanged);
+    registerState<AsyncHsm>(AsyncHsmState::C, this, &AsyncHsm::onStateChanged);
 
     ASSERT_TRUE(registerSubstate(AsyncHsmState::P1, AsyncHsmState::B, true));
 
-    registerTransition(AsyncHsmState::A, AsyncHsmState::P1, AsyncHsmEvent::NEXT_STATE, nullptr, nullptr);
-    registerTransition(AsyncHsmState::P1, AsyncHsmState::C, AsyncHsmEvent::EXIT_SUBSTATE, nullptr, nullptr);
-    registerTransition(AsyncHsmState::C, AsyncHsmState::A, AsyncHsmEvent::NEXT_STATE, nullptr, nullptr);
+    registerTransition(AsyncHsmState::A, AsyncHsmState::P1, AsyncHsmEvent::NEXT_STATE);
+    registerTransition(AsyncHsmState::P1, AsyncHsmState::C, AsyncHsmEvent::EXIT_SUBSTATE);
+    registerTransition(AsyncHsmState::C, AsyncHsmState::A, AsyncHsmEvent::NEXT_STATE);
 
     ASSERT_EQ(getCurrentState(), AsyncHsmState::A);
 
     //-------------------------------------------
     // ACTIONS
     // this should trigger A -> [P1 -> B]
-    ASSERT_TRUE(transitionEx(AsyncHsmEvent::NEXT_STATE, false, false));
+    transition(AsyncHsmEvent::NEXT_STATE);
     waitAsyncOperation(200);// wait for A::onExit
 
     // send new event with clearQueue=TRUE
-    ASSERT_TRUE(transitionEx(AsyncHsmEvent::EXIT_SUBSTATE, true, false));
+    transitionWithQueueClear(AsyncHsmEvent::EXIT_SUBSTATE);
 
     unblockNextStep();// allow A::onExit to continue
     waitAsyncOperation(200);// wait for B::onStateChanged

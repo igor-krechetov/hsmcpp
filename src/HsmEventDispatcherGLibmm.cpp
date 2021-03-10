@@ -1,24 +1,24 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for detail
 
-#include "HsmEventDispatcherGLib.hpp"
+#include "HsmEventDispatcherGLibmm.hpp"
 
-HsmEventDispatcherGLib::HsmEventDispatcherGLib()
+HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm()
     : mDispatcher(std::make_shared<Glib::Dispatcher>())
 {
 }
 
-HsmEventDispatcherGLib::HsmEventDispatcherGLib(const Glib::RefPtr<Glib::MainContext>& context)
+HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context)
     : mDispatcher(std::make_shared<Glib::Dispatcher>(context))
 {
 }
 
-HsmEventDispatcherGLib::~HsmEventDispatcherGLib()
+HsmEventDispatcherGLibmm::~HsmEventDispatcherGLibmm()
 {
     unregisterAllEventHandlers();
 }
 
-int HsmEventDispatcherGLib::registerEventHandler(std::function<void(void)> handler)
+int HsmEventDispatcherGLibmm::registerEventHandler(std::function<void(void)> handler)
 {
     int id = INVALID_HSM_DISPATCHER_HANDLER_ID;
 
@@ -31,7 +31,7 @@ int HsmEventDispatcherGLib::registerEventHandler(std::function<void(void)> handl
     return id;
 }
 
-void HsmEventDispatcherGLib::unregisterEventHandler(const int handlerId)
+void HsmEventDispatcherGLibmm::unregisterEventHandler(const int handlerId)
 {
     auto it = mEventHandlers.find(handlerId);
 
@@ -42,7 +42,7 @@ void HsmEventDispatcherGLib::unregisterEventHandler(const int handlerId)
     }
 }
 
-void HsmEventDispatcherGLib::emit()
+void HsmEventDispatcherGLibmm::emit()
 {
     if (mDispatcher)
     {
@@ -50,7 +50,7 @@ void HsmEventDispatcherGLib::emit()
     }
 }
 
-bool HsmEventDispatcherGLib::start()
+bool HsmEventDispatcherGLibmm::start()
 {
     // NOTE: in case of GLib based dispatcher implementation it's expected
     //       that application will run GLib MainLoop in it's own code.
@@ -58,7 +58,7 @@ bool HsmEventDispatcherGLib::start()
     return true;
 }
 
-void HsmEventDispatcherGLib::unregisterAllEventHandlers()
+void HsmEventDispatcherGLibmm::unregisterAllEventHandlers()
 {
     for (auto it = mEventHandlers.begin(); it != mEventHandlers.end(); ++it)
     {

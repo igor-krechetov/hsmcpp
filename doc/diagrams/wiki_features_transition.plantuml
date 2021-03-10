@@ -1,0 +1,6 @@
+@startuml
+
+[*] --> StateA
+StateA -right-> StateB: EVENT_1\n[event_1_condition]\n<on_event_1_transition>
+
+@enduml

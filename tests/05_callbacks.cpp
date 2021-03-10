@@ -6,14 +6,14 @@ TEST_F(ABCHsm, callbacks_class_pointers)
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState(AbcState::A, this, nullptr, nullptr, &ABCHsm::onAExit);
-    registerState(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, nullptr);
+    registerState<ABCHsm>(AbcState::A, this, nullptr, nullptr, &ABCHsm::onAExit);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, nullptr);
 
-    registerTransition(AbcState::A, AbcState::B, AbcEvent::E1, this, &ABCHsm::onE1Transition, &ABCHsm::conditionTrue);
+    registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1, this, &ABCHsm::onE1Transition, &ABCHsm::conditionTrue);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true, "test", 7));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY, "test", 7));
 
     //-------------------------------------------
     // VALIDATION
@@ -66,7 +66,7 @@ TEST_F(ABCHsm, callbacks_lambdas)
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true, "test", 7));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY, "test", 7));
 
     //-------------------------------------------
     // VALIDATION

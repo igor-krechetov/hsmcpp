@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.4.2] - 2021-03-10
+### Add
+- add timeout to sync transitions
+- add transitionSync() API for convenience
+### Updated
+- remove HsmHandlerClass from HierarchicalStateMachine class template parameters
+- renamed HsmEventDispatcherGLib -> HsmEventDispatcherGLibmm
+
 ## [0.4.1] - 2021-03-08
 ### Updated
 - thread safety for HSM

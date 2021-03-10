@@ -1,0 +1,26 @@
+@startuml
+
+(*) --> "find transition"
+--> "event_1_condition"
+if "" then
+  --> [true] "on_exiting_a"
+  --> "on_event_1_transition"
+  if "" then
+    --> [true] "on_entering_b"
+    if "" then
+      --> [true] "on_state_changed_b"
+      --> (*)
+    else
+      --> [false] "on_entering_a"
+      --> "on_state_changed_a"
+      --> "cancel transition"
+      --> (*)
+    endif
+  else
+    --> [false] "cancel transition"
+  endif
+else
+  --> [false] "cancel transition"
+endif
+
+@enduml

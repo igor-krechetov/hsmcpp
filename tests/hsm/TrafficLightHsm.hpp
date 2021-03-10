@@ -24,7 +24,7 @@ enum class TrafficLightEvent
 };
 
 class TrafficLightHsm: public testing::Test
-                     , public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent, TrafficLightHsm>
+                     , public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent>
 {
 public:
     TrafficLightHsm();

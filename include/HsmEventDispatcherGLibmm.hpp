@@ -1,20 +1,20 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for detail
 
-#ifndef __HSMCPP_HSMEVENTDISPATCHERGLIB_HPP__
-#define __HSMCPP_HSMEVENTDISPATCHERGLIB_HPP__
+#ifndef __HSMCPP_HSMEVENTDISPATCHERGLIBMM_HPP__
+#define __HSMCPP_HSMEVENTDISPATCHERGLIBMM_HPP__
 
 #include "HsmEventDispatcherBase.hpp"
 #include <glibmm.h>
 #include <memory>
 #include <map>
 
-class HsmEventDispatcherGLib: public HsmEventDispatcherBase
+class HsmEventDispatcherGLibmm: public HsmEventDispatcherBase
 {
 public:
-    HsmEventDispatcherGLib();
-    HsmEventDispatcherGLib(const Glib::RefPtr<Glib::MainContext>& context);
-    virtual ~HsmEventDispatcherGLib();
+    HsmEventDispatcherGLibmm();
+    HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context);
+    virtual ~HsmEventDispatcherGLibmm();
 
     virtual int registerEventHandler(std::function<void(void)> handler) override;
     virtual void unregisterEventHandler(const int handlerId) override;
@@ -30,4 +30,4 @@ private:
     std::map<int, sigc::connection> mEventHandlers;
 };
 
-#endif // __HSMCPP_HSMEVENTDISPATCHERGLIB_HPP__
+#endif // __HSMCPP_HSMEVENTDISPATCHERGLIBMM_HPP__

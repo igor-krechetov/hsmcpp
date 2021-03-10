@@ -72,7 +72,7 @@ if (DISPATCHER_GLIB)
     add_definitions(-DHSM_BUILD_DISPATCHER_GLIB)
 
     file (GLOB SRC_LIBRARY ${SRC_LIBRARY}
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLib.cpp)
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLibmm.cpp)
 endif()
 
 if (DISPATCHER_STD)

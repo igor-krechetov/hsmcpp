@@ -7,18 +7,18 @@ TEST_F(ABCHsm, substate_entrypoint)
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState(AbcState::A, this, &ABCHsm::onA, nullptr, nullptr);
-    registerState(AbcState::B, this, &ABCHsm::onB, nullptr, nullptr);
-    registerState(AbcState::C, this, &ABCHsm::onC, nullptr, nullptr);
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
     EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::B, true) );
     EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::C) );
 
-    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1, nullptr, nullptr);
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
 
     //-------------------------------------------
     // VALIDATION
@@ -32,20 +32,20 @@ TEST_F(ABCHsm, substate_entrypoint_substate)
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState(AbcState::A, this, &ABCHsm::onA, nullptr, nullptr);
-    registerState(AbcState::B, this, &ABCHsm::onB, nullptr, nullptr);
-    registerState(AbcState::C, this, &ABCHsm::onC, nullptr, nullptr);
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
     EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::P2, true) );
     EXPECT_TRUE( registerSubstate(AbcState::P2, AbcState::P3, true) );
     EXPECT_TRUE( registerSubstate(AbcState::P3, AbcState::B, true) );
     EXPECT_TRUE( registerSubstate(AbcState::P3, AbcState::C) );
 
-    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1, nullptr, nullptr);
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
 
     //-------------------------------------------
     // VALIDATION
@@ -64,14 +64,14 @@ TEST_F(TrafficLightHsm, substate_exit_single)
     // PRECONDITIONS
     setupDefault();
 
-    ASSERT_TRUE(transitionEx(TrafficLightEvent::TURN_ON, false, true));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
     ASSERT_EQ(getCurrentState(), TrafficLightState::STARTING);
-    ASSERT_TRUE(transitionEx(TrafficLightEvent::NEXT_STATE, false, true));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
     ASSERT_EQ(getCurrentState(), TrafficLightState::RED);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionEx(TrafficLightEvent::TURN_OFF, false, true));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_OFF, HSM_WAIT_INDEFINITELY));
 
     //-------------------------------------------
     // VALIDATION
@@ -88,10 +88,10 @@ TEST_F(ABCHsm, substate_exit_multiple_layers)
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState(AbcState::A, this, &ABCHsm::onA, nullptr, nullptr);
-    registerState(AbcState::B, this, &ABCHsm::onB, nullptr, nullptr);
-    registerState(AbcState::C, this, &ABCHsm::onC, nullptr, nullptr);
-    registerState(AbcState::D, this, &ABCHsm::onD, nullptr, nullptr);
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
+    registerState<ABCHsm>(AbcState::D, this, &ABCHsm::onD);
 
     EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::B, true) );
     EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::P2) );
@@ -99,23 +99,23 @@ TEST_F(ABCHsm, substate_exit_multiple_layers)
     EXPECT_TRUE( registerSubstate(AbcState::P2, AbcState::P3) );
     EXPECT_TRUE( registerSubstate(AbcState::P3, AbcState::D, true) );
 
-    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1, nullptr, nullptr);
-    registerTransition(AbcState::B, AbcState::P2, AbcEvent::E1, nullptr, nullptr);
-    registerTransition(AbcState::C, AbcState::P3, AbcEvent::E1, nullptr, nullptr);
-    registerTransition(AbcState::P1, AbcState::A, AbcEvent::E2, nullptr, nullptr);
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::B, AbcState::P2, AbcEvent::E1);
+    registerTransition(AbcState::C, AbcState::P3, AbcEvent::E1);
+    registerTransition(AbcState::P1, AbcState::A, AbcEvent::E2);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
     ASSERT_EQ(getCurrentState(), AbcState::B);
 
-    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
     ASSERT_EQ(getCurrentState(), AbcState::C);
 
-    ASSERT_TRUE(transitionEx(AbcEvent::E1, false, true));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
     ASSERT_EQ(getCurrentState(), AbcState::D);
 
-    ASSERT_TRUE(transitionEx(AbcEvent::E2, false, true));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
 
     //-------------------------------------------
     // VALIDATION
@@ -133,9 +133,9 @@ TEST_F(ABCHsm, substate_safe_registration)
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState(AbcState::A, this, &ABCHsm::onA, nullptr, nullptr);
-    registerState(AbcState::B, this, &ABCHsm::onB, nullptr, nullptr);
-    registerState(AbcState::C, this, &ABCHsm::onC, nullptr, nullptr);
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
     EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::A, true) );
 

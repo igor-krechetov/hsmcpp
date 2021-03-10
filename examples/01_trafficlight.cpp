@@ -2,7 +2,7 @@
 #include <thread>
 #include <unistd.h>
 #include "logging.hpp"
-#include "HsmEventDispatcherGLib.hpp"
+#include "HsmEventDispatcherGLibmm.hpp"
 #include "HsmEventDispatcherSTD.hpp"
 
 #undef __TRACE_CLASS__
@@ -26,18 +26,18 @@ enum class TrafficLightEvent
     NEXT_STATE
 };
 
-class TrafficLight: public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent, TrafficLight>
+class TrafficLight: public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent>
 {
 public:
     TrafficLight() : HierarchicalStateMachine(TrafficLightState::OFF)
     {
         initialize(std::make_shared<HsmEventDispatcherSTD>());
 
-        registerState(TrafficLightState::OFF, this, &TrafficLight::onOff, nullptr, nullptr);
-        registerState(TrafficLightState::STARTING, this, &TrafficLight::onStarting, nullptr, nullptr);
-        registerState(TrafficLightState::RED, this, &TrafficLight::onRed, nullptr, nullptr);
-        registerState(TrafficLightState::YELLOW, this, &TrafficLight::onYellow, nullptr, nullptr);
-        registerState(TrafficLightState::GREEN, this, &TrafficLight::onGreen, nullptr, nullptr);
+        registerState<TrafficLight>(TrafficLightState::OFF, this, &TrafficLight::onOff, nullptr, nullptr);
+        registerState<TrafficLight>(TrafficLightState::STARTING, this, &TrafficLight::onStarting, nullptr, nullptr);
+        registerState<TrafficLight>(TrafficLightState::RED, this, &TrafficLight::onRed, nullptr, nullptr);
+        registerState<TrafficLight>(TrafficLightState::YELLOW, this, &TrafficLight::onYellow, nullptr, nullptr);
+        registerState<TrafficLight>(TrafficLightState::GREEN, this, &TrafficLight::onGreen, nullptr, nullptr);
 
         registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, nullptr, nullptr);
         registerTransition(TrafficLightState::STARTING, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE, this, &TrafficLight::onNextStateTransition);
@@ -105,7 +105,7 @@ void simulateSync1()
         bool status;
 
         printf("[T1] BEFORE transition\n");
-        status = tl->transitionEx(TrafficLightEvent::NEXT_STATE, true, true, 1, index);
+        status = tl->transitionEx(TrafficLightEvent::NEXT_STATE, true, true, HSM_WAIT_INDEFINITELY, 1, index);
         printf("[T1] AFTER transition: %d\n", (int)status);
         index++;
         sleep(3);
@@ -128,7 +128,7 @@ void simulateSync2()
         bool status;
 
         printf("[T2] BEFORE transition\n");
-        status = tl->transitionEx(TrafficLightEvent::NEXT_STATE, true, true, 2, index);
+        status = tl->transitionEx(TrafficLightEvent::NEXT_STATE, true, true, HSM_WAIT_INDEFINITELY, 2, index);
         printf("[T2] AFTER transition: %d\n", (int)status);
         index++;
         sleep(3);

@@ -16,7 +16,7 @@ enum class AbcEvent
 };
 
 class ABCHsm: public testing::Test
-            , public HierarchicalStateMachine<AbcState, AbcEvent, ABCHsm>
+            , public HierarchicalStateMachine<AbcState, AbcEvent>
 {
 public:
     ABCHsm();

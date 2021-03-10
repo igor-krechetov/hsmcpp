@@ -35,10 +35,10 @@ using ::testing::_;
 
 // ======================================================
 // HSM initialization
-#if defined(TEST_HSM_GLIB)
-    #include "HsmEventDispatcherGLib.hpp"
+#if defined(TEST_HSM_GLIBMM)
+    #include "HsmEventDispatcherGLibmm.hpp"
 
-    #define INITIALIZE_HSM()              ASSERT_TRUE(initialize(std::make_shared<HsmEventDispatcherGLib>()));
+    #define INITIALIZE_HSM()              ASSERT_TRUE(initialize(std::make_shared<HsmEventDispatcherGLibmm>()));
 #elif defined(TEST_HSM_STD)
     #include "HsmEventDispatcherSTD.hpp"
     #define INITIALIZE_HSM()              ASSERT_TRUE(initialize(std::make_shared<HsmEventDispatcherSTD>()));

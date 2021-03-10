@@ -1,0 +1,9 @@
+@startuml
+
+StateA : -> on_entering_a
+StateA : on_state_changed_a
+StateA : <- on_exiting_a
+
+[*] --> StateA
+
+@enduml

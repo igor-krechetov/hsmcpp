@@ -1,5 +1,5 @@
 #include "TrafficLightHsm.hpp"
-#include "HsmEventDispatcherGLib.hpp"
+#include "HsmEventDispatcherGLibmm.hpp"
 
 TrafficLightHsm::TrafficLightHsm() : HierarchicalStateMachine(TrafficLightState::OFF)
 {
@@ -10,11 +10,11 @@ TrafficLightHsm::~TrafficLightHsm()
 
 void TrafficLightHsm::setupDefault()
 {
-    registerState(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, nullptr, nullptr);
-    registerState(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, nullptr, nullptr);
-    registerState(TrafficLightState::RED, this, &TrafficLightHsm::onRed, nullptr, nullptr);
-    registerState(TrafficLightState::YELLOW, this, &TrafficLightHsm::onYellow, nullptr, nullptr);
-    registerState(TrafficLightState::GREEN, this, &TrafficLightHsm::onGreen, nullptr, nullptr);
+    registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, nullptr, nullptr);
+    registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, nullptr, nullptr);
+    registerState<TrafficLightHsm>(TrafficLightState::RED, this, &TrafficLightHsm::onRed, nullptr, nullptr);
+    registerState<TrafficLightHsm>(TrafficLightState::YELLOW, this, &TrafficLightHsm::onYellow, nullptr, nullptr);
+    registerState<TrafficLightHsm>(TrafficLightState::GREEN, this, &TrafficLightHsm::onGreen, nullptr, nullptr);
 
     ASSERT_TRUE(registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::RED, true));
     ASSERT_TRUE(registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::YELLOW));

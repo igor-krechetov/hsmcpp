@@ -1,0 +1,21 @@
+@startuml
+
+StateA : -> on_entering_a
+StateA : on_state_changed_a
+StateA : <- on_exiting_a
+
+StateB : -> on_entering_b
+StateB : on_state_changed_b
+StateB : <- on_exiting_b
+
+StateC : -> on_entering_c
+StateC : on_state_changed_c
+StateC : <- on_exiting_c
+
+[*] --> StateA
+StateA -down-> StateB: EVENT_1\n[event_1_condition]\n<on_event_1_transition>
+StateB -right-> StateC: EVENT_2
+StateC -left-> StateB: EVENT_3
+StateC -up-> StateA: EVENT_4
+
+@enduml

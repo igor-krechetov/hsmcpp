@@ -1,6 +1,6 @@
 #include "AsyncHsm.hpp"
 #include "logging.hpp"
-#include "HsmEventDispatcherGLib.hpp"
+#include "HsmEventDispatcherGLibmm.hpp"
 #include <chrono>
 
 #undef __TRACE_CLASS__

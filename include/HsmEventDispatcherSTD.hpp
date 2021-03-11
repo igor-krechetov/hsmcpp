@@ -26,7 +26,7 @@ public:
     virtual bool start() override;
 
 protected:
-    virtual void unregisterAllEventHandlers() override;
+    void unregisterAllEventHandlers();
     void doDispatching();
 
 private:

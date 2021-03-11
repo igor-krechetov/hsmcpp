@@ -98,7 +98,7 @@ private:
     };
 
 public:
-    HierarchicalStateMachine(const HsmStateEnum initialState);
+    explicit HierarchicalStateMachine(const HsmStateEnum initialState);
     virtual ~HierarchicalStateMachine();
 
     bool initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
@@ -643,15 +643,13 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getParentState(const 
                                                                           HsmStateEnum& outParent)
 {
     bool wasFound = false;
+    auto it = std::find_if(mSubstates.begin(), mSubstates.end(),
+                          [child](const auto& itemIt){ return (child == itemIt.second); });
 
-    for (auto it : mSubstates)
+    if (mSubstates.end() != it)
     {
-        if (child == it.second)
-        {
-            outParent = it.first;
-            wasFound = true;
-            break;
-        }
+        outParent = it->first;
+        wasFound = true;
     }
 
     return wasFound;

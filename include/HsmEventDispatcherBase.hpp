@@ -13,8 +13,6 @@ public:
 
 protected:
     virtual int getNextHandlerID();
-    // For internal usage. Must be called in destructor by all dispatchers.
-    virtual void unregisterAllEventHandlers() = 0;
 
 private:
     int mNextHandlerId = 1;

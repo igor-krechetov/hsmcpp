@@ -13,7 +13,7 @@ class HsmEventDispatcherGLibmm: public HsmEventDispatcherBase
 {
 public:
     HsmEventDispatcherGLibmm();
-    HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context);
+    explicit HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context);
     virtual ~HsmEventDispatcherGLibmm();
 
     virtual int registerEventHandler(std::function<void(void)> handler) override;
@@ -23,7 +23,7 @@ public:
     virtual bool start() override;
 
 protected:
-    virtual void unregisterAllEventHandlers() override;
+    void unregisterAllEventHandlers();
 
 private:
     std::shared_ptr<Glib::Dispatcher> mDispatcher;

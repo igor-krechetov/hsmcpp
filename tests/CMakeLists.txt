@@ -18,61 +18,65 @@ PRIVATE
 )
 
 # ================================================
-# SOURCE CODE (Dispatcher: GLibmm)
-set(TEST_BIN_GLIBMM ${TEST_BIN_NAME_TEMPLATE}GLibmm)
-
-set(SRC_UNITTESTS_GLIBMM mainGLibmm.cpp
-                         01_states.cpp
+# COMMON SOURCE CODE
+set(SRC_UNITTESTS_COMMON 01_states.cpp
                          02_substates.cpp
                          03_transitions.cpp
                          04_multithreaded.cpp
                          05_callbacks.cpp
+                         06_dispatchers.cpp
+                         TestsCommon.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/ABCHsm.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/AsyncHsm.cpp
 )
 
-add_executable(${TEST_BIN_GLIBMM} ${SRC_UNITTESTS_GLIBMM})
+# ================================================
+# SOURCE CODE (Dispatcher: GLib)
+set(TEST_BIN_GLIB ${TEST_BIN_NAME_TEMPLATE}GLib)
+
+add_executable(${TEST_BIN_GLIB} mainGLib.cpp ${SRC_UNITTESTS_COMMON})
+target_compile_definitions(${TEST_BIN_GLIB} PUBLIC -DTEST_HSM_GLIB)
+
+# ================================================
+# SOURCE CODE (Dispatcher: GLibmm)
+set(TEST_BIN_GLIBMM ${TEST_BIN_NAME_TEMPLATE}GLibmm)
+
+add_executable(${TEST_BIN_GLIBMM} mainGLibmm.cpp ${SRC_UNITTESTS_COMMON})
 target_compile_definitions(${TEST_BIN_GLIBMM} PUBLIC -DTEST_HSM_GLIBMM)
 
 # ================================================
 # SOURCE CODE (Dispatcher: STD)
 set(TEST_BIN_STD ${TEST_BIN_NAME_TEMPLATE}STD)
 
-set(SRC_UNITTESTS_STD mainSTD.cpp
-                      01_states.cpp
-                      02_substates.cpp
-                      03_transitions.cpp
-                      04_multithreaded.cpp
-                      05_callbacks.cpp
-                      ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp
-                      ${CMAKE_CURRENT_SOURCE_DIR}/hsm/ABCHsm.cpp
-                      ${CMAKE_CURRENT_SOURCE_DIR}/hsm/AsyncHsm.cpp
-)
-
-add_executable(${TEST_BIN_STD} ${SRC_UNITTESTS_STD})
+add_executable(${TEST_BIN_STD} mainSTD.cpp ${SRC_UNITTESTS_COMMON})
 target_compile_definitions(${TEST_BIN_STD} PUBLIC -DTEST_HSM_STD)
 
 # ================================================
 # LIBRARIES
-target_link_libraries(${TEST_BIN_GLIBMM}
-PUBLIC
-    ${GLIB_LDFLAGS}
-    ${GLIBMM_LDFLAGS}
-    ${GTEST_LDFLAGS}
-    ${GMOCK_LDFLAGS}
-    rt
+target_link_libraries(${TEST_BIN_GLIB}
 PRIVATE
     ${HSM_LIBRARY_NAME}
+PUBLIC
+    ${GLIBMM_LDFLAGS}
+    ${GMOCK_LDFLAGS}
+    rt
+)
+
+target_link_libraries(${TEST_BIN_GLIBMM}
+PRIVATE
+    ${HSM_LIBRARY_NAME}
+PUBLIC
+    ${GLIBMM_LDFLAGS}
+    ${GMOCK_LDFLAGS}
+    rt
 )
 
 target_link_libraries(${TEST_BIN_STD}
-PUBLIC
-    ${GLIB_LDFLAGS}
-    ${GLIBMM_LDFLAGS}
-    ${GTEST_LDFLAGS}
-    ${GMOCK_LDFLAGS}
-    rt
 PRIVATE
     ${HSM_LIBRARY_NAME}
+PUBLIC
+    ${GLIBMM_LDFLAGS}
+    ${GMOCK_LDFLAGS}
+    rt
 )

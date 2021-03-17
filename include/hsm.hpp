@@ -19,12 +19,12 @@
 // If defined, HSM will performe safety checks during states and substates registration.
 // Normally HSM structure should be static, so this feature is usefull only
 // during development since it reduces performance a bit
-// #define HSM_ENABLE_SAFE_STRUCTURE               1
+// #define HSM_ENABLE_SAFE_STRUCTURE                    1
 
 // Thread safety is enabled by default, but it adds some overhead related with mutex usage.
 // If performance is critical and it's ensured that HSM is used only from a single thread,
 // then synchronization could be disabled during compilation.
-// #define HSM_DISABLE_THREADSAFETY                    1
+// #define HSM_DISABLE_THREADSAFETY                     1
 
 #ifdef HSM_DISABLE_THREADSAFETY
   #define _HSM_SYNC_EVENTS_QUEUE()
@@ -37,12 +37,12 @@
 
 #define HSM_WAIT_INDEFINITELY                   (0)
 
+typedef std::vector<Variant> VariantList_t;
+
 template <typename HsmStateEnum, typename HsmEventEnum>
 class HierarchicalStateMachine
 {
 public:
-    typedef std::vector<Variant> VariantList_t;
-
     typedef std::function<void(const VariantList_t&)> HsmTransitionCallback_t;
     typedef std::function<bool(const VariantList_t&)> HsmTransitionConditionCallback_t;
     typedef std::function<void(const VariantList_t&)> HsmStateChangedCallback_t;
@@ -99,11 +99,21 @@ private:
 
 public:
     explicit HierarchicalStateMachine(const HsmStateEnum initialState);
+    // Uses unregisterEventHandler from Dispatcher. Usually HSM has to be destroyed from the same thread it was created.
     virtual ~HierarchicalStateMachine();
 
+    // Uses registerEventHandler from Dispatcher. Usually must be called from the same thread where dispatcher was created.
     bool initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
 
-    // if state has substates its callbacks will be ignored
+    // Releases dispatcher and resets all internal resources. HSM cant be reused after calling this API.
+    // Must be called on the same thread as initialize()
+    //
+    // NOTE: Usually you dont need to call this function directly. The only scenario when it's needed is
+    //       for multithreaded environment where it's impossible to delete HSM on the same thread where it was initialized.
+    //       Then you must call release() on the Dispatcher's thread before deleting HSM instance on another thread.
+    void release();
+
+    // If state has substates its callbacks will be ignored
     template <class HsmHandlerClass>
     void registerState(const HsmStateEnum state,
                        HsmHandlerClass* handler = nullptr,
@@ -193,6 +203,7 @@ private:
     std::list<PendingEventInfo> mPendingEvents;
     std::shared_ptr<IHsmEventDispatcher> mDispatcher;
     int mDispatcherHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
+    bool mStopDispatching = false;
 
 #ifdef HSM_ENABLE_SAFE_STRUCTURE
     std::list<HsmStateEnum> mTopLevelStates; // list of states which are not substates and dont have substates of their own
@@ -215,12 +226,7 @@ HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::HierarchicalStateMachine(c
 template <typename HsmStateEnum, typename HsmEventEnum>
 HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::~HierarchicalStateMachine()
 {
-    __TRACE_CALL_DEBUG__();
-    if (mDispatcher)
-    {
-        mDispatcher->unregisterEventHandler(mDispatcherHandlerId);
-        mDispatcherHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
-    }
+    release();
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -250,6 +256,20 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::initialize(const std:
     }
 
     return result;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::release()
+{
+    mStopDispatching = true;
+    __TRACE_CALL_DEBUG__();
+
+    if (mDispatcher)
+    {
+        mDispatcher->unregisterEventHandler(mDispatcherHandlerId);
+        mDispatcher.reset();
+        mDispatcherHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
+    }
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -506,7 +526,7 @@ template <typename... Args>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionWithQueueClear(const HsmEventEnum event,
                                                                                     Args... args)
 {
-    __TRACE_CALL_DEBUG_ARGS__("event=%d", static_cast<HsmEventEnum>(event));
+    __TRACE_CALL_DEBUG_ARGS__("event=%d", static_cast<int>(event));
 
     transitionEx(event, true, false, 0, args...);
 }
@@ -516,7 +536,7 @@ template <typename... Args>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(const HsmEventEnum event,
                                                                                 Args... args)
 {
-    __TRACE_CALL_DEBUG_ARGS__("event=%d", static_cast<HsmEventEnum>(event));
+    __TRACE_CALL_DEBUG_ARGS__("event=%d", static_cast<int>(event));
 
     HsmStateEnum stateFrom = mCurrentState;
     TransitionInfo possibleTransition;
@@ -566,29 +586,29 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchEvents()
 {
     __TRACE_CALL_DEBUG_ARGS__("dispatchEvents: mPendingEvents.size()=%ld", mPendingEvents.size());
 
-    if (false == mPendingEvents.empty())
+    if (false == mStopDispatching)
     {
-        PendingEventInfo pendingEvent;
-
+        if (false == mPendingEvents.empty())
         {
-            _HSM_SYNC_EVENTS_QUEUE();
-            pendingEvent = mPendingEvents.front();
+            PendingEventInfo pendingEvent;
 
-            mPendingEvents.pop_front();
+            {
+                _HSM_SYNC_EVENTS_QUEUE();
+                pendingEvent = mPendingEvents.front();
+
+                mPendingEvents.pop_front();
+            }
+
+            HsmEventStatus_t transitiontStatus = doTransition(pendingEvent);
+
+            __TRACE_DEBUG__("dispatchEvents: unlock with status %d", static_cast<int>(transitiontStatus));
+            pendingEvent.unlock(transitiontStatus);
         }
 
-        HsmEventStatus_t transitiontStatus = doTransition(pendingEvent);
-
-        __TRACE_DEBUG__("dispatchEvents: unlock with status %d", static_cast<int>(transitiontStatus));
-        pendingEvent.unlock(transitiontStatus);
-    }
-
-    if (false == mPendingEvents.empty())
-    {
-        mDispatcher->emit();
-    }
-    else
-    {
+        if ((false == mStopDispatching) && (false == mPendingEvents.empty()))
+        {
+            mDispatcher->emit();
+        }
     }
 }
 

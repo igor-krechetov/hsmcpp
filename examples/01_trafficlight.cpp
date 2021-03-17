@@ -50,7 +50,7 @@ public:
     {
         if (args.size() == 2)
         {
-            printf("----> onNextStateTransition (args=%ld, thread=%d, index=%d)\n", args.size(), (int)args[0].toInt64(), (int)args[1].toInt64());
+            printf("----> onNextStateTransition (args=%d, thread=%d, index=%d)\n", (int)args.size(), (int)args[0].toInt64(), (int)args[1].toInt64());
         }
         else
         {

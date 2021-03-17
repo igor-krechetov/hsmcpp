@@ -3,6 +3,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "IHsmEventDispatcher.hpp"
 
 // ======================================================
 // GTest namespace
@@ -23,6 +24,10 @@ using ::testing::SaveArg;
 using ::testing::_;
 
 // ======================================================
+// Utility functions
+void configureGTest();
+
+// ======================================================
 #define TEST_DESCRIPTION(desc)                  RecordProperty("description", desc)
 
 #define EXPECT_EQ_IF(cond, val1, val2)          if (cond){ EXPECT_EQ((val1), (val2)); }
@@ -35,16 +40,30 @@ using ::testing::_;
 
 // ======================================================
 // HSM initialization
-#if defined(TEST_HSM_GLIBMM)
+
+// since unit tests are executed on a separate thread we need a way to create/destroy dispatchers on main thread (in a sync way)
+// this function blocks thread execution until func() is finished running on main thread.
+// implementation depends on used dispatcher
+bool executeOnMainThread(std::function<bool()> func);
+
+#if defined(TEST_HSM_GLIB)
+    #include "HsmEventDispatcherGLib.hpp"
+
+    #define CREATE_DISPATCHER()           std::make_shared<HsmEventDispatcherGLib>()
+#elif defined(TEST_HSM_GLIBMM)
     #include "HsmEventDispatcherGLibmm.hpp"
 
-    #define INITIALIZE_HSM()              ASSERT_TRUE(initialize(std::make_shared<HsmEventDispatcherGLibmm>()));
+    #define CREATE_DISPATCHER()           std::make_shared<HsmEventDispatcherGLibmm>()
 #elif defined(TEST_HSM_STD)
     #include "HsmEventDispatcherSTD.hpp"
-    #define INITIALIZE_HSM()              ASSERT_TRUE(initialize(std::make_shared<HsmEventDispatcherSTD>()));
+
+    #define CREATE_DISPATCHER()           std::make_shared<HsmEventDispatcherSTD>()
 #else
     #error HSM Dispatcher not specified
 #endif
+
+#define INITIALIZE_HSM()                  ASSERT_TRUE(executeOnMainThread([&](){ return initialize(CREATE_DISPATCHER()); }))
+#define RELEASE_HSM()                     ASSERT_TRUE(executeOnMainThread([&](){ release(); return true; }))
 
 // ======================================================
 #define DEF_EXIT_ACTION_IMPL(_state, _ret)                              \
@@ -52,7 +71,7 @@ using ::testing::_;
     bool on##_state()                                                   \
     {                                                                   \
         ++mStateCounter##_state;                                        \
-        printf("----> on" #_state "\n");                                \
+        __TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
         return (_ret);                                                  \
     }
 
@@ -62,7 +81,7 @@ using ::testing::_;
     bool on##_state(const VariantList_t& args)                          \
     {                                                                   \
         ++mStateCounter##_state;                                        \
-        printf("----> on" #_state "\n");                                \
+        __TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
         mArgs##_state = args;                                           \
         return (_ret);                                                  \
     }
@@ -73,7 +92,7 @@ using ::testing::_;
     void on##_name##Transition(const VariantList_t& args)              \
     {                                                                  \
         ++mTransitionCounter##_name;                                   \
-        printf("----> on" #_name "Transition\n");                      \
+        __TRACE_CALL_ARGS__("----> on" #_name "Transition\n");         \
         mTransitionArgs##_name = args;                                 \
     }
 
@@ -83,7 +102,7 @@ using ::testing::_;
     void on##_state(const VariantList_t& args)                          \
     {                                                                   \
         ++mStateCounter##_state;                                        \
-        printf("----> on" #_state "\n");                                \
+        __TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
         mArgs##_state = args;                                           \
     }                                                                   \
     DEF_EXIT_ACTION_IMPL(_state##Exit, true)                            \

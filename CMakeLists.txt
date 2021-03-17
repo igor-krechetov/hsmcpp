@@ -13,6 +13,7 @@ option(VERBOSE "Enable/disable HSM verbosity [feature for DEBUG]" OFF)
 option(STRUCTURE_VALIDATION "Enable/disable HSM structure validation" ON)
 option(THREAD_SAFETY "Enable/disable HSM thread safety" ON)
 option(DISPATCHER_GLIB "Enable GLib dispatcher" ON)
+option(DISPATCHER_GLIBMM "Enable GLibmm dispatcher" ON)
 option(DISPATCHER_STD "Enable std::thread based dispatcher" ON)
 option(BUILD_TESTS "Build unittets" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
@@ -23,6 +24,7 @@ message("VERBOSE = ${VERBOSE}")
 message("STRUCTURE_VALIDATION = ${STRUCTURE_VALIDATION}")
 message("THREAD_SAFETY = ${THREAD_SAFETY}")
 message("DISPATCHER_GLIB = ${DISPATCHER_GLIB}")
+message("DISPATCHER_GLIBMM = ${DISPATCHER_GLIBMM}")
 message("DISPATCHER_STD = ${DISPATCHER_STD}")
 message("BUILD_TESTS = ${BUILD_TESTS}")
 message("BUILD_EXAMPLES = ${BUILD_EXAMPLES}")
@@ -72,6 +74,14 @@ if (DISPATCHER_GLIB)
     add_definitions(-DHSM_BUILD_DISPATCHER_GLIB)
 
     file (GLOB SRC_LIBRARY ${SRC_LIBRARY}
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLib.cpp)
+endif()
+
+if (DISPATCHER_GLIBMM)
+    add_definitions(-DHSM_BUILD_DISPATCHER_GLIBMM)
+
+    file (GLOB SRC_LIBRARY ${SRC_LIBRARY}
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/dispatcher.cpp
                            ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLibmm.cpp)
 endif()
 

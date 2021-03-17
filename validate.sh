@@ -6,6 +6,7 @@ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_TESTS=on -DVERBOSE=off ..
 make -j2
 
 ./tests/hsmUnitTestsSTD
+./tests/hsmUnitTestsGLib
 ./tests/hsmUnitTestsGLibmm
 
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBUILD_TESTS=off -DVERBOSE=off ..

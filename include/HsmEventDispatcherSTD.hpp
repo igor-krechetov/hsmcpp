@@ -9,7 +9,6 @@
 #include <mutex>
 #include <thread>
 #include <memory>
-#include <atomic>
 #include <functional>
 #include <condition_variable>
 
@@ -35,9 +34,10 @@ private:
     std::condition_variable mEmitEvent;
     std::mutex mStartupSync;
     std::condition_variable mStartupEvent;
-    std::atomic<int> mPendingEmitCount;
-    std::atomic<bool> mStopDispatcher;
+    std::mutex mHandlersSync;
     std::map<int, std::function<void(void)>> mEventHandlers;
+    int mPendingEmitCount = 0;
+    bool mStopDispatcher = false;
 };
 
 #endif // __HSMCPP_HSMEVENTDISPATCHERSTD_HPP__

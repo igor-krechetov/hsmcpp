@@ -9,6 +9,18 @@
 #include <memory>
 #include <map>
 
+// NOTE: this implementation is based on Glib::Dispatcher class so it has to follow the same rules.
+//       Most important one are:
+//        * HsmEventDispatcherGLibmm must be constructred and destroyed in the receiver
+//          thread (the thread in whose main loop it will execute its connected slots)
+//        * registerEventHandler() must be called from the same thread where dispatcher was created
+//       for more details see: https://developer.gnome.org/gtkmm-tutorial/stable/sec-using-glib-dispatcher.html.en
+//
+//       Not following these rules will result in an occasional SIGSEGV crash (usually when deleting dispatcher instance).
+//
+//       Unless you really have to it's always better to reuse a single dispatcher instance for multiple HSMs instead of
+//       creating/deliting multiple ones(they will anyway handle events sequentially since they use same Glib main loop)
+
 class HsmEventDispatcherGLibmm: public HsmEventDispatcherBase
 {
 public:
@@ -26,7 +38,7 @@ protected:
     void unregisterAllEventHandlers();
 
 private:
-    std::shared_ptr<Glib::Dispatcher> mDispatcher;
+    std::unique_ptr<Glib::Dispatcher> mDispatcher;
     std::map<int, sigc::connection> mEventHandlers;
 };
 

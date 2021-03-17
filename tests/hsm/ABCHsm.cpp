@@ -5,7 +5,8 @@ ABCHsm::ABCHsm() : HierarchicalStateMachine(AbcState::A)
 }
 
 ABCHsm::~ABCHsm()
-{}
+{
+}
 
 bool ABCHsm::conditionTrue(const VariantList_t& args)
 {
@@ -21,4 +22,5 @@ void ABCHsm::SetUp()
 
 void ABCHsm::TearDown()
 {
+    RELEASE_HSM();
 }

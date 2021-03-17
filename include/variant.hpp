@@ -38,20 +38,10 @@ public:
         DOUBLE,
         BOOL,
 
-        TRISTATE,       // Triple State Type (FALSE/TRUE/INVALID)
-        SWITCHSTATE,    // Switch State Type (DEFAULT/OFF/ON/INVALID)
-
         STRING,         // std::string
 
         DICTIONARY,     // VariantDict_t
         PAIR,           // VariantPair_t
-    };
-
-    enum class TriState
-    {
-        STATE_FALSE,
-        STATE_TRUE,
-        STATE_INVALID
     };
 
     enum class SwitchState
@@ -73,8 +63,6 @@ public:
     static Variant make(const uint64_t v);
     static Variant make(const double v);
     static Variant make(const bool v);
-    static Variant make(const TriState v);
-    static Variant make(const SwitchState v);
     static Variant make(const std::string& v);
     static Variant make(const char* v);
     static Variant make(const VariantDict_t& v);
@@ -99,8 +87,6 @@ public:
     DEF_OPERATOR_ASSIGN(uint64_t, Type::UBYTE_8)
     DEF_OPERATOR_ASSIGN(double, Type::DOUBLE)
     DEF_OPERATOR_ASSIGN(bool, Type::BOOL)
-    DEF_OPERATOR_ASSIGN(TriState, Type::TRISTATE)
-    DEF_OPERATOR_ASSIGN(SwitchState, Type::SWITCHSTATE)
     DEF_OPERATOR_ASSIGN(std::string, Type::STRING)
     DEF_OPERATOR_ASSIGN(VariantDict_t, Type::DICTIONARY)
     DEF_OPERATOR_ASSIGN(VariantPair_t, Type::PAIR)
@@ -139,6 +125,8 @@ public:
 
 private:
     Variant(void* d, const Type t);
+
+    bool isSameObject(const Variant& val) const;
 
     template <typename T>
     void assign(const T& v, const Type t)

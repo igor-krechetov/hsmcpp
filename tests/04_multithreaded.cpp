@@ -1,4 +1,5 @@
 #include "hsm/AsyncHsm.hpp"
+#include "hsm/ABCHsm.hpp"
 
 TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
 {
@@ -37,11 +38,31 @@ TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
     waitAsyncOperation(200);// wait for C::onStateChanged
     ASSERT_EQ(getCurrentState(), AsyncHsmState::C);
     unblockNextStep();// allow C::onStateChanged to continue
-    usleep(200 * 1000);// ugly, but we need to let HSM to return controll to main loop
-    // otherwise gTest will free resources while we are still inside HSM handler
 
     //-------------------------------------------
     // VALIDATION
     EXPECT_EQ(getCurrentState(), AsyncHsmState::C);
+}
 
+TEST_F(ABCHsm, multithreaded_deleting_running_dispatcher)
+{
+    TEST_DESCRIPTION("");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+
+    registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
+    registerTransition(AbcState::B, AbcState::A, AbcEvent::E1);
+
+    //-------------------------------------------
+    // ACTIONS
+    for (int i = 0; i < 100; ++i)
+    {
+        transition(AbcEvent::E1);
+    }
+
+    //-------------------------------------------
+    // VALIDATION
 }

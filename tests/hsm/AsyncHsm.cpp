@@ -24,6 +24,7 @@ void AsyncHsm::TearDown()
     __TRACE_CALL_DEBUG_ARGS__("----> TearDown AsyncHsm");
     mSyncVariable.notify_all();
     mBlockNextStep.notify_all();
+    RELEASE_HSM();
 }
 
 bool AsyncHsm::onExit()

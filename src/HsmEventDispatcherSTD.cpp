@@ -8,8 +8,6 @@
 #define __TRACE_CLASS__                         "HsmEventDispatcherSTD"
 
 HsmEventDispatcherSTD::HsmEventDispatcherSTD()
-    : mPendingEmitCount(0)
-    , mStopDispatcher(false)
 {
 }
 
@@ -17,14 +15,14 @@ HsmEventDispatcherSTD::~HsmEventDispatcherSTD()
 {
     __TRACE_CALL_DEBUG__();
 
+    unregisterAllEventHandlers();
+
     if (true == mDispatcherThread.joinable())
     {
         mStopDispatcher = true;
-        mEmitEvent.notify_one();
+        mEmitEvent.notify_all();
         mDispatcherThread.join();
     }
-
-    unregisterAllEventHandlers();
 }
 
 int HsmEventDispatcherSTD::registerEventHandler(std::function<void(void)> handler)
@@ -39,12 +37,13 @@ int HsmEventDispatcherSTD::registerEventHandler(std::function<void(void)> handle
 
 void HsmEventDispatcherSTD::unregisterEventHandler(const int handlerId)
 {
+    std::lock_guard<std::mutex> lck(mHandlersSync);
+
     __TRACE_CALL_DEBUG_ARGS__("handlerId=%d", handlerId);
     auto it = mEventHandlers.find(handlerId);
 
     if (it != mEventHandlers.end())
     {
-        // TODO: not thread-safe
         mEventHandlers.erase(it);
     }
 }
@@ -54,7 +53,7 @@ void HsmEventDispatcherSTD::emit()
     __TRACE_CALL_DEBUG__();
     if (true == mDispatcherThread.joinable())
     {
-        std::unique_lock<std::mutex> lck(mEmitSync);
+        std::lock_guard<std::mutex> lck(mEmitSync);
 
         ++mPendingEmitCount;
         mEmitEvent.notify_one();
@@ -73,12 +72,18 @@ bool HsmEventDispatcherSTD::start()
         mDispatcherThread = std::thread(&HsmEventDispatcherSTD::doDispatching, this);
         result = mDispatcherThread.joinable();
     }
+    else
+    {
+        result = (mDispatcherThread.get_id() != std::thread::id());
+    }
 
     return result;
 }
 
 void HsmEventDispatcherSTD::unregisterAllEventHandlers()
 {
+    std::lock_guard<std::mutex> lck(mHandlersSync);
+
     // NOTE: can be called only in destructor after thread was already stopped
     if (false == mDispatcherThread.joinable())
     {
@@ -90,41 +95,45 @@ void HsmEventDispatcherSTD::doDispatching()
 {
     __TRACE_CALL_DEBUG__();
 
-    while (false == mStopDispatcher.load())
+    while (false == mStopDispatcher)
     {
-        while (mPendingEmitCount.load() > 0)
+        while ((mPendingEmitCount > 0) && (mEventHandlers.size() > 0))
         {
-            __TRACE_DEBUG__("handle emit event...");
-            // TODO: not thread-safe
-            for (auto it = mEventHandlers.begin(); it != mEventHandlers.end(); ++it)
-            {
-                if (true == mStopDispatcher.load())
-                {
-                    __TRACE_DEBUG__("stopping...");
-                    break;
-                }
+            __TRACE_DEBUG__("handle emit event... (%d)", mPendingEmitCount);
 
-                it->second();
+            {
+                std::lock_guard<std::mutex> lck(mHandlersSync);
+
+                for (auto it = mEventHandlers.begin(); it != mEventHandlers.end(); ++it)
+                {
+                    if (true == mStopDispatcher)
+                    {
+                        __TRACE_DEBUG__("stopping...");
+                        break;
+                    }
+
+                    it->second();
+                }
             }
 
             --mPendingEmitCount;
 
-            if (true == mStopDispatcher.load())
+            if (true == mStopDispatcher)
             {
                 __TRACE_DEBUG__("stopping...");
                 break;
             }
         }
 
-        if (false == mStopDispatcher.load())
+        if (false == mStopDispatcher)
         {
             std::unique_lock<std::mutex> lck(mEmitSync);
 
-            if (mPendingEmitCount.load() == 0)
+            if (mPendingEmitCount == 0)
             {
                 __TRACE_DEBUG__("wait for emit...");
-                mEmitEvent.wait(lck);
-                __TRACE_DEBUG__("woke up. pending events=%d", mPendingEmitCount.load());
+                mEmitEvent.wait(lck, [=](){ return (mPendingEmitCount > 0) || (true == mStopDispatcher); });
+                __TRACE_DEBUG__("woke up. pending events=%d", mPendingEmitCount);
             }
         }
     }

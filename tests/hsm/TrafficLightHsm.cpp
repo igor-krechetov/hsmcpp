@@ -65,4 +65,5 @@ void TrafficLightHsm::SetUp()
 
 void TrafficLightHsm::TearDown()
 {
+    RELEASE_HSM();
 }

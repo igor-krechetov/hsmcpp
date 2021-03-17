@@ -13,8 +13,6 @@ Variant Variant::make(const uint32_t v) { return Variant(new uint32_t(v), Type::
 Variant Variant::make(const uint64_t v) { return Variant(new uint64_t(v), Type::UBYTE_8); }
 Variant Variant::make(const double v) { return Variant(new double(v), Type::DOUBLE); }
 Variant Variant::make(const bool v) { return Variant(new bool(v), Type::BOOL); }
-Variant Variant::make(const TriState v) { return Variant(new TriState(v), Type::TRISTATE); }
-Variant Variant::make(const SwitchState v) { return Variant(new SwitchState(v), Type::SWITCHSTATE); }
 Variant Variant::make(const std::string& v) { return Variant(new std::string(v), Type::STRING); }
 Variant Variant::make(const char* v) { return make(std::string(v)); }
 Variant Variant::make(const VariantDict_t& v) { return Variant(new VariantDict_t(v), Type::DICTIONARY); }
@@ -47,62 +45,59 @@ Variant::Variant(Variant&& v)
 
 Variant& Variant::operator=(const Variant& v)
 {
-    switch (v.type)
+    if (false == isSameObject(v))
     {
-        case Type::BYTE_1:
-            *this = *v.value<int8_t>();
-            break;
-        case Type::BYTE_2:
-            *this = *v.value<int16_t>();
-            break;
-        case Type::BYTE_4:
-            *this = *v.value<int32_t>();
-            break;
-        case Type::BYTE_8:
-            *this = *v.value<int64_t>();
-            break;
+        switch (v.type)
+        {
+            case Type::BYTE_1:
+                *this = *v.value<int8_t>();
+                break;
+            case Type::BYTE_2:
+                *this = *v.value<int16_t>();
+                break;
+            case Type::BYTE_4:
+                *this = *v.value<int32_t>();
+                break;
+            case Type::BYTE_8:
+                *this = *v.value<int64_t>();
+                break;
 
-        case Type::UBYTE_1:
-            *this = *v.value<uint8_t>();
-            break;
-        case Type::UBYTE_2:
-            *this = *v.value<uint16_t>();
-            break;
-        case Type::UBYTE_4:
-            *this = *v.value<uint32_t>();
-            break;
-        case Type::UBYTE_8:
-            *this = *v.value<uint64_t>();
-            break;
+            case Type::UBYTE_1:
+                *this = *v.value<uint8_t>();
+                break;
+            case Type::UBYTE_2:
+                *this = *v.value<uint16_t>();
+                break;
+            case Type::UBYTE_4:
+                *this = *v.value<uint32_t>();
+                break;
+            case Type::UBYTE_8:
+                *this = *v.value<uint64_t>();
+                break;
 
-        case Type::DOUBLE:
-            *this = *v.value<double>();
-            break;
-        case Type::BOOL:
-            *this = *v.value<bool>();
-            break;
-        case Type::TRISTATE:
-            *this = *v.value<TriState>();
-            break;
-        case Type::SWITCHSTATE:
-            *this = *v.value<SwitchState>();
-            break;
+            case Type::DOUBLE:
+                *this = *v.value<double>();
+                break;
+            case Type::BOOL:
+                *this = *v.value<bool>();
+                break;
 
-        case Type::STRING:
-            *this = *v.value<std::string>();
-            break;
+            case Type::STRING:
+                *this = *v.value<std::string>();
+                break;
 
-        case Type::DICTIONARY:
-            *this = *v.value<VariantDict_t>();
-            break;
+            case Type::DICTIONARY:
+                *this = *v.value<VariantDict_t>();
+                break;
 
-        case Type::PAIR:
-            *this = *v.value<VariantPair_t>();
-            break;
+            case Type::PAIR:
+                *this = *v.value<VariantPair_t>();
+                break;
 
-        default:
-            free();
-            break;
+            default:
+                free();
+                break;
+        }
     }
 
     return *this;
@@ -215,12 +210,6 @@ bool Variant::operator==(const Variant& val) const
             case Type::BOOL:
                 equal = (*value<bool>() == *val.value<bool>());
                 break;
-            case Type::TRISTATE:
-                equal = (*value<TriState>() == *val.value<TriState>());
-                break;
-            case Type::SWITCHSTATE:
-                equal = (*value<SwitchState>() == *val.value<SwitchState>());
-                break;
 
             case Type::STRING:
                 equal = (*value<std::string>() == *val.value<std::string>());
@@ -295,8 +284,6 @@ bool Variant::isNumeric() const
             break;
 
         case Type::BOOL:
-        case Type::TRISTATE:
-        case Type::SWITCHSTATE:
         case Type::STRING:
         case Type::DICTIONARY:
         case Type::PAIR:
@@ -392,45 +379,6 @@ std::string Variant::toString() const
         case Type::BOOL:
             result = (*(value<bool>()) ? "true" : "false");
             break;
-        case Type::TRISTATE:
-        {
-            switch (*(value<TriState>()))
-            {
-                case TriState::STATE_FALSE:
-                    result = "false";
-                    break;
-                case TriState::STATE_TRUE:
-                    result = "true";
-                    break;
-                case TriState::STATE_INVALID:
-                    result = "invalid";
-                    break;
-                default:
-                    break;
-            }
-            break;
-        }
-        case Type::SWITCHSTATE:
-        {
-            switch (*(value<SwitchState>()))
-            {
-                case SwitchState::DEFAULT:
-                    result = "default";
-                    break;
-                case SwitchState::OFF:
-                    result = "off";
-                    break;
-                case SwitchState::ON:
-                    result = "on";
-                    break;
-                case SwitchState::INVALID:
-                    result = "invalid";
-                    break;
-                default:
-                    break;
-            }
-            break;
-        }
         case Type::STRING:
             result = *(value<std::string>());
             break;
@@ -488,8 +436,6 @@ int64_t Variant::toInt64() const
             break;
 
         case Type::BOOL:
-        case Type::TRISTATE:
-        case Type::SWITCHSTATE:
         case Type::STRING:
         case Type::DICTIONARY:
         case Type::PAIR:
@@ -537,8 +483,6 @@ uint64_t Variant::toUInt64() const
             break;
 
         case Type::BOOL:
-        case Type::TRISTATE:
-        case Type::SWITCHSTATE:
         case Type::STRING:
         case Type::DICTIONARY:
         case Type::PAIR:
@@ -586,8 +530,6 @@ double Variant::toDouble() const
             break;
 
         case Type::BOOL:
-        case Type::TRISTATE:
-        case Type::SWITCHSTATE:
         case Type::STRING:
         case Type::DICTIONARY:
         case Type::PAIR:
@@ -608,6 +550,11 @@ bool Variant::toBool() const
     }
 
     return result;
+}
+
+bool Variant::isSameObject(const Variant& val) const
+{
+    return (val.data == data) && (nullptr != data);
 }
 
 void Variant::free()
@@ -645,12 +592,6 @@ void Variant::free()
             break;
         case Type::BOOL:
             delete static_cast<bool*>(data);
-            break;
-        case Type::TRISTATE:
-            delete static_cast<TriState*>(data);
-            break;
-        case Type::SWITCHSTATE:
-            delete static_cast<SwitchState*>(data);
             break;
 
         case Type::STRING:

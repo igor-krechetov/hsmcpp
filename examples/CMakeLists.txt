@@ -1,39 +1,44 @@
-set(BINARY_NAME "01_trafficlight")
+# ======================================================
+if (HSMBUILD_DISPATCHER_GLIBMM)
+    set(BINARY_NAME_00_1 "00_helloworld_glibmm")
 
-file (GLOB SRC_FILES 01_trafficlight.cpp)
+    add_executable(${BINARY_NAME_00_1} 00_helloworld_glibmm.cpp)
+    target_include_directories(${BINARY_NAME_00_1} PRIVATE ${HSMCPP_GLIBMM_INCLUDE})
+    target_link_libraries(${BINARY_NAME_00_1} PRIVATE ${HSMCPP_GLIBMM_LIB})
+endif()
 
-add_executable(${BINARY_NAME} ${SRC_FILES})
+# ======================================================
+if (HSMBUILD_DISPATCHER_STD)
+    set(BINARY_NAME_00_2 "00_helloworld_std")
 
-target_include_directories(${BINARY_NAME}
-PUBLIC
-    ${GLIB_PKG_INCLUDE_DIRS}
-PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-)
+    add_executable(${BINARY_NAME_00_2} 00_helloworld_std.cpp)
+    target_include_directories(${BINARY_NAME_00_2} PRIVATE ${HSMCPP_STD_INCLUDE})
+    target_link_libraries(${BINARY_NAME_00_2} PRIVATE ${HSMCPP_STD_LIB})
+endif()
 
-target_link_libraries(${BINARY_NAME}
-PUBLIC
-    ${GLIB_PKG_LDFLAGS}
-PRIVATE
-    ${HSM_LIBRARY_NAME}
-)
+# ======================================================
+if (HSMBUILD_DISPATCHER_GLIBMM)
+    set(BINARY_NAME_01_1 "01_trafficlight")
 
-# pkg_check_modules(HSMCPP REQUIRED hsmcpp)
+    add_executable(${BINARY_NAME_01_1} 01_trafficlight.cpp)
+    target_include_directories(${BINARY_NAME_01_1} PRIVATE ${HSMCPP_GLIBMM_INCLUDE})
+    target_link_libraries(${BINARY_NAME_01_1} PRIVATE ${HSMCPP_GLIBMM_LIB})
+endif()
 
-# file (GLOB SRC_FILES 01_trafficlight.cpp)
+# ======================================================
+if (HSMBUILD_DISPATCHER_GLIBMM)
+    set(BINARY_NAME_01_2 "01_trafficlight_class")
 
-# add_executable(${BINARY_NAME} ${SRC_FILES})
+    add_executable(${BINARY_NAME_01_2} 01_trafficlight_class.cpp)
+    target_include_directories(${BINARY_NAME_01_2} PRIVATE ${HSMCPP_GLIBMM_INCLUDE})
+    target_link_libraries(${BINARY_NAME_01_2} PRIVATE ${HSMCPP_GLIBMM_LIB})
+endif()
 
-# target_include_directories(${BINARY_NAME}
-# PUBLIC
-#     ${GLIB_PKG_INCLUDE_DIRS}
-#     ${HSMCPP_INCLUDE_DIRS}
-# PRIVATE
-# )
+# ======================================================
+if (HSMBUILD_DISPATCHER_GLIBMM)
+    set(BINARY_NAME_01_3 "01_trafficlight_lambda")
 
-# target_link_libraries(${BINARY_NAME}
-# PUBLIC
-#     ${GLIB_PKG_LDFLAGS}
-#     ${HSMCPP_LDFLAGS}
-# PRIVATE
-# )
+    add_executable(${BINARY_NAME_01_3} 01_trafficlight_lambda.cpp)
+    target_include_directories(${BINARY_NAME_01_3} PRIVATE ${HSMCPP_GLIBMM_INCLUDE})
+    target_link_libraries(${BINARY_NAME_01_3} PRIVATE ${HSMCPP_GLIBMM_LIB})
+endif()

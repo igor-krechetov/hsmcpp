@@ -1,5 +1,5 @@
 // Copyright (C) 2021 Igor Krechetov
-// Distributed under MIT license. See file LICENSE for detail
+// Distributed under MIT license. See file LICENSE for details
 
 #ifndef __HSMCPP_VARIANT_HPP__
 #define __HSMCPP_VARIANT_HPP__

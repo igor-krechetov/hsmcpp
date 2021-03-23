@@ -1,5 +1,5 @@
 // Copyright (C) 2021 Igor Krechetov
-// Distributed under MIT license. See file LICENSE for detail
+// Distributed under MIT license. See file LICENSE for details
 
 #ifndef __HSMCPP_HSMEVENTDISPATCHERSTD_HPP__
 #define __HSMCPP_HSMEVENTDISPATCHERSTD_HPP__
@@ -23,6 +23,12 @@ public:
     virtual void emit() override;
 
     virtual bool start() override;
+    virtual void stop() override;
+
+    // Blocks current thread until dispatcher is stopped.
+    // NOTE: Make sure you call stop() before destroying dispatcher object if you use join() API.
+    //       Failing to do so will result in an undefined behaviour.
+    void join();
 
 protected:
     void unregisterAllEventHandlers();

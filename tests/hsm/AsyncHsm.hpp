@@ -2,7 +2,7 @@
 #define __HSMCPP_TESTS_HSM_ASYNCHSM_HPP__
 
 #include "TestsCommon.hpp"
-#include "hsm.hpp"
+#include "hsmcpp/hsm.hpp"
 #include <mutex>
 #include <atomic>
 #include <condition_variable>

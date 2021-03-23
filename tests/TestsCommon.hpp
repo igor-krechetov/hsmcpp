@@ -3,7 +3,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "IHsmEventDispatcher.hpp"
+#include "hsmcpp/IHsmEventDispatcher.hpp"
 
 // ======================================================
 // GTest namespace
@@ -47,15 +47,15 @@ void configureGTest();
 bool executeOnMainThread(std::function<bool()> func);
 
 #if defined(TEST_HSM_GLIB)
-    #include "HsmEventDispatcherGLib.hpp"
+    #include "hsmcpp/HsmEventDispatcherGLib.hpp"
 
     #define CREATE_DISPATCHER()           std::make_shared<HsmEventDispatcherGLib>()
 #elif defined(TEST_HSM_GLIBMM)
-    #include "HsmEventDispatcherGLibmm.hpp"
+    #include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
 
     #define CREATE_DISPATCHER()           std::make_shared<HsmEventDispatcherGLibmm>()
 #elif defined(TEST_HSM_STD)
-    #include "HsmEventDispatcherSTD.hpp"
+    #include "hsmcpp/HsmEventDispatcherSTD.hpp"
 
     #define CREATE_DISPATCHER()           std::make_shared<HsmEventDispatcherSTD>()
 #else

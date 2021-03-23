@@ -1,0 +1,47 @@
+@startuml
+
+participant app
+participant HSM
+participant HsmEventDispatcherSTD as std
+participant thread #CC8877
+
+create HSM
+app -> HSM: create
+
+create std
+app -> std: create
+
+app -> HSM ++: initialize()
+  HSM -> std ++: start()
+    std -> thread **: create
+  return true
+
+  HSM -> std ++: registerEventHandler(callback)
+  return true
+return true
+
+thread -> thread: doDispatching()
+activate thread #CC8877
+thread -> thread: wait for events
+deactivate thread
+
+...
+
+app -> HSM ++: emit()
+  HSM -> std ++: emit()
+    std -> std: add to queue
+    std --> thread: notify
+  return
+return
+
+activate thread #CC8877
+thread -> thread: dispatch
+  thread -> HSM: callback
+  activate HSM #CC8877
+  ...
+  HSM --> thread
+  deactivate HSM
+deactivate thread
+
+
+@enduml

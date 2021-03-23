@@ -1,8 +1,8 @@
 // Copyright (C) 2021 Igor Krechetov
-// Distributed under MIT license. See file LICENSE for detail
+// Distributed under MIT license. See file LICENSE for details
 
-#include "HsmEventDispatcherGLib.hpp"
-#include "logging.hpp"
+#include "hsmcpp/HsmEventDispatcherGLib.hpp"
+#include "hsmcpp/logging.hpp"
 
 #undef __TRACE_CLASS__
 #define __TRACE_CLASS__                         "HsmEventDispatcherGLib"
@@ -138,6 +138,11 @@ bool HsmEventDispatcherGLib::start()
     }
 
     return result;
+}
+
+void HsmEventDispatcherGLib::stop()
+{
+    // TODO: impl
 }
 
 void HsmEventDispatcherGLib::unregisterAllEventHandlers()

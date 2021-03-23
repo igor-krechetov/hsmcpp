@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2021-03-23
+### Added
+- cmake templates showing how to include hsmcpp in a project
+- new examples
+- HsmEventDispatcherSTD::join()
+- HsmEventDispatcherSTD::stop()
+### Updated
+- improved build configuration
+- rename build options: HSMBUILD_VERBOSE, HSMBUILD_STRUCTURE_VALIDATION, HSMBUILD_THREAD_SAFETY, HSMBUILD_DISPATCHER_GLIB, HSMBUILD_DISPATCHER_GLIBMM, HSMBUILD_DISPATCHER_STD, HSMBUILD_TESTS, HSMBUILD_EXAMPLES
+- dispatchers are now compiled into separate modules (with own pkg-config files)
+- examples and tests are compiled based on enabled dispatchers
+- move pkg-config templates to a subfolder (/pkgconfig)
+
 ## [0.5.0] - 2021-03-17
 ### Added
 - glib based event dispatcher

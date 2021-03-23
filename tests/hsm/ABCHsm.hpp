@@ -2,7 +2,7 @@
 #define __HSMCPP_TESTS_HSM_ABCHSM_HPP__
 
 #include "TestsCommon.hpp"
-#include "hsm.hpp"
+#include "hsmcpp/hsm.hpp"
 
 enum class AbcState
 {

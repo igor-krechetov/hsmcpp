@@ -1,8 +1,8 @@
 // Copyright (C) 2021 Igor Krechetov
-// Distributed under MIT license. See file LICENSE for detail
+// Distributed under MIT license. See file LICENSE for details
 
-#include "HsmEventDispatcherSTD.hpp"
-#include "logging.hpp"
+#include "hsmcpp/HsmEventDispatcherSTD.hpp"
+#include "hsmcpp/logging.hpp"
 
 #undef __TRACE_CLASS__
 #define __TRACE_CLASS__                         "HsmEventDispatcherSTD"
@@ -16,13 +16,8 @@ HsmEventDispatcherSTD::~HsmEventDispatcherSTD()
     __TRACE_CALL_DEBUG__();
 
     unregisterAllEventHandlers();
-
-    if (true == mDispatcherThread.joinable())
-    {
-        mStopDispatcher = true;
-        mEmitEvent.notify_all();
-        mDispatcherThread.join();
-    }
+    stop();
+    join();
 }
 
 int HsmEventDispatcherSTD::registerEventHandler(std::function<void(void)> handler)
@@ -78,6 +73,27 @@ bool HsmEventDispatcherSTD::start()
     }
 
     return result;
+}
+
+void HsmEventDispatcherSTD::stop()
+{
+    __TRACE_CALL_DEBUG__();
+
+    if (true == mDispatcherThread.joinable())
+    {
+        mStopDispatcher = true;
+        mEmitEvent.notify_all();
+    }
+}
+
+void HsmEventDispatcherSTD::join()
+{
+    __TRACE_CALL_DEBUG__();
+
+    if (true == mDispatcherThread.joinable())
+    {
+        mDispatcherThread.join();
+    }
 }
 
 void HsmEventDispatcherSTD::unregisterAllEventHandlers()

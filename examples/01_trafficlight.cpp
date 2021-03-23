@@ -1,9 +1,10 @@
-#include "hsm.hpp"
+// NOTE: For internal testing and will be removed later
+
+#include "hsmcpp/hsm.hpp"
 #include <thread>
 #include <unistd.h>
-#include "logging.hpp"
-#include "HsmEventDispatcherGLibmm.hpp"
-#include "HsmEventDispatcherSTD.hpp"
+#include "hsmcpp/logging.hpp"
+#include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
 
 #undef __TRACE_CLASS__
 #define __TRACE_CLASS__                         "01_trafficlight"
@@ -31,7 +32,7 @@ class TrafficLight: public HierarchicalStateMachine<TrafficLightState, TrafficLi
 public:
     TrafficLight() : HierarchicalStateMachine(TrafficLightState::OFF)
     {
-        initialize(std::make_shared<HsmEventDispatcherSTD>());
+        initialize(std::make_shared<HsmEventDispatcherGLibmm>());
 
         registerState<TrafficLight>(TrafficLightState::OFF, this, &TrafficLight::onOff, nullptr, nullptr);
         registerState<TrafficLight>(TrafficLightState::STARTING, this, &TrafficLight::onStarting, nullptr, nullptr);

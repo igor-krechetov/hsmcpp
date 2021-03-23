@@ -1,5 +1,5 @@
 // Copyright (C) 2021 Igor Krechetov
-// Distributed under MIT license. See file LICENSE for detail
+// Distributed under MIT license. See file LICENSE for details
 
 #ifndef __HSMCPP_IHSMEVENTDISPATCHER_HPP__
 #define __HSMCPP_IHSMEVENTDISPATCHER_HPP__
@@ -17,6 +17,8 @@ public:
     // on individual dispatcher. But it should be non blocking.
     // Returns TRUE if dispatching was successfully started or if it is already running (calling multiple times will have no effect)
     virtual bool start() = 0;
+
+    virtual void stop() = 0;
 
     // As a general rule registerEventHandler and unregisterEventHandler are
     // not expected to be thread-safe and should to be used from the same thread.

@@ -1,0 +1,7 @@
+@startuml
+
+[*] -down-> Off
+Off -right-> On: SWITCH
+On -left-> Off: SWITCH
+
+@enduml

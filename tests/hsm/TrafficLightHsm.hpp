@@ -2,7 +2,7 @@
 #define __HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP__
 
 #include "TestsCommon.hpp"
-#include "hsm.hpp"
+#include "hsmcpp/hsm.hpp"
 
 enum class TrafficLightState
 {

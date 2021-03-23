@@ -1,5 +1,4 @@
 #include "TrafficLightHsm.hpp"
-#include "HsmEventDispatcherGLibmm.hpp"
 
 TrafficLightHsm::TrafficLightHsm() : HierarchicalStateMachine(TrafficLightState::OFF)
 {

@@ -1,0 +1,7 @@
+Name: @PROJECT_NAME@
+Description: @PROJECT_DESCRIPTION@
+Version: @PROJECT_VERSION@
+
+Requires: hsmcpp glib-2.0 glibmm-2.4
+Libs: -lhsmcpp_glibmm
+Cflags: @HSM_DEFINITIONS_GLIBMM@

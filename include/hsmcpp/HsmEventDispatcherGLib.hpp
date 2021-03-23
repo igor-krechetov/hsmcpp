@@ -1,5 +1,5 @@
 // Copyright (C) 2021 Igor Krechetov
-// Distributed under MIT license. See file LICENSE for detail
+// Distributed under MIT license. See file LICENSE for details
 
 #ifndef __HSMCPP_HSMEVENTDISPATCHERGLIB_HPP__
 #define __HSMCPP_HSMEVENTDISPATCHERGLIB_HPP__
@@ -22,6 +22,7 @@ public:
     virtual void emit() override;
 
     virtual bool start() override;
+    virtual void stop() override;
 
 protected:
     void unregisterAllEventHandlers();

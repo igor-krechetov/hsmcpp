@@ -1,7 +1,7 @@
 // Copyright (C) 2021 Igor Krechetov
-// Distributed under MIT license. See file LICENSE for detail
+// Distributed under MIT license. See file LICENSE for details
 
-#include "variant.hpp"
+#include "hsmcpp/variant.hpp"
 
 Variant Variant::make(const int8_t v) { return Variant(new int8_t(v), Type::BYTE_1); }
 Variant Variant::make(const int16_t v) { return Variant(new int16_t(v), Type::BYTE_2); }

@@ -1,0 +1,16 @@
+@startuml
+
+[*] --> Off
+Off --> Operable: POWER_ON
+Operable --> Off: POWER_OFF
+
+state Operable {
+  [*] --> Initializing
+  Initializing -down-> Red: INIT_DONE
+
+  Red -down-> Yellow: NEXT_STATE
+  Yellow -right-> Green: NEXT_STATE
+  Green -left-> Red: NEXT_STATE
+}
+
+@enduml

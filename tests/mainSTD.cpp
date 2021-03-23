@@ -1,6 +1,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "logging.hpp"
+#include "hsmcpp/logging.hpp"
 #include "TestsCommon.hpp"
 
 __TRACE_PREINIT__();

@@ -1,8 +1,8 @@
 // Copyright (C) 2021 Igor Krechetov
-// Distributed under MIT license. See file LICENSE for detail
+// Distributed under MIT license. See file LICENSE for details
 
-#include "HsmEventDispatcherGLibmm.hpp"
-#include "logging.hpp"
+#include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
+#include "hsmcpp/logging.hpp"
 
 #undef __TRACE_CLASS__
 #define __TRACE_CLASS__                         "HsmEventDispatcherGLibmm"
@@ -62,10 +62,17 @@ void HsmEventDispatcherGLibmm::emit()
 
 bool HsmEventDispatcherGLibmm::start()
 {
+    // do nothing
     // NOTE: in case of GLib based dispatcher implementation it's expected
     //       that application will run GLib MainLoop in it's own code.
-    //       start() function is added only for compatibility with other implementations.
     return true;
+}
+
+void HsmEventDispatcherGLibmm::stop()
+{
+    // do nothing
+    // NOTE: in case of GLib based dispatcher implementation it's expected
+    //       that application will run GLib MainLoop in it's own code.
 }
 
 void HsmEventDispatcherGLibmm::unregisterAllEventHandlers()

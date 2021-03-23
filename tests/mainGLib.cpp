@@ -3,7 +3,7 @@
 #include <glib.h>
 #include <future>
 #include <thread>
-#include "logging.hpp"
+#include "hsmcpp/logging.hpp"
 #include "TestsCommon.hpp"
 
 __TRACE_PREINIT__();

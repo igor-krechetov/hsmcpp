@@ -9,25 +9,25 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
-option(VERBOSE "Enable/disable HSM verbosity [feature for DEBUG]" OFF)
-option(STRUCTURE_VALIDATION "Enable/disable HSM structure validation" ON)
-option(THREAD_SAFETY "Enable/disable HSM thread safety" ON)
-option(DISPATCHER_GLIB "Enable GLib dispatcher" ON)
-option(DISPATCHER_GLIBMM "Enable GLibmm dispatcher" ON)
-option(DISPATCHER_STD "Enable std::thread based dispatcher" ON)
-option(BUILD_TESTS "Build unittets" ON)
-option(BUILD_EXAMPLES "Build examples" ON)
+option(HSMBUILD_VERBOSE "Enable/disable HSM verbosity [feature for DEBUG]" OFF)
+option(HSMBUILD_STRUCTURE_VALIDATION "Enable/disable HSM structure validation" ON)
+option(HSMBUILD_THREAD_SAFETY "Enable/disable HSM thread safety" ON)
+option(HSMBUILD_DISPATCHER_GLIB "Enable GLib dispatcher" ON)
+option(HSMBUILD_DISPATCHER_GLIBMM "Enable GLibmm dispatcher" ON)
+option(HSMBUILD_DISPATCHER_STD "Enable std::thread based dispatcher" ON)
+option(HSMBUILD_TESTS "Build unittests" ON)
+option(HSMBUILD_EXAMPLES "Build examples" ON)
 
 message("--------------------------------------")
 message("HSM build settings:\n")
-message("VERBOSE = ${VERBOSE}")
-message("STRUCTURE_VALIDATION = ${STRUCTURE_VALIDATION}")
-message("THREAD_SAFETY = ${THREAD_SAFETY}")
-message("DISPATCHER_GLIB = ${DISPATCHER_GLIB}")
-message("DISPATCHER_GLIBMM = ${DISPATCHER_GLIBMM}")
-message("DISPATCHER_STD = ${DISPATCHER_STD}")
-message("BUILD_TESTS = ${BUILD_TESTS}")
-message("BUILD_EXAMPLES = ${BUILD_EXAMPLES}")
+message("HSMBUILD_VERBOSE = ${HSMBUILD_VERBOSE}")
+message("HSMBUILD_STRUCTURE_VALIDATION = ${HSMBUILD_STRUCTURE_VALIDATION}")
+message("HSMBUILD_THREAD_SAFETY = ${HSMBUILD_THREAD_SAFETY}")
+message("HSMBUILD_DISPATCHER_GLIB = ${HSMBUILD_DISPATCHER_GLIB}")
+message("HSMBUILD_DISPATCHER_GLIBMM = ${HSMBUILD_DISPATCHER_GLIBMM}")
+message("HSMBUILD_DISPATCHER_STD = ${HSMBUILD_DISPATCHER_STD}")
+message("HSMBUILD_TESTS = ${HSMBUILD_TESTS}")
+message("HSMBUILD_EXAMPLES = ${HSMBUILD_EXAMPLES}")
 message("--------------------------------------")
 
 # ================================================
@@ -37,12 +37,12 @@ include(FindPkgConfig)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 pkg_check_modules(GLIBMM REQUIRED glibmm-2.4)
 
-set (GLIB_PKG_INCLUDE_DIRS
+set(GLIB_PKG_INCLUDE_DIRS
     ${GLIB_INCLUDE_DIRS}
     ${GLIBMM_INCLUDE_DIRS}
 )
 
-set (GLIB_PKG_LDFLAGS
+set(GLIB_PKG_LDFLAGS
     ${GLIB_LDFLAGS}
     ${GLIBMM_LDFLAGS}
 )
@@ -51,18 +51,20 @@ set (GLIB_PKG_LDFLAGS
 # HSMCPP library
 set(HSM_LIBRARY_NAME "hsmcpp")
 
+set(HSM_DEFINITIONS_BASE "")
+
 if (VERBOSE)
-    add_definitions(-DLOGGING_MODE_STRICT_VERBOSE)
+    set(HSM_DEFINITIONS_BASE "${HSM_DEFINITIONS_BASE} -DLOGGING_MODE_STRICT_VERBOSE")
 else()
-    add_definitions(-DLOGGING_MODE_OFF)
+    set(HSM_DEFINITIONS_BASE "${HSM_DEFINITIONS_BASE} -DLOGGING_MODE_OFF")
 endif()
 
-if (STRUCTURE_VALIDATION)
-    add_definitions(-DHSM_ENABLE_SAFE_STRUCTURE)
+if (HSMBUILD_STRUCTURE_VALIDATION)
+    set(HSM_DEFINITIONS_BASE "${HSM_DEFINITIONS_BASE} -DHSM_ENABLE_SAFE_STRUCTURE")
 endif()
 
-if (NOT THREAD_SAFETY)
-    add_definitions(-DHSM_DISABLE_THREADSAFETY)
+if (NOT HSMBUILD_THREAD_SAFETY)
+    set(HSM_DEFINITIONS_BASE "${HSM_DEFINITIONS_BASE} -DHSM_DISABLE_THREADSAFETY")
 endif()
 
 file (GLOB SRC_LIBRARY
@@ -70,57 +72,97 @@ file (GLOB SRC_LIBRARY
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherBase.cpp
 )
 
-if (DISPATCHER_GLIB)
-    add_definitions(-DHSM_BUILD_DISPATCHER_GLIB)
-
-    file (GLOB SRC_LIBRARY ${SRC_LIBRARY}
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLib.cpp)
-endif()
-
-if (DISPATCHER_GLIBMM)
-    add_definitions(-DHSM_BUILD_DISPATCHER_GLIBMM)
-
-    file (GLOB SRC_LIBRARY ${SRC_LIBRARY}
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/dispatcher.cpp
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLibmm.cpp)
-endif()
-
-if (DISPATCHER_STD)
-    add_definitions(-DHSM_BUILD_DISPATCHER_STD)
-
-    file (GLOB SRC_LIBRARY ${SRC_LIBRARY}
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherSTD.cpp)
-endif()
-
+add_definitions(${HSM_DEFINITIONS_BASE})
 add_library(${HSM_LIBRARY_NAME} STATIC ${SRC_LIBRARY})
-
-target_include_directories(${HSM_LIBRARY_NAME}
-PUBLIC
-    ${GLIB_PKG_INCLUDE_DIRS}
-PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-)
+target_include_directories(${HSM_LIBRARY_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # ================================================
+# DISPATCHER: GLIB
+if (HSMBUILD_DISPATCHER_GLIB)
+    set(HSM_DEFINITIONS_GLIB "-DHSM_BUILD_HSMBUILD_DISPATCHER_GLIB")
+    add_definitions(-DHSM_BUILD_HSMBUILD_DISPATCHER_GLIB)
+    add_library(${HSM_LIBRARY_NAME}_glib STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLib.cpp)
+    target_include_directories(${HSM_LIBRARY_NAME}_glib PUBLIC ${GLIB_PKG_INCLUDE_DIRS})
+endif()
+
+# ================================================
+# DISPATCHER: GLIBMM
+if (HSMBUILD_DISPATCHER_GLIBMM)
+    set(HSM_DEFINITIONS_GLIBMM "-DHSM_BUILD_HSMBUILD_DISPATCHER_GLIBMM")
+    add_definitions(-DHSM_BUILD_HSMBUILD_DISPATCHER_GLIBMM)
+    add_library(${HSM_LIBRARY_NAME}_glibmm STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLibmm.cpp)
+    target_include_directories(${HSM_LIBRARY_NAME}_glibmm PUBLIC ${GLIB_PKG_INCLUDE_DIRS})
+endif()
+
+# ================================================
+# DISPATCHER: STD
+if (HSMBUILD_DISPATCHER_STD)
+    set(HSM_DEFINITIONS_STD "-DHSM_BUILD_HSMBUILD_DISPATCHER_STD")
+    add_definitions(-DHSM_BUILD_HSMBUILD_DISPATCHER_STD)
+    add_library(${HSM_LIBRARY_NAME}_std STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherSTD.cpp)
+endif()
+
+# ================================================
+# Export variables
+set(HSMCPP_DEFINITIONS ${HSM_DEFINITIONS_BASE} CACHE STRING "" FORCE)
+set(HSMCPP_CXX_FLAGS "-pthread" CACHE STRING "" FORCE)
+
+set(HSMCPP_LIB ${HSM_LIBRARY_NAME} CACHE STRING "" FORCE)
+set(HSMCPP_STD_LIB ${HSM_LIBRARY_NAME}_std ${HSMCPP_LIB} CACHE STRING "" FORCE)
+set(HSMCPP_GLIB_LIB ${HSM_LIBRARY_NAME}_glib ${HSMCPP_LIB} ${GLIB_PKG_LDFLAGS} CACHE STRING "" FORCE)
+set(HSMCPP_GLIBMM_LIB ${HSM_LIBRARY_NAME}_glibmm ${HSMCPP_LIB} ${GLIB_PKG_LDFLAGS} CACHE STRING "" FORCE)
+
+set(HSMCPP_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE STRING "" FORCE)
+set(HSMCPP_STD_INCLUDE ${HSMCPP_INCLUDE} CACHE STRING "" FORCE)
+set(HSMCPP_GLIB_INCLUDE ${HSMCPP_INCLUDE} ${GLIB_PKG_INCLUDE_DIRS} CACHE STRING "" FORCE)
+set(HSMCPP_GLIBMM_INCLUDE ${HSMCPP_INCLUDE} ${GLIB_PKG_INCLUDE_DIRS} CACHE STRING "" FORCE)
+
+# ================================================
+# Installation
+set(HSM_INCLUDES_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/")
 set(CMAKE_INSTALL_INCLUDEDIR "include/hsmcpp")
 set(CMAKE_INSTALL_LIBDIR "lib")
 
-configure_file(hsmcpp.pc.in hsmcpp.pc @ONLY)
-
-install(TARGETS ${HSM_LIBRARY_NAME}
-        DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+configure_file(./pkgconfig/hsmcpp.pc.in hsmcpp.pc @ONLY)
+install(FILES "${PROJECT_BINARY_DIR}/hsmcpp.pc" DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+install(TARGETS ${HSM_LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(FILES ${HSM_INCLUDES_ROOT}/hsm.hpp
+              ${HSM_INCLUDES_ROOT}/HsmEventDispatcherBase.hpp
+              ${HSM_INCLUDES_ROOT}/IHsmEventDispatcher.hpp
+              ${HSM_INCLUDES_ROOT}/logging.hpp
+              ${HSM_INCLUDES_ROOT}/variant.hpp
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(FILES "${PROJECT_BINARY_DIR}/hsmcpp.pc"
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+if (HSMBUILD_DISPATCHER_STD)
+    configure_file(./pkgconfig/hsmcpp_std.pc.in hsmcpp_std.pc @ONLY)
+    install(FILES "${PROJECT_BINARY_DIR}/hsmcpp_std.pc" DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+    install(TARGETS ${HSM_LIBRARY_NAME}_std DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(FILES ${HSM_INCLUDES_ROOT}/HsmEventDispatcherSTD.hpp
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
+
+if (HSMBUILD_DISPATCHER_GLIB)
+    configure_file(./pkgconfig/hsmcpp_glib.pc.in hsmcpp_glib.pc @ONLY)
+    install(FILES "${PROJECT_BINARY_DIR}/hsmcpp_glib.pc" DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+    install(TARGETS ${HSM_LIBRARY_NAME}_glib DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(FILES ${HSM_INCLUDES_ROOT}/HsmEventDispatcherGLib.hpp
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
+
+if (HSMBUILD_DISPATCHER_GLIBMM)
+    configure_file(./pkgconfig/hsmcpp_glibmm.pc.in hsmcpp_glibmm.pc @ONLY)
+    install(FILES "${PROJECT_BINARY_DIR}/hsmcpp_glibmm.pc" DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+    install(TARGETS ${HSM_LIBRARY_NAME}_glibmm DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(FILES ${HSM_INCLUDES_ROOT}/HsmEventDispatcherGLibmm.hpp
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
 
 # ================================================
-if (BUILD_EXAMPLES)
+if (HSMBUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
-if (BUILD_TESTS)
+if (HSMBUILD_TESTS)
     add_subdirectory(tests)
 endif()

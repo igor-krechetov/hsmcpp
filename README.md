@@ -74,10 +74,7 @@ enum class States
 
 enum class Events
 {
-    SWITCH,
-    POWER_OFF,
-    INIT_DONE,
-    NEXT_STATE
+    SWITCH
 };
 
 int main(const int argc, const char**argv)

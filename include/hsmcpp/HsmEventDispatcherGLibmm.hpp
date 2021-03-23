@@ -30,10 +30,9 @@ public:
 
     virtual int registerEventHandler(std::function<void(void)> handler) override;
     virtual void unregisterEventHandler(const int handlerId) override;
-    virtual void emit() override;
+    virtual void emitEvent() override;
 
     virtual bool start() override;
-    virtual void stop() override;
 
 protected:
     void unregisterAllEventHandlers();

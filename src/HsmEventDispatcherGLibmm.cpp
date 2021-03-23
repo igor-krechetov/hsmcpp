@@ -51,7 +51,7 @@ void HsmEventDispatcherGLibmm::unregisterEventHandler(const int handlerId)
     }
 }
 
-void HsmEventDispatcherGLibmm::emit()
+void HsmEventDispatcherGLibmm::emitEvent()
 {
     __TRACE_CALL_DEBUG__();
     if (mDispatcher)
@@ -66,13 +66,6 @@ bool HsmEventDispatcherGLibmm::start()
     // NOTE: in case of GLib based dispatcher implementation it's expected
     //       that application will run GLib MainLoop in it's own code.
     return true;
-}
-
-void HsmEventDispatcherGLibmm::stop()
-{
-    // do nothing
-    // NOTE: in case of GLib based dispatcher implementation it's expected
-    //       that application will run GLib MainLoop in it's own code.
 }
 
 void HsmEventDispatcherGLibmm::unregisterAllEventHandlers()

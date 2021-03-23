@@ -83,7 +83,7 @@ private:
     struct PendingEventInfo
     {
         bool entryPointTransition = false;
-        HsmEventEnum type;
+        HsmEventEnum type = static_cast<HsmEventEnum>(-1);
         VariantList_t args;
         std::shared_ptr<std::mutex> cvLock;
         std::shared_ptr<std::condition_variable> syncProcessed;
@@ -221,6 +221,7 @@ template <typename HsmStateEnum, typename HsmEventEnum>
 HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::HierarchicalStateMachine(const HsmStateEnum initialState)
     : mCurrentState(initialState)
 {
+    __TRACE_INIT__();
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -487,7 +488,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionEx(const Hs
     }
 
     __TRACE_DEBUG__("transitionEx: emit");
-    mDispatcher->emit();
+    mDispatcher->emitEvent();
 
     if (true == sync)
     {
@@ -607,7 +608,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchEvents()
 
         if ((false == mStopDispatching) && (false == mPendingEvents.empty()))
         {
-            mDispatcher->emit();
+            mDispatcher->emitEvent();
         }
     }
 }

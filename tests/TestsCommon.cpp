@@ -37,7 +37,7 @@ void configureGTest()
     listeners.Append(listener);
 }
 
-#ifndef TEST_HSM_STD
+#if defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM)
 gboolean mainThreadCallback(void* data)
 {
     std::lock_guard<std::mutex> lck(gSyncCall);
@@ -48,12 +48,12 @@ gboolean mainThreadCallback(void* data)
 
     return FALSE;
 }
-#endif
+#endif // defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM)
 
 bool executeOnMainThread(std::function<bool()> func)
 {
-    // in case of STD dispatcher everything is run from a single thread so we can just call func()
-#if defined(TEST_HSM_STD)
+    // in case of STD and Qt dispatcher we can just call func()
+#if defined(TEST_HSM_STD) || defined(TEST_HSM_QT)
     return func();
 #endif
 

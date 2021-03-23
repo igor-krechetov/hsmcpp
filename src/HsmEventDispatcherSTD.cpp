@@ -43,7 +43,7 @@ void HsmEventDispatcherSTD::unregisterEventHandler(const int handlerId)
     }
 }
 
-void HsmEventDispatcherSTD::emit()
+void HsmEventDispatcherSTD::emitEvent()
 {
     __TRACE_CALL_DEBUG__();
     if (true == mDispatcherThread.joinable())

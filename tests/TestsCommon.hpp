@@ -58,6 +58,10 @@ bool executeOnMainThread(std::function<bool()> func);
     #include "hsmcpp/HsmEventDispatcherSTD.hpp"
 
     #define CREATE_DISPATCHER()           std::make_shared<HsmEventDispatcherSTD>()
+#elif defined(TEST_HSM_QT)
+    #include "hsmcpp/HsmEventDispatcherQt.hpp"
+
+    #define CREATE_DISPATCHER()           std::make_shared<HsmEventDispatcherQt>()
 #else
     #error HSM Dispatcher not specified
 #endif

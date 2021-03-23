@@ -27,8 +27,8 @@ deactivate thread
 
 ...
 
-app -> HSM ++: emit()
-  HSM -> std ++: emit()
+app -> HSM ++: emitEvent()
+  HSM -> std ++: emitEvent()
     std -> std: add to queue
     std --> thread: notify
   return

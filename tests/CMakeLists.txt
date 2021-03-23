@@ -61,4 +61,14 @@ if (HSMBUILD_DISPATCHER_STD)
 endif()
 
 # ================================================
-# LIBRARIES
+# SOURCE CODE (Dispatcher: Qt)
+if (HSMBUILD_DISPATCHER_QT)
+    set(TEST_BIN_QT ${TEST_BIN_NAME_TEMPLATE}Qt)
+
+    add_executable(${TEST_BIN_QT} mainQt.cpp ${SRC_UNITTESTS_COMMON})
+    target_compile_definitions(${TEST_BIN_QT} PUBLIC -DTEST_HSM_QT)
+    target_include_directories(${TEST_BIN_QT} PRIVATE ${HSMCPP_QT_INCLUDE})
+    target_link_libraries(${TEST_BIN_QT} PRIVATE ${HSMCPP_QT_LIB} ${GMOCK_LDFLAGS})
+    target_link_libraries(${TEST_BIN_QT} PUBLIC Qt5::Core)
+endif()
+

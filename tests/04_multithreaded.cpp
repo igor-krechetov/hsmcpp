@@ -44,6 +44,9 @@ TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
     EXPECT_EQ(getCurrentState(), AsyncHsmState::C);
 }
 
+// NOTE: Qt doesn't support cancelation of already posted events. So deleting dispatcher before
+//       all events are processed will result in a crash.
+#ifndef TEST_HSM_QT
 TEST_F(ABCHsm, multithreaded_deleting_running_dispatcher)
 {
     TEST_DESCRIPTION("");
@@ -66,3 +69,4 @@ TEST_F(ABCHsm, multithreaded_deleting_running_dispatcher)
     //-------------------------------------------
     // VALIDATION
 }
+#endif // !TEST_HSM_QT

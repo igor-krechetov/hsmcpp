@@ -3,10 +3,7 @@
 #include <glib.h>
 #include <future>
 #include <thread>
-#include "hsmcpp/logging.hpp"
 #include "TestsCommon.hpp"
-
-__TRACE_PREINIT__();
 
 GMainLoop* gMainLoop = nullptr;
 std::future<int> gUnitTestResult;
@@ -31,7 +28,6 @@ gboolean runTests(gpointer user_data)
 
 int main(int argc, char** argv)
 {
-    __TRACE_INIT__();
     gArgc = argc;
     gArgv = argv;
     gMainLoop = g_main_loop_new(nullptr, FALSE);

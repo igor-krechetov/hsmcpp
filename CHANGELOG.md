@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2021-03-23
+### Added
+- Qt based event dispatcher
+- Qt based example
+### Updated
+- improve log macroses
+- rename emit() -> emitEvent() in IHsmEventDispatcher (due to name collision with Qt)
+
 ## [0.5.1] - 2021-03-23
 ### Added
 - cmake templates showing how to include hsmcpp in a project

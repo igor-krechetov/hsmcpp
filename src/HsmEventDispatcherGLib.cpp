@@ -3,6 +3,7 @@
 
 #include "hsmcpp/HsmEventDispatcherGLib.hpp"
 #include "hsmcpp/logging.hpp"
+#include <unistd.h>
 
 #undef __TRACE_CLASS__
 #define __TRACE_CLASS__                         "HsmEventDispatcherGLib"
@@ -62,7 +63,7 @@ void HsmEventDispatcherGLib::unregisterEventHandler(const int handlerId)
     }
 }
 
-void HsmEventDispatcherGLib::emit()
+void HsmEventDispatcherGLib::emitEvent()
 {
     __TRACE_CALL__();
     if (mPipeFD[1] > 0)
@@ -138,11 +139,6 @@ bool HsmEventDispatcherGLib::start()
     }
 
     return result;
-}
-
-void HsmEventDispatcherGLib::stop()
-{
-    // TODO: impl
 }
 
 void HsmEventDispatcherGLib::unregisterAllEventHandlers()

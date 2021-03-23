@@ -17,6 +17,16 @@ if (HSMBUILD_DISPATCHER_STD)
 endif()
 
 # ======================================================
+if (HSMBUILD_DISPATCHER_QT)
+    set(BINARY_NAME_00_3 "00_helloworld_qt")
+
+    add_executable(${BINARY_NAME_00_3} 00_helloworld_qt.cpp)
+    target_include_directories(${BINARY_NAME_00_3} PRIVATE ${HSMCPP_QT_INCLUDE})
+    target_link_libraries(${BINARY_NAME_00_3} PRIVATE ${HSMCPP_QT_LIB})
+    target_link_libraries(${BINARY_NAME_00_3} PUBLIC Qt5::Core)
+endif()
+
+# ======================================================
 if (HSMBUILD_DISPATCHER_GLIBMM)
     set(BINARY_NAME_01_1 "01_trafficlight")
 

@@ -9,4 +9,4 @@ Version: @PROJECT_VERSION@
 
 Requires: glib-2.0
 Libs: -L${libdir} -lhsmcpp
-Cflags: -I${includedir} @HSM_DEFINITIONS_BASE@
+Cflags: -fPIC -I${includedir} @HSM_DEFINITIONS_BASE@

@@ -18,8 +18,6 @@ public:
     // Returns TRUE if dispatching was successfully started or if it is already running (calling multiple times will have no effect)
     virtual bool start() = 0;
 
-    virtual void stop() = 0;
-
     // As a general rule registerEventHandler and unregisterEventHandler are
     // not expected to be thread-safe and should to be used from the same thread.
     // But this depends on specific Dispatcher implementation.
@@ -30,7 +28,7 @@ public:
     virtual void unregisterEventHandler(const int handlerId) = 0;
 
     // dispatcher must guarantee that emit call is thread-safe
-    virtual void emit() = 0;
+    virtual void emitEvent() = 0;
 };
 
 #endif // __HSMCPP_IHSMEVENTDISPATCHER_HPP__

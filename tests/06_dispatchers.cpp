@@ -1,6 +1,9 @@
 #include "TestsCommon.hpp"
 #include "hsm/ABCHsm.hpp"
 
+// NOTE: Qt doesn't support cancelation of already posted events. So deleting dispatcher before
+//       all events are processed will result in a crash.
+#ifndef TEST_HSM_QT
 TEST(dispatchers, stresstest_create_destroy)
 {
     TEST_DESCRIPTION("check that it's possible to destroy HSM and disconnect from dispatcher when there are events pending");
@@ -41,3 +44,5 @@ TEST(dispatchers, stresstest_create_destroy)
     //-------------------------------------------
     // VALIDATION
 }
+
+#endif // TEST_HSM_QT

@@ -3,15 +3,10 @@
 #include <glibmm.h>
 #include <future>
 #include <thread>
-#include "hsmcpp/logging.hpp"
 #include "TestsCommon.hpp"
-
-__TRACE_PREINIT__();
 
 int main(int argc, char** argv)
 {
-    __TRACE_INIT__();
-
     Glib::init();
     Glib::RefPtr<Glib::MainLoop> glibMainLoop = Glib::MainLoop::create();
     std::future<int> unitTestResult;

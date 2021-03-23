@@ -3,7 +3,7 @@
 TEST_F(TrafficLightHsm, initial_state)
 {
     TEST_DESCRIPTION("after creation FSM should be in it's initial state");
-
+    
     //-------------------------------------------
     // PRECONDITIONS
     setupDefault();

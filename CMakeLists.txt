@@ -127,6 +127,10 @@ if (HSMBUILD_DISPATCHER_QT)
     add_definitions(-DHSM_BUILD_HSMBUILD_DISPATCHER_QT)
     add_library(${HSM_LIBRARY_NAME}_qt STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherQt.cpp ${SRC_DISPATCHER_QT})
     target_include_directories(${HSM_LIBRARY_NAME}_qt PUBLIC ${Qt5Core_INCLUDE_DIRS})
+
+    set(CMAKE_AUTOMOC OFF)
+    set(CMAKE_AUTORCC OFF)
+    set(CMAKE_AUTOUIC OFF)
 endif()
 
 # ================================================
@@ -187,6 +191,8 @@ if (HSMBUILD_DISPATCHER_GLIBMM)
 endif()
 
 # ================================================
+add_subdirectory(tools)
+
 if (HSMBUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()

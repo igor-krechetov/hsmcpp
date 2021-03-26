@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="sample" qt:editorversion="4.10.2" initial="Off">
+    <qt:editorinfo initialGeometry="461.99;54.06;-20;-20;40;40"/>
+    <state id="Off">
+        <qt:editorinfo scenegeometry="508.89;187.66;355.08;137.66;213.81;100" geometry="508.89;187.66;-153.81;-50;213.81;100"/>
+        <transition type="external" event="POWER_ON" target="State_2">
+            <qt:editorinfo movePoint="-47.95;7.12"/>
+        </transition>
+        <transition type="external" event="INSPECT" target="Off"/>
+    </state>
+    <state id="State_2" initial="Yellow">
+        <qt:editorinfo scenegeometry="320.36;433.44;216.29;326.51;488.65;381.24" geometry="320.36;433.44;-104.07;-106.93;488.65;381.24"/>
+        <state id="Red">
+            <qt:editorinfo scenegeometry="321.50;452.81;261.50;402.81;120;100" geometry="1.14;19.37;-60;-50;120;100"/>
+            <transition type="external" event="NEXT_STATE" target="Yellow">
+                <qt:editorinfo localGeometry="176.80;2.59"/>
+                <script src="onRed2YellowTransition"/>
+            </transition>
+            <onentry>
+                <script src="onRedEnter"/>
+            </onentry>
+            <invoke src="onRed"/>
+            <onexit>
+                <script src="onRedExit"/>
+            </onexit>
+        </state>
+        <state id="Yellow">
+            <qt:editorinfo scenegeometry="597.86;454.85;537.86;404.85;120;100" geometry="277.50;21.41;-60;-50;120;100"/>
+            <transition type="external" event="NEXT_STATE" target="Green"/>
+            <invoke src="onYellow"/>
+        </state>
+        <state id="Green">
+            <qt:editorinfo scenegeometry="461.99;618.04;401.99;568.04;120;100" geometry="141.63;184.60;-60;-50;120;100"/>
+            <transition type="external" event="NEXT_STATE" target="Red">
+                <script src="onGreen2RedTransition"/>
+            </transition>
+        </state>
+        <transition type="external" event="POWER_OFF" target="Off" cond="checkPowerOff">
+            <qt:editorinfo localGeometry="0.15;-166.07" movePoint="63.23;2.04" startTargetFactors="81.18;6.60"/>
+        </transition>
+        <transition type="external" event="EXIT" target="Final_1"/>
+    </state>
+    <final id="Final_1">
+        <qt:editorinfo scenegeometry="436;770;416;750;40;40" geometry="436;770;-20;-20;40;40"/>
+        <onentry>
+            <script src="onEnterFinished"/>
+        </onentry>
+    </final>
+</scxml>

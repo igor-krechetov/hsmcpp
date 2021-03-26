@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" datamodel="ecmascript" qt:editorversion="4.10.2" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" initial="off">
+    <qt:editorinfo initialGeometry="-110;-410;-20;-20;40;40"/>
+    <datamodel>
+        <data id="cook_time" expr="5"/>
+        <data id="door_closed" expr="true"/>
+        <data id="timer" expr="0"/>
+    </datamodel>
+    <state id="off">
+        <qt:editorinfo scenegeometry="-15.01;-257.46;-75.01;-307.46;120;100" geometry="-15.01;-257.46;-60;-50;120;100"/>
+        <transition type="internal" event="turn_on" target="on"/>
+    </state>
+    <state id="on">
+        <qt:editorinfo scenegeometry="40.32;191.13;-120.32;-86.37;416.64;458.41" geometry="40.32;191.13;-160.64;-277.50;416.64;458.41"/>
+        <initial>
+            <qt:editorinfo scenegeometry="-144.64;-170;-164.64;-190;40;40" geometry="-110;-190;-20;-20;40;40"/>
+            <transition target="idle"/>
+        </initial>
+        <transition type="internal" event="turn_off" target="off"/>
+        <transition type="internal" cond="timer &gt;= cook_time" target="off"/>
+        <state id="idle">
+            <qt:editorinfo scenegeometry="88;84.61;28;34.61;120;100" geometry="47.68;-106.52;-60;-50;120;100"/>
+            <transition type="internal" cond="door_closed" target="cooking"/>
+            <transition type="internal" event="door_close" target="cooking">
+                <assign location="door_closed" expr="true"/>
+            </transition>
+        </state>
+        <state id="cooking">
+            <qt:editorinfo scenegeometry="121;289.19;15;239.19;146;100" geometry="80.68;98.06;-106;-50;146;100"/>
+            <transition type="internal" event="door_open" target="idle">
+                <assign location="door_closed" expr="false"/>
+            </transition>
+            <transition type="internal" event="time">
+                <assign location="timer" expr="timer + 1"/>
+            </transition>
+        </state>
+    </state>
+</scxml>

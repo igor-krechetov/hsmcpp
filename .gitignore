@@ -2,3 +2,4 @@ build
 .vscode
 out
 _temp
+.idea

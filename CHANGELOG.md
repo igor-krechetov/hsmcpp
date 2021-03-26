@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+
+## [0.7.0] - 2021-03-26
+### Added
+- SCXML based code generator
+- CMake function to use code generation from CMakeLists
+- Example of generator usage (02_generated)
+
 ## [0.6.0] - 2021-03-23
 ### Added
 - Qt based event dispatcher

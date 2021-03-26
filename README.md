@@ -1,9 +1,9 @@
-[![Generic badge](https://img.shields.io/badge/changelog-v0.6.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Generic badge](https://img.shields.io/badge/changelog-v0.7.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Generic badge](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
 [![Generic badge](https://img.shields.io/badge/documentation-green.svg)](https://github.com/igor-krechetov/hsmcpp/wiki)
 
 # Overview
-HSMCPP is a C++ library proving an easy way (hopefully) to add hierarchical or finite state machine to your code. Main motivation behind making it was lack of suitable alternatives which do not involve large frameworks (usually commercial) and could satisfy needs of the projects I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multithreading or event driven applications.
+HSMCPP is a C++ library providing an easy way (hopefully) to add hierarchical or finite state machine to your code. Main motivation behind making it was lack of suitable alternatives which do not involve large frameworks (usually commercial) and could satisfy needs of the projects I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multithreading or event driven applications.
 
 It's also applicable for single threaded and synchronous applications, but it might not be the most efficient option.
 
@@ -11,7 +11,7 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
 - [Introduction to Hierarchical State Machines](https://barrgroup.com/embedded-systems/how-to/introduction-hierarchical-state-machines)
 - [Hierarchical Finite State Machine for AI Acting Engine](https://towardsdatascience.com/hierarchical-finite-state-machine-for-ai-acting-engine-9b24efc66f2)
 
-## Notable alternatives:
+## Notable FSM/HSM libraries
 - [Qt](https://github.com/qt/qtscxml) (using QStateMachine or QScxmlStateMachine)
 - [QP/C++](https://github.com/QuantumLeaps/qpcpp)
 - [TinyFSM](https://github.com/digint/tinyfsm)
@@ -21,6 +21,7 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
 
 # Key Features
 ## Generic
+- code generation (using state machine described in SCXML format as an input)
 - asynchronous / synchronous operation
 - thread safety
 - configurable event dispatchers:
@@ -42,8 +43,10 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
 
 # Dependencies
 - C++11 or newer
-- glib (optional)
-- glibmm (optional)
+- glib (optional, for dispatcher)
+- glibmm (optional, for dispatcher)
+- Qt (optional, for dispatcher)
+- Python 3 (optional, for code generator)
 
 # Installation
 - `git clone https://github.com/igor-krechetov/hsmcpp.git`

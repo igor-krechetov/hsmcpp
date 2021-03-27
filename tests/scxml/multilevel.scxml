@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="sample" qt:editorversion="4.10.2" initial="State1">
+    <qt:editorinfo initialGeometry="461.99;54.06;-20;-20;40;40"/>
+    <state id="State1">
+        <qt:editorinfo scenegeometry="508.89;187.66;355.08;137.66;213.81;100" geometry="508.89;187.66;-153.81;-50;213.81;100"/>
+        <transition type="external" event="POWER_ON" target="Level2">
+            <qt:editorinfo endTargetFactors="42.61;2.65" movePoint="-47.95;7.12"/>
+        </transition>
+        <transition type="external" event="INSPECT" target="State1">
+            <script>onInspect</script>
+        </transition>
+        <onentry>
+            <script>onEnterOff</script>
+        </onentry>
+        <onexit>
+            <script>onExitOff</script>
+        </onexit>
+    </state>
+    <state id="Level2" initial="State_2_1">
+        <qt:editorinfo scenegeometry="522.18;416.67;139.06;287.58;767.70;452.94" geometry="522.18;416.67;-383.12;-129.09;767.70;452.94"/>
+        <state id="State_2_1">
+            <qt:editorinfo scenegeometry="654.88;433.02;594.88;383.02;146.84;100" geometry="132.70;16.35;-60;-50;146.84;100"/>
+            <onentry>
+                <script>onEnter_2_1</script>
+            </onentry>
+            <invoke srcexpr="onState_2_1"/>
+            <onexit>
+                <script>onState_2_1</script>
+            </onexit>
+            <transition type="external" event="Transition_2" target="State_2_2"/>
+        </state>
+        <state id="State_2_2">
+            <qt:editorinfo scenegeometry="653.65;613.49;593.65;563.49;151.15;100" geometry="131.47;196.82;-60;-50;151.15;100"/>
+            <transition type="external" event="Transition_4" target="Level3">
+                <qt:editorinfo endTargetFactors="82.50;72.85"/>
+            </transition>
+            <invoke srcexpr="onState_2_2"/>
+        </state>
+        <transition type="external" event="POWER_OFF" target="State1" cond="checkPowerOff">
+            <qt:editorinfo localGeometry="1.95;-113.21" movePoint="63.23;2.04" startTargetFactors="61.50;2.65"/>
+        </transition>
+        <transition type="external" event="EXIT" target="Final_1">
+            <script>onExit</script>
+        </transition>
+        <state id="Level3" initial="State_3_1">
+            <qt:editorinfo scenegeometry="274.90;445.22;162.27;354.76;234.99;364.74" geometry="-247.28;28.55;-112.63;-90.46;234.99;364.74"/>
+            <state id="State_3_1">
+                <qt:editorinfo scenegeometry="274.90;466.64;214.90;416.64;138.26;100" geometry="0;21.42;-60;-50;138.26;100"/>
+                <transition type="external" event="Transition_1" target="State_3_2">
+                    <script>onTransition1</script>
+                </transition>
+                <onentry>
+                    <script>onEnter_3_1</script>
+                </onentry>
+            </state>
+            <state id="State_3_2">
+                <qt:editorinfo scenegeometry="274.91;643.07;214.91;593.07;137.23;100" geometry="0.01;197.85;-60;-50;137.23;100"/>
+                <onexit>
+                    <script>onExit_3_2</script>
+                </onexit>
+            </state>
+            <transition type="external" event="Transition_5" target="State_2_1" cond="checkTransition5">
+                <qt:editorinfo startTargetFactors="92.64;24.37"/>
+                <script>onTransition5</script>
+            </transition>
+        </state>
+        <onentry>
+            <script>onEnterLevel2</script>
+        </onentry>
+        <onexit>
+            <script>onExitLevel2</script>
+        </onexit>
+        <invoke srcexpr="onLevel2"/>
+    </state>
+    <final id="Final_1">
+        <qt:editorinfo scenegeometry="1040.77;514.05;1020.77;494.05;40;40" geometry="1040.77;514.05;-20;-20;40;40"/>
+        <onentry>
+            <script>onEnterFinished</script>
+            <script>onEnterExit</script>
+        </onentry>
+        <onexit>
+            <script>onLeaveExit</script>
+        </onexit>
+    </final>
+</scxml>

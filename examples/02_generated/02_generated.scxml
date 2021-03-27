@@ -6,13 +6,13 @@
         <transition type="external" event="SWITCH" target="Off">
             <qt:editorinfo endTargetFactors="20.77;23.68" movePoint="3.06;9.18" startTargetFactors="91.95;22.76"/>
         </transition>
-        <invoke src="onOn"/>
+        <invoke srcexpr="onOn"/>
     </state>
     <state id="Off">
         <qt:editorinfo scenegeometry="464.03;253.94;404.03;203.94;120;100" geometry="464.03;253.94;-60;-50;120;100"/>
         <transition type="external" event="SWITCH" target="On">
             <qt:editorinfo endTargetFactors="35.75;71.10" movePoint="6.12;-17.34" startTargetFactors="22.99;71.91"/>
         </transition>
-        <invoke src="onOff"/>
+        <invoke srcexpr="onOff"/>
     </state>
 </scxml>

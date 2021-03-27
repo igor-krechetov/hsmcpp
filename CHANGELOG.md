@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2021-03-27
+### Added
+- PlantUML state diagrams generator (from SCXML)
 
 ## [0.7.0] - 2021-03-26
 ### Added

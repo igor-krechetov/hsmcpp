@@ -1,7 +1,7 @@
 // Content of this file was generated
 
-#ifndef __GEN_HSM_@CLASS_NAME@__
-#define __GEN_HSM_@CLASS_NAME@__
+#ifndef __GEN_HSM_%CLASS_NAME%__
+#define __GEN_HSM_%CLASS_NAME%__
 
 #include <hsmcpp/hsm.hpp>
 
@@ -45,4 +45,4 @@ protected:
     @HSM_TRANSITION_CONDITIONS@
 };
 
-#endif // __GEN_HSM_@CLASS_NAME@__
+#endif // __GEN_HSM_%CLASS_NAME%__

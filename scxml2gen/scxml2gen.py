@@ -7,8 +7,11 @@ import argparse
 # CMD ARGUMENTS
 parser = argparse.ArgumentParser(description='State machine code/diagram generator')
 argsGenType = parser.add_mutually_exclusive_group(required=True)
-argsGenType.add_argument('-code', action="store_true", help='generate C++ code based on hsmcpp library')
-argsGenType.add_argument('-plantuml', action="store_true", help='generate plantuml state diagram')
+argsGenType.add_argument('-code', action="store_true", help='generate C++ code based on hsmcpp library. '
+                                                            'Supported arguments: '
+                                                            '-class_name, -class_suffix, -template_hpp, -template_cpp, -dest_hpp, -dest_cpp, -dest_dir')
+argsGenType.add_argument('-plantuml', action="store_true", help='generate plantuml state diagram. '
+                                                                'Supported arguments: -out')
 
 parser.add_argument('-scxml', '-s', type=str, required=True, help='path to state machine in SCXML format')
 parser.add_argument('-class_name', '-c', type=str, help='class name used in generated code')
@@ -17,7 +20,9 @@ parser.add_argument('-template_hpp', '-thpp', type=str, help='path to HPP templa
 parser.add_argument('-template_cpp', '-tcpp', type=str, help='path to CPP template file')
 parser.add_argument('-dest_hpp', '-dhpp', type=str, help='path to file in which to store generated HPP content (default: ClassSuffixBase.hpp)')
 parser.add_argument('-dest_cpp', '-dcpp', type=str, help='path to file in which to store generated CPP content (default: ClassSuffixBase.cpp)')
-parser.add_argument('-dest', '-d', type=str, help='path to folder where to store generated files (ignored if -dest_hpp and -dest_cpp are provided)')
+parser.add_argument('-dest_dir', '-d', type=str, help='path to folder where to store generated files (ignored if -dest_hpp and -dest_cpp are provided)')
+
+parser.add_argument('-out', '-o', type=str, help='path for storing generated Plantuml file (only for -plantuml)')
 
 args = parser.parse_args()
 
@@ -28,8 +33,12 @@ if args.code:
     if ((args.dest_hpp == None) and (args.dest_cpp != None)) or ((args.dest_hpp != None) and (args.dest_cpp == None)):
         print("ERROR: both dest_cpp and dest_hpp must be provided")
         exit(1)
-    if (args.dest_hpp == None) and (args.dest_cpp == None) and (args.dest == None):
+    if (args.dest_hpp == None) and (args.dest_cpp == None) and (args.dest_dir == None):
         print("ERROR: destination was not provided")
+        exit(1)
+elif args.plantuml:
+    if args.out == None:
+        print("ERROR: -out option was not specified")
         exit(1)
 
 
@@ -58,15 +67,20 @@ def getCallbackName(elem):
     if elem != None:
         if (getTag(elem.tag) == "onentry") or (getTag(elem.tag) == "onexit"):
             elemCallback = elem.find("{*}script")
-            if elemCallback != None:
-                callback = elemCallback.attrib["src"]
+            if (elemCallback != None) and (elemCallback.text != None):
+                callback = elemCallback.text
             else:
-                print(f"WARNING: skipping {getTag(elem.tag)} element because it doesn't have callback defined (<script> element was expected)")
-        elif (getTag(elem.tag) == "invoke") or (getTag(elem.tag) == "script"):
-            if "src" in elem.attrib:
-                callback = elem.attrib["src"]
+                print(f"WARNING: skipping {getTag(elem.tag)} element because it doesn't have callback defined (<script> element is not defined or has empty value)")
+        elif (getTag(elem.tag) == "invoke"):
+            if "srcexpr" in elem.attrib:
+                callback = elem.attrib["srcexpr"]
             else:
                 print(f"WARNING: skipping {getTag(elem.tag)} element (src attribute is not defined)")
+        elif getTag(elem.tag) == "script":
+            if elem.text != None:
+                callback = elem.text
+            else:
+                print(f"WARNING: skipping {getTag(elem.tag)} element (doesnt have any value)")
         elif (getTag(elem.tag) == "transition") and ("cond" in elem.attrib):
             callback = elem.attrib["cond"]
 
@@ -86,16 +100,26 @@ def parseScxmlStates(parentElement):
                         "transitions": []}
             validateIdentifier(newState["id"])
 
+            if getTag(curState.tag) == "final":
+                newState["is_final"] = True
+
             if curState.find("{*}state") != None:
+                print(f"###### {newState['id']}")
                 if "initial" in curState.attrib:
                     newState["initial_state"] = curState.attrib["initial"]
                 else:
-                    initialTransition = curState.find("{*}transition")
-                    if (initialTransition != None) and ("target" in initialTransition.attrib):
-                        newState["initial_state"] = initialTransition.attrib["target"]
-                    else:
-                        print(f"ERROR: <initial> element doesn't have transition defined or that transition doesnt have target (parent state [{newState['id']}])")
-                        exit(3)
+                    initialTransition = curState.find("{*}initial")
+                    if (initialTransition != None):
+                        initialTransition = initialTransition.find("{*}transition")
+                        if (initialTransition != None) and ("target" in initialTransition.attrib):
+                            newState["initial_state"] = initialTransition.attrib["target"]
+                        else:
+                            print(f"ERROR: <initial> element doesn't have transition defined or that transition doesnt have target (parent state [{newState['id']}])")
+                            exit(3)
+                print(newState)
+                if "initial_state" not in newState:
+                    print(f"ERROR: initial substate not defined for [{newState['id']}]")
+                    exit(3)
 
             onentry = getCallbackName(curState.find("{*}onentry"))
             onexit = getCallbackName(curState.find("{*}onexit"))
@@ -138,13 +162,12 @@ def parseScxmlStates(parentElement):
 
 # NOTE: example of structure returned by parseScxml
 # hsm = {"initial_state": "Off",
-#        "states_list": ["", "", ...]
 #        "states": [
 #            {
 #                "id": "Red",
 #                "initial_state": "Yellow",
 #                "onstate": "",
-#                "onenter": "",
+#                "onentry": "",
 #                "onexit": "",
 #                "transitions": [
 #                    {
@@ -176,6 +199,8 @@ def parseScxml(path):
     return hsm
 
 
+# ==========================================================================================================
+# C++ code generation
 def countOffset(line):
     offset = 0
     for c in line:
@@ -201,17 +226,25 @@ def generateFile(vars, templatePath, destPath):
         with open(destPath, "w") as fileDestination:
             for templateLine in fileTemplate:
                 for curVariable in vars:
-                    curVariableID = "@" + curVariable + "@"
-                    if curVariableID in templateLine:
-                        if curVariableID != templateLine.strip(' \n\r'):
-                            # if line contains other text besides the keywork we insert data as-is
-                            templateLine = templateLine.replace(curVariableID, list2str(vars[curVariable]))
-                        else:
-                            # if line contains only keyword we should offset data when inserting it
-                            offset = generateOffset(countOffset(templateLine))
-                            templateLine = ""
-                            for curValue in vars[curVariable]:
-                                templateLine += offset + curValue + "\n"
+                    variableTypes = ["@", "%"]
+                    for curType in variableTypes:
+                        curVariableID = curType + curVariable + curType
+                        if curVariableID in templateLine:
+                            if curVariableID != templateLine.strip(' \n\r'):
+                                # if line contains other text besides the keyword we insert data as-is
+                                curVariableValue = list2str(vars[curVariable])
+                                if curType == "%":
+                                    curVariableValue = curVariableValue.upper()
+                                templateLine = templateLine.replace(curVariableID, curVariableValue)
+                            else:
+                                # if line contains only keyword we should offset data when inserting it
+                                offset = generateOffset(countOffset(templateLine))
+                                templateLine = ""
+                                for curValue in vars[curVariable]:
+                                    if curType == "%":
+                                        curValue = curValue.upper()
+                                    templateLine += offset + curValue + "\n"
+
                 fileDestination.writelines(templateLine)
 
 
@@ -240,7 +273,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
 
     vars = {"ENUM_STATES_DEF": [],
             "ENUM_EVENTS_DEF": set(),
-            "CLASS_NAME": args.class_name + "Base",
+            "CLASS_NAME": args.class_name + args.class_suffix,
             "ENUM_STATES": f"{args.class_name}States",
             "ENUM_EVENTS": f"{args.class_name}Events",
             "INITIAL_STATE": hsm["initial_state"],
@@ -330,6 +363,65 @@ def generateCppCode(hsm, pathHpp, pathCpp):
 
 
 # ==========================================================================================================
+# Plantuml generation
+def generatePlantumlState(stateData, level):
+    plantumlState = ""
+    finalStates = []
+    offset = generateOffset(level * 4)
+
+    if "states" in stateData:
+        plantumlState += f"\n{offset}state {stateData['id']} {{\n"
+        plantumlState += f"{generateOffset((level + 1) * 4)}[*] -> {stateData['initial_state']}\n"
+
+        for substate in stateData["states"]:
+            (substatePlantuml, substateFinalStates) = generatePlantumlState(substate, level + 1)
+            plantumlState += substatePlantuml
+            finalStates += substateFinalStates
+        plantumlState += f"{offset}}}\n\n"
+    elif ("is_final" in stateData) and (stateData["is_final"] == True):
+        finalStates = [stateData['id']]
+    else:
+        if "onentry" in stateData:
+            plantumlState += f"\n{offset}{stateData['id']} : -> {stateData['onentry']}\n"
+        if "onstate" in stateData:
+            plantumlState += f"\n{offset}{stateData['id']} : {stateData['onstate']}\n"
+        if "onexit" in stateData:
+            plantumlState += f"\n{offset}{stateData['id']} : <- {stateData['onexit']}\n"
+
+    for curTransition in stateData["transitions"]:
+        plantumlState += f"{offset}{stateData['id']} --> {curTransition['target']}: {curTransition['event']}"
+        if "condition" in curTransition:
+            plantumlState += f"\\n[{curTransition['condition']}]"
+        if "callback" in curTransition:
+            plantumlState += f"\\n<{curTransition['callback']}>"
+        plantumlState += "\n"
+
+    return (plantumlState, finalStates)
+
+
+def generatePlantuml(hsm, dest):
+    plantuml = "@startuml\n\n"
+    plantuml += f"[*] --> {hsm['initial_state']}\n"
+    finalStates = []
+
+    for curState in hsm["states"]:
+        (statePlantuml, stateFinalStates) = generatePlantumlState(curState, 0)
+        plantuml += statePlantuml
+        finalStates += stateFinalStates
+
+    print(finalStates)
+
+    for finalID in finalStates:
+        plantuml = plantuml.replace(f"--> {finalID}", "--> [*]")
+
+    plantuml += "\n@enduml"
+    print(plantuml)
+
+    with open(dest, "w") as destFile:
+        destFile.write(plantuml)
+
+
+# ==========================================================================================================
 # MAIN
 if __name__ == "__main__":
     hsm = parseScxml(args.scxml)
@@ -339,18 +431,18 @@ if __name__ == "__main__":
             print("Generating code...")
 
             if args.dest_hpp == None:
-                destHpp = f"{args.dest}/{args.class_name}{args.class_suffix}.hpp"
+                destHpp = f"{args.dest_dir}/{args.class_name}{args.class_suffix}.hpp"
             else:
                 destHpp = args.dest_hpp
             if args.dest_cpp == None:
-                destCpp = f"{args.dest}/{args.class_name}{args.class_suffix}.cpp"
+                destCpp = f"{args.dest_dir}/{args.class_name}{args.class_suffix}.cpp"
             else:
                 destCpp = args.dest_cpp
 
             generateCppCode(hsm, destHpp, destCpp)
         elif args.plantuml:
-            print("TODO: Plantuml generation is not implemented yet")
-            exit(7)
+            # TODO: fix path
+            generatePlantuml(hsm, args.out)
     else:
         print("ERROR: failed to parse SCXML")
         exit(2)

@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/changelog-v0.7.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Generic badge](https://img.shields.io/badge/changelog-v0.8.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Generic badge](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
 [![Generic badge](https://img.shields.io/badge/documentation-green.svg)](https://github.com/igor-krechetov/hsmcpp/wiki)
 
@@ -22,12 +22,14 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
 # Key Features
 ## Generic
 - code generation (using state machine described in SCXML format as an input)
+- PlantUML diagrams generation (from SCXML files)
 - asynchronous / synchronous operation
 - thread safety
 - configurable event dispatchers:
   - std::thread based
   - glib based
   - glibmm based
+  - Qt based
   - possibility to implement your own dispatcher
 
 ## State machine related

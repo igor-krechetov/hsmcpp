@@ -27,17 +27,17 @@ parser.add_argument('-out', '-o', type=str, help='path for storing generated Pla
 args = parser.parse_args()
 
 if args.code:
-    if (args.scxml == None) or (args.class_name == None) or (args.template_hpp == None) or (args.template_cpp == None):
+    if (args.scxml is None) or (args.class_name is None) or (args.template_hpp is None) or (args.template_cpp is None):
         print("ERROR: scxml, class_name, template_hpp or template_cpp was not provided")
         exit(1)
-    if ((args.dest_hpp == None) and (args.dest_cpp != None)) or ((args.dest_hpp != None) and (args.dest_cpp == None)):
+    if ((args.dest_hpp is None) and (args.dest_cpp is not None)) or ((args.dest_hpp is not None) and (args.dest_cpp is None)):
         print("ERROR: both dest_cpp and dest_hpp must be provided")
         exit(1)
-    if (args.dest_hpp == None) and (args.dest_cpp == None) and (args.dest_dir == None):
+    if (args.dest_hpp is None) and (args.dest_cpp is None) and (args.dest_dir is None):
         print("ERROR: destination was not provided")
         exit(1)
 elif args.plantuml:
-    if args.out == None:
+    if args.out is None:
         print("ERROR: -out option was not specified")
         exit(1)
 
@@ -47,7 +47,7 @@ elif args.plantuml:
 def validateIdentifier(identifier):
     isCorrect = False
     p = re.compile("^[a-zA-Z_]+[\w]*$")
-    if p.match(identifier) == None:
+    if p.match(identifier) is None:
         print(f"ERROR: <{identifier}> is not a valid C++ identifier (only digits, underscores, lowercase and uppercase Latin letters are permitted)")
         exit(3)
     else:
@@ -64,99 +64,134 @@ def getTag(str):
 
 def getCallbackName(elem):
     callback = None
-    if elem != None:
+    if elem is not None:
         if (getTag(elem.tag) == "onentry") or (getTag(elem.tag) == "onexit"):
             elemCallback = elem.find("{*}script")
-            if (elemCallback != None) and (elemCallback.text != None):
+            if (elemCallback is not None) and (elemCallback.text is not None):
                 callback = elemCallback.text
             else:
-                print(f"WARNING: skipping {getTag(elem.tag)} element because it doesn't have callback defined (<script> element is not defined or has empty value)")
+                print(f"WARNING: skipping {getTag(elem.tag)} element because it doesn't have callback defined "
+                      f"(<script> element is not defined or has empty value)\n{dumpXmlElement(elem)}")
         elif (getTag(elem.tag) == "invoke"):
             if "srcexpr" in elem.attrib:
                 callback = elem.attrib["srcexpr"]
             else:
-                print(f"WARNING: skipping {getTag(elem.tag)} element (src attribute is not defined)")
+                print(f"WARNING: skipping {getTag(elem.tag)} element (srcexpr attribute is not defined)"
+                      f"\n{dumpXmlElement(elem)}")
         elif getTag(elem.tag) == "script":
-            if elem.text != None:
+            if elem.text is not None:
                 callback = elem.text
             else:
-                print(f"WARNING: skipping {getTag(elem.tag)} element (doesnt have any value)")
+                print(f"WARNING: skipping {getTag(elem.tag)} element (doesnt have any value)\n{dumpXmlElement(elem)}")
         elif (getTag(elem.tag) == "transition") and ("cond" in elem.attrib):
             callback = elem.attrib["cond"]
 
-    if callback != None:
+    if callback is not None:
         validateIdentifier(callback)
 
     return callback
 
 
-def parseScxmlStates(parentElement):
-    stateNodes = ["{*}state", "{*}final"]
+def dumpXmlElement(elem):
+    return ET.tostring(elem).decode()
+
+
+def parseScxmlStates(parentElement, rootDir, namePrefix):
+    stateNodes = ["{*}state", "{*}include", "{*}final"]
     states = []
+    initialState = None
+
+    if "initial" in parentElement.attrib:
+        initialState = namePrefix + parentElement.attrib["initial"]
+    else:
+        initialTransition = parentElement.find("{*}initial")
+        if (initialTransition is not None):
+            initialTransition = initialTransition.find("{*}transition")
+            if (initialTransition is not None) and ("target" in initialTransition.attrib):
+                initialState = namePrefix + initialTransition.attrib["target"]
+            else:
+                print(f"ERROR: <initial> element doesn't have transition defined or that transition "
+                      f"doesnt have target (parent state [{parentElement.attrib['id']}])\n{dumpXmlElement(parentElement)}")
+                exit(3)
+
+    if 'src' in parentElement.attrib:
+        includePath = os.path.join(rootDir, parentElement.attrib['src'])
+        print(f"-- INCLUDE: {includePath}")
+        subScxml = parseScxml(includePath, namePrefix + parentElement.attrib['id'] + "__")
+
+        if subScxml is not None:
+            states += subScxml
+        else:
+            print(f"ERROR: can't load included file: <{parentElement.attrib['src']}>")
+            exit(4)
 
     for curNode in stateNodes:
         for curState in parentElement.findall(curNode):
-            newState = {"id": curState.attrib["id"],
-                        "transitions": []}
-            validateIdentifier(newState["id"])
+            if getTag(curState.tag) == "include":
+                if 'href' in curState.attrib:
+                    newPrefix = namePrefix
+                    includePath = os.path.join(rootDir, curState.attrib['href'])
+                    print(f"-- INCLUDE: {includePath}")
 
-            if getTag(curState.tag) == "final":
-                newState["is_final"] = True
+                    # add prefix only if xi:include is wrapped inside aa state with no other items inside
+                    if ('id' in parentElement.attrib) and (parentElement.find("{*}state") is None) and (len(parentElement.findall("{*}include")) == 1):
+                        newPrefix += parentElement.attrib['id'] + "__"
+                    subScxml = parseScxml(includePath, newPrefix)
 
-            if curState.find("{*}state") != None:
-                print(f"###### {newState['id']}")
-                if "initial" in curState.attrib:
-                    newState["initial_state"] = curState.attrib["initial"]
-                else:
-                    initialTransition = curState.find("{*}initial")
-                    if (initialTransition != None):
-                        initialTransition = initialTransition.find("{*}transition")
-                        if (initialTransition != None) and ("target" in initialTransition.attrib):
-                            newState["initial_state"] = initialTransition.attrib["target"]
-                        else:
-                            print(f"ERROR: <initial> element doesn't have transition defined or that transition doesnt have target (parent state [{newState['id']}])")
-                            exit(3)
-                print(newState)
-                if "initial_state" not in newState:
-                    print(f"ERROR: initial substate not defined for [{newState['id']}]")
-                    exit(3)
-
-            onentry = getCallbackName(curState.find("{*}onentry"))
-            onexit = getCallbackName(curState.find("{*}onexit"))
-            invoke = getCallbackName(curState.find("{*}invoke"))
-
-            if onentry != None:
-                newState["onentry"] = onentry
-            if onexit != None:
-                newState["onexit"] = onexit
-            if invoke != None:
-                newState["onstate"] = invoke
-
-            for curTransition in curState.iterfind("{*}transition"):
-                if "event" in curTransition.attrib:
-                    newTransition = {"event": curTransition.attrib["event"]}
-                    validateIdentifier(newTransition["event"])
-
-                    if "target" in curTransition.attrib:
-                        newTransition["target"] = curTransition.attrib["target"]
+                    if subScxml is not None:
+                        states += subScxml
                     else:
-                        newTransition["target"] = newState["id"]
-
-                    if "cond" in curTransition.attrib:
-                        newTransition["condition"] = getCallbackName(curTransition)
-
-                    transitionCallback = getCallbackName(curTransition.find("{*}script"))
-                    if transitionCallback != None:
-                        newTransition["callback"] = transitionCallback
-
-                    newState["transitions"].append(newTransition)
+                        print(f"ERROR: failed to load included file: [{includePath}]")
+                        exit(4)
                 else:
-                    print("WARNING: transition without event was skipped because it's not supported by hsmcpp")
+                    print(f"ERROR: include statement doesn't have href attribute defined\n{dumpXmlElement(curState)}")
+                    exit(5)
+            else:
+                newState = {"id": namePrefix + curState.attrib["id"],
+                            "transitions": []}
+                validateIdentifier(newState["id"])
 
-            if curState.find("{*}state") != None:
-                newState["states"] = parseScxmlStates(curState)
+                if getTag(curState.tag) == "final":
+                    newState["is_final"] = True
+                elif newState['id'] == initialState:
+                    newState["initial_state"] = True
 
-            states.append(newState)
+                onentry = getCallbackName(curState.find("{*}onentry"))
+                onexit = getCallbackName(curState.find("{*}onexit"))
+                invoke = getCallbackName(curState.find("{*}invoke"))
+
+                if onentry is not None:
+                    newState["onentry"] = onentry
+                if onexit is not None:
+                    newState["onexit"] = onexit
+                if invoke is not None:
+                    newState["onstate"] = invoke
+
+                for curTransition in curState.iterfind("{*}transition"):
+                    if "event" in curTransition.attrib:
+                        newTransition = {"event": curTransition.attrib["event"]}
+                        validateIdentifier(newTransition["event"])
+
+                        if "target" in curTransition.attrib:
+                            newTransition["target"] = namePrefix + curTransition.attrib["target"]
+                        else:
+                            newTransition["target"] = namePrefix + newState["id"]
+
+                        if "cond" in curTransition.attrib:
+                            newTransition["condition"] = getCallbackName(curTransition)
+
+                        transitionCallback = getCallbackName(curTransition.find("{*}script"))
+                        if transitionCallback is not None:
+                            newTransition["callback"] = transitionCallback
+
+                        newState["transitions"].append(newTransition)
+                    else:
+                        print(f"WARNING: transition without event was skipped because it's not supported by hsmcpp\n{dumpXmlElement(curTransition)}")
+
+                if (curState.find("{*}state") is not None) or (curState.find("{*}include") is not None) or ('src' in curState.attrib):
+                    newState["states"] = parseScxmlStates(curState, rootDir, namePrefix)
+
+                states.append(newState)
     return states
 
 
@@ -180,22 +215,37 @@ def parseScxmlStates(parentElement):
 #                "states": [...]
 #            }
 #        ]}
-def parseScxml(path):
+def parseScxml(path, namePrefix = ""):
     hsm = None
-    tree = ET.parse(path)
-    rootScxml = tree.getroot()
 
-    # TODO: check if other namespaces are possible
-    if ("{http://www.w3.org/2005/07/scxml}scxml" == rootScxml.tag) or ("scxml" == getTag(rootScxml.tag)):
-        if "initial" in rootScxml.attrib:
-            initialState = rootScxml.attrib["initial"]
-            states = parseScxmlStates(rootScxml)
+    if os.path.exists(path):
+        pathDir = os.path.dirname(path)
+        tree = ET.parse(path)
+        rootScxml = tree.getroot()
 
-            hsm = {"initial_state": initialState, "states": states}
+        # TODO: check if other namespaces are possible
+        if ("{http://www.w3.org/2005/07/scxml}scxml" == rootScxml.tag) or ("scxml" == getTag(rootScxml.tag)):
+            if "initial" in rootScxml.attrib:
+                initialState = namePrefix + rootScxml.attrib["initial"]
+            else:
+                initialState = ""
+            states = parseScxmlStates(rootScxml, pathDir, namePrefix)
+            isCorrectInitialState = False
+
+            for curState in states:
+                if curState['id'] == initialState:
+                    curState['initial_state'] = True
+                    isCorrectInitialState = True
+                    break
+
+            if (isCorrectInitialState == True) or (len(initialState) == 0):
+                hsm = states
+            else:
+                print(f"ERROR: incorrect initial state set for HSM: {initialState} [{path}]")
         else:
-            print("ERROR: initial state is not set or document is empty")
+            print(f"ERROR: not an SCXML document: [{path}]")
     else:
-        print("ERROR: not an SCXML document")
+        print(f"ERROR: file not found: [{path}]")
     return hsm
 
 
@@ -221,18 +271,18 @@ def list2str(listData):
     return result
 
 
-def generateFile(vars, templatePath, destPath):
+def generateFile(genVars, templatePath, destPath):
     with open(templatePath, "r") as fileTemplate:
         with open(destPath, "w") as fileDestination:
             for templateLine in fileTemplate:
-                for curVariable in vars:
+                for curVariable in genVars:
                     variableTypes = ["@", "%"]
                     for curType in variableTypes:
                         curVariableID = curType + curVariable + curType
                         if curVariableID in templateLine:
                             if curVariableID != templateLine.strip(' \n\r'):
                                 # if line contains other text besides the keyword we insert data as-is
-                                curVariableValue = list2str(vars[curVariable])
+                                curVariableValue = list2str(genVars[curVariable])
                                 if curType == "%":
                                     curVariableValue = curVariableValue.upper()
                                 templateLine = templateLine.replace(curVariableID, curVariableValue)
@@ -240,7 +290,7 @@ def generateFile(vars, templatePath, destPath):
                                 # if line contains only keyword we should offset data when inserting it
                                 offset = generateOffset(countOffset(templateLine))
                                 templateLine = ""
-                                for curValue in vars[curVariable]:
+                                for curValue in genVars[curVariable]:
                                     if curType == "%":
                                         curValue = curValue.upper()
                                     templateLine += offset + curValue + "\n"
@@ -269,60 +319,71 @@ def prepareHsmcppStateExitCallbackDeclaration(funcName):
 
 
 def generateCppCode(hsm, pathHpp, pathCpp):
-    pendingStates = hsm["states"]
+    pendingStates = hsm
 
-    vars = {"ENUM_STATES_DEF": [],
-            "ENUM_EVENTS_DEF": set(),
-            "CLASS_NAME": args.class_name + args.class_suffix,
-            "ENUM_STATES": f"{args.class_name}States",
-            "ENUM_EVENTS": f"{args.class_name}Events",
-            "INITIAL_STATE": hsm["initial_state"],
-            "HSM_STATE_ACTIONS": set(),
-            "HSM_STATE_ENTERING_ACTIONS": set(),
-            "HSM_STATE_EXITING_ACTIONS": set(),
-            "HSM_TRANSITION_ACTIONS": set(),
-            "HSM_TRANSITION_CONDITIONS": set(),
-            "HPP_FILE": os.path.basename(pathHpp),
-            "REGISTER_STATES": [],
-            "REGISTER_SUBSTATES": [],
-            "REGISTER_TRANSITIONS": []}
+    genVars = {"ENUM_STATES_DEF": [],
+               "ENUM_EVENTS_DEF": set(),
+               "CLASS_NAME": args.class_name + args.class_suffix,
+               "ENUM_STATES": f"{args.class_name}States",
+               "ENUM_EVENTS": f"{args.class_name}Events",
+               "INITIAL_STATE": "",
+               "HSM_STATE_ACTIONS": set(),
+               "HSM_STATE_ENTERING_ACTIONS": set(),
+               "HSM_STATE_EXITING_ACTIONS": set(),
+               "HSM_TRANSITION_ACTIONS": set(),
+               "HSM_TRANSITION_CONDITIONS": set(),
+               "HPP_FILE": os.path.basename(pathHpp),
+               "REGISTER_STATES": [],
+               "REGISTER_SUBSTATES": [],
+               "REGISTER_TRANSITIONS": []}
+
+    for curState in hsm:
+        if ('initial_state' in curState) and (curState['initial_state'] == True):
+            genVars['INITIAL_STATE'] = curState['id']
+            break
 
     while len(pendingStates) > 0:
         substates = []
         for curState in pendingStates:
             if "states" in curState:
                 substates += curState["states"]
+
                 # initial state must be registered first
-                vars["REGISTER_SUBSTATES"].append(f"registerSubstate({vars['ENUM_STATES']}::{curState['id']}, " +
-                                                  f"{vars['ENUM_STATES']}::{curState['initial_state']}" +
-                                                  ", true);")
+                for genEntryPoint in [True, False]:
+                    for curSubstate in curState["states"]:
+                        isInitialState = ("initial_state" in curSubstate) and (curSubstate["initial_state"] == True)
+                        initialStateFlag = ""
+                        print(f"{genEntryPoint}, {isInitialState}, {curSubstate['id']}")
+                        if genEntryPoint == True:
+                            if isInitialState == True:
+                                initialStateFlag = ", true"
+                            else:
+                                continue
+                        elif isInitialState == True:
+                            continue
 
-                for curSubstate in curState["states"]:
-                    isInitialState = ""
-                    if curState["initial_state"] == curSubstate["id"]:
-                        continue
-                    vars["REGISTER_SUBSTATES"].append(f"registerSubstate({vars['ENUM_STATES']}::{curState['id']}, " +
-                                                                       f"{vars['ENUM_STATES']}::{curSubstate['id']}" +
-                                                                       f"{isInitialState});")
+                        genVars["REGISTER_SUBSTATES"].append(f"registerSubstate({genVars['ENUM_STATES']}::{curState['id']}, " +
+                                                                              f"{genVars['ENUM_STATES']}::{curSubstate['id']}" +
+                                                                              f"{initialStateFlag});")
 
-            vars["ENUM_STATES_DEF"].append(f"{curState['id']},")
+            genVars["ENUM_STATES_DEF"].append(f"{curState['id']},")
             registerCallbacks = ""
 
             if 'onstate' in curState:
-                vars["HSM_STATE_ACTIONS"].add(prepareHsmcppStateCallbackDeclaration(curState['onstate']))
-                registerCallbacks += f", &{vars['CLASS_NAME']}::{curState['onstate']}"
+                genVars["HSM_STATE_ACTIONS"].add(prepareHsmcppStateCallbackDeclaration(curState['onstate']))
+                registerCallbacks += f", &{genVars['CLASS_NAME']}::{curState['onstate']}"
             else:
                 registerCallbacks += ", nullptr"
 
             if 'onentry' in curState:
-                vars["HSM_STATE_ENTERING_ACTIONS"].add(prepareHsmcppStateEnterCallbackDeclaration(curState['onentry']))
-                registerCallbacks += f", &{vars['CLASS_NAME']}::{curState['onentry']}"
+                genVars["HSM_STATE_ENTERING_ACTIONS"].add(prepareHsmcppStateEnterCallbackDeclaration(curState['onentry']))
+                registerCallbacks += f", &{genVars['CLASS_NAME']}::{curState['onentry']}"
             else:
                 registerCallbacks += ", nullptr"
 
             if 'onexit' in curState:
-                vars["HSM_STATE_EXITING_ACTIONS"].add(prepareHsmcppStateExitCallbackDeclaration(curState['onexit']))
-                registerCallbacks += f", &{vars['CLASS_NAME']}::{curState['onexit']}"
+                genVars["HSM_STATE_EXITING_ACTIONS"].add(prepareHsmcppStateExitCallbackDeclaration(curState['onexit']))
+                registerCallbacks += f", &{genVars['CLASS_NAME']}::{curState['onexit']}"
             else:
                 registerCallbacks += ", nullptr"
 
@@ -331,35 +392,35 @@ def generateCppCode(hsm, pathHpp, pathCpp):
             else:
                 registerCallbacks = ""
 
-            vars["REGISTER_STATES"].append(f"registerState<{vars['CLASS_NAME']}>({vars['ENUM_STATES']}::{curState['id']}{registerCallbacks});")
+            genVars["REGISTER_STATES"].append(f"registerState<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}{registerCallbacks});")
 
             for curTransition in curState["transitions"]:
                 registerCallbacks = ""
-                vars["ENUM_EVENTS_DEF"].add(f"{curTransition['event']},")
+                genVars["ENUM_EVENTS_DEF"].add(f"{curTransition['event']},")
 
                 if 'callback' in curTransition:
-                    vars["HSM_TRANSITION_ACTIONS"].add(prepareHsmcppTransitionCallbackDeclaration(curTransition['callback']))
-                    registerCallbacks += f", &{vars['CLASS_NAME']}::{curTransition['callback']}"
+                    genVars["HSM_TRANSITION_ACTIONS"].add(prepareHsmcppTransitionCallbackDeclaration(curTransition['callback']))
+                    registerCallbacks += f", &{genVars['CLASS_NAME']}::{curTransition['callback']}"
                 else:
                     registerCallbacks += ", nullptr"
 
                 if 'condition' in curTransition:
-                    vars["HSM_TRANSITION_CONDITIONS"].add(prepareHsmcppConditionCallbackDeclaration(curTransition['condition']))
-                    registerCallbacks += f", &{vars['CLASS_NAME']}::{curTransition['condition']}"
+                    genVars["HSM_TRANSITION_CONDITIONS"].add(prepareHsmcppConditionCallbackDeclaration(curTransition['condition']))
+                    registerCallbacks += f", &{genVars['CLASS_NAME']}::{curTransition['condition']}"
 
                 if "&" not in registerCallbacks:
                     registerCallbacks = ", this" + registerCallbacks
                 else:
                     registerCallbacks = ""
 
-                vars["REGISTER_TRANSITIONS"].append(f"registerTransition<{vars['CLASS_NAME']}>({vars['ENUM_STATES']}::{curState['id']}, " +
-                                                                                             f"{vars['ENUM_STATES']}::{curTransition['target']}, " +
-                                                                                             f"{vars['ENUM_EVENTS']}::{curTransition['event']}" +
+                genVars["REGISTER_TRANSITIONS"].append(f"registerTransition<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}, " +
+                                                                                             f"{genVars['ENUM_STATES']}::{curTransition['target']}, " +
+                                                                                             f"{genVars['ENUM_EVENTS']}::{curTransition['event']}" +
                                                                                              registerCallbacks + ");")
         pendingStates = substates
 
-    generateFile(vars, args.template_hpp, pathHpp)
-    generateFile(vars, args.template_cpp, pathCpp)
+    generateFile(genVars, args.template_hpp, pathHpp)
+    generateFile(genVars, args.template_cpp, pathCpp)
 
 
 # ==========================================================================================================
@@ -369,9 +430,11 @@ def generatePlantumlState(stateData, level):
     finalStates = []
     offset = generateOffset(level * 4)
 
+    if 'initial_state' in stateData:
+        plantumlState += f"{generateOffset(level * 4)}[*] --> {stateData['id']}\n"
+
     if "states" in stateData:
         plantumlState += f"\n{offset}state {stateData['id']} {{\n"
-        plantumlState += f"{generateOffset((level + 1) * 4)}[*] -> {stateData['initial_state']}\n"
 
         for substate in stateData["states"]:
             (substatePlantuml, substateFinalStates) = generatePlantumlState(substate, level + 1)
@@ -401,21 +464,17 @@ def generatePlantumlState(stateData, level):
 
 def generatePlantuml(hsm, dest):
     plantuml = "@startuml\n\n"
-    plantuml += f"[*] --> {hsm['initial_state']}\n"
     finalStates = []
 
-    for curState in hsm["states"]:
+    for curState in hsm:
         (statePlantuml, stateFinalStates) = generatePlantumlState(curState, 0)
         plantuml += statePlantuml
         finalStates += stateFinalStates
-
-    print(finalStates)
 
     for finalID in finalStates:
         plantuml = plantuml.replace(f"--> {finalID}", "--> [*]")
 
     plantuml += "\n@enduml"
-    print(plantuml)
 
     with open(dest, "w") as destFile:
         destFile.write(plantuml)
@@ -424,25 +483,26 @@ def generatePlantuml(hsm, dest):
 # ==========================================================================================================
 # MAIN
 if __name__ == "__main__":
+    print(f"Loading [{args.scxml}] ...")
     hsm = parseScxml(args.scxml)
 
-    if hsm != None:
+    if hsm is not None:
         if args.code:
             print("Generating code...")
 
-            if args.dest_hpp == None:
+            if args.dest_hpp is None:
                 destHpp = f"{args.dest_dir}/{args.class_name}{args.class_suffix}.hpp"
             else:
                 destHpp = args.dest_hpp
-            if args.dest_cpp == None:
+            if args.dest_cpp is None:
                 destCpp = f"{args.dest_dir}/{args.class_name}{args.class_suffix}.cpp"
             else:
                 destCpp = args.dest_cpp
 
             generateCppCode(hsm, destHpp, destCpp)
         elif args.plantuml:
-            # TODO: fix path
+            print(f"Generating PlantUML...")
             generatePlantuml(hsm, args.out)
     else:
-        print("ERROR: failed to parse SCXML")
+        print(f"ERROR: failed to parse SCXML: [{args.scxml}]")
         exit(2)

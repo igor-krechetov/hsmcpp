@@ -1,0 +1,13 @@
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml">
+    <state id="State1">
+        <onentry>
+            <script>onEnteringState1</script>
+        </onentry>
+        <onexit>
+            <script>onExitingState1</script>
+        </onexit>
+        <transition event="SELF_TRANSITION"></transition>
+        <transition event="EVENT_2" target="State2"></transition>
+        <invoke srcexpr="onState1"></invoke>
+    </state>
+</scxml>

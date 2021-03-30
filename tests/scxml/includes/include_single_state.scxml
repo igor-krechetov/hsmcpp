@@ -1,0 +1,12 @@
+<scxml version="1.0" xmlns="http://www.w3.org/2005/07/scxml"><!--   node-size-and-position x=0 y=0 w=1642 h=995  -->
+ <state id="imported_state"><!--   node-size-and-position x=170 y=140 w=190 h=130  -->
+  <onentry>
+   <script>onEnteringImportedState</script>
+  </onentry>
+  <onexit>
+   <script>onExitImportedState</script>
+  </onexit>
+  <transition event="SELF_TRANSITION"><!--   edge-path [imported_state]  pointx=0 pointy=60 offsetx=0 offsety=5  --></transition>
+  <invoke srcexpr="onImportedState"></invoke>
+ </state>
+</scxml>

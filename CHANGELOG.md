@@ -1,9 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2021-03-30
+### Added
+- scxml2gen: support for include of external files
+
 ## [0.8.0] - 2021-03-27
 ### Added
-- PlantUML state diagrams generator (from SCXML)
+- scxml2gen: PlantUML state diagrams generator (from SCXML)
+- scxml2gen: support for uppercase generator variables in templates
 
 ## [0.7.0] - 2021-03-26
 ### Added

@@ -1,0 +1,9 @@
+<scxml initial="State0" version="1.0" xmlns="http://www.w3.org/2005/07/scxml">
+ <state id="State0">
+  <transition event="EVENT_1" target="Substates1"></transition>
+ </state>
+ <state id="State2"></state>
+ <state id="Substates1" src="./substates1.scxml">
+  <transition event="EVENT_2" target="State2"></transition>
+ </state>
+</scxml>

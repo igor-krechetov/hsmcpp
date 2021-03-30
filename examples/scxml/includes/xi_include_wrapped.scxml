@@ -1,0 +1,10 @@
+<scxml initial="State0" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <state id="State0">
+        <transition event="EVENT_1" target="ImportedState"></transition>
+    </state>
+    <state id="ImportedState">
+        <transition event="EVENT_2" target="State2"></transition>
+        <xi:include href="./substates1.scxml" parse="xml"></xi:include>
+    </state>
+    <state id="State2"></state>
+</scxml>

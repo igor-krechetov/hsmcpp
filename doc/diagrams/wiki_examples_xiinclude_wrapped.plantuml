@@ -1,0 +1,15 @@
+@startuml
+
+[*] --> State0
+State0 --> ImportedState: EVENT_1
+
+state ImportedState {
+    [*] --> ImportedState__state_a
+    ImportedState__state_a --> ImportedState__state_b: EVENT_B
+    ImportedState__state_b --> ImportedState__state_c: EVENT_C
+    ImportedState__state_c --> ImportedState__state_b: EVENT_B
+}
+
+ImportedState --> State2: EVENT_2
+
+@enduml

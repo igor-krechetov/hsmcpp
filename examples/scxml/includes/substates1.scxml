@@ -1,0 +1,11 @@
+<scxml initial="state_a" version="1.0" xmlns="http://www.w3.org/2005/07/scxml">
+    <state id="state_a">
+        <transition event="EVENT_B" target="state_b"></transition>
+    </state>
+    <state id="state_b">
+        <transition event="EVENT_C" target="state_c"></transition>
+    </state>
+    <state id="state_c">
+        <transition event="EVENT_B" target="state_b"></transition>
+    </state>
+</scxml>

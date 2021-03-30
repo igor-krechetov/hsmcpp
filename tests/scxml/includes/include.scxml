@@ -1,0 +1,38 @@
+<scxml initial="State1" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:xi="http://www.w3.org/2001/XInclude"><!--   node-size-and-position x=0 y=0 w=670 h=990  -->
+ <state id="State1"><!--   node-size-and-position x=203.5 y=43 w=75 h=75  -->
+  <transition event="EVENT_1" target="test_xi_import"></transition>
+  <transition event="EVENT_2" target="test_state_src"><!--   edge-path [test_state_src]  pointx=0 pointy=0 offsetx=-5 offsety=0  --></transition>
+ </state>
+ <state id="State2"><!--   node-size-and-position x=211.5 y=607 w=75 h=75  -->
+  <transition event="EXIT" target="Final_1"></transition>
+  <transition event="EVENT_3" target="imported_state"></transition>
+  <transition event="EVENT_4" target="test_input_raw"></transition>
+  <invoke srcexpr="onLevel2"></invoke>
+ </state>
+ <final id="Final_1"><!--   node-size-and-position x=210.5 y=870.5 w=75 h=75  --></final>
+ <state id="test_xi_import" initial="xiimport_with_initial"><!--   node-size-and-position x=218 y=168 w=320 h=389  -->
+  <transition event="INCLUDE_DONE" target="State2"></transition>
+  <state id="xiimport_with_initial"><!--   node-size-and-position x=20 y=43 w=280 h=138  -->
+   <transition event="EVENT_NEXT_INCLUDE" target="xiimport_no_initial"></transition>
+   <xi:include href="./include_simple_with_initial.scxml" parse="xml"><!--   node-size-and-position x=20 y=43 w=240 h=75  --></xi:include>
+  </state>
+  <state id="xiimport_no_initial"><!--   node-size-and-position x=25 y=231 w=270 h=138  -->
+   <xi:include href="./include_simple_no_initial.scxml" parse="xml"><!--   node-size-and-position x=20 y=43 w=230 h=75  --></xi:include>
+  </state>
+ </state>
+ <state id="test_state_src" initial="src_with_initial"><!--   node-size-and-position x=20 y=229.5 w=168 h=266  -->
+  <transition event="INCLUDE_DONE" target="State2"><!--   edge-path [State2]  pointx=0 pointy=0 offsetx=0 offsety=13  --></transition>
+  <state id="src_with_initial" src="./include_simple_with_initial.scxml"><!--   node-size-and-position x=29 y=43 w=110 h=75  -->
+   <transition event="EVENT_NEXT_INCLUDE" target="src_no_initial"><!--   edge-path [src_no_initial]  pointx=0 pointy=0 offsetx=0 offsety=18  --></transition>
+  </state>
+  <state id="src_no_initial" src="./include_simple_no_initial.scxml"><!--   node-size-and-position x=34 y=171 w=100 h=75  --></state>
+ </state>
+ <xi:include href="./include_single_state.scxml" parse="xml"><!--   node-size-and-position x=90 y=740 w=100 h=75  --></xi:include>
+ <state id="test_input_raw" initial="State3"><!--   node-size-and-position x=330 y=710 w=310 h=140  -->
+  <transition event="EXIT" target="Final_1"></transition>
+  <xi:include href="./include_single_state2.scxml" parse="xml"><!--   node-size-and-position x=180 y=40 w=110 h=75  --></xi:include>
+  <state id="State3"><!--   node-size-and-position x=20 y=40 w=75 h=75  -->
+   <transition event="EVENT_5" target="imported_state2"></transition>
+  </state>
+ </state>
+</scxml>

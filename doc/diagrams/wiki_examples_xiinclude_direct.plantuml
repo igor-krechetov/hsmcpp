@@ -1,0 +1,14 @@
+@startuml
+
+[*] --> State0
+State0 --> State1: EVENT_1
+
+State1 : -> onEnteringState1
+
+State1 : onState1
+
+State1 : <- onExitingState1
+State1 --> State1: SELF_TRANSITION
+State1 --> State2: EVENT_2
+
+@enduml

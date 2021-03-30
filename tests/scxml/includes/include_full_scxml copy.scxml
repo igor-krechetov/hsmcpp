@@ -1,0 +1,56 @@
+<scxml initial="State1" name="sample" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:qt="http://www.qt.io/2015/02/scxml-ext"><!--   node-size-and-position x=0 y=0 w=240 h=760  -->
+ <state id="State1"><!--   node-size-and-position x=83.78 y=43 w=75 h=75  -->
+  <onentry>
+   <script>onEnterOff</script>
+  </onentry>
+  <onexit>
+   <script>onExitOff</script>
+  </onexit>
+  <transition event="POWER_ON" target="Level2"><!--   edge-path [Level2]  x=131.28 y=143  --></transition>
+  <transition event="INSPECT" target="State1">
+   <script>onInspect</script>
+  </transition>
+ </state>
+ <state id="Level2" initial="State_2_1"><!--   node-size-and-position x=20 y=168 w=202.56 h=576  -->
+  <onentry>
+   <script>onEnterLevel2</script>
+  </onentry>
+  <onexit>
+   <script>onExitLevel2</script>
+  </onexit>
+  <transition cond="checkPowerOff" event="POWER_OFF" target="State1"><!--   edge-path [State1]  x=111.28 y=143  --></transition>
+  <invoke srcexpr="onLevel2"></invoke>
+  <state id="State_2_1"><!--   node-size-and-position x=54 y=43 w=75 h=75  -->
+   <onentry>
+    <script>onEnter_2_1</script>
+   </onentry>
+   <onexit>
+    <script>onState_2_1</script>
+   </onexit>
+   <transition event="Transition_2" target="State_2_2"></transition>
+   <invoke srcexpr="onState_2_1"></invoke>
+  </state>
+  <state id="State_2_2"><!--   node-size-and-position x=20 y=168 w=75 h=75  -->
+   <transition event="Transition_4" target="Level3"></transition>
+   <invoke srcexpr="onState_2_2"></invoke>
+  </state>
+  <state id="Level3" initial="State_3_1"><!--   node-size-and-position x=28 y=293 w=127 h=263  -->
+   <transition cond="checkTransition5" event="Transition_5" target="State_2_1">
+    <script>onTransition5</script>
+<!--   edge-path [State_2_1]  x=125.5 y=205.5 pointx=0 pointy=0 offsetx=14 offsety=0  --></transition>
+   <state id="State_3_1"><!--   node-size-and-position x=25.61 y=43 w=75 h=75  -->
+    <onentry>
+     <script>onEnter_3_1</script>
+    </onentry>
+    <transition event="Transition_1" target="State_3_2">
+     <script>onTransition1</script>
+    </transition>
+   </state>
+   <state id="State_3_2"><!--   node-size-and-position x=25.61 y=168 w=75 h=75  -->
+    <onexit>
+     <script>onExit_3_2</script>
+    </onexit>
+   </state>
+  </state>
+ </state>
+</scxml>

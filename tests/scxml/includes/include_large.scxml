@@ -1,0 +1,18 @@
+<scxml initial="State1" version="1.0" xmlns="http://www.w3.org/2005/07/scxml" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" xmlns:xi="http://www.w3.org/2001/XInclude"><!--   node-size-and-position x=0 y=0 w=420 h=590  -->
+ <state id="State1"><!--   node-size-and-position x=151.5 y=43 w=75 h=75  -->
+  <transition event="EVENT_1" target="IncludedState2_xiimport_substate"></transition>
+  <transition event="EVENT_2" target="IncludedState3_src"></transition>
+ </state>
+ <state id="State2"><!--   node-size-and-position x=130 y=360 w=120 h=70  -->
+  <transition event="EXIT" target="Final_1"></transition>
+  <invoke srcexpr="onLevel2"></invoke>
+ </state>
+ <final id="Final_1"><!--   node-size-and-position x=150.5 y=480 w=75 h=75  --></final>
+ <state id="IncludedState3_src" src="./include_full_scxml.scxml"><!--   node-size-and-position x=20 y=198 w=130 h=75  -->
+  <transition event="INCLUDE_DONE" target="State2"></transition>
+ </state>
+ <state id="IncludedState2_xiimport_substate"><!--   node-size-and-position x=183 y=168 w=220 h=138  -->
+  <transition event="INCLUDE_DONE" target="State2"></transition>
+  <xi:include href="./include_full_scxml.scxml" parse="xml"><!--   node-size-and-position x=20 y=43 w=180 h=75  --></xi:include>
+ </state>
+</scxml>

@@ -1,0 +1,15 @@
+@startuml
+
+[*] --> State0
+State0 --> Substates1: EVENT_1
+
+state Substates1 {
+    [*] --> Substates1__state_a
+    Substates1__state_a --> Substates1__state_b: EVENT_B
+    Substates1__state_b --> Substates1__state_c: EVENT_C
+    Substates1__state_c --> Substates1__state_b: EVENT_B
+}
+
+Substates1 --> State2: EVENT_2
+
+@enduml

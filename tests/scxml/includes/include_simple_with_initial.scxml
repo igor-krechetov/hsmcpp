@@ -1,0 +1,11 @@
+<scxml initial="state_a" version="1.0" xmlns="http://www.w3.org/2005/07/scxml"><!--   node-size-and-position x=0 y=0 w=160 h=470  -->
+ <state id="state_a"><!--   node-size-and-position x=40 y=43 w=75 h=75  -->
+  <transition event="EVENT_1" target="group_b"></transition>
+ </state>
+ <state id="group_b" initial="state_c"><!--   node-size-and-position x=20 y=190 w=115 h=263  -->
+  <state id="state_c"><!--   node-size-and-position x=20 y=43 w=75 h=75  -->
+   <transition event="EVENT_3" target="state_d"></transition>
+  </state>
+  <state id="state_d"><!--   node-size-and-position x=20 y=168 w=75 h=75  --></state>
+ </state>
+</scxml>

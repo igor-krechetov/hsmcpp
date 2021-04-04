@@ -11,7 +11,7 @@ TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
     registerState<AsyncHsm>(AsyncHsmState::B, this, &AsyncHsm::onStateChanged);
     registerState<AsyncHsm>(AsyncHsmState::C, this, &AsyncHsm::onStateChanged);
 
-    ASSERT_TRUE(registerSubstate(AsyncHsmState::P1, AsyncHsmState::B, true));
+    ASSERT_TRUE(registerSubstateEntryPoint(AsyncHsmState::P1, AsyncHsmState::B));
 
     registerTransition(AsyncHsmState::A, AsyncHsmState::P1, AsyncHsmEvent::NEXT_STATE);
     registerTransition(AsyncHsmState::P1, AsyncHsmState::C, AsyncHsmEvent::EXIT_SUBSTATE);

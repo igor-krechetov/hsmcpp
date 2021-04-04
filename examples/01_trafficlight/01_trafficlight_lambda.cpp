@@ -63,7 +63,7 @@ int main(const int argc, const char**argv)
         hsm.transition(TrafficLightEvent::NEXT_STATE);
     });
 
-    hsm.registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::INITIALIZING, true);
+    hsm.registerSubstateEntryPoint(TrafficLightState::OPERABLE, TrafficLightState::INITIALIZING);
     hsm.registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::RED);
     hsm.registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::YELLOW);
     hsm.registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::GREEN);

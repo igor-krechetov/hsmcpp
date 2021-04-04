@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.10.0] - 2021-04-04
+### Added
+- support for conditional entrypoints in states
 ## [0.9.0] - 2021-03-30
 ### Added
 - scxml2gen: support for include of external files

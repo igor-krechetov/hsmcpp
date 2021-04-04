@@ -36,7 +36,8 @@ public:
         registerState(TrafficLightState::YELLOW, this, &TrafficLight::onYellow);
         registerState(TrafficLightState::GREEN, this, &TrafficLight::onGreen);
 
-        registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::INITIALIZING, true);
+        registerSubstateEntryPoint(TrafficLightState::OPERABLE, TrafficLightState::RED);
+
         registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::RED);
         registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::YELLOW);
         registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::GREEN);

@@ -15,7 +15,7 @@ void TrafficLightHsm::setupDefault()
     registerState<TrafficLightHsm>(TrafficLightState::YELLOW, this, &TrafficLightHsm::onYellow, nullptr, nullptr);
     registerState<TrafficLightHsm>(TrafficLightState::GREEN, this, &TrafficLightHsm::onGreen, nullptr, nullptr);
 
-    ASSERT_TRUE(registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::RED, true));
+    ASSERT_TRUE(registerSubstateEntryPoint(TrafficLightState::OPERABLE, TrafficLightState::RED));
     ASSERT_TRUE(registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::YELLOW));
     ASSERT_TRUE(registerSubstate(TrafficLightState::OPERABLE, TrafficLightState::GREEN));
 

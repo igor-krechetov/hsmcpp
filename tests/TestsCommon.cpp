@@ -17,6 +17,7 @@ bool gCallResult;
 
 void configureGTest()
 {
+#ifdef LOGGING_MODE_OFF
     testing::TestEventListeners& listeners = testing::UnitTest::GetInstance()->listeners();
     auto default_printer = listeners.Release(listeners.default_result_printer());
 
@@ -35,6 +36,7 @@ void configureGTest()
     listener->showSuccesses = false;
     listener->showInlineFailures = false;
     listeners.Append(listener);
+#endif // LOGGING_MODE_OFF
 }
 
 #if defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM)

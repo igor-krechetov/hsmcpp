@@ -6,7 +6,7 @@
 
 enum class AbcState
 {
-    A, B, C, D, E,
+    A, B, C, D, E, F,
     P1, P2, P3, P4
 };
 
@@ -27,8 +27,12 @@ public:
     DEF_STATE_ACTION_IMPL(C)
     DEF_STATE_ACTION_IMPL(D)
     DEF_STATE_ACTION_IMPL(E)
+    DEF_STATE_ACTION_IMPL(F)
 
     DEF_TRANSITION_IMPL(E1)
+    DEF_TRANSITION_IMPL(E2)
+    DEF_TRANSITION_IMPL(E3)
+    DEF_TRANSITION_IMPL(Self)
 
     bool conditionTrue(const VariantList_t& args);
 

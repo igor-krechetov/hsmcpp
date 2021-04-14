@@ -17,7 +17,7 @@ TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
     registerTransition(AsyncHsmState::P1, AsyncHsmState::C, AsyncHsmEvent::EXIT_SUBSTATE);
     registerTransition(AsyncHsmState::C, AsyncHsmState::A, AsyncHsmEvent::NEXT_STATE);
 
-    ASSERT_EQ(getCurrentState(), AsyncHsmState::A);
+    ASSERT_EQ(getLastActiveState(), AsyncHsmState::A);
 
     //-------------------------------------------
     // ACTIONS
@@ -32,16 +32,16 @@ TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
     waitAsyncOperation(200);// wait for B::onStateChanged
 
     // NOTE: this is the main validation point. In case of an error state would be C since we would never go into B
-    ASSERT_EQ(getCurrentState(), AsyncHsmState::B);
+    ASSERT_EQ(getLastActiveState(), AsyncHsmState::B);
     unblockNextStep();// allow B::onStateChanged to continue
 
     waitAsyncOperation(200);// wait for C::onStateChanged
-    ASSERT_EQ(getCurrentState(), AsyncHsmState::C);
+    ASSERT_EQ(getLastActiveState(), AsyncHsmState::C);
     unblockNextStep();// allow C::onStateChanged to continue
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), AsyncHsmState::C);
+    EXPECT_EQ(getLastActiveState(), AsyncHsmState::C);
 }
 
 // NOTE: Qt doesn't support cancelation of already posted events. So deleting dispatcher before

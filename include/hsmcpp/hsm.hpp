@@ -37,6 +37,7 @@
 
 #define HSM_WAIT_INDEFINITELY                   (0)
 #define INVALID_HSM_EVENT_ID                    static_cast<HsmEventEnum>(-1000)
+#define INVALID_HSM_STATE_ID                    static_cast<HsmStateEnum>(-1000)
 
 typedef std::vector<Variant> VariantList_t;
 
@@ -61,7 +62,8 @@ private:
     {
         PENDING,
         DONE_OK,
-        DONE_FAILED
+        DONE_FAILED,
+        CANCELED
     };
 
     // NOTE: just an alias to make code more readable
@@ -82,6 +84,7 @@ private:
 
     struct TransitionInfo
     {
+        HsmStateEnum fromState;
         HsmStateEnum destinationState;
         HsmTransitionCallback_t onTransition = nullptr;
         HsmTransitionConditionCallback_t checkCondition = nullptr;
@@ -150,7 +153,11 @@ public:
                             HsmTransitionCallback_t transitionCallback = nullptr,
                             HsmTransitionConditionCallback_t conditionCallback = nullptr);
 
-    HsmStateEnum getCurrentState() const;
+    // If HSM doesnt contain any parallel states returns current active state.
+    // Otherwise returns most recently activated state
+    HsmStateEnum getLastActiveState() const;
+    const std::list<HsmStateEnum>& getActiveStates() const;
+    bool isStateActive(const HsmStateEnum state) const;
 
     // extended version of transition function with all possible arguments
     // use HSM_WAIT_INDEFINITELY for timeoutMs to ignore timeout
@@ -186,21 +193,30 @@ private:
     bool onStateExiting(const HsmStateEnum state);
     bool onStateEntering(const HsmStateEnum state, const VariantList_t& args);
     void onStateChanged(const HsmStateEnum state, const VariantList_t& args);
+
     bool getParentState(const HsmStateEnum child, HsmStateEnum& outParent);
-    bool findTransitionTarget(const HsmEventEnum event,
-                              const VariantList_t& transitionArgs,
-                              TransitionInfo& outTransition);
+    bool isSubstateOf(const HsmStateEnum parent, const HsmStateEnum child);
+
+    template <typename... Args>
+    bool isTransitionPossible(const HsmStateEnum fromState, const HsmEventEnum event, Args... args);
+
     bool findTransitionTarget(const HsmStateEnum fromState,
                               const HsmEventEnum event,
                               const VariantList_t& transitionArgs,
-                              TransitionInfo& outTransition);
+                              std::list<TransitionInfo>& outTransitions);
     HsmEventStatus doTransition(const PendingEventInfo& event);
+    HsmEventStatus handleSingleTransition(const HsmStateEnum fromState, const PendingEventInfo& event);
     void clearPendingEvents();
 
     bool hasSubstates(const HsmStateEnum parent) const;
     bool hasEntryPoint(const HsmStateEnum state) const;
     // TODO: return enum instead of bool (no entrypoint registered, no matching entry, ok)
-    bool getEntryPoint(const HsmStateEnum state, const HsmEventEnum onEvent, HsmStateEnum &outEntryPoint) const;
+    bool getEntryPoints(const HsmStateEnum state, const HsmEventEnum onEvent, std::list<HsmStateEnum>& outEntryPoints) const;
+
+    // returns TRUE if newState was added to a list of active states
+    bool replaceActiveState(const HsmStateEnum oldState, const HsmStateEnum newState);
+    // returns TRUE if newState was added to a list of active states
+    bool addActiveState(const HsmStateEnum newState);
 
 #ifdef HSM_ENABLE_SAFE_STRUCTURE
     bool isTopState(const HsmStateEnum state) const;
@@ -209,7 +225,8 @@ private:
 #endif // HSM_ENABLE_SAFE_STRUCTURE
 
 private:
-    HsmStateEnum mCurrentState;
+    HsmStateEnum mInitialState;
+    std::list<HsmStateEnum> mActiveStates;
     std::multimap<std::pair<HsmStateEnum, HsmEventEnum>, TransitionInfo> mTransitionsByEvent; // FROM_STATE, EVENT => TO
     std::map<HsmStateEnum, StateCallbacks> mRegisteredStates;
     std::multimap<HsmStateEnum, HsmStateEnum> mSubstates;
@@ -233,9 +250,10 @@ private:
 // ============================================================================
 template <typename HsmStateEnum, typename HsmEventEnum>
 HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::HierarchicalStateMachine(const HsmStateEnum initialState)
-    : mCurrentState(initialState)
+    : mInitialState(initialState)
 {
     __TRACE_INIT__();
+    mActiveStates.push_back(mInitialState);
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -385,7 +403,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstate(cons
                 if (substate == prevState)
                 {
                     __TRACE_CALL_DEBUG_ARGS__("requested operation will result in substates recursion (parent=%d, substate=%d)",
-                                              static_cast<int>(parent), static_cast<int>(substate));
+                                              SC2INT(parent), SC2INT(substate));
                     registrationAllowed = false;
                     break;
                 }
@@ -396,7 +414,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstate(cons
         else
         {
             __TRACE_CALL_DEBUG_ARGS__("substate %d already has a parent %d",
-                                      static_cast<int>(substate), static_cast<int>(prevState));
+                                      SC2INT(substate), SC2INT(prevState));
         }
     }
 #else
@@ -460,13 +478,32 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerTransition(co
                                                                               HsmTransitionCallback_t transitionCallback,
                                                                               HsmTransitionConditionCallback_t conditionCallback)
 {
-    mTransitionsByEvent.emplace(std::make_pair(from, onEvent), TransitionInfo{to, /*handler,*/ transitionCallback, conditionCallback});
+    mTransitionsByEvent.emplace(std::make_pair(from, onEvent), TransitionInfo{from, to, transitionCallback, conditionCallback});
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
-inline HsmStateEnum HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getCurrentState() const
+HsmStateEnum HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getLastActiveState() const
 {
-    return mCurrentState;
+    HsmStateEnum currentState = INVALID_HSM_STATE_ID;
+
+    if (mActiveStates.size() > 0)
+    {
+        currentState = mActiveStates.back();
+    }
+
+    return currentState;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+inline const std::list<HsmStateEnum>& HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getActiveStates() const
+{
+    return mActiveStates;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isStateActive(const HsmStateEnum state) const
+{
+    return (std::find(mActiveStates.begin(), mActiveStates.end(), state) != mActiveStates.end());
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -477,7 +514,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionEx(const Hs
                                                                         const int timeoutMs,
                                                                         Args... args)
 {
-    __TRACE_CALL_DEBUG_ARGS__("transitionEx: event=%d, clearQueue=%s, sync=%s", static_cast<int>(event), BOOL2STR(clearQueue), BOOL2STR(sync));
+    __TRACE_CALL_DEBUG_ARGS__("transitionEx: event=%d, clearQueue=%s, sync=%s", SC2INT(event), BOOL2STR(clearQueue), BOOL2STR(sync));
 
     bool status = false;
     PendingEventInfo eventInfo;
@@ -523,7 +560,7 @@ template <typename HsmStateEnum, typename HsmEventEnum>
 template <typename... Args>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transition(const HsmEventEnum event, Args... args)
 {
-    __TRACE_CALL_DEBUG_ARGS__("event=%d", static_cast<int>(event));
+    __TRACE_CALL_DEBUG_ARGS__("event=%d", SC2INT(event));
 
     transitionEx(event, false, false, 0, args...);
 }
@@ -532,7 +569,7 @@ template <typename HsmStateEnum, typename HsmEventEnum>
 template <typename... Args>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionSync(const HsmEventEnum event, const int timeoutMs, Args... args)
 {
-    __TRACE_CALL_DEBUG_ARGS__("event=%d", static_cast<int>(event));
+    __TRACE_CALL_DEBUG_ARGS__("event=%d", SC2INT(event));
     return transitionEx(event, false, true, timeoutMs, args...);
 }
 
@@ -541,7 +578,7 @@ template <typename... Args>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionWithQueueClear(const HsmEventEnum event,
                                                                                     Args... args)
 {
-    __TRACE_CALL_DEBUG_ARGS__("event=%d", static_cast<int>(event));
+    __TRACE_CALL_DEBUG_ARGS__("event=%d", SC2INT(event));
 
     transitionEx(event, true, false, 0, args...);
 }
@@ -551,35 +588,17 @@ template <typename... Args>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(const HsmEventEnum event,
                                                                                 Args... args)
 {
-    __TRACE_CALL_DEBUG_ARGS__("event=%d", static_cast<int>(event));
+    __TRACE_CALL_DEBUG_ARGS__("event=%d", SC2INT(event));
+    bool possible = false;
 
-    HsmStateEnum stateFrom = mCurrentState;
-    TransitionInfo possibleTransition;
-    HsmEventEnum nextEvent;
-    VariantList_t transitionArgs;
-    bool possible = true;
-
-    makeVariantList(transitionArgs, args...);
-
+    for (auto it = mActiveStates.begin() ; it != mActiveStates.end() ; ++it)
     {
-        _HSM_SYNC_EVENTS_QUEUE();
+        possible = isTransitionPossible(*it, event, args...);
 
-        for (auto it = mPendingEvents.begin(); (it != mPendingEvents.end()) && (true == possible); ++it)
+        if (true == possible)
         {
-            nextEvent = it->type;
-            possible = findTransitionTarget(stateFrom, nextEvent, transitionArgs, possibleTransition);
-
-            if (true == possible)
-            {
-                stateFrom = possibleTransition.destinationState;
-            }
+            break;
         }
-    }
-
-    if (true == possible)
-    {
-        nextEvent = event;
-        possible = findTransitionTarget(stateFrom, nextEvent, transitionArgs, possibleTransition);
     }
 
     __TRACE_CALL_RESULT__("%d", BOOL2INT(possible));
@@ -610,13 +629,12 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchEvents()
             {
                 _HSM_SYNC_EVENTS_QUEUE();
                 pendingEvent = mPendingEvents.front();
-
                 mPendingEvents.pop_front();
             }
 
             HsmEventStatus_t transitiontStatus = doTransition(pendingEvent);
 
-            __TRACE_DEBUG__("dispatchEvents: unlock with status %d", static_cast<int>(transitiontStatus));
+            __TRACE_DEBUG__("dispatchEvents: unlock with status %d", SC2INT(transitiontStatus));
             pendingEvent.unlock(transitiontStatus);
         }
 
@@ -646,11 +664,17 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateEntering(const
                                                                            const VariantList_t& args)
 {
     bool res = true;
-    auto it = mRegisteredStates.find(state);
 
-    if ((mRegisteredStates.end() != it) && it->second.onEntering)
+    // since we can have a situation when same state is entered twice (parallel transitions) there
+    // is no need to call callbacks multiple times
+    if (false == isStateActive(state))
     {
-        res = it->second.onEntering(args);
+        auto it = mRegisteredStates.find(state);
+
+        if ((mRegisteredStates.end() != it) && it->second.onEntering)
+        {
+            res = it->second.onEntering(args);
+        }
     }
 
     return res;
@@ -660,7 +684,7 @@ template <typename HsmStateEnum, typename HsmEventEnum>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateChanged(const HsmStateEnum state,
                                                                           const VariantList_t& args)
 {
-    __TRACE_CALL_DEBUG_ARGS__("onStateChanged with state <%d>", static_cast<int>(state));
+    __TRACE_CALL_DEBUG_ARGS__("state=%d", SC2INT(state));
     auto it = mRegisteredStates.find(state);
 
     if ((mRegisteredStates.end() != it) && it->second.onStateChanged)
@@ -669,7 +693,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateChanged(const 
     }
     else
     {
-        __TRACE_DEBUG__("WARNING: no callback registered for state <%d>", static_cast<int>(state));
+        __TRACE_WARNING__("no callback registered for state <%d>", SC2INT(state));
     }
 }
 
@@ -689,23 +713,71 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getParentState(const 
 
     return wasFound;
 }
+template <typename HsmStateEnum, typename HsmEventEnum>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isSubstateOf(const HsmStateEnum parent, const HsmStateEnum child)
+{
+    __TRACE_CALL_DEBUG_ARGS__("parent=%d, child=%d", SC2INT(parent), SC2INT(child));
+    HsmStateEnum curState = child;
+
+    do
+    {
+        if (false == getParentState(curState, curState))
+        {
+            break;
+        }
+    } while (parent != curState);
+
+    return (parent == curState);
+}
 
 template <typename HsmStateEnum, typename HsmEventEnum>
-bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::findTransitionTarget(const HsmEventEnum event,
-                                                                                const VariantList_t& transitionArgs,
-                                                                                TransitionInfo& outTransition)
+template <typename... Args>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(const HsmStateEnum fromState,
+                                                                                const HsmEventEnum event,
+                                                                                Args... args)
 {
-    return findTransitionTarget(mCurrentState, event, transitionArgs, outTransition);
+    __TRACE_CALL_DEBUG_ARGS__("event=%d", SC2INT(event));
+
+    HsmStateEnum currentState = fromState;
+    TransitionInfo possibleTransition;
+    HsmEventEnum nextEvent;
+    VariantList_t transitionArgs;
+    bool possible = true;
+
+    makeVariantList(transitionArgs, args...);
+
+    {
+        _HSM_SYNC_EVENTS_QUEUE();
+
+        for (auto it = mPendingEvents.begin(); (it != mPendingEvents.end()) && (true == possible); ++it)
+        {
+            nextEvent = it->type;
+            possible = findTransitionTarget(currentState, nextEvent, transitionArgs, possibleTransition);
+
+            if (true == possible)
+            {
+                currentState = possibleTransition.destinationState;
+            }
+        }
+    }
+
+    if (true == possible)
+    {
+        nextEvent = event;
+        possible = findTransitionTarget(currentState, nextEvent, transitionArgs, possibleTransition);
+    }
+
+    __TRACE_CALL_RESULT__("%d", BOOL2INT(possible));
+    return possible;
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::findTransitionTarget(const HsmStateEnum fromState,
                                                                                 const HsmEventEnum event,
                                                                                 const VariantList_t& transitionArgs,
-                                                                                TransitionInfo& outTransition)
+                                                                                std::list<TransitionInfo>& outTransitions)
 {
-    __TRACE_CALL_DEBUG_ARGS__("fromState=%d, event=%d", static_cast<int>(fromState), static_cast<int>(event));
-    bool wasFound = false;
+    __TRACE_CALL_DEBUG_ARGS__("fromState=%d, event=%d", SC2INT(fromState), SC2INT(event));
     bool continueSearch;
     HsmStateEnum curState = fromState;
 
@@ -729,22 +801,34 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::findTransitionTarget(
         }
         else
         {
-            for (auto it = itRange.first; (it != itRange.second) && (false == wasFound); ++it)
+            for (auto it = itRange.first; it != itRange.second; ++it)
             {
+                __TRACE_DEBUG__("check transition to %d...", SC2INT(it->second.destinationState));
+
                 if ((nullptr == it->second.checkCondition) || (true == it->second.checkCondition(transitionArgs)))
                 {
-                    HsmStateEnum parentState = it->second.destinationState;
+                    bool wasFound = false;
+                    std::list<HsmStateEnum> parentStates = {it->second.destinationState};
 
                     do
                     {
-                        if (true == hasSubstates(parentState))
-                        {
-                            // check if transition into substates is possible (after cond)
-                            if (true == hasEntryPoint(parentState))
-                            {
-                                __TRACE_DEBUG__("state <%d> has entrypoints", static_cast<int>(parentState));
+                        HsmStateEnum currentParent = parentStates.front();
 
-                                if (false == getEntryPoint(parentState, event, parentState))
+                        parentStates.pop_front();
+
+                        // if state has substates we must check if transition into them is possible (after cond)
+                        if (true == hasSubstates(currentParent))
+                        {
+                            if (true == hasEntryPoint(currentParent))
+                            {
+                                __TRACE_DEBUG__("state <%d> has entrypoints", SC2INT(currentParent));
+                                std::list<HsmStateEnum> entryPoints;
+
+                                if (true == getEntryPoints(currentParent, event, entryPoints))
+                                {
+                                    parentStates.splice(parentStates.end(), entryPoints);
+                                }
+                                else
                                 {
                                     __TRACE_WARNING__("no matching entrypoints found");
                                     break;
@@ -752,113 +836,246 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::findTransitionTarget(
                             }
                             else
                             {
-                                __TRACE_WARNING__("state <%d> doesn't have an entrypoint defined", static_cast<int>(parentState));
+                                __TRACE_WARNING__("state <%d> doesn't have an entrypoint defined", SC2INT(currentParent));
                                 break;
                             }
                         }
                         else
                         {
-                            outTransition = it->second;
+                            outTransitions.push_back(it->second);
                             wasFound = true;
                         }
-                    } while(false == wasFound);
+                    } while((false == wasFound) && (parentStates.empty() == false));
                 }
             }
         }
     } while (true == continueSearch);
 
-    __TRACE_CALL_RESULT__("%s", BOOL2STR(wasFound));
-    return wasFound;
+    __TRACE_CALL_RESULT__("%s", BOOL2STR(outTransitions.empty() == false));
+    return (outTransitions.empty() == false);
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::doTransition(const PendingEventInfo& event)
 {
-    __TRACE_CALL_DEBUG_ARGS__("event=%d, entryPointTransition=%s", static_cast<int>(event.type), BOOL2STR(event.entryPointTransition));
+    __TRACE_CALL_DEBUG_ARGS__("event=%d, entryPointTransition=%s", SC2INT(event.type), BOOL2STR(event.entryPointTransition));
     HsmEventStatus_t res = HsmEventStatus_t::DONE_FAILED;
-    TransitionInfo transitionInfo;
-    bool correctTransition = false;
+    auto activeStatesSnapshot = mActiveStates;
+
+    for (auto it = activeStatesSnapshot.begin() ; it != activeStatesSnapshot.end() ; ++it)
+    {
+        // in case of parallel transitions some states might become inactive after handleSingleTransition()
+        // example: [*B, *C] -> D
+        if (true == isStateActive(*it))
+        {
+            const HsmEventStatus_t singleTransitionResult = handleSingleTransition(*it, event);
+
+            switch(singleTransitionResult)
+            {
+                case HsmEventStatus_t::PENDING:
+                    res = singleTransitionResult;
+                    break;
+                case HsmEventStatus_t::DONE_OK:
+                    if (HsmEventStatus_t::PENDING != res)
+                    {
+                        res = singleTransitionResult;
+                    }
+                    break;
+                case HsmEventStatus_t::CANCELED:
+                    break;
+                case HsmEventStatus_t::DONE_FAILED:
+                default:
+                    // do nothing
+                    break;
+            }
+        }
+    }
+
+    __TRACE_CALL_RESULT__("%d", SC2INT(res));
+    return res;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::handleSingleTransition(const HsmStateEnum activeState,
+                                                                                                       const PendingEventInfo& event)
+{
+    __TRACE_CALL_DEBUG_ARGS__("activeState=%d, event=%d, entryPointTransition=%s",
+                              SC2INT(activeState), SC2INT(event.type), BOOL2STR(event.entryPointTransition));
+    HsmEventStatus_t res = HsmEventStatus_t::DONE_FAILED;
+    const HsmStateEnum fromState = activeState;
+    bool isCorrectTransition = false;
+    std::list<TransitionInfo> matchingTransitions;
 
     if (true == event.entryPointTransition)
     {
-        if (true == getEntryPoint(mCurrentState, event.type, transitionInfo.destinationState))
+        std::list<HsmStateEnum> entryStates;
+
+        isCorrectTransition = getEntryPoints(fromState, event.type, entryStates);
+
+        if (true == isCorrectTransition)
         {
-            correctTransition = true;
+            for (auto it = entryStates.begin(); it != entryStates.end(); ++it)
+            {
+                matchingTransitions.emplace_back(TransitionInfo{fromState, *it, nullptr, nullptr});
+            }
         }
         else
         {
             __TRACE_WARNING__("state <%d> doesn't have a suitable entry point (event <%d>)",
-                              static_cast<int>(mCurrentState), static_cast<int>(event.type));
+                              SC2INT(fromState), SC2INT(event.type));
         }
-    }
-    else if (true == findTransitionTarget(event.type, event.args, transitionInfo))
-    {
-        correctTransition = true;
     }
     else
     {
-        __TRACE_WARNING__("no suitable transition from state <%d> with event <%d>",
-                            static_cast<int>(mCurrentState), static_cast<int>(event.type));
+        isCorrectTransition = findTransitionTarget(fromState, event.type, event.args, matchingTransitions);
+
+        if (false == isCorrectTransition)
+        {
+            __TRACE_WARNING__("no suitable transition from state <%d> with event <%d>",
+                              SC2INT(fromState), SC2INT(event.type));
+        }
     }
 
-    if (true == correctTransition)
+    if (true == isCorrectTransition)
     {
-        if (mCurrentState != transitionInfo.destinationState)
+        bool isExitAllowed = true;
+        std::list<HsmStateEnum> exitedStates;
+
+        // execute self transitions first
+        for (auto it = matchingTransitions.begin(); it != matchingTransitions.end(); ++it)
         {
-            // NOTE: Decide if we need functionality to cancel ongoing transition
-            if (true == onStateExiting(mCurrentState))
+            if (it->fromState == it->destinationState)
             {
-                if (transitionInfo.onTransition)
+                it->onTransition(event.args);
+                res = HsmEventStatus_t::DONE_OK;
+            }
+        }
+
+        // execute exit transition (only once in case of parallel transitions)
+        for (auto it = matchingTransitions.begin(); it != matchingTransitions.end(); ++it)
+        {
+            if (it->fromState != it->destinationState)
+            {
+                if (fromState == it->fromState)
                 {
-                    transitionInfo.onTransition(event.args);
-                }
+                    isExitAllowed = onStateExiting(fromState);
 
-                if (true == onStateEntering(transitionInfo.destinationState, event.args))
-                {
-                    mCurrentState = transitionInfo.destinationState;
-                    onStateChanged(transitionInfo.destinationState, event.args);
-
-                    HsmStateEnum entryPoint;
-
-                    if (true == getEntryPoint(mCurrentState, event.type, entryPoint))
+                    if (true == isExitAllowed)
                     {
-                        __TRACE_DEBUG__("state <%d> has substates with entry point <%d>",
-                                        static_cast<int>(mCurrentState), static_cast<int>(entryPoint));
-                        PendingEventInfo entryPointTransitionEvent = event;
-
-                        entryPointTransitionEvent.entryPointTransition = true;
-
-                        {
-                            _HSM_SYNC_EVENTS_QUEUE();
-                            mPendingEvents.push_front(entryPointTransitionEvent);
-                        }
-                        res = HsmEventStatus_t::PENDING;
+                        exitedStates.push_back(fromState);
+                        mActiveStates.remove(fromState);
                     }
-                    else
-                    {
-                        res = HsmEventStatus_t::DONE_OK;
-                    }
+                    break;
                 }
+                // we need to find and exit all active substates if it's an outer transition
                 else
                 {
-                    // to prevent infinite loops we don't allow state to cancel transition
-                    onStateEntering(mCurrentState, VariantList_t());
-                    onStateChanged(mCurrentState, VariantList_t());
+                    for (auto itActiveState = mActiveStates.begin(); itActiveState != mActiveStates.end(); ++itActiveState)
+                    {
+                        if (true == isSubstateOf(it->fromState, *itActiveState))
+                        {
+                            isExitAllowed = onStateExiting(*itActiveState);
+
+                            if (true == isExitAllowed)
+                            {
+                                exitedStates.push_back(*itActiveState);
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    // if no one blocked ongoing transition - remove child states from active list
+                    if (true == isExitAllowed)
+                    {
+                        for (auto itState = exitedStates.begin(); itState != exitedStates.end(); ++itState)
+                        {
+                            mActiveStates.remove(*itState);
+                        }
+                    }
+                    // if one of the states blocked ongoing transition we need to rollback
+                    else
+                    {
+                        for (auto itState = exitedStates.begin(); itState != exitedStates.end(); ++itState)
+                        {
+                            mActiveStates.remove(*itState);
+                            // to prevent infinite loops we don't allow state to cancel transition
+                            onStateEntering(*itState, VariantList_t());
+                            mActiveStates.push_back(*itState);
+                            onStateChanged(*itState, VariantList_t());
+                        }
+                    }
                 }
             }
         }
-        else if (transitionInfo.onTransition)
+
+        if (true == isExitAllowed)
         {
-            transitionInfo.onTransition(event.args);
-            res = HsmEventStatus_t::DONE_OK;
+            for (auto it = matchingTransitions.begin(); it != matchingTransitions.end(); ++it)
+            {
+                if (it->fromState != it->destinationState)
+                {
+                    // NOTE: Decide if we need functionality to cancel ongoing transition
+                    if (it->onTransition)
+                    {
+                        it->onTransition(event.args);
+                    }
+
+                    if (true == onStateEntering(it->destinationState, event.args))
+                    {
+                        std::list<HsmStateEnum> entryPoints;
+
+                        if (true == replaceActiveState(fromState, it->destinationState))
+                        {
+                            onStateChanged(it->destinationState, event.args);
+                        }
+
+                        if (true == getEntryPoints(it->destinationState, event.type, entryPoints))
+                        {
+                            __TRACE_DEBUG__("state <%d> has substates with %d entry points (first: %d)",
+                                            SC2INT(it->destinationState), SC2INT(entryPoints.size()), SC2INT(entryPoints.front()));
+                            PendingEventInfo entryPointTransitionEvent = event;
+
+                            entryPointTransitionEvent.entryPointTransition = true;
+
+                            {
+                                _HSM_SYNC_EVENTS_QUEUE();
+                                mPendingEvents.push_front(entryPointTransitionEvent);
+                            }
+                            res = HsmEventStatus_t::PENDING;
+                        }
+                        else
+                        {
+                            res = HsmEventStatus_t::DONE_OK;
+                        }
+                    }
+                    else
+                    {
+                        for (auto itState = exitedStates.begin(); itState != exitedStates.end(); ++itState)
+                        {
+                            // to prevent infinite loops we don't allow state to cancel transition
+                            onStateEntering(*itState, VariantList_t());
+                            addActiveState(*itState);
+                            onStateChanged(*itState, VariantList_t());
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            res = HsmEventStatus_t::CANCELED;
         }
     }
 
     if (HsmEventStatus_t::DONE_FAILED == res)
     {
-        __TRACE_DEBUG__("event <%d> in state <%d> was ignored.", static_cast<int>(event.type), static_cast<int>(mCurrentState));
+        __TRACE_DEBUG__("event <%d> in state <%d> was ignored.", SC2INT(event.type), SC2INT(fromState));
     }
 
+    __TRACE_CALL_RESULT__("%d", SC2INT(res));
     return res;
 }
 
@@ -887,7 +1104,7 @@ HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::PendingEventInfo::~Pending
 {
     if (true == cvLock.unique())
     {
-        __TRACE_CALL_DEBUG_ARGS__("event=%d was deleted. releasing lock", static_cast<int>(type));
+        __TRACE_CALL_DEBUG_ARGS__("event=%d was deleted. releasing lock", SC2INT(type));
         unlock(HsmEventStatus_t::DONE_FAILED);
         cvLock.reset();
         syncProcessed.reset();
@@ -931,7 +1148,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::PendingEventInfo::wai
     {
         std::unique_lock<std::mutex> lck(*cvLock);
 
-        __TRACE_CALL_DEBUG_ARGS__("trying to wait... (current status=%d, %p)", static_cast<int>(*transitionStatus), transitionStatus.get());
+        __TRACE_CALL_DEBUG_ARGS__("trying to wait... (current status=%d, %p)", SC2INT(*transitionStatus), transitionStatus.get());
         if (timeoutMs > 0)
         {
             syncProcessed->wait_for(lck, std::chrono::milliseconds(timeoutMs),
@@ -942,14 +1159,14 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::PendingEventInfo::wai
             syncProcessed->wait(lck, [=](){return (HsmEventStatus_t::PENDING != *transitionStatus);});
         }
 
-        __TRACE_DEBUG__("unlocked! transitionStatus=%d", static_cast<int>(*transitionStatus));
+        __TRACE_DEBUG__("unlocked! transitionStatus=%d", SC2INT(*transitionStatus));
     }
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::PendingEventInfo::unlock(const HsmEventStatus_t status)
 {
-    __TRACE_CALL_DEBUG_ARGS__("try to unlock with status=%d", static_cast<int>(status));
+    __TRACE_CALL_DEBUG_ARGS__("try to unlock with status=%d", SC2INT(status));
 
     if (isSync())
     {
@@ -980,38 +1197,69 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::hasEntryPoint(const H
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
-bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getEntryPoint(const HsmStateEnum state,
-                                                                         const HsmEventEnum onEvent,
-                                                                         HsmStateEnum &outEntryPoint) const
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getEntryPoints(const HsmStateEnum state,
+                                                                          const HsmEventEnum onEvent,
+                                                                          std::list<HsmStateEnum>& outEntryPoints) const
 {
     bool hasEntryPoint = false;
     auto itRange = mSubstateEntryPoints.equal_range(state);
-    HsmStateEnum nonconditionalEntryState;
-    bool hasNonconditionalEntryState = false;
+    std::list<HsmStateEnum> nonconditionalEntryPoints;
+
+    outEntryPoints.clear();
 
     for (auto it = itRange.first; it != itRange.second; ++it)
     {
         if (INVALID_HSM_EVENT_ID == it->second.onEvent)
         {
-            // TODO: should be fixed for parallel states feature
-            nonconditionalEntryState = it->second.state;
-            hasNonconditionalEntryState = true;
+            nonconditionalEntryPoints.push_back(it->second.state);
         }
         else if (onEvent == it->second.onEvent)
         {
-            outEntryPoint = it->second.state;
-            hasEntryPoint = true;
-            break;
+            outEntryPoints.push_back(it->second.state);
         }
     }
 
-    if ((false == hasEntryPoint) && (true == hasNonconditionalEntryState))
+    if (outEntryPoints.empty() == true)
     {
-        outEntryPoint = nonconditionalEntryState;
+        if (nonconditionalEntryPoints.empty() == false)
+        {
+            outEntryPoints = nonconditionalEntryPoints;
+            hasEntryPoint = true;
+        }
+    }
+    else
+    {
         hasEntryPoint = true;
     }
 
     return hasEntryPoint;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::replaceActiveState(const HsmStateEnum oldState,
+                                                                              const HsmStateEnum newState)
+{
+    __TRACE_CALL_DEBUG_ARGS__("oldState=%d, newState=%d", SC2INT(oldState), SC2INT(newState));
+
+    mActiveStates.remove(oldState);
+
+    return addActiveState(newState);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::addActiveState(const HsmStateEnum newState)
+{
+    __TRACE_CALL_DEBUG_ARGS__("newState=%d", SC2INT(newState));
+    bool wasAdded = false;
+
+    if (false == isStateActive(newState))
+    {
+        mActiveStates.push_back(newState);
+        wasAdded = true;
+    }
+
+    __TRACE_DEBUG__("mActiveStates.size=%d", SC2INT(mActiveStates.size()));
+    return wasAdded;
 }
 
 #ifdef HSM_ENABLE_SAFE_STRUCTURE

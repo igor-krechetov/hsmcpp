@@ -111,7 +111,8 @@
 
 // ---------------------------------------------------------------------------------
 //                          HELPERS
-#define BOOL2INT(v)             static_cast<int>(v)
+#define SC2INT(v)               static_cast<int>(v)
+#define BOOL2INT(v)             SC2INT(v)
 #define BOOL2STR(v)             ((v) ? "true" : "false")
 
 #define _DEF2STR_INTERNAL(s)    #s

@@ -22,7 +22,7 @@ TEST_F(ABCHsm, callbacks_class_pointers)
     expectedArgs.push_back(Variant::make("test"));
     expectedArgs.push_back(Variant::make(7));
 
-    EXPECT_EQ(getCurrentState(), AbcState::B);
+    EXPECT_EQ(getLastActiveState(), AbcState::B);
     EXPECT_EQ(mStateCounterAExit, 1);
     EXPECT_EQ(mStateCounterBEnter, 1);
     EXPECT_EQ(mStateCounterB, 1);
@@ -75,7 +75,7 @@ TEST_F(ABCHsm, callbacks_lambdas)
     expectedArgs.push_back(Variant::make("test"));
     expectedArgs.push_back(Variant::make(7));
 
-    EXPECT_EQ(getCurrentState(), AbcState::B);
+    EXPECT_EQ(getLastActiveState(), AbcState::B);
     EXPECT_EQ(stateCounterAExit, 1);
     EXPECT_EQ(stateCounterBEnter, 1);
     EXPECT_EQ(stateCounterB, 1);

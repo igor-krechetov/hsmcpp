@@ -22,7 +22,7 @@ TEST_F(ABCHsm, substate_entrypoint)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), AbcState::B);
+    EXPECT_EQ(getLastActiveState(), AbcState::B);
 }
 
 TEST_F(ABCHsm, substate_multiple_entrypoints_conditional)
@@ -42,18 +42,18 @@ TEST_F(ABCHsm, substate_multiple_entrypoints_conditional)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E2);
     registerTransition(AbcState::P1, AbcState::A, AbcEvent::E3);
 
-    ASSERT_EQ(getCurrentState(), AbcState::A);
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
     // ACTIONS
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    EXPECT_EQ(getCurrentState(), AbcState::B);
+    EXPECT_EQ(getLastActiveState(), AbcState::B);
 
     ASSERT_TRUE(transitionSync(AbcEvent::E3, HSM_WAIT_INDEFINITELY));
-    EXPECT_EQ(getCurrentState(), AbcState::A);
+    EXPECT_EQ(getLastActiveState(), AbcState::A);
 
     ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
-    EXPECT_EQ(getCurrentState(), AbcState::C);
+    EXPECT_EQ(getLastActiveState(), AbcState::C);
 
     //-------------------------------------------
     // VALIDATION
@@ -77,18 +77,18 @@ TEST_F(ABCHsm, substate_multiple_entrypoints_default)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E2);
     registerTransition(AbcState::P1, AbcState::A, AbcEvent::E3);
 
-    ASSERT_EQ(getCurrentState(), AbcState::A);
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
     // ACTIONS
     ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
-    EXPECT_EQ(getCurrentState(), AbcState::C);
+    EXPECT_EQ(getLastActiveState(), AbcState::C);
 
     ASSERT_TRUE(transitionSync(AbcEvent::E3, HSM_WAIT_INDEFINITELY));
-    EXPECT_EQ(getCurrentState(), AbcState::A);
+    EXPECT_EQ(getLastActiveState(), AbcState::A);
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    EXPECT_EQ(getCurrentState(), AbcState::B);
+    EXPECT_EQ(getLastActiveState(), AbcState::B);
 
     //-------------------------------------------
     // VALIDATION
@@ -113,15 +113,15 @@ TEST_F(ABCHsm, substate_block_conditional_entry_transition)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E2);
 
-    ASSERT_EQ(getCurrentState(), AbcState::A);
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
     // ACTIONS
     EXPECT_FALSE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
-    ASSERT_EQ(getCurrentState(), AbcState::A);
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    EXPECT_EQ(getCurrentState(), AbcState::C);
+    EXPECT_EQ(getLastActiveState(), AbcState::C);
 
     //-------------------------------------------
     // VALIDATION
@@ -150,7 +150,7 @@ TEST_F(ABCHsm, substate_entrypoint_substate)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), AbcState::B);
+    EXPECT_EQ(getLastActiveState(), AbcState::B);
     EXPECT_EQ(mStateCounterA, 0);
     EXPECT_EQ(mStateCounterB, 1);
     EXPECT_EQ(mStateCounterC, 0);
@@ -165,9 +165,9 @@ TEST_F(TrafficLightHsm, substate_exit_single)
     setupDefault();
 
     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
-    ASSERT_EQ(getCurrentState(), TrafficLightState::STARTING);
+    ASSERT_EQ(getLastActiveState(), TrafficLightState::STARTING);
     ASSERT_TRUE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
-    ASSERT_EQ(getCurrentState(), TrafficLightState::RED);
+    ASSERT_EQ(getLastActiveState(), TrafficLightState::RED);
 
     //-------------------------------------------
     // ACTIONS
@@ -175,7 +175,7 @@ TEST_F(TrafficLightHsm, substate_exit_single)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::OFF);
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
     EXPECT_EQ(mStateCounterStarting, 1);
     EXPECT_EQ(mStateCounterRed, 1);
     EXPECT_EQ(mStateCounterOff, 1);
@@ -207,19 +207,19 @@ TEST_F(ABCHsm, substate_exit_multiple_layers)
     //-------------------------------------------
     // ACTIONS
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    ASSERT_EQ(getCurrentState(), AbcState::B);
+    ASSERT_EQ(getLastActiveState(), AbcState::B);
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    ASSERT_EQ(getCurrentState(), AbcState::C);
+    ASSERT_EQ(getLastActiveState(), AbcState::C);
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    ASSERT_EQ(getCurrentState(), AbcState::D);
+    ASSERT_EQ(getLastActiveState(), AbcState::D);
 
     ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), AbcState::A);
+    EXPECT_EQ(getLastActiveState(), AbcState::A);
     EXPECT_EQ(mStateCounterA, 1);
     EXPECT_EQ(mStateCounterB, 1);
     EXPECT_EQ(mStateCounterC, 1);
@@ -275,7 +275,7 @@ TEST_F(ABCHsm, substate_error_no_entrypoint)
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
-    ASSERT_EQ(getCurrentState(), AbcState::A);
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
     // ACTIONS
@@ -283,5 +283,5 @@ TEST_F(ABCHsm, substate_error_no_entrypoint)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), AbcState::A);
+    EXPECT_EQ(getLastActiveState(), AbcState::A);
 }

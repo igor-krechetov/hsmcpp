@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.11.0] - 2021-04-14
+### Added
+- support for parallel states and transitions
+- scxml2gen: support for parallel states and transitions
+
 ## [0.10.0] - 2021-04-04
 ### Added
 - support for conditional entrypoints in states

@@ -4,6 +4,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "hsmcpp/IHsmEventDispatcher.hpp"
+#include <list>
 
 // ======================================================
 // GTest namespace
@@ -26,6 +27,28 @@ using ::testing::_;
 // ======================================================
 // Utility functions
 void configureGTest();
+
+template <typename HsmStateEnum>
+bool compareStateLists(const std::list<HsmStateEnum> l1, const std::list<HsmStateEnum> l2)
+{
+    bool equalLists = false;
+
+    if (l1.size() == l2.size())
+    {
+        equalLists = true;
+
+        for(auto it1  = l1.begin(); it1 != l1.end(); ++it1)
+        {
+            if (std::find(l2.begin(), l2.end(), *it1) == l2.end())
+            {
+                equalLists = false;
+                break;
+            }
+        }
+    }
+
+    return equalLists;
+}
 
 // ======================================================
 #define TEST_DESCRIPTION(desc)                  RecordProperty("description", desc)
@@ -110,6 +133,8 @@ bool executeOnMainThread(std::function<bool()> func);
         mArgs##_state = args;                                           \
     }                                                                   \
     DEF_EXIT_ACTION_IMPL(_state##Exit, true)                            \
-    DEF_ENTER_ACTION_IMPL(_state##Enter, true)
+    DEF_EXIT_ACTION_IMPL(_state##ExitCancel, false)                     \
+    DEF_ENTER_ACTION_IMPL(_state##Enter, true)                          \
+    DEF_ENTER_ACTION_IMPL(_state##EnterCancel, false)
 
 #endif // __HSMCPP_TESTS_TESTSCOMMON_HPP__

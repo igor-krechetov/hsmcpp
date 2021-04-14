@@ -14,7 +14,7 @@ TEST_F(TrafficLightHsm, simple_transition)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::STARTING);
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 1);
 }
@@ -35,7 +35,7 @@ TEST_F(TrafficLightHsm, transition_with_args)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::STARTING);
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
     EXPECT_EQ(mTransitionCounterNextState, 1);
 
     EXPECT_EQ(mTransitionArgsNextState.size(), 4);
@@ -63,13 +63,13 @@ TEST_F(TrafficLightHsm, transition_non_existent)
 
     //-------------------------------------------
     // ACTIONS
-    TrafficLightState prevState = getCurrentState();
+    TrafficLightState prevState = getLastActiveState();
 
     ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), prevState);
+    EXPECT_EQ(getLastActiveState(), prevState);
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 0);
 }
@@ -90,7 +90,7 @@ TEST_F(TrafficLightHsm, transition_cancel_on_exit)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::OFF);
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
     EXPECT_EQ(mStateCounterExitCancel, 1);
     EXPECT_EQ(mStateCounterExit, 0);
     EXPECT_EQ(mStateCounterEnter, 0);
@@ -115,7 +115,7 @@ TEST_F(TrafficLightHsm, transition_cancel_on_enter)
     //-------------------------------------------
     // VALIDATION
 
-    EXPECT_EQ(getCurrentState(), TrafficLightState::OFF);
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
     EXPECT_EQ(mStateCounterExit, 1);
     EXPECT_EQ(mStateCounterEnter, 1);
     EXPECT_EQ(mStateCounterEnterCancel, 1);
@@ -141,7 +141,7 @@ TEST_F(TrafficLightHsm, transition_self)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::OFF);
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
     EXPECT_EQ(mStateCounterExit, 0);
     EXPECT_EQ(mStateCounterEnter, 0);
     EXPECT_EQ(mStateCounterOff, 0);
@@ -159,13 +159,13 @@ TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition)
 
     //-------------------------------------------
     // ACTIONS
-    TrafficLightState prevState = getCurrentState();
+    TrafficLightState prevState = getLastActiveState();
 
     ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), prevState);
+    EXPECT_EQ(getLastActiveState(), prevState);
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 0);
 }
@@ -187,7 +187,7 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_true)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::STARTING);
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
     EXPECT_EQ(mTransitionCounterNextState, 1);
 }
 
@@ -210,7 +210,7 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_false)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::OFF);
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
     EXPECT_EQ(mTransitionCounterNextState, 0);
 }
 
@@ -236,52 +236,54 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::STARTING);
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
     EXPECT_EQ(mTransitionCounterNextState, 2);
 }
 
-TEST_F(TrafficLightHsm, transition_conditional_multiple_valid)
-{
-    TEST_DESCRIPTION("if there are multiple valid transitions HSM will pick the first applicable one based on registration order");
+// NOTE: test is obsolete with introduction of parallel feature
+// TEST_F(TrafficLightHsm, transition_conditional_multiple_valid)
+// {
+//     TEST_DESCRIPTION("if there are multiple valid transitions HSM will pick self-transition or the first applicable one based on registration order");
 
-    //-------------------------------------------
-    // PRECONDITIONS
-    registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
-    registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+//     //-------------------------------------------
+//     // PRECONDITIONS
+//     registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+//     registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
 
-    registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2On);
-    registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2Off);
+//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2On);
+//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2Off);
 
-    //-------------------------------------------
-    // ACTIONS
-    // OFF -> STARTING will be used because it was registered first and doesnt have condition
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "any"));
+//     //-------------------------------------------
+//     // ACTIONS
+//     // OFF -> STARTING will be used because it was registered first and doesnt have condition
+//     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "any"));
 
-    //-------------------------------------------
-    // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::STARTING);
-    EXPECT_EQ(mTransitionCounterNextState, 1);
-}
+//     //-------------------------------------------
+//     // VALIDATION
+//     EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
+//     EXPECT_EQ(mTransitionCounterNextState, 1);
+// }
 
-TEST_F(TrafficLightHsm, transition_multiple_valid)
-{
-    TEST_DESCRIPTION("if there are multiple valid transitions HSM will pick the first applicable one based on registration order");
+// NOTE: test is obsolete with introduction of parallel feature
+// TEST_F(TrafficLightHsm, transition_multiple_valid)
+// {
+//     TEST_DESCRIPTION("if there are multiple valid transitions HSM will pick the first applicable one based on registration order");
 
-    //-------------------------------------------
-    // PRECONDITIONS
-    registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
-    registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+//     //-------------------------------------------
+//     // PRECONDITIONS
+//     registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+//     registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
 
-    registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition);
-    registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition);
+//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition);
+//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition);
 
-    //-------------------------------------------
-    // ACTIONS
-    // OFF -> STARTING will be used because it was registered first
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+//     //-------------------------------------------
+//     // ACTIONS
+//     // OFF -> STARTING will be used because it was registered first
+//     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
 
-    //-------------------------------------------
-    // VALIDATION
-    EXPECT_EQ(getCurrentState(), TrafficLightState::OFF);
-    EXPECT_EQ(mTransitionCounterNextState, 1);
-}
+//     //-------------------------------------------
+//     // VALIDATION
+//     EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
+//     EXPECT_EQ(mTransitionCounterNextState, 1);
+// }

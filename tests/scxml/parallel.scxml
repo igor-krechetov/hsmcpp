@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="parallel.scxml" qt:editorversion="4.14.2" initial="State_1">
+    <qt:editorinfo initialGeometry="437.51;69.35;-20;-20;40;40"/>
+    <state id="State_1">
+        <qt:editorinfo geometry="437.51;189.69;-60;-50;120;100" scenegeometry="437.51;189.69;377.51;139.69;120;100"/>
+        <transition type="external" event="E1" target="Parallel_1">
+            <qt:editorinfo endTargetFactors="48.53;16.50"/>
+            <script>onE1Transition</script>
+        </transition>
+    </state>
+    <parallel id="Parallel_1">
+        <qt:editorinfo geometry="181.53;379.38;-60;-56.58;649.47;491.64" scenegeometry="181.53;379.38;121.53;322.80;649.47;491.64"/>
+        <state id="P1_2" initial="p2_s1">
+            <qt:editorinfo geometry="392.08;74.14;-84.08;-61.22;249.29;399.79" scenegeometry="573.61;453.52;489.53;392.30;249.29;399.79"/>
+            <state id="p2_s1">
+                <qt:editorinfo geometry="40.57;52.77;-60;-50;120;100" scenegeometry="614.18;506.29;554.18;456.29;120;100"/>
+                <transition type="external" event="E2" target="p2_s2"/>
+            </state>
+            <state id="p2_s2">
+                <qt:editorinfo geometry="40.57;252.92;-60;-50;120;100" scenegeometry="614.18;706.44;554.18;656.44;120;100"/>
+            </state>
+        </state>
+        <state id="P1_1" initial="p1_s1">
+            <qt:editorinfo geometry="63.23;76.49;-84.08;-59.86;249.29;398.43" scenegeometry="244.76;455.87;160.68;396.01;249.29;398.43"/>
+            <state id="p1_s1">
+                <qt:editorinfo geometry="40.57;54.05;-60;-50;120;100" scenegeometry="285.33;509.92;225.33;459.92;120;100"/>
+                <transition type="external" event="E2" target="p1_s2"/>
+            </state>
+            <state id="p1_s2">
+                <qt:editorinfo geometry="40.57;252.92;-60;-50;120;100" scenegeometry="285.33;708.79;225.33;658.79;120;100"/>
+            </state>
+        </state>
+        <transition type="external" event="E3" target="Parallel_2">
+            <qt:editorinfo endTargetFactors="3.48;38.78"/>
+        </transition>
+    </parallel>
+    <state id="Parallel_2">
+        <qt:editorinfo geometry="985.38;411.98;-130.69;-92.45;655.59;623.01" scenegeometry="985.38;411.98;854.69;319.53;655.59;623.01"/>
+        <state id="P2_1" initial="p21_s1">
+            <qt:editorinfo geometry="-6.67;155.09;-84.08;-59.86;249.29;398.43" scenegeometry="978.71;567.07;894.63;507.21;249.29;398.43"/>
+            <state id="p21_s1">
+                <qt:editorinfo geometry="40.57;54.05;-60;-50;120;100" scenegeometry="1019.28;621.12;959.28;571.12;120;100"/>
+                <transition type="external" event="E2" target="p21_s2"/>
+            </state>
+            <state id="p21_s2">
+                <qt:editorinfo geometry="40.57;252.92;-60;-50;120;100" scenegeometry="1019.28;819.99;959.28;769.99;120;100"/>
+            </state>
+        </state>
+        <state id="P2_2" initial="p22_s1">
+            <qt:editorinfo geometry="328.74;157.66;-84.08;-59.86;249.29;398.43" scenegeometry="1314.12;569.64;1230.04;509.78;249.29;398.43"/>
+            <state id="p22_s1">
+                <qt:editorinfo geometry="40.57;54.05;-60;-50;120;100" scenegeometry="1354.69;623.69;1294.69;573.69;120;100"/>
+                <transition type="external" event="E2" target="p22_s2"/>
+            </state>
+            <state id="p22_s2">
+                <qt:editorinfo geometry="40.57;252.92;-60;-50;120;100" scenegeometry="1354.69;822.56;1294.69;772.56;120;100"/>
+            </state>
+        </state>
+        <initial>
+            <qt:editorinfo geometry="197.10;16.36;-20;-20;40;40" scenegeometry="1182.48;428.34;1162.48;408.34;40;40"/>
+            <transition type="external" target="P2_1"/>
+            <transition type="external" event="E3" target="P2_2"/>
+        </initial>
+        <transition type="external" event="E5" target="State_1" cond="testE5">
+            <qt:editorinfo localGeometry="-0.04;-441.35"/>
+        </transition>
+    </state>
+</scxml>

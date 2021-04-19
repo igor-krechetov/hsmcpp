@@ -73,7 +73,7 @@ Documentation is available in [Wiki](https://github.com/igor-krechetov/hsmcpp/wi
 # hsmdebugger
 **NOTE: work in progress. not a final design.**
 
-![hsmdebugger demo](https://github.com/igor-krechetov/hsmcpp/doc/readme/hsmdebugger_demo.gif)
+![hsmdebugger demo](https://github.com/igor-krechetov/hsmcpp/blob/main/doc/readme/hsmdebugger_demo.gif)
 
 **TODO**
 

@@ -4,6 +4,11 @@
 #ifndef __HSMCPP_HSM_HPP__
 #define __HSMCPP_HSM_HPP__
 
+#include <fstream>
+#include <time.h>
+#include <sys/time.h>
+#include <unistd.h>// for log
+
 #include <algorithm>
 #include <functional>
 #include <atomic>
@@ -58,6 +63,16 @@ public:
     #define HsmStateExitCallbackPtr_t(_class, _func)               bool (_class::*_func)()
 
 private:
+    enum class HsmLogAction
+    {
+        IDLE,
+        TRANSITION,
+        TRANSITION_ENTRYPOINT,
+        CALLBACK_EXIT,
+        CALLBACK_ENTER,
+        CALLBACK_STATE
+    };
+
     enum class HsmEventStatus
     {
         PENDING,
@@ -93,7 +108,7 @@ private:
     struct PendingEventInfo
     {
         bool entryPointTransition = false;
-        HsmEventEnum type = static_cast<HsmEventEnum>(-1);
+        HsmEventEnum type = INVALID_HSM_EVENT_ID;
         VariantList_t args;
         std::shared_ptr<std::mutex> cvLock;
         std::shared_ptr<std::condition_variable> syncProcessed;
@@ -179,6 +194,9 @@ public:
     template <typename... Args>
     bool isTransitionPossible(const HsmEventEnum event, Args... args);
 
+    bool enableHsmDebugging();
+    void disableHsmDebugging();
+
 private:
     template <typename... Args>
     void makeVariantList(VariantList_t& vList, Args&&... args);
@@ -224,6 +242,18 @@ private:
     bool hasParentState(const HsmStateEnum state, HsmStateEnum &outParent) const;
 #endif // HSM_ENABLE_SAFE_STRUCTURE
 
+    void logHsmAction(const HsmLogAction action,
+                      const HsmStateEnum fromState = INVALID_HSM_STATE_ID,
+                      const HsmStateEnum targetState = INVALID_HSM_STATE_ID,
+                      const HsmEventEnum event = INVALID_HSM_EVENT_ID,
+                      const bool hasFailed = false,
+                      const VariantList_t& args = VariantList_t());
+
+protected:
+    // NOTE: clients must implement this method for debugging to work. names should match with the names in scxml file
+    virtual std::string getStateName(const HsmStateEnum state);
+    virtual std::string getEventName(const HsmEventEnum event);
+
 private:
     HsmStateEnum mInitialState;
     std::list<HsmStateEnum> mActiveStates;
@@ -243,6 +273,9 @@ private:
 #ifndef HSM_DISABLE_THREADSAFETY
     std::mutex mEventsSync;
 #endif// HSM_DISABLE_THREADSAFETY
+
+    std::filebuf mHsmLogFile;
+    std::shared_ptr<std::ostream> mHsmLog;
 };
 
 // ============================================================================
@@ -277,6 +310,11 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::initialize(const std:
                                                                      this));
 
             result = (INVALID_HSM_DISPATCHER_HANDLER_ID != mDispatcherHandlerId);
+
+            if (true == result)
+            {
+                logHsmAction(HsmLogAction::IDLE, INVALID_HSM_STATE_ID, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, false, VariantList_t());
+            }
         }
         else
         {
@@ -654,6 +692,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateExiting(const 
     if ((mRegisteredStates.end() != it) && it->second.onExiting)
     {
         res = it->second.onExiting();
+        logHsmAction(HsmLogAction::CALLBACK_EXIT, state, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, (false == res), VariantList_t());
     }
 
     return res;
@@ -674,6 +713,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateEntering(const
         if ((mRegisteredStates.end() != it) && it->second.onEntering)
         {
             res = it->second.onEntering(args);
+            logHsmAction(HsmLogAction::CALLBACK_ENTER, INVALID_HSM_STATE_ID, state, INVALID_HSM_EVENT_ID, (false == res), args);
         }
     }
 
@@ -690,6 +730,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateChanged(const 
     if ((mRegisteredStates.end() != it) && it->second.onStateChanged)
     {
         it->second.onStateChanged(args);
+        logHsmAction(HsmLogAction::CALLBACK_STATE, INVALID_HSM_STATE_ID, state, INVALID_HSM_EVENT_ID, false, args);
     }
     else
     {
@@ -876,6 +917,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                     res = singleTransitionResult;
                     break;
                 case HsmEventStatus_t::DONE_OK:
+                    logHsmAction(HsmLogAction::IDLE, INVALID_HSM_STATE_ID, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, false, VariantList_t());
                     if (HsmEventStatus_t::PENDING != res)
                     {
                         res = singleTransitionResult;
@@ -946,7 +988,14 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
         {
             if (it->fromState == it->destinationState)
             {
-                it->onTransition(event.args);
+                // TODO: separate type for self transition?
+                logHsmAction(HsmLogAction::TRANSITION, it->fromState, it->destinationState, event.type, false, event.args);
+
+                if (it->onTransition)
+                {
+                    it->onTransition(event.args);
+                }
+
                 res = HsmEventStatus_t::DONE_OK;
             }
         }
@@ -1018,6 +1067,9 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                 if (it->fromState != it->destinationState)
                 {
                     // NOTE: Decide if we need functionality to cancel ongoing transition
+                    logHsmAction((false == event.entryPointTransition ? HsmLogAction::TRANSITION : HsmLogAction::TRANSITION_ENTRYPOINT),
+                                 it->fromState, it->destinationState, event.type, false, event.args);
+
                     if (it->onTransition)
                     {
                         it->onTransition(event.args);
@@ -1309,5 +1361,107 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::hasParentState(const 
 }
 
 #endif // HSM_ENABLE_SAFE_STRUCTURE
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+std::string HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getStateName(const HsmStateEnum state)
+{
+    std::string name;
+
+    if (state != INVALID_HSM_STATE_ID)
+    {
+        name = std::to_string(static_cast<int>(state));
+    }
+
+    return name;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+std::string HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getEventName(const HsmEventEnum event)
+{
+    std::string name;
+
+    if (event != INVALID_HSM_EVENT_ID)
+    {
+        name = std::to_string(static_cast<int>(event));
+    }
+
+    return name;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::enableHsmDebugging()
+{
+    // TODO: make name configurable
+    bool isNewLog = (access("./test.hsmlog", F_OK) != 0);
+
+    if (nullptr != mHsmLogFile.open("./test.hsmlog", std::ios::out | std::ios::app))
+    {
+        mHsmLog = std::make_shared<std::ostream>(&mHsmLogFile);
+
+        if (true == isNewLog)
+        {
+            *mHsmLog << "---\n";
+            mHsmLog->flush();
+        }
+    }
+
+    return true;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::disableHsmDebugging()
+{
+    mHsmLogFile.close();
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::logHsmAction(const HsmLogAction action,
+                                                                        const HsmStateEnum fromState,
+                                                                        const HsmStateEnum targetState,
+                                                                        const HsmEventEnum event,
+                                                                        const bool hasFailed,
+                                                                        const VariantList_t& args)
+{
+    if (true == mHsmLogFile.is_open())
+    {
+        static const std::map<HsmLogAction, std::string> actionsMap = {std::make_pair(HsmLogAction::IDLE, "idle"),
+                                                                       std::make_pair(HsmLogAction::TRANSITION, "transition"),
+                                                                       std::make_pair(HsmLogAction::TRANSITION_ENTRYPOINT, "transition_entrypoint"),
+                                                                       std::make_pair(HsmLogAction::CALLBACK_EXIT, "callback_exit"),
+                                                                       std::make_pair(HsmLogAction::CALLBACK_ENTER, "callback_enter"),
+                                                                       std::make_pair(HsmLogAction::CALLBACK_STATE, "callback_state")};
+        timeval curTime;
+        gettimeofday(&curTime, nullptr);
+        struct tm tmBuf;
+        char bufTime[80];
+        strftime(bufTime, sizeof(bufTime), "%Y-%m-%d %H:%M:%S", localtime_r(&curTime.tv_sec, &tmBuf));
+
+        char bufTimeMs[5] = {0};
+        sprintf(bufTimeMs, ".%03d", static_cast<int>(curTime.tv_usec / 1000));
+
+        *mHsmLog << "\n-\n"
+                    "  timestamp: \"" << bufTime << bufTimeMs << "\"\n"
+                    "  active_states:";
+
+        for (auto itState = mActiveStates.begin(); itState != mActiveStates.end(); ++itState)
+        {
+            *mHsmLog << "\n    - " << getStateName(*itState);
+        }
+
+        *mHsmLog << "\n  action: " << actionsMap.at(action) << "\n"
+                    "  from_state: " << getStateName(fromState) << "\n"
+                    "  target_state: " << getStateName(targetState) << "\n"
+                    "  event: " << getEventName(event) << "\n"
+                    "  status: " << (hasFailed ? "failed" : "") << "\n"
+                    "  args:";
+
+        for (auto itArg = args.begin() ; itArg != args.end(); ++itArg)
+        {
+            *mHsmLog << "\n    - " << itArg->toString();
+        }
+
+        mHsmLog->flush();
+    }
+}
 
 #endif  // __HSMCPP_HSM_HPP__

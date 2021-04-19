@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/changelog-v0.11.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Generic badge](https://img.shields.io/badge/changelog-v0.12.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Generic badge](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
 [![Generic badge](https://img.shields.io/badge/documentation-green.svg)](https://github.com/igor-krechetov/hsmcpp/wiki)
 
@@ -31,6 +31,7 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
   - glibmm based
   - Qt based
   - possibility to implement your own dispatcher
+- debugger to help analyze state machine behavior
 
 ## State machine related
 - states
@@ -46,11 +47,18 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
 - support for std::function and lambdas as callbacks
 
 # Dependencies
-- C++11 or newer
-- glib (optional, for dispatcher)
-- glibmm (optional, for dispatcher)
-- Qt (optional, for dispatcher)
-- Python 3 (optional, for code generator)
+- For library:
+  - C++11 or newer
+  - glib (optional, for dispatcher)
+  - glibmm (optional, for dispatcher)
+  - Qt (optional, for dispatcher)
+- For code generator:
+  - Python 3
+- For hsmdebugger:
+  - Python 3
+  - PyYaml
+  - PySide6
+  - plantuml
 
 # Installation
 - `git clone https://github.com/igor-krechetov/hsmcpp.git`
@@ -61,6 +69,13 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
 
 # Documentation
 Documentation is available in [Wiki](https://github.com/igor-krechetov/hsmcpp/wiki).
+
+# hsmdebugger
+**NOTE: work in progress. not a final design.**
+
+![hsmdebugger demo](https://github.com/igor-krechetov/hsmcpp/doc/readme/hsmdebugger_demo.gif)
+
+**TODO**
 
 # Creating a simple State Machine
 HSM structure:

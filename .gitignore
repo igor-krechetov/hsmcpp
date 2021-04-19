@@ -1,5 +1,9 @@
 build
 .vscode
 out
+gen
 _temp
 .idea
+__pycache__
+*.pyproject
+*.pyproject.user

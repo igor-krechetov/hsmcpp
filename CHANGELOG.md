@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.12.0] - 2021-04-19
+### Added
+- initial version of hsmdebugger
+
 ## [0.11.0] - 2021-04-14
 ### Added
 - support for parallel states and transitions

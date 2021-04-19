@@ -1,3 +1,4 @@
 add_subdirectory(00_helloworld)
 add_subdirectory(01_trafficlight)
 add_subdirectory(02_generated)
+add_subdirectory(03_debugging)

@@ -1,46 +1,8 @@
 import os
 import re
+import sys
 import xml.etree.ElementTree as ET
 import argparse
-
-# ==========================================================================================================
-# CMD ARGUMENTS
-parser = argparse.ArgumentParser(description='State machine code/diagram generator')
-argsGenType = parser.add_mutually_exclusive_group(required=True)
-argsGenType.add_argument('-code', action="store_true", help='generate C++ code based on hsmcpp library. '
-                                                            'Supported arguments: '
-                                                            '-class_name, -class_suffix, -template_hpp, -template_cpp, -dest_hpp, -dest_cpp, -dest_dir')
-argsGenType.add_argument('-plantuml', action="store_true", help='generate plantuml state diagram. '
-                                                                'Supported arguments: -out')
-
-parser.add_argument('-scxml', '-s', type=str, required=True, help='path to state machine in SCXML format')
-parser.add_argument('-class_name', '-c', type=str, help='class name used in generated code')
-parser.add_argument('-class_suffix', '-cs', type=str, default="Base", help='suffix to append to class name (default: Base)')
-parser.add_argument('-template_hpp', '-thpp', type=str, help='path to HPP template file')
-parser.add_argument('-template_cpp', '-tcpp', type=str, help='path to CPP template file')
-parser.add_argument('-dest_hpp', '-dhpp', type=str, help='path to file in which to store generated HPP content (default: ClassSuffixBase.hpp)')
-parser.add_argument('-dest_cpp', '-dcpp', type=str, help='path to file in which to store generated CPP content (default: ClassSuffixBase.cpp)')
-parser.add_argument('-dest_dir', '-d', type=str, help='path to folder where to store generated files (ignored if -dest_hpp and -dest_cpp are provided)')
-
-parser.add_argument('-out', '-o', type=str, help='path for storing generated Plantuml file (only for -plantuml)')
-
-args = parser.parse_args()
-
-if args.code:
-    if (args.scxml is None) or (args.class_name is None) or (args.template_hpp is None) or (args.template_cpp is None):
-        print("ERROR: scxml, class_name, template_hpp or template_cpp was not provided")
-        exit(1)
-    if ((args.dest_hpp is None) and (args.dest_cpp is not None)) or ((args.dest_hpp is not None) and (args.dest_cpp is None)):
-        print("ERROR: both dest_cpp and dest_hpp must be provided")
-        exit(1)
-    if (args.dest_hpp is None) and (args.dest_cpp is None) and (args.dest_dir is None):
-        print("ERROR: destination was not provided")
-        exit(1)
-elif args.plantuml:
-    if args.out is None:
-        print("ERROR: -out option was not specified")
-        exit(1)
-
 
 # ==========================================================================================================
 # FUNCTIONS
@@ -443,52 +405,149 @@ def generateCppCode(hsm, pathHpp, pathCpp):
 
 # ==========================================================================================================
 # Plantuml generation
-def generatePlantumlState(stateData, level):
+# hightlight = {"style": {"active_state": "00FF00", "blocked_transition": "FFAA00"},
+#               "active_states": ["state_3", ...],
+#               "callback": {"state_1": {"onstate|onexit|onentry": False, "args": [...]}, ...},
+#               "transitions": {"parent_2": {"from": "parent_1", "event": "event_next_parent", "args": [...]}, # reguler
+#                               "state_4": {"from": "state_4", "event": "event_self", "args": [...]},          # self
+#                               "state_3": {"from": "", "event": "event_self", "args": [...]}, ...}}           # entry
+def generatePlantumlState(stateData, level, highlight=None):
     plantumlState = ""
     finalStates = []
     offset = generateOffset(level * 4)
 
+    # -----------------------------------
+    # Configure colors
+    highlightColorActive = None
+    highlightColorBlocked = None
+
+    if 'style' in highlight:
+        if 'active_state' in highlight['style']:
+            highlightColorActive = highlight['style']['active_state']
+        if 'blocked_transition' in highlight['style']:
+            highlightColorBlocked = highlight['style']['blocked_transition']
+    if highlightColorActive is None:
+        highlightColorActive = "00FF00"
+    if highlightColorBlocked is None:
+        highlightColorBlocked = "FFAA00"
+    # -----------------------------------
+
     if 'initial_state' in stateData:
         condition = ""
+        highlightEntryTransition = ""
+        entryTransitionArgs = ""
         if 'initial_state_condition' in stateData:
             condition = f" : {stateData['initial_state_condition']}"
-        plantumlState += f"{generateOffset(level * 4)}[*] --> {stateData['id']}{condition}\n"
+
+        if highlight and (stateData['id'] in highlight['transitions']):
+            highlightEntryTransitionInfo = highlight['transitions'][stateData['id']]
+            if (highlightEntryTransitionInfo["from"] == "") and\
+               (('initial_state_condition' not in stateData) or\
+                highlightEntryTransitionInfo["event"] == stateData['initial_state_condition']):
+                    highlightEntryTransition = f"[#{highlightColorActive},bold]"
+                    if "args" in highlightEntryTransitionInfo:
+                        entryTransitionArgs = highlightEntryTransitionInfo['args']
+
+        plantumlState += f"{generateOffset(level * 4)}[*] -{highlightEntryTransition}-> {stateData['id']}{condition}\n"
+        if len(entryTransitionArgs) > 0:
+            plantumlState += f"{offset}note on link\n{offset}  **Arguments:**\n\n{offset}  {entryTransitionArgs}\n{offset}end note\n"
 
     if "states" in stateData:
         plantumlState += f"\n{offset}state {stateData['id']} {{\n"
 
         for substate in stateData["states"]:
-            (substatePlantuml, substateFinalStates) = generatePlantumlState(substate, level + 1)
+            (substatePlantuml, substateFinalStates) = generatePlantumlState(substate, level + 1, highlight)
             plantumlState += substatePlantuml
             finalStates += substateFinalStates
         plantumlState += f"{offset}}}\n\n"
     elif ("is_final" in stateData) and (stateData["is_final"] == True):
         finalStates = [stateData['id']]
     else:
+        highlightOnEntry = ""
+        highlightOnExit = ""
+        highlightOnState = ""
+        highlightState = False
+        callbackFailedMsg = ""
+        callbackArgs = ""
+
+        if highlight and stateData['id'] in highlight['active_states']:
+            highlightState = True
+        if highlight and stateData['id'] in highlight['callback']:
+            highlightState = True
+            stateHighlightInfo = highlight['callback'][stateData['id']]
+            if "onentry" in stateHighlightInfo:
+                highlightOnEntry = "**"
+                if stateHighlightInfo["onentry"] is False:
+                    callbackFailedMsg = stateData['onentry']
+            if "onexit" in stateHighlightInfo:
+                highlightOnExit = "**"
+                if stateHighlightInfo["onexit"] is False:
+                    callbackFailedMsg = stateData['onexit']
+            if "onstate" in stateHighlightInfo:
+                highlightOnState = "**"
+                if stateHighlightInfo["onstate"] is False:
+                    callbackFailedMsg = stateData['onstate']
+            if 'args' in stateHighlightInfo:
+                callbackArgs = stateHighlightInfo['args']
+
         if "onentry" in stateData:
-            plantumlState += f"\n{offset}{stateData['id']} : -> {stateData['onentry']}\n"
+            plantumlState += f"\n{offset}{stateData['id']} : {highlightOnEntry}-> {stateData['onentry']}{highlightOnEntry}\n"
         if "onstate" in stateData:
-            plantumlState += f"\n{offset}{stateData['id']} : {stateData['onstate']}\n"
+            plantumlState += f"\n{offset}{stateData['id']} : {highlightOnState}{stateData['onstate']}{highlightOnState}\n"
         if "onexit" in stateData:
-            plantumlState += f"\n{offset}{stateData['id']} : <- {stateData['onexit']}\n"
+            plantumlState += f"\n{offset}{stateData['id']} : {highlightOnExit}<- {stateData['onexit']}{highlightOnExit}\n"
+
+        if highlightState:
+            if len(callbackFailedMsg) > 0:
+                plantumlState += f"state \"**{stateData['id']}**\" as {stateData['id']} #{highlightColorBlocked}\n"
+                plantumlState += f"note left of {stateData['id']} : "\
+                                 "**Transition blocked**\\n{callbackFailedMsg}() returned FALSE"
+                if len(callbackArgs) > 0:
+                    plantumlState += f"\\n\\n**Arguments**\\n\\n{callbackArgs}"
+                plantumlState += "\n"
+            else:
+                plantumlState += f"state \"**{stateData['id']}**\" as {stateData['id']} #{highlightColorActive}\n"
+                if callbackArgs and len(callbackArgs) > 0:
+                    plantumlState += f"note left of {stateData['id']} : **Arguments**\\n\\n{callbackArgs}\n"
+
+    # highlighting transition targets must be done AFTER state is fully defined (since transitions can appear earlier)
+    # but skip self transitions since in this case state will be active
+    if highlight \
+       and (stateData['id'] in highlight['transitions']) \
+       and (stateData['id'] != highlight['transitions'][stateData['id']]["from"]):
+        plantumlState += f"state {stateData['id']} ##[dotted]{highlightColorActive}\n"
 
     for curTransition in stateData["transitions"]:
-        plantumlState += f"{offset}{stateData['id']} --> {curTransition['target']}: {curTransition['event']}"
+        highlightTransition = ""
+        highlightTransitionEvent = ""
+        transitionArgs = ""
+
+        if highlight and curTransition['target'] in highlight['transitions']:
+            highlightInfo = highlight['transitions'][curTransition['target']]
+            if (highlightInfo["from"] == stateData['id']) and (highlightInfo["event"] == curTransition['event']):
+                highlightTransition = f"[#{highlightColorActive},bold]"
+                highlightTransitionEvent = "**"
+                if 'args' in highlightInfo:
+                    transitionArgs = highlightInfo['args']
+
+        plantumlState += f"{offset}{stateData['id']} -{highlightTransition}-> {curTransition['target']}: {highlightTransitionEvent}{curTransition['event']}"
         if "condition" in curTransition:
             plantumlState += f"\\n[{curTransition['condition']}]"
         if "callback" in curTransition:
             plantumlState += f"\\n<{curTransition['callback']}>"
-        plantumlState += "\n"
+        plantumlState += f"{highlightTransitionEvent}\n"
+        if len(transitionArgs) > 0:
+            plantumlState += f"{offset}note on link\n{offset}  **Arguments:**\n\n{offset}  {transitionArgs}\n{offset}end note\n"
 
     return (plantumlState, finalStates)
 
 
-def generatePlantuml(hsm, dest):
+def generatePlantuml(hsm, dest, highlight=None):
     plantuml = "@startuml\n\n"
     finalStates = []
 
     for curState in hsm:
-        (statePlantuml, stateFinalStates) = generatePlantumlState(curState, 0)
+        (statePlantuml, stateFinalStates) = generatePlantumlState(curState, 0, highlight)
         plantuml += statePlantuml
         finalStates += stateFinalStates
 
@@ -504,6 +563,50 @@ def generatePlantuml(hsm, dest):
 # ==========================================================================================================
 # MAIN
 if __name__ == "__main__":
+    # CMD ARGUMENTS
+    parser = argparse.ArgumentParser(description='State machine code/diagram generator')
+    argsGenType = parser.add_mutually_exclusive_group(required=True)
+    argsGenType.add_argument('-code', action="store_true", help='generate C++ code based on hsmcpp library. '
+                                                                'Supported arguments: '
+                                                                '-class_name, -class_suffix, -template_hpp, -template_cpp, -dest_hpp, -dest_cpp, -dest_dir')
+    argsGenType.add_argument('-plantuml', action="store_true", help='generate plantuml state diagram. '
+                                                                    'Supported arguments: -out')
+
+    parser.add_argument('-scxml', '-s', type=str, required=True, help='path to state machine in SCXML format')
+    parser.add_argument('-class_name', '-c', type=str, help='class name used in generated code')
+    parser.add_argument('-class_suffix', '-cs', type=str, default="Base",
+                        help='suffix to append to class name (default: Base)')
+    parser.add_argument('-template_hpp', '-thpp', type=str, help='path to HPP template file')
+    parser.add_argument('-template_cpp', '-tcpp', type=str, help='path to CPP template file')
+    parser.add_argument('-dest_hpp', '-dhpp', type=str,
+                        help='path to file in which to store generated HPP content (default: ClassSuffixBase.hpp)')
+    parser.add_argument('-dest_cpp', '-dcpp', type=str,
+                        help='path to file in which to store generated CPP content (default: ClassSuffixBase.cpp)')
+    parser.add_argument('-dest_dir', '-d', type=str,
+                        help='path to folder where to store generated files (ignored if -dest_hpp and -dest_cpp are provided)')
+
+    parser.add_argument('-out', '-o', type=str, help='path for storing generated Plantuml file (only for -plantuml)')
+
+    args = parser.parse_args()
+
+    if args.code:
+        if (args.scxml is None) or (args.class_name is None) or (args.template_hpp is None) or (
+                args.template_cpp is None):
+            print("ERROR: scxml, class_name, template_hpp or template_cpp was not provided")
+            exit(1)
+        if ((args.dest_hpp is None) and (args.dest_cpp is not None)) or (
+                (args.dest_hpp is not None) and (args.dest_cpp is None)):
+            print("ERROR: both dest_cpp and dest_hpp must be provided")
+            exit(1)
+        if (args.dest_hpp is None) and (args.dest_cpp is None) and (args.dest_dir is None):
+            print("ERROR: destination was not provided")
+            exit(1)
+    elif args.plantuml:
+        if args.out is None:
+            print("ERROR: -out option was not specified")
+            exit(1)
+
+    # ==========================================================================================================
     print(f"Loading [{args.scxml}] ...")
     hsm = parseScxml(args.scxml)
 

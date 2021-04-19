@@ -27,7 +27,7 @@ function(generateHsm genTarget scxml className destDirectory outSrcVariableName)
                        DEPENDS ${scxml} ${templateHpp} ${templateCpp}
                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    add_custom_target(genTarget DEPENDS ${GEN_CPP})
+    add_custom_target(${genTarget} DEPENDS ${GEN_CPP})
 endfunction()
 
 # Extended version of generateHsm which allows to provide custom template and destination files path

@@ -17,6 +17,7 @@ Variant Variant::make(const std::string& v) { return Variant(new std::string(v),
 Variant Variant::make(const char* v) { return make(std::string(v)); }
 Variant Variant::make(const VariantDict_t& v) { return Variant(new VariantDict_t(v), Type::DICTIONARY); }
 Variant Variant::make(const Variant& first, const Variant& second) { return Variant(new VariantPair_t(first, second), Type::PAIR); }
+Variant Variant::make(const Variant& v) { return v; }
 
 Variant::Variant(void* d, const Type t)
     : data(d)
@@ -392,6 +393,9 @@ std::string Variant::toString() const
             }
             break;
         }
+        case Type::PAIR:
+            result = "(" + value<VariantPair_t>()->first.toString() + ", " + value<VariantPair_t>()->first.toString() + ")";
+            break;
         default:
             break;
     }

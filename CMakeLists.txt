@@ -191,7 +191,7 @@ if (HSMBUILD_DISPATCHER_GLIBMM)
 endif()
 
 # ================================================
-add_subdirectory(scxml2gen)
+add_subdirectory(tools/scxml2gen)
 
 if (HSMBUILD_EXAMPLES)
     add_subdirectory(examples)

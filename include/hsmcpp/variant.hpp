@@ -67,6 +67,7 @@ public:
     static Variant make(const char* v);
     static Variant make(const VariantDict_t& v);
     static Variant make(const Variant& first, const Variant& second);
+    static Variant make(const Variant& v);
 
 public:
     Variant() = default;

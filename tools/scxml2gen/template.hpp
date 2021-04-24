@@ -7,12 +7,16 @@
 
 enum class @ENUM_STATES@
 {
-    @ENUM_STATES_DEF@
+~~~BLOCK:ENUM_STATES_ITEM~~~
+    @ENUM_STATES_ITEM@,
+~~~BLOCK_END~~~
 };
 
 enum class @ENUM_EVENTS@
 {
-    @ENUM_EVENTS_DEF@
+~~~BLOCK:ENUM_EVENTS_ITEM~~~
+    @ENUM_EVENTS_ITEM@,
+~~~BLOCK_END~~~
 };
 
 class @CLASS_NAME@: public HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>
@@ -43,6 +47,10 @@ protected:
 // HSM transition condition callbacks
 protected:
     @HSM_TRANSITION_CONDITIONS@
+
+protected:
+    std::string getStateName(const @ENUM_STATES@ state) override;
+    std::string getEventName(const @ENUM_EVENTS@ event) override;
 };
 
 #endif // __GEN_HSM_%CLASS_NAME%__

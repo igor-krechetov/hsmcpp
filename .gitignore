@@ -7,3 +7,7 @@ _temp
 __pycache__
 *.pyproject
 *.pyproject.user
+config.ini
+out.cpp
+out.hpp
+test.plantuml

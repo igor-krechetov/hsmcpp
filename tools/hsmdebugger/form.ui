@@ -158,8 +158,20 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menuFileRecentHSM">
+     <property name="title">
+      <string>Recent HSM</string>
+     </property>
+    </widget>
+    <widget class="QMenu" name="menuFileRecentLogs">
+     <property name="title">
+      <string>Recent Logs</string>
+     </property>
+    </widget>
     <addaction name="actionOpenHsm"/>
     <addaction name="actionOpenHsmLog"/>
+    <addaction name="menuFileRecentHSM"/>
+    <addaction name="menuFileRecentLogs"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
     <addaction name="separator"/>
@@ -208,8 +220,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>0</width>
-     <height>0</height>
+     <width>274</width>
+     <height>286</height>
     </size>
    </property>
    <attribute name="dockWidgetArea">
@@ -409,6 +421,16 @@
   <action name="actionAbout">
    <property name="text">
     <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="actionClearRecentHSM">
+   <property name="text">
+    <string>Clear Menu</string>
+   </property>
+  </action>
+  <action name="actionClearRecentLogs">
+   <property name="text">
+    <string>Clear Menu</string>
    </property>
   </action>
  </widget>

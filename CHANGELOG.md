@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.12.1] - 2021-04-25
+### Added
+- add configurable hsm dump path
+- scxml2gen: add support to blocks generation
+- scxml2gen: update template
+- scxml2gen: add generation of getStateName(), getEventName() functions
+- hsmdebugger: add recent files
+- examples: simplify 03_debugging
+
 ## [0.12.0] - 2021-04-19
 ### Added
 - initial version of hsmdebugger

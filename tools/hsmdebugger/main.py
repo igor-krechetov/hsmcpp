@@ -10,27 +10,32 @@ import subprocess
 import threading
 from qclickableslider import QClickableSlider
 from qimageviewarea import QImageViewArea
+from impl.recent import RecentFilesManager
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QLabel, QFileDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QLabel, QFileDialog, QInputDialog, QLineEdit
 from PySide6.QtCore import QFile, QSettings, Signal, Slot
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap, QMovie
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap, QMovie, QAction
 from PySide6.QtUiTools import QUiLoader
 
 
 class hsmdebugger(QMainWindow):
     signalPlantumlDone = Signal(str)
+    configPath = "./config.ini"
+    appTitle = "HSM Debugger"
 
     def __init__(self):
         super(hsmdebugger, self).__init__()
-
-        self.hsmViewScaleFactor = 1.0
         self.threadPlantuml = None
         self.plantuml = None
         self.hsm = None
+        self.hsmLog = None
         self.lastDirectory = "~/"
+        self.currentScxmlPath = None
+        self.currentLogPath = None
+        self.hsmViewScaleFactor = 1.0
+        self.currentFrameIndex = 0
 
         self.load_settings()
-
         (loadScxml2genStatus, errMsg) = self.loadScxml2genModule()
         if loadScxml2genStatus is False:
             QMessageBox.critical(None, "Error", f"Failed to load scxml2gen.py module.\n{errMsg}",
@@ -39,6 +44,11 @@ class hsmdebugger(QMainWindow):
 
         self.load_ui()
         self.configure_ui()
+        self.recentFiles = RecentFilesManager(self.configPath,
+                                              self.window.menuFileRecentHSM,
+                                              self.window.menuFileRecentLogs,
+                                              self.onActionOpenRecentHSM,
+                                              self.onActionOpenRecentLog)
         self.prepareFramesModel()
         self.configureActions()
         self.configureStatusBar()
@@ -47,22 +57,19 @@ class hsmdebugger(QMainWindow):
     def onActionOpenHsm(self):
         scxmlPath = self.selectFile("Select HSM file", "SCXML files (*.scxml);;All files (*.*)")
         if scxmlPath:
-            print("Loading: " + scxmlPath)
-            self.unloadHsmLog()
-            if self.loadScxml(scxmlPath) is False:
-                QMessageBox.critical(QApplication.activeWindow(), "Error", "Failed to load HSM",
-                                     buttons=QMessageBox.Ok)
+            self.loadScxml(scxmlPath)
 
     def onActionOpenHsmLog(self):
         if self.hsm:
             logPath = self.selectFile("Select HSM log file", "HSMCPP Log Files (*.hsmlog);;All files (*.*)")
             if logPath:
-                if self.loadHsmLog(logPath):
-                    self.updateFrames()
-                    self.setCurrentFrameIndex(0)
-                else:
-                    QMessageBox.critical(QApplication.activeWindow(), "Error", "Failed to load HSM log",
-                                         buttons=QMessageBox.Ok)
+                self.loadHsmLog(logPath)
+
+    def onActionOpenRecentHSM(self):
+        self.loadScxml(self.sender().text())
+
+    def onActionOpenRecentLog(self):
+        self.loadHsmLog(self.sender().text())
 
     def onActionSearch(self):
         if self.window.actionSearch.isChecked():
@@ -100,7 +107,13 @@ class hsmdebugger(QMainWindow):
         print("TODO")
 
     def onActionGoToFrame(self):
-        print("TODO")
+        if self.hsmLog:
+            (newIndex, wasOk) = QInputDialog.getInt(QApplication.activeWindow(),
+                                                    "Go to Frame",
+                                                    f"Frame index (1 ~ {len(self.hsmLog) + 1}):",
+                                                    minValue=1, maxValue=len(self.hsmLog) + 1)
+            if wasOk:
+                self.setCurrentFrameIndex(newIndex - 1)
 
     def onActionShowOnlineHelp(self):
         print("TODO")
@@ -112,7 +125,7 @@ class hsmdebugger(QMainWindow):
         self.setCurrentFrameIndex(currentIndex.row())
 
     def load_settings(self):
-        settings = QSettings("./config.ini", QSettings.IniFormat)
+        settings = QSettings(self.configPath, QSettings.IniFormat)
         self.pathScxml2gen = settings.value("environment/scxml2gen", "../scxml2gen/scxml2gen.py")
         self.styleColors = {"active_state": settings.value("style/active_state", "38EB4B"),
                             "blocked_transition": settings.value("style/blocked_transition", "EB8421")}# FFAA00
@@ -133,6 +146,7 @@ class hsmdebugger(QMainWindow):
         self.window.hsmStateViewWait.hide()
         self.window.frameSelector.setSingleStep(1)
         self.window.frameSelector.setPageStep(1)
+        self.window.frameSelector.setMaximum(0)
         self.window.searchFilter.hide()
         self.window.hsmStateView.hide()
 
@@ -158,6 +172,7 @@ class hsmdebugger(QMainWindow):
 
     def enableHsmActions(self, enable):
         self.window.actionOpenHsmLog.setEnabled(enable)
+        self.window.menuFileRecentLogs.setEnabled(enable)
 
     def enableLogActions(self, enable):
         self.window.actionSearch.setEnabled(enable)
@@ -167,12 +182,13 @@ class hsmdebugger(QMainWindow):
         self.window.actionZoomOut.setEnabled(enable)
         self.window.actionResetZoom.setEnabled(enable)
         self.window.actionFitToView.setEnabled(enable)
+        self.window.actionGoToFrame.setEnabled(enable)
 
     def configureStatusBar(self):
         self.statusBarFrame = QLabel("")
         self.statusBarLog = QLabel("")
-        self.window.statusbar.addWidget(self.statusBarFrame)
-        self.window.statusbar.addWidget(self.statusBarLog)
+        self.window.statusbar.addPermanentWidget(self.statusBarLog, 9999)
+        self.window.statusbar.addPermanentWidget(self.statusBarFrame, 0)
 
     def prepareFramesModel(self):
         self.modelFrames = QStandardItemModel()
@@ -180,8 +196,9 @@ class hsmdebugger(QMainWindow):
         self.window.frames.verticalHeader().hide()
 
     def scaleView(self, newScale):
-        self.hsmViewScaleFactor = newScale
-        self.window.hsmStateView.setFixedSize(self.hsmViewScaleFactor * self.window.hsmStateView.pixmap().size())
+        if self.hsmLog:
+            self.hsmViewScaleFactor = newScale
+            self.window.hsmStateView.setFixedSize(self.hsmViewScaleFactor * self.window.hsmStateView.pixmap().size())
 
     def selectFile(self, title, filter):
         selectedPath = None
@@ -213,12 +230,23 @@ class hsmdebugger(QMainWindow):
 
     def loadScxml(self, path):
         loaded = True
-        self.enableHsmActions(False)
-        try:
-            self.hsm = self.scxml2gen.parseScxml(path)
-            self.enableHsmActions(True)
-        except:
-            self.hsm = None
+        if path and len(path) > 0:
+            self.unloadHsmLog()
+            self.enableHsmActions(False)
+            try:
+                self.hsm = self.scxml2gen.parseScxml(path)
+            except:
+                self.hsm = None
+                loaded = False
+                QMessageBox.critical(QApplication.activeWindow(), "Error", "Failed to load HSM",
+                                     buttons=QMessageBox.Ok)
+
+            if loaded:
+                self.currentScxmlPath = path
+                self.recentFiles.addPathToRecentHSMList(path)
+                self.enableHsmActions(True)
+                self.updateStatusBar()
+        else:
             loaded = False
         return loaded
 
@@ -228,19 +256,23 @@ class hsmdebugger(QMainWindow):
 
     def loadHsmLog(self, path):
         loaded = False
-        self.enableLogActions(False)
 
-        with open(path, 'r') as stream:
-            try:
-                self.hsmLog = yaml.safe_load(stream)
-                self.enableLogActions(True)
-                loaded = True
-            except yaml.YAMLError as exc:
-                print(exc)
+        if path and len(path) > 0:
+            self.enableLogActions(False)
+            with open(path, 'r') as stream:
+                try:
+                    self.hsmLog = yaml.safe_load(stream)
+                    self.enableLogActions(True)
+                    loaded = True
+                except yaml.YAMLError as exc:
+                    QMessageBox.critical(QApplication.activeWindow(), "Error", f"Failed to load HSM log:\n{exc}",
+                                         buttons=QMessageBox.Ok)
+            if loaded:
+                self.currentLogPath = path
+                self.recentFiles.addPathToRecentLogsList(path)
+                self.updateFrames()
+                self.setCurrentFrameIndex(0)
 
-        if loaded:
-            self.currentFrameIndex = 0
-            self.window.frameSelector.setMaximum(len(self.hsmLog))
         return loaded
 
     def threadPlantumlGeneration(self, format, destDirectory, srcFile):
@@ -279,20 +311,31 @@ class hsmdebugger(QMainWindow):
 
     def updateFrames(self):
         self.modelFrames.clear()
-        self.modelFrames.setHorizontalHeaderLabels(['ID', 'Timestamp', 'Action'])
-        self.window.frames.setColumnWidth(0, 25)
-        self.window.frames.setColumnWidth(1, 190)
-        self.window.frames.setColumnWidth(2, 600)
-        id = 1
-
-        for entry in self.hsmLog:
-            items = [QStandardItem(str(id)), QStandardItem(entry['timestamp']), QStandardItem(entry['action'])]
-            self.modelFrames.appendRow(items)
-            id += 1
+        if self.hsmLog:
+            self.window.frameSelector.setMaximum(len(self.hsmLog) - 1)
+            self.modelFrames.setHorizontalHeaderLabels(['ID', 'Timestamp', 'Action'])
+            self.window.frames.setColumnWidth(0, 25)
+            self.window.frames.setColumnWidth(1, 190)
+            self.window.frames.setColumnWidth(2, 600)
+            id = 1
+            for entry in self.hsmLog:
+                items = [QStandardItem(str(id)), QStandardItem(entry['timestamp']), QStandardItem(entry['action'])]
+                self.modelFrames.appendRow(items)
+                id += 1
 
     def updateStatusBar(self):
-        self.statusBarFrame.setText(f"Frame {self.currentFrameIndex + 1} / {len(self.hsmLog)}")
-        # TODO: update other fields
+        if self.hsmLog:
+            self.statusBarFrame.setText(f"Frame {self.currentFrameIndex + 1} / {len(self.hsmLog)}")
+
+        if self.currentScxmlPath:
+            self.window.setWindowTitle(f"{self.appTitle}  \u2014  [{os.path.basename(self.currentScxmlPath)}]")
+        else:
+            self.window.setWindowTitle(self.appTitle)
+
+        if self.currentLogPath:
+            self.statusBarLog.setText(self.currentLogPath)
+        else:
+            self.statusBarLog.setText("")
 
     def updateHsmFrame(self, index):
         if index < len(self.hsmLog):
@@ -342,7 +385,6 @@ class hsmdebugger(QMainWindow):
             self.window.hsmStateViewWait.show()
             self.scxml2gen.generatePlantuml(self.hsm, "./test.plantuml", highlight)
             self.plantumlGeneratePng("./test.plantuml")
-
 
 if __name__ == "__main__":
     app = QApplication([])

@@ -248,31 +248,72 @@ def list2str(listData):
     return result
 
 
+def applySingleVariableToLine(line, variableName, variableValue):
+    newLine = line
+    for curType in ["@", "%"]:
+        curVariableID = curType + variableName + curType
+        if curVariableID in newLine:
+            if curVariableID != newLine.strip(' \n\r'):
+                # if line contains other text besides the keyword we insert data as-is
+                curVariableValue = list2str(variableValue)
+                if curType == "%":
+                    curVariableValue = curVariableValue.upper()
+                newLine = newLine.replace(curVariableID, curVariableValue)
+            else:
+                # if line contains only keyword we should offset data when inserting it
+                offset = generateOffset(countOffset(newLine))
+                newLine = ""
+                for curValue in variableValue:
+                    if curType == "%":
+                        curValue = curValue.upper()
+                    newLine += offset + curValue + "\n"
+    return newLine
+
+def applyGenVariablesToLine(genVars, line):
+    newLine = line
+
+    for curVariable in genVars:
+        newLine = applySingleVariableToLine(newLine, curVariable, genVars[curVariable])
+
+    return newLine
+
+
 def generateFile(genVars, templatePath, destPath):
     with open(templatePath, "r") as fileTemplate:
         with open(destPath, "w") as fileDestination:
-            for templateLine in fileTemplate:
-                for curVariable in genVars:
-                    variableTypes = ["@", "%"]
-                    for curType in variableTypes:
-                        curVariableID = curType + curVariable + curType
-                        if curVariableID in templateLine:
-                            if curVariableID != templateLine.strip(' \n\r'):
-                                # if line contains other text besides the keyword we insert data as-is
-                                curVariableValue = list2str(genVars[curVariable])
-                                if curType == "%":
-                                    curVariableValue = curVariableValue.upper()
-                                templateLine = templateLine.replace(curVariableID, curVariableValue)
-                            else:
-                                # if line contains only keyword we should offset data when inserting it
-                                offset = generateOffset(countOffset(templateLine))
-                                templateLine = ""
-                                for curValue in genVars[curVariable]:
-                                    if curType == "%":
-                                        curValue = curValue.upper()
-                                    templateLine += offset + curValue + "\n"
+            currentBlock = None
+            currentBlockVariable = None
 
-                fileDestination.writelines(templateLine)
+            for templateLine in fileTemplate:
+                # ~~~BLOCK:variable~~~
+                # ... repeat this code for each variable value ...
+                # ~~~BLOCK:END~~~
+                if templateLine.startswith("~~~BLOCK:"):
+                    currentBlockVariable = templateLine[len("~~~BLOCK:"):][:-4]
+                    if currentBlockVariable in genVars:
+                        currentBlock = []
+                    else:
+                        print(f"ERROR: BLOCK variable <{currentBlockVariable}> is not supported")
+                        exit(6)
+                elif templateLine.startswith("~~~BLOCK_END~~~"):
+                    if currentBlockVariable:
+                        templateLine = ""
+                        for curVariableValue in genVars[currentBlockVariable]:
+                            for blockLine in currentBlock:
+                                blockLine = applySingleVariableToLine(blockLine, currentBlockVariable, curVariableValue)
+                                templateLine += applyGenVariablesToLine(genVars, blockLine)
+
+                        currentBlock = None
+                        currentBlockVariable = None
+                        fileDestination.writelines(templateLine)
+                    else:
+                        print("ERROR: BLOCK_END was found, but there is no BLOCK BEGIN")
+                        exit(6)
+                elif currentBlockVariable:
+                    currentBlock.append(templateLine)
+                else:
+                    templateLine = applyGenVariablesToLine(genVars, templateLine)
+                    fileDestination.writelines(templateLine)
 
 
 def prepareHsmcppTransitionCallbackDeclaration(funcName):
@@ -298,8 +339,8 @@ def prepareHsmcppStateExitCallbackDeclaration(funcName):
 def generateCppCode(hsm, pathHpp, pathCpp):
     pendingStates = hsm
 
-    genVars = {"ENUM_STATES_DEF": [],
-               "ENUM_EVENTS_DEF": set(),
+    genVars = {"ENUM_STATES_ITEM": [],
+               "ENUM_EVENTS_ITEM": set(),
                "CLASS_NAME": args.class_name + args.class_suffix,
                "ENUM_STATES": f"{args.class_name}States",
                "ENUM_EVENTS": f"{args.class_name}Events",
@@ -312,7 +353,9 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                "HPP_FILE": os.path.basename(pathHpp),
                "REGISTER_STATES": [],
                "REGISTER_SUBSTATES": [],
-               "REGISTER_TRANSITIONS": []}
+               "REGISTER_TRANSITIONS": [],
+               "ENUM_STATES_GETNAME_CASES": [],
+               "ENUM_EVENTS_GETNAME_CASES": []}
 
     for curState in hsm:
         if ('initial_state' in curState) and (curState['initial_state'] == True):
@@ -346,7 +389,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                                                                                     f"{genVars['ENUM_STATES']}::{curSubstate['id']}" +
                                                                                     f"{initialStateCondition});")
 
-            genVars["ENUM_STATES_DEF"].append(f"{curState['id']},")
+            genVars["ENUM_STATES_ITEM"].append({curState['id']})
             registerCallbacks = ""
 
             if 'onstate' in curState:
@@ -376,7 +419,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
 
             for curTransition in curState["transitions"]:
                 registerCallbacks = ""
-                genVars["ENUM_EVENTS_DEF"].add(f"{curTransition['event']},")
+                genVars["ENUM_EVENTS_ITEM"].add(curTransition['event'])
 
                 if 'callback' in curTransition:
                     genVars["HSM_TRANSITION_ACTIONS"].add(prepareHsmcppTransitionCallbackDeclaration(curTransition['callback']))
@@ -449,7 +492,7 @@ def generatePlantumlState(stateData, level, highlight=None):
                         entryTransitionArgs = highlightEntryTransitionInfo['args']
 
         plantumlState += f"{generateOffset(level * 4)}[*] -{highlightEntryTransition}-> {stateData['id']}{condition}\n"
-        if len(entryTransitionArgs) > 0:
+        if entryTransitionArgs and len(entryTransitionArgs) > 0:
             plantumlState += f"{offset}note on link\n{offset}  **Arguments:**\n\n{offset}  {entryTransitionArgs}\n{offset}end note\n"
 
     if "states" in stateData:
@@ -536,9 +579,8 @@ def generatePlantumlState(stateData, level, highlight=None):
         if "callback" in curTransition:
             plantumlState += f"\\n<{curTransition['callback']}>"
         plantumlState += f"{highlightTransitionEvent}\n"
-        if len(transitionArgs) > 0:
+        if transitionArgs and len(transitionArgs) > 0:
             plantumlState += f"{offset}note on link\n{offset}  **Arguments:**\n\n{offset}  {transitionArgs}\n{offset}end note\n"
-
     return (plantumlState, finalStates)
 
 

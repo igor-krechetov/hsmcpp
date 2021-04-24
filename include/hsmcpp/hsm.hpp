@@ -8,7 +8,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <unistd.h>// for log
-
+#include <cstdlib>// for log
 #include <algorithm>
 #include <functional>
 #include <atomic>
@@ -43,6 +43,9 @@
 #define HSM_WAIT_INDEFINITELY                   (0)
 #define INVALID_HSM_EVENT_ID                    static_cast<HsmEventEnum>(-1000)
 #define INVALID_HSM_STATE_ID                    static_cast<HsmStateEnum>(-1000)
+
+#define ENV_DUMPPATH                            "HSMCPP_DUMP_PATH"
+#define DEFAULT_DUMP_PATH                       "./dump.hsmlog"
 
 typedef std::vector<Variant> VariantList_t;
 
@@ -195,6 +198,7 @@ public:
     bool isTransitionPossible(const HsmEventEnum event, Args... args);
 
     bool enableHsmDebugging();
+    bool enableHsmDebugging(const std::string& dumpPath);
     void disableHsmDebugging();
 
 private:
@@ -334,6 +338,8 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::release()
 {
     mStopDispatching = true;
     __TRACE_CALL_DEBUG__();
+
+    disableHsmDebugging();
 
     if (mDispatcher)
     {
@@ -1391,10 +1397,17 @@ std::string HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getEventName(c
 template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::enableHsmDebugging()
 {
-    // TODO: make name configurable
-    bool isNewLog = (access("./test.hsmlog", F_OK) != 0);
+    char* envPath = std::getenv(ENV_DUMPPATH);
 
-    if (nullptr != mHsmLogFile.open("./test.hsmlog", std::ios::out | std::ios::app))
+    return enableHsmDebugging(nullptr != envPath ? DEFAULT_DUMP_PATH : std::string(envPath));
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::enableHsmDebugging(const std::string& dumpPath)
+{
+    bool isNewLog = (access(dumpPath.c_str(), F_OK) != 0);
+
+    if (nullptr != mHsmLogFile.open(dumpPath.c_str(), std::ios::out | std::ios::app))
     {
         mHsmLog = std::make_shared<std::ostream>(&mHsmLogFile);
 

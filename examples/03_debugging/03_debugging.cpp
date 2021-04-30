@@ -17,7 +17,7 @@ protected:
 protected:
     bool State1OnEntry(const VariantList_t& args) override
     {
-        return true;
+        return false;
     }
 
 // HSM state exiting callbacks
@@ -32,20 +32,17 @@ int main(const int argc, const char**argv)
 {
     std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
     DebugTestHsm hsm;
-    Variant arg1 = Variant::make(false);
-    Variant arg2 = Variant::make("test value");
-    Variant arg3 = Variant::make(123.89);
-    Variant arg4 = Variant::make(Variant::make(1), Variant::make(2));
+    Variant argPair = Variant::make(Variant::make(1), Variant::make(2));
 
     hsm.enableHsmDebugging();
     hsm.initialize(dispatcher);
-    hsm.transition(DebugTestHsmEvents::event_next, arg1, arg2, arg3, arg4);
+    hsm.transition(DebugTestHsmEvents::event_next, false, "initializing value", 123.89, argPair);
     hsm.transition(DebugTestHsmEvents::event_next);
     hsm.transition(DebugTestHsmEvents::event_self);
     hsm.transition(DebugTestHsmEvents::event_next_parent);
     hsm.transition(DebugTestHsmEvents::event_next);
     hsm.transition(DebugTestHsmEvents::event_exit_parent);
-    hsm.transition(DebugTestHsmEvents::event_next, arg1, arg2, arg3, arg4);
+    hsm.transition(DebugTestHsmEvents::event_next, true, "finishing", 765.54, argPair);
 
     dispatcher->join();
 

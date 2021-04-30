@@ -20,6 +20,12 @@
    <string>HSM Debugger</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QImageViewArea" name="hsmStateViewArea">
@@ -213,7 +219,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+    <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
@@ -221,8 +227,14 @@
    <property name="minimumSize">
     <size>
      <width>274</width>
-     <height>286</height>
+     <height>0</height>
     </size>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Frames</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>8</number>
@@ -236,7 +248,11 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QLineEdit" name="searchFilter"/>
+      <widget class="QLineEdit" name="searchFilter">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Input search filter in one of these formats:&lt;/p&gt;&lt;p&gt;&amp;lt;action&amp;gt;&lt;br/&gt;&amp;lt;action&amp;gt;:&amp;lt;args&amp;gt;&lt;/p&gt;&lt;p&gt;Regular expressions enabled by default (Python format).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QTableView" name="frames">
@@ -292,8 +308,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionOpenHsm"/>
-   <addaction name="actionOpenHsmLog"/>
    <addaction name="actionSearch"/>
    <addaction name="actionShowFrames"/>
    <addaction name="actionPrevFrame"/>
@@ -423,16 +437,6 @@
     <string>&amp;About</string>
    </property>
   </action>
-  <action name="actionClearRecentHSM">
-   <property name="text">
-    <string>Clear Menu</string>
-   </property>
-  </action>
-  <action name="actionClearRecentLogs">
-   <property name="text">
-    <string>Clear Menu</string>
-   </property>
-  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -450,22 +454,6 @@
  <resources/>
  <connections>
   <connection>
-   <sender>frameSelector</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>frames</receiver>
-   <slot>selectRow(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>254</x>
-     <y>573</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>259</x>
-     <y>503</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>actionQuit</sender>
    <signal>triggered()</signal>
    <receiver>hsmdebugger</receiver>
@@ -478,22 +466,6 @@
     <hint type="destinationlabel">
      <x>430</x>
      <y>307</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionShowFrames</sender>
-   <signal>triggered(bool)</signal>
-   <receiver>frames</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>430</x>
-     <y>462</y>
     </hint>
    </hints>
   </connection>

@@ -1399,7 +1399,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::enableHsmDebugging()
 {
     char* envPath = std::getenv(ENV_DUMPPATH);
 
-    return enableHsmDebugging(nullptr != envPath ? DEFAULT_DUMP_PATH : std::string(envPath));
+    return enableHsmDebugging(nullptr == envPath ? DEFAULT_DUMP_PATH : std::string(envPath));
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>

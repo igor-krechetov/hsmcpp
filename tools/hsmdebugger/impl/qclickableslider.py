@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QSlider, QStyle, QStyleOptionSlider
 
 
 class QClickableSlider(QSlider):
-    def mousePressEvent(self, event):
+    def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
             val = self.pixelPosToRangeValue(event.pos())
             self.setValue(val)

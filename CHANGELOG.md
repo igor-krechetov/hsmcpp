@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.13.0] - 2021-04-30
+### Added
+- hsmdebugger: search frames feature
+- hsmdebugger: settings
+- hsmdebugger: caching of generated images
+### Fixed
+- crash caused by mistake in enableHsmDebugging()
+
 ## [0.12.1] - 2021-04-25
 ### Added
 - add configurable hsm dump path

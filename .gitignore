@@ -10,4 +10,4 @@ __pycache__
 config.ini
 out.cpp
 out.hpp
-test.plantuml
+cache

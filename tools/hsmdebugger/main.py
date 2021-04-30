@@ -8,12 +8,15 @@ import yaml
 import importlib.util
 import subprocess
 import threading
-from qclickableslider import QClickableSlider
-from qimageviewarea import QImageViewArea
+import hashlib
+from impl.qclickableslider import QClickableSlider
+from impl.qimageviewarea import QImageViewArea
 from impl.recent import RecentFilesManager
+from impl.search import QFramesSearchModel
+from impl.settings import QSettingsDialog
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QLabel, QFileDialog, QInputDialog, QLineEdit
-from PySide6.QtCore import QFile, QSettings, Signal, Slot
+from PySide6.QtCore import QFile, QSettings, Signal, Slot, QModelIndex
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap, QMovie, QAction
 from PySide6.QtUiTools import QUiLoader
 
@@ -33,7 +36,7 @@ class hsmdebugger(QMainWindow):
         self.currentScxmlPath = None
         self.currentLogPath = None
         self.hsmViewScaleFactor = 1.0
-        self.currentFrameIndex = 0
+        self.currentFrameIndex = None
 
         self.load_settings()
         (loadScxml2genStatus, errMsg) = self.loadScxml2genModule()
@@ -53,6 +56,9 @@ class hsmdebugger(QMainWindow):
         self.configureActions()
         self.configureStatusBar()
         self.window.show()
+        if self.settings.loadLastHSM is True:
+            if len(self.recentFiles.recentHsmFiles) > 0:
+                self.loadScxml(self.recentFiles.recentHsmFiles[0])
 
     def onActionOpenHsm(self):
         scxmlPath = self.selectFile("Select HSM file", "SCXML files (*.scxml);;All files (*.*)")
@@ -75,8 +81,16 @@ class hsmdebugger(QMainWindow):
         if self.window.actionSearch.isChecked():
             self.window.searchFilter.show()
             self.window.searchFilter.setFocus()
+            self.modelFrames.enableFilter()
         else:
             self.window.searchFilter.hide()
+            self.modelFrames.disableFilter()
+
+    def onActionShowFrames(self):
+        if self.window.actionShowFrames.isChecked():
+            self.window.frames.show()
+        else:
+            self.window.frames.hide()
 
     def onActionPrevFrame(self):
         self.window.frameSelector.setValue(self.window.frameSelector.value() - 1)
@@ -104,13 +118,16 @@ class hsmdebugger(QMainWindow):
         self.scaleView(1.0)
 
     def onActionSettings(self):
-        print("TODO")
+        if self.settings.show():
+            # TODO: only needed if colors changed
+            self.updateHsmFrame(self.currentFrameIndex)
 
     def onActionGoToFrame(self):
         if self.hsmLog:
             (newIndex, wasOk) = QInputDialog.getInt(QApplication.activeWindow(),
                                                     "Go to Frame",
                                                     f"Frame index (1 ~ {len(self.hsmLog) + 1}):",
+                                                    value=self.currentFrameIndex + 1,
                                                     minValue=1, maxValue=len(self.hsmLog) + 1)
             if wasOk:
                 self.setCurrentFrameIndex(newIndex - 1)
@@ -122,19 +139,25 @@ class hsmdebugger(QMainWindow):
         print("TODO")
 
     def onFrameSelected(self, currentIndex, previousIndex):
-        self.setCurrentFrameIndex(currentIndex.row())
+        if currentIndex.row() >= 0:
+            indexId = self.modelFrames.index(currentIndex.row(), 0)
+            newFrameIndex = int(self.modelFrames.data(indexId)) - 1
+            self.setCurrentFrameIndex(newFrameIndex)
+
+    def onFrameSelectorUpdated(self, newFrameIndex):
+        self.setCurrentFrameIndex(newFrameIndex)
+
+    def onSearchFilterChanged(self, newFilter):
+        self.modelFrames.setFilter(newFilter)
 
     def load_settings(self):
-        settings = QSettings(self.configPath, QSettings.IniFormat)
-        self.pathScxml2gen = settings.value("environment/scxml2gen", "../scxml2gen/scxml2gen.py")
-        self.styleColors = {"active_state": settings.value("style/active_state", "38EB4B"),
-                            "blocked_transition": settings.value("style/blocked_transition", "EB8421")}# FFAA00
+        self.settings = QSettingsDialog(self.configPath)
 
     def load_ui(self):
         loader = QUiLoader()
         loader.registerCustomWidget(QClickableSlider)
         loader.registerCustomWidget(QImageViewArea)
-        path = os.path.join(os.path.dirname(__file__), "form.ui")
+        path = os.path.join(os.path.dirname(__file__), "./ui/form.ui")
         ui_file = QFile(path)
         ui_file.open(QFile.ReadOnly)
         self.window = loader.load(ui_file, self)
@@ -154,6 +177,7 @@ class hsmdebugger(QMainWindow):
         self.window.actionOpenHsm.triggered.connect(self.onActionOpenHsm)
         self.window.actionOpenHsmLog.triggered.connect(self.onActionOpenHsmLog)
         self.window.actionSearch.triggered.connect(self.onActionSearch)
+        self.window.actionShowFrames.triggered.connect(self.onActionShowFrames)
         self.window.actionPrevFrame.triggered.connect(self.onActionPrevFrame)
         self.window.actionNextFrame.triggered.connect(self.onActionNextFrame)
         self.window.actionZoomIn.triggered.connect(self.onActionZoomIn)
@@ -165,7 +189,9 @@ class hsmdebugger(QMainWindow):
         self.window.actionShowOnlineHelp.triggered.connect(self.onActionShowOnlineHelp)
         self.window.actionAbout.triggered.connect(self.onActionAbout)
 
+        self.window.searchFilter.textChanged.connect(self.onSearchFilterChanged)
         self.window.frames.selectionModel().currentRowChanged.connect(self.onFrameSelected)
+        self.window.frameSelector.valueChanged.connect(self.onFrameSelectorUpdated)
         self.signalPlantumlDone.connect(self.plantumlGenerationDone)
         self.enableHsmActions(False)
         self.enableLogActions(False)
@@ -191,7 +217,8 @@ class hsmdebugger(QMainWindow):
         self.window.statusbar.addPermanentWidget(self.statusBarFrame, 0)
 
     def prepareFramesModel(self):
-        self.modelFrames = QStandardItemModel()
+        self.modelFrames = QFramesSearchModel()
+        self.modelFrames.setSourceModel(QStandardItemModel())
         self.window.frames.setModel(self.modelFrames)
         self.window.frames.verticalHeader().hide()
 
@@ -214,18 +241,17 @@ class hsmdebugger(QMainWindow):
     def loadScxml2genModule(self):
         loaded = False
         msg = ""
-
-        if os.path.exists(self.pathScxml2gen):
+        if os.path.exists(self.settings.pathScxml2gen):
             try:
-                spec = importlib.util.spec_from_file_location("", self.pathScxml2gen)
+                spec = importlib.util.spec_from_file_location("", self.settings.pathScxml2gen)
                 self.scxml2gen = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(self.scxml2gen)
                 loaded = True
             except:
                 loaded = False
-                msg = f"<{self.pathScxml2gen}> contains an error or has incorrect format"
+                msg = f"<{self.settings.pathScxml2gen}> contains an error or has incorrect format"
         else:
-            msg = f"<{self.pathScxml2gen}> wasn't found. Check that configuration file contains correct path."
+            msg = f"<{self.settings.pathScxml2gen}> wasn't found. Check that configuration file contains correct path."
         return (loaded, msg)
 
     def loadScxml(self, path):
@@ -242,6 +268,7 @@ class hsmdebugger(QMainWindow):
                                      buttons=QMessageBox.Ok)
 
             if loaded:
+                self.hsmId = self.getDataChecksum(str(self.hsm))
                 self.currentScxmlPath = path
                 self.recentFiles.addPathToRecentHSMList(path)
                 self.enableHsmActions(True)
@@ -272,11 +299,10 @@ class hsmdebugger(QMainWindow):
                 self.recentFiles.addPathToRecentLogsList(path)
                 self.updateFrames()
                 self.setCurrentFrameIndex(0)
-
         return loaded
 
     def threadPlantumlGeneration(self, format, destDirectory, srcFile):
-        self.plantuml = subprocess.Popen(["plantuml", format, "-o", destDirectory, srcFile])
+        self.plantuml = subprocess.Popen(["plantuml", format, "-o", "./", srcFile])
         rc = self.plantuml.wait()
         if rc == 0:
             (base, ext) = os.path.splitext(srcFile)
@@ -292,35 +318,40 @@ class hsmdebugger(QMainWindow):
             self.window.hsmStateViewWait.hide()
             self.window.hsmStateView.show()
 
-    def plantumlGeneratePng(self, src):
+    def plantumlGeneratePng(self, src, outDir):
         if self.threadPlantuml:
             if self.plantuml:
                 self.plantuml.kill()
                 self.plantuml.wait()
                 self.plantuml = None
             self.threadPlantuml.join()
-        self.threadPlantuml = threading.Thread(target=self.threadPlantumlGeneration, args=("-tpng", "./gen", src,))
+        self.threadPlantuml = threading.Thread(target=self.threadPlantumlGeneration, args=("-tpng", outDir, src,))
         self.threadPlantuml.start()
 
     def setCurrentFrameIndex(self, index):
-        if index < len(self.hsmLog):
+        print(f"setCurrentFrameIndex: {index}")
+        if (self.currentFrameIndex != index) and (index < len(self.hsmLog)):
             self.updateHsmFrame(index)
             self.currentFrameIndex = index
             self.window.frameSelector.setValue(index)
             self.updateStatusBar()
 
     def updateFrames(self):
-        self.modelFrames.clear()
+        self.modelFrames.sourceModel().clear()
         if self.hsmLog:
             self.window.frameSelector.setMaximum(len(self.hsmLog) - 1)
-            self.modelFrames.setHorizontalHeaderLabels(['ID', 'Timestamp', 'Action'])
+            self.modelFrames.sourceModel().setHorizontalHeaderLabels(['ID', 'Timestamp', 'Action', 'Arguments'])
             self.window.frames.setColumnWidth(0, 25)
             self.window.frames.setColumnWidth(1, 190)
-            self.window.frames.setColumnWidth(2, 600)
+            self.window.frames.setColumnWidth(2, 250)
+            self.window.frames.setColumnWidth(3, 600)
             id = 1
             for entry in self.hsmLog:
-                items = [QStandardItem(str(id)), QStandardItem(entry['timestamp']), QStandardItem(entry['action'])]
-                self.modelFrames.appendRow(items)
+                entryArgs = ""
+                if ('args' in entry) and (entry['args'] is not None):
+                    entryArgs = str(entry['args'])
+                items = [QStandardItem(str(id)), QStandardItem(entry['timestamp']), QStandardItem(entry['action']), QStandardItem(entryArgs)]
+                self.modelFrames.sourceModel().appendRow(items)
                 id += 1
 
     def updateStatusBar(self):
@@ -338,7 +369,7 @@ class hsmdebugger(QMainWindow):
             self.statusBarLog.setText("")
 
     def updateHsmFrame(self, index):
-        if index < len(self.hsmLog):
+        if (self.hsmLog is not None) and (index < len(self.hsmLog)):
             logEntry = self.hsmLog[index]
             highlight = {"active_states": [], "callback": {}, "transitions": {}}
             callbackStateId = None
@@ -379,12 +410,57 @@ class hsmdebugger(QMainWindow):
                 elif callbackStateId:
                     highlight["callback"][callbackStateId]["args"] = logEntry["args"]
 
-            highlight["style"] = self.styleColors
+            highlight["style"] = self.settings.styleColors
 
             self.window.hsmStateView.hide()
             self.window.hsmStateViewWait.show()
-            self.scxml2gen.generatePlantuml(self.hsm, "./test.plantuml", highlight)
-            self.plantumlGeneratePng("./test.plantuml")
+            self.generateHsmFrameImage(index, highlight)
+
+    def generateHsmFrameImage(self, index, highlight):
+        dirCacheRoot = "./cache"
+        dirHsmCache = f"{dirCacheRoot}/{self.hsmId}"
+
+        if os.path.exists(dirCacheRoot) is False:
+            os.mkdir(dirCacheRoot)
+        if os.path.exists(dirHsmCache) is False:
+            os.mkdir(dirHsmCache)
+
+        plantumlContent = self.scxml2gen.generatePlantumlInMemory(self.hsm, highlight)
+        plantumlChecksumNew = self.getDataChecksum(plantumlContent)
+        pathPlantumlFile = f"{dirHsmCache}/{plantumlChecksumNew}.plantuml"
+        pathFrameImage = f"{dirHsmCache}/{plantumlChecksumNew}.png"
+
+        if os.path.exists(f"{dirHsmCache}/{plantumlChecksumNew}.plantuml") is False:
+            self.createFile(pathPlantumlFile, plantumlContent)
+            self.plantumlGeneratePng(pathPlantumlFile, dirHsmCache)
+        else:
+            self.signalPlantumlDone.emit(pathFrameImage)
+
+    def getFileChecksum(self, path):
+        hash_md5 = hashlib.md5()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
+
+    def getDataChecksum(self, data):
+        hash_md5 = hashlib.md5()
+        hash_md5.update(data.encode('utf-8'))
+        return hash_md5.hexdigest()
+
+    def readFile(self, path):
+        content = None
+        try:
+            with open(path, "r") as f:
+                content = f.read()
+        except FileNotFoundError:
+            content = None
+        return content
+
+    def createFile(self, path, content):
+        with open(path, "w") as f:
+            f.write(content)
+
 
 if __name__ == "__main__":
     app = QApplication([])

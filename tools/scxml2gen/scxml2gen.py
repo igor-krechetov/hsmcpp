@@ -544,7 +544,7 @@ def generatePlantumlState(stateData, level, highlight=None):
             if len(callbackFailedMsg) > 0:
                 plantumlState += f"state \"**{stateData['id']}**\" as {stateData['id']} #{highlightColorBlocked}\n"
                 plantumlState += f"note left of {stateData['id']} : "\
-                                 "**Transition blocked**\\n{callbackFailedMsg}() returned FALSE"
+                                 f"**Transition blocked**\\n{callbackFailedMsg}() returned FALSE"
                 if len(callbackArgs) > 0:
                     plantumlState += f"\\n\\n**Arguments**\\n\\n{callbackArgs}"
                 plantumlState += "\n"
@@ -584,7 +584,7 @@ def generatePlantumlState(stateData, level, highlight=None):
     return (plantumlState, finalStates)
 
 
-def generatePlantuml(hsm, dest, highlight=None):
+def generatePlantumlInMemory(hsm, highlight=None):
     plantuml = "@startuml\n\n"
     finalStates = []
 
@@ -597,6 +597,11 @@ def generatePlantuml(hsm, dest, highlight=None):
         plantuml = plantuml.replace(f"--> {finalID}", "--> [*]")
 
     plantuml += "\n@enduml"
+    return plantuml
+
+
+def generatePlantuml(hsm, dest, highlight=None):
+    plantuml = generatePlantumlInMemory(hsm, highlight)
 
     with open(dest, "w") as destFile:
         destFile.write(plantuml)

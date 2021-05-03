@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>369</width>
-    <height>288</height>
+    <height>346</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -47,6 +47,42 @@
      </item>
      <item>
       <widget class="QPushButton" name="btnSelectScxml2gen">
+       <property name="minimumSize">
+        <size>
+         <width>30</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>30</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Plantuml binary</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QLineEdit" name="pathPlantuml"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnSelectPlantuml">
        <property name="minimumSize">
         <size>
          <width>30</width>

@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.13.1] - 2021-05-03
+### Added
+- hsmdebugger: app icon
+- hsmdebugger: setting to set plantuml path
+- hsmdebugger: startup scripts for Windows and Linux
+### Fixed
+- hsmdebugger: Windows support
+
 ## [0.13.0] - 2021-04-30
 ### Added
 - hsmdebugger: search frames feature

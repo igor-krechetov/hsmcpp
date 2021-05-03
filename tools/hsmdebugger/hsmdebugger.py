@@ -9,22 +9,26 @@ import importlib.util
 import subprocess
 import threading
 import hashlib
+from pathlib import Path
+
 from impl.qclickableslider import QClickableSlider
 from impl.qimageviewarea import QImageViewArea
 from impl.recent import RecentFilesManager
 from impl.search import QFramesSearchModel
+from impl.utils import utils
 from impl.settings import QSettingsDialog
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QLabel, QFileDialog, QInputDialog, QLineEdit
-from PySide6.QtCore import QFile, QSettings, Signal, Slot, QModelIndex
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap, QMovie, QAction
+from PySide6.QtWidgets import QApplication, QMessageBox, QLabel, QFileDialog, QInputDialog
+from PySide6.QtCore import QFile, Signal, Slot, QObject
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap, QMovie, QIcon
 from PySide6.QtUiTools import QUiLoader
 
 
-class hsmdebugger(QMainWindow):
+class hsmdebugger(QObject):
     signalPlantumlDone = Signal(str)
-    configPath = "./config.ini"
     appTitle = "HSM Debugger"
+    appDir = Path(os.path.dirname(__file__))
+    configPath = appDir / "config.ini"
 
     def __init__(self):
         super(hsmdebugger, self).__init__()
@@ -32,7 +36,10 @@ class hsmdebugger(QMainWindow):
         self.plantuml = None
         self.hsm = None
         self.hsmLog = None
-        self.lastDirectory = "~/"
+        if sys.platform == "win32":
+            self.lastDirectory = ""
+        else:
+            self.lastDirectory = "~/"
         self.currentScxmlPath = None
         self.currentLogPath = None
         self.hsmViewScaleFactor = 1.0
@@ -47,7 +54,7 @@ class hsmdebugger(QMainWindow):
 
         self.load_ui()
         self.configure_ui()
-        self.recentFiles = RecentFilesManager(self.configPath,
+        self.recentFiles = RecentFilesManager(str(self.configPath),
                                               self.window.menuFileRecentHSM,
                                               self.window.menuFileRecentLogs,
                                               self.onActionOpenRecentHSM,
@@ -61,14 +68,16 @@ class hsmdebugger(QMainWindow):
                 self.loadScxml(self.recentFiles.recentHsmFiles[0])
 
     def onActionOpenHsm(self):
-        scxmlPath = self.selectFile("Select HSM file", "SCXML files (*.scxml);;All files (*.*)")
+        (scxmlPath, lastDir) = utils.selectFile("Select HSM file", "SCXML files (*.scxml);;All files (*)", self.lastDirectory)
         if scxmlPath:
+            self.lastDirectory = lastDir
             self.loadScxml(scxmlPath)
 
     def onActionOpenHsmLog(self):
         if self.hsm:
-            logPath = self.selectFile("Select HSM log file", "HSMCPP Log Files (*.hsmlog);;All files (*.*)")
+            (logPath, lastDir) = utils.selectFile("Select HSM log file", "HSMCPP Log Files (*.hsmlog);;All files (*)", self.lastDirectory)
             if logPath:
+                self.lastDirectory = lastDir
                 self.loadHsmLog(logPath)
 
     def onActionOpenRecentHSM(self):
@@ -151,20 +160,20 @@ class hsmdebugger(QMainWindow):
         self.modelFrames.setFilter(newFilter)
 
     def load_settings(self):
-        self.settings = QSettingsDialog(self.configPath)
+        self.settings = QSettingsDialog(str(self.configPath))
 
     def load_ui(self):
         loader = QUiLoader()
         loader.registerCustomWidget(QClickableSlider)
         loader.registerCustomWidget(QImageViewArea)
-        path = os.path.join(os.path.dirname(__file__), "./ui/form.ui")
+        path = str(self.appDir / "ui" / "form.ui")
         ui_file = QFile(path)
         ui_file.open(QFile.ReadOnly)
-        self.window = loader.load(ui_file, self)
+        self.window = loader.load(ui_file)
         ui_file.close()
 
     def configure_ui(self):
-        self.window.hsmStateViewWait.setMovie( QMovie("./res/busy.gif") )
+        self.window.hsmStateViewWait.setMovie(QMovie(str(self.appDir / "res" / "busy.gif")))
         self.window.hsmStateViewWait.movie().start()
         self.window.hsmStateViewWait.hide()
         self.window.frameSelector.setSingleStep(1)
@@ -198,7 +207,10 @@ class hsmdebugger(QMainWindow):
 
     def enableHsmActions(self, enable):
         self.window.actionOpenHsmLog.setEnabled(enable)
-        self.window.menuFileRecentLogs.setEnabled(enable)
+        if len(self.recentFiles.recentLogFiles) > 0:
+            self.window.menuFileRecentLogs.setEnabled(enable)
+        else:
+            self.window.menuFileRecentLogs.setEnabled(False)
 
     def enableLogActions(self, enable):
         self.window.actionSearch.setEnabled(enable)
@@ -226,17 +238,6 @@ class hsmdebugger(QMainWindow):
         if self.hsmLog:
             self.hsmViewScaleFactor = newScale
             self.window.hsmStateView.setFixedSize(self.hsmViewScaleFactor * self.window.hsmStateView.pixmap().size())
-
-    def selectFile(self, title, filter):
-        selectedPath = None
-        dlgFileSelector = QFileDialog(QApplication.activeWindow(), title)
-        dlgFileSelector.setOption(QFileDialog.DontUseNativeDialog)
-        dlgFileSelector.setDirectory(self.lastDirectory)
-        dlgFileSelector.setNameFilter(filter)
-        if dlgFileSelector.exec_():
-            selectedPath = dlgFileSelector.selectedFiles()[0]
-            self.lastDirectory = os.path.dirname(selectedPath)
-        return selectedPath
 
     def loadScxml2genModule(self):
         loaded = False
@@ -302,11 +303,18 @@ class hsmdebugger(QMainWindow):
         return loaded
 
     def threadPlantumlGeneration(self, format, destDirectory, srcFile):
-        self.plantuml = subprocess.Popen(["plantuml", format, "-o", "./", srcFile])
+        if sys.platform == "win32":
+            argsPlantUml = ["java", "-jar", self.settings.pathPlantuml]
+        else:
+            argsPlantUml = [self.settings.pathPlantuml]
+        self.plantuml = subprocess.Popen(argsPlantUml + [format, "-o", Path("./"), srcFile])
         rc = self.plantuml.wait()
         if rc == 0:
             (base, ext) = os.path.splitext(srcFile)
-            self.signalPlantumlDone.emit(f"{destDirectory}/{os.path.basename(base)}.png")
+            self.signalPlantumlDone.emit(str(Path(destDirectory) / f"{os.path.basename(base)}.png"))
+        else:
+            QMessageBox.critical(None, "Error", f"Failed to run Plantuml. Check that path to binary is correctly specified",
+                                 buttons=QMessageBox.Ok)
 
     @Slot(str)
     def plantumlGenerationDone(self, path):
@@ -329,7 +337,6 @@ class hsmdebugger(QMainWindow):
         self.threadPlantuml.start()
 
     def setCurrentFrameIndex(self, index):
-        print(f"setCurrentFrameIndex: {index}")
         if (self.currentFrameIndex != index) and (index < len(self.hsmLog)):
             self.updateHsmFrame(index)
             self.currentFrameIndex = index
@@ -350,7 +357,8 @@ class hsmdebugger(QMainWindow):
                 entryArgs = ""
                 if ('args' in entry) and (entry['args'] is not None):
                     entryArgs = str(entry['args'])
-                items = [QStandardItem(str(id)), QStandardItem(entry['timestamp']), QStandardItem(entry['action']), QStandardItem(entryArgs)]
+                items = [QStandardItem(str(id)), QStandardItem(entry['timestamp']), QStandardItem(entry['action']),
+                         QStandardItem(entryArgs)]
                 self.modelFrames.sourceModel().appendRow(items)
                 id += 1
 
@@ -386,11 +394,11 @@ class hsmdebugger(QMainWindow):
             if logEntry["action"] == "transition":
                 transitionStateId = logEntry["target_state"]
                 highlight["transitions"][transitionStateId] = {"from": logEntry["from_state"],
-                                                                      "event": logEntry["event"]}
+                                                               "event": logEntry["event"]}
             elif logEntry["action"] == "transition_entrypoint":
                 transitionStateId = logEntry["target_state"]
                 highlight["transitions"][transitionStateId] = {"from": "",
-                                                                      "event": logEntry["event"]}
+                                                               "event": logEntry["event"]}
             # --------------------
             # Callbacks
             elif logEntry["action"] == "callback_enter":
@@ -417,8 +425,8 @@ class hsmdebugger(QMainWindow):
             self.generateHsmFrameImage(index, highlight)
 
     def generateHsmFrameImage(self, index, highlight):
-        dirCacheRoot = "./cache"
-        dirHsmCache = f"{dirCacheRoot}/{self.hsmId}"
+        dirCacheRoot = Path("./cache")
+        dirHsmCache = dirCacheRoot / self.hsmId
 
         if os.path.exists(dirCacheRoot) is False:
             os.mkdir(dirCacheRoot)
@@ -427,13 +435,15 @@ class hsmdebugger(QMainWindow):
 
         plantumlContent = self.scxml2gen.generatePlantumlInMemory(self.hsm, highlight)
         plantumlChecksumNew = self.getDataChecksum(plantumlContent)
-        pathPlantumlFile = f"{dirHsmCache}/{plantumlChecksumNew}.plantuml"
-        pathFrameImage = f"{dirHsmCache}/{plantumlChecksumNew}.png"
+        pathPlantumlFile = str(dirHsmCache / f"{plantumlChecksumNew}.plantuml")
+        pathFrameImage = str(dirHsmCache / f"{plantumlChecksumNew}.png")
 
-        if os.path.exists(f"{dirHsmCache}/{plantumlChecksumNew}.plantuml") is False:
+        if (os.path.exists(pathFrameImage) is False) or (os.path.getsize(pathFrameImage) == 0):
+            print("Generate image...")
             self.createFile(pathPlantumlFile, plantumlContent)
             self.plantumlGeneratePng(pathPlantumlFile, dirHsmCache)
         else:
+            print(f"Use existing image: {pathFrameImage}")
             self.signalPlantumlDone.emit(pathFrameImage)
 
     def getFileChecksum(self, path):
@@ -463,6 +473,13 @@ class hsmdebugger(QMainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication([])
+    if sys.platform == 'win32':
+        # NOTE: This is needed to display the app icon on the taskbar on Windows 7
+        import ctypes
+        myappid = 'igorkrechetov.hsmdebugger'
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
+    app = QApplication(sys.argv)
     main = hsmdebugger()
+    app.setWindowIcon(QIcon(str(Path("./res/hsmdebugger.ico"))))
     sys.exit(app.exec_())

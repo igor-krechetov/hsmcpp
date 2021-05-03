@@ -11,3 +11,4 @@ config.ini
 out.cpp
 out.hpp
 cache
+*.autosave

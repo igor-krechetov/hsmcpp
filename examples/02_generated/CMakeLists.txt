@@ -1,3 +1,5 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HSMCPP_CXX_FLAGS}")
+
 # ======================================================
 if (HSMBUILD_DISPATCHER_STD)
     set(BINARY_NAME_02 "02_generated")
@@ -16,4 +18,5 @@ if (HSMBUILD_DISPATCHER_STD)
             ${CMAKE_BINARY_DIR}
     )
     target_link_libraries(${BINARY_NAME_02} PRIVATE ${HSMCPP_STD_LIB})
+    target_compile_options(${BINARY_NAME_02} PRIVATE ${HSMCPP_STD_CXX_FLAGS})
 endif()

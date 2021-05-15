@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.13.2] - 2021-05-16
+### Added
+- support for Windows build
+- simple build scripts
+### Fixed
+- scxml2gen: added support of Python 3 versions before 3.8 (due to a bug in XML parser)
+
 ## [0.13.1] - 2021-05-03
 ### Added
 - hsmdebugger: app icon

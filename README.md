@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/changelog-v0.13.1-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Generic badge](https://img.shields.io/badge/changelog-v0.13.2-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Generic badge](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
 [![Generic badge](https://img.shields.io/badge/documentation-green.svg)](https://github.com/igor-krechetov/hsmcpp/wiki)
 
@@ -10,14 +10,6 @@ It's also applicable for single threaded and synchronous applications, but it mi
 If you are not familiar with HSM/FSM and which problems then can solve in your code, I recommend reading:
 - [Introduction to Hierarchical State Machines](https://barrgroup.com/embedded-systems/how-to/introduction-hierarchical-state-machines)
 - [Hierarchical Finite State Machine for AI Acting Engine](https://towardsdatascience.com/hierarchical-finite-state-machine-for-ai-acting-engine-9b24efc66f2)
-
-## Notable FSM/HSM libraries
-- [Qt](https://github.com/qt/qtscxml) (using QStateMachine or QScxmlStateMachine)
-- [QP/C++](https://github.com/QuantumLeaps/qpcpp)
-- [TinyFSM](https://github.com/digint/tinyfsm)
-- [Another Finite State Machine](https://github.com/zmij/afsm)
-- [HFSM2](https://github.com/andrew-gresyk/HFSM2)
-- [arduino-fsm](https://github.com/jonblack/arduino-fsm)
 
 # Key Features
 ## Generic
@@ -31,7 +23,7 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
   - glibmm based
   - Qt based
   - possibility to implement your own dispatcher
-- debugger to help analyze state machine behavior
+- visual debugger to help analyze state machine behavior
 
 ## State machine related
 - states
@@ -52,6 +44,9 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
   - glib (optional, for dispatcher)
   - glibmm (optional, for dispatcher)
   - Qt (optional, for dispatcher)
+- For build:
+  - cmake 3.14+
+  - Visual Studio 2015+ (for Windows build)
 - For code generator:
   - Python 3
 - For hsmdebugger:
@@ -133,3 +128,11 @@ int main(const int argc, const char**argv)
 See [/examples/cmake_templates](https://github.com/igor-krechetov/hsmcpp/tree/main/examples/cmake_templates) for CMake configuration examples.
 
 For other examples see [Wiki](https://github.com/igor-krechetov/hsmcpp/wiki/Getting-Started) or [/examples](https://github.com/igor-krechetov/hsmcpp/tree/main/examples).
+
+## Notable FSM/HSM libraries
+- [Qt](https://github.com/qt/qtscxml) (using QStateMachine or QScxmlStateMachine)
+- [QP/C++](https://github.com/QuantumLeaps/qpcpp)
+- [TinyFSM](https://github.com/digint/tinyfsm)
+- [Another Finite State Machine](https://github.com/zmij/afsm)
+- [HFSM2](https://github.com/andrew-gresyk/HFSM2)
+- [arduino-fsm](https://github.com/jonblack/arduino-fsm)

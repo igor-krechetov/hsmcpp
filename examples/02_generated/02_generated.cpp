@@ -1,6 +1,9 @@
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
 #include "gen/SwitchHsmBase.hpp"
+
+using namespace std::chrono_literals;
 
 class SwitchHsm: public SwitchHsmBase
 {
@@ -12,14 +15,14 @@ protected:
     void onOff(const VariantList_t& args) override
     {
         printf("Off\n");
-        usleep(1000000);
+        std::this_thread::sleep_for(1000ms);
         transition(SwitchHsmEvents::SWITCH);
     }
 
     void onOn(const VariantList_t& args) override
     {
         printf("On\n");
-        usleep(1000000);
+        std::this_thread::sleep_for(1000ms);
         transition(SwitchHsmEvents::SWITCH);
     }
 };

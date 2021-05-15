@@ -5,10 +5,9 @@
 #define __HSMCPP_HSM_HPP__
 
 #include <fstream>
-#include <time.h>
-#include <sys/time.h>
-#include <unistd.h>// for log
+#include <ctime>
 #include <cstdlib>// for log
+#include <cstring>// for log
 #include <algorithm>
 #include <functional>
 #include <atomic>
@@ -20,6 +19,15 @@
 #include "IHsmEventDispatcher.hpp"
 #include "variant.hpp"
 #include "logging.hpp"
+
+// WIN, access
+#ifdef WIN32
+  #include <io.h>
+  #define F_OK            0
+#else
+  #include <unistd.h>
+  #include <time.h>
+#endif
 
 // If defined, HSM will performe safety checks during states and substates registration.
 // Normally HSM structure should be static, so this feature is usefull only
@@ -106,6 +114,13 @@ private:
         HsmStateEnum destinationState;
         HsmTransitionCallback_t onTransition = nullptr;
         HsmTransitionConditionCallback_t checkCondition = nullptr;
+
+        TransitionInfo(const HsmStateEnum from, const HsmStateEnum to, HsmTransitionCallback_t cbTransition, HsmTransitionConditionCallback_t cbCondition)
+           : fromState(from)
+           , destinationState(to)
+           , onTransition(cbTransition)
+           , checkCondition(cbCondition)
+        {}
     };
 
     struct PendingEventInfo
@@ -522,7 +537,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerTransition(co
                                                                               HsmTransitionCallback_t transitionCallback,
                                                                               HsmTransitionConditionCallback_t conditionCallback)
 {
-    mTransitionsByEvent.emplace(std::make_pair(from, onEvent), TransitionInfo{from, to, transitionCallback, conditionCallback});
+    mTransitionsByEvent.emplace(std::make_pair(from, onEvent), TransitionInfo(from, to, transitionCallback, conditionCallback));
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -1443,14 +1458,34 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::logHsmAction(const Hs
                                                                        std::make_pair(HsmLogAction::CALLBACK_EXIT, "callback_exit"),
                                                                        std::make_pair(HsmLogAction::CALLBACK_ENTER, "callback_enter"),
                                                                        std::make_pair(HsmLogAction::CALLBACK_STATE, "callback_state")};
-        timeval curTime;
-        gettimeofday(&curTime, nullptr);
-        struct tm tmBuf;
-        char bufTime[80];
-        strftime(bufTime, sizeof(bufTime), "%Y-%m-%d %H:%M:%S", localtime_r(&curTime.tv_sec, &tmBuf));
+        char bufTime[80] = { 0 };
+        char bufTimeMs[5] = { 0 };
+        auto currentTimePoint = std::chrono::system_clock::now();
+        const std::time_t tt = std::chrono::system_clock::to_time_t(currentTimePoint);
+        std::tm timeinfo = {0};
+        const std::tm* tmResult = nullptr;
 
-        char bufTimeMs[5] = {0};
-        sprintf(bufTimeMs, ".%03d", static_cast<int>(curTime.tv_usec / 1000));
+#ifdef WIN32
+        tmResult = ::localtime_s(&timeinfo, &tt);
+#else
+        tmResult = localtime(&tt);
+        if (nullptr != tmResult)
+        {
+            timeinfo = *tmResult;
+        }
+#endif // WIN32
+
+        if (nullptr != tmResult)
+        {
+            std::strftime(bufTime, sizeof(bufTime), "%Y-%m-%d %H:%M:%S", &timeinfo);
+            snprintf(bufTimeMs, sizeof(bufTimeMs), ".%03d",
+                     static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(currentTimePoint.time_since_epoch()).count() % 1000));
+        }
+        else
+        {
+            std::strcpy(bufTime, "0000-00-00 00:00:00");
+            std::strcpy(bufTimeMs, ".000");
+        }
 
         *mHsmLog << "\n-\n"
                     "  timestamp: \"" << bufTime << bufTimeMs << "\"\n"

@@ -1,4 +1,3 @@
-#include <unistd.h>
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
 #include "gen/DebugTestHsmBase.hpp"
 
@@ -44,6 +43,7 @@ int main(const int argc, const char**argv)
     hsm.transition(DebugTestHsmEvents::event_exit_parent);
     hsm.transition(DebugTestHsmEvents::event_next, true, "finishing", 765.54, argPair);
 
+    printf("DONE. Kill the process and check dump.hsmlog file in debugger.\n");
     dispatcher->join();
 
     return 0;

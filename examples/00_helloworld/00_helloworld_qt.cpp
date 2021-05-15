@@ -1,7 +1,10 @@
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 #include <hsmcpp/hsm.hpp>
 #include <hsmcpp/HsmEventDispatcherQt.hpp>
 #include <QCoreApplication>
+
+using namespace std::chrono_literals;
 
 enum class States
 {
@@ -24,13 +27,13 @@ int main(int argc, char** argv)
     hsm.registerState(States::OFF, [&hsm](const VariantList_t& args)
     {
         printf("Off\n");
-        usleep(1000000);
+        std::this_thread::sleep_for(1000ms);
         hsm.transition(Events::SWITCH);
     });
     hsm.registerState(States::ON, [&hsm](const VariantList_t& args)
     {
         printf("On\n");
-        usleep(1000000);
+        std::this_thread::sleep_for(1000ms);
         hsm.transition(Events::SWITCH);
     });
 

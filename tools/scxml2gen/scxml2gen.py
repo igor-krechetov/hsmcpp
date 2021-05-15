@@ -28,7 +28,7 @@ def getCallbackName(elem):
     callback = None
     if elem is not None:
         if (getTag(elem.tag) == "onentry") or (getTag(elem.tag) == "onexit"):
-            elemCallback = elem.find("{*}script")
+            elemCallback = xmlFind(elem, "script")
             if (elemCallback is not None) and (elemCallback.text is not None):
                 callback = elemCallback.text
             else:
@@ -58,9 +58,25 @@ def dumpXmlElement(elem):
     return ET.tostring(elem).decode()
 
 
+# NOTE: find, findall don't work correctly in versions prior to 3.8 (https://bugs.python.org/issue28238)
+def xmlFind(node, tag):
+    res = None
+    for child in node:
+        if getTag(child.tag) == tag:
+            res = child
+            break
+    return res
+    
+
+def xmlFindAll(node, tag):
+    for child in node:
+        if getTag(child.tag) == tag:
+            yield child
+
+
 def parseScxmlStates(parentElement, rootDir, namePrefix):
-    nodesWithChildren = ["{*}state", "{*}parallel", "{*}include"]
-    stateNodes = nodesWithChildren + ["{*}final"]
+    nodesWithChildren = ["state", "parallel", "include"]
+    stateNodes = nodesWithChildren + ["final"]
     states = []
     initialStates = []
     initialStatesCondition = {}
@@ -71,9 +87,9 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
     if "initial" in parentElement.attrib:
         initialStates = [namePrefix + parentElement.attrib["initial"]]
     else:
-        initialTransition = parentElement.find("{*}initial")
+        initialTransition = xmlFind(parentElement, "initial")
         if (initialTransition is not None):
-            for initialTransition in initialTransition.findall("{*}transition"):
+            for initialTransition in xmlFindAll(initialTransition, "transition"):
                 if "target" in initialTransition.attrib:
                     initialStateName = namePrefix + initialTransition.attrib["target"]
                     initialStates.append(initialStateName)
@@ -97,77 +113,77 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
             exit(4)
 
     for curNode in stateNodes:
-        for curState in parentElement.findall(curNode):
-            if getTag(curState.tag) == "include":
-                if 'href' in curState.attrib:
-                    newPrefix = namePrefix
-                    includePath = os.path.join(rootDir, curState.attrib['href'])
-                    print(f"-- INCLUDE: {includePath}")
+        for curState in xmlFindAll(parentElement, curNode):
+            if getTag(curState.tag) in stateNodes:
+                if getTag(curState.tag) == "include":
+                    if 'href' in curState.attrib:
+                        newPrefix = namePrefix
+                        includePath = os.path.join(rootDir, curState.attrib['href'])
+                        print(f"-- INCLUDE: {includePath}")
 
-                    # add prefix only if xi:include is wrapped inside aa state with no other items inside
-                    if ('id' in parentElement.attrib) and (parentElement.find("{*}state") is None) and (len(parentElement.findall("{*}include")) == 1):
-                        newPrefix += parentElement.attrib['id'] + "__"
-                    subScxml = parseScxml(includePath, newPrefix)
+                        # add prefix only if xi:include is wrapped inside aa state with no other items inside
+                        if ('id' in parentElement.attrib) and (xmlFind(parentElement, "state") is None) and (len(xmlFindAll(parentElement, "include")) == 1):
+                            newPrefix += parentElement.attrib['id'] + "__"
+                        subScxml = parseScxml(includePath, newPrefix)
 
-                    if subScxml is not None:
-                        states += subScxml
-                    else:
-                        print(f"ERROR: failed to load included file: [{includePath}]")
-                        exit(4)
-                else:
-                    print(f"ERROR: include statement doesn't have href attribute defined\n{dumpXmlElement(curState)}")
-                    exit(5)
-            else:
-                newState = {"id": namePrefix + curState.attrib["id"],
-                            "transitions": []}
-                validateIdentifier(newState["id"])
-
-                if getTag(curState.tag) == "final":
-                    newState["is_final"] = True
-
-                if (getTag(parentElement.tag) == "parallel") or (newState['id'] in initialStates):
-                    newState["initial_state"] = True
-                    if newState['id'] in initialStatesCondition:
-                        newState["initial_state_condition"] = initialStatesCondition[newState['id']]
-
-                onentry = getCallbackName(curState.find("{*}onentry"))
-                onexit = getCallbackName(curState.find("{*}onexit"))
-                invoke = getCallbackName(curState.find("{*}invoke"))
-
-                if onentry is not None:
-                    newState["onentry"] = onentry
-                if onexit is not None:
-                    newState["onexit"] = onexit
-                if invoke is not None:
-                    newState["onstate"] = invoke
-
-                for curTransition in curState.iterfind("{*}transition"):
-                    if "event" in curTransition.attrib:
-                        newTransition = {"event": curTransition.attrib["event"]}
-                        validateIdentifier(newTransition["event"])
-
-                        if "target" in curTransition.attrib:
-                            newTransition["target"] = namePrefix + curTransition.attrib["target"]
+                        if subScxml is not None:
+                            states += subScxml
                         else:
-                            newTransition["target"] = namePrefix + newState["id"]
-
-                        if "cond" in curTransition.attrib:
-                            newTransition["condition"] = getCallbackName(curTransition)
-
-                        transitionCallback = getCallbackName(curTransition.find("{*}script"))
-                        if transitionCallback is not None:
-                            newTransition["callback"] = transitionCallback
-
-                        newState["transitions"].append(newTransition)
+                            print(f"ERROR: failed to load included file: [{includePath}]")
+                            exit(4)
                     else:
-                        print(f"WARNING: transition without event was skipped because it's not supported by hsmcpp\n{dumpXmlElement(curTransition)}")
+                        print(f"ERROR: include statement doesn't have href attribute defined\n{dumpXmlElement(curState)}")
+                        exit(5)
+                else:
+                    newState = {"id": namePrefix + curState.attrib["id"],
+                                "transitions": []}
+                    validateIdentifier(newState["id"])
 
-                for nodeName in nodesWithChildren:
-                    if (curState.find(nodeName) is not None) or ('src' in curState.attrib):
-                        newState["states"] = parseScxmlStates(curState, rootDir, namePrefix)
-                        break
+                    if getTag(curState.tag) == "final":
+                        newState["is_final"] = True
 
-                states.append(newState)
+                    if (getTag(parentElement.tag) == "parallel") or (newState['id'] in initialStates):
+                        newState["initial_state"] = True
+                        if newState['id'] in initialStatesCondition:
+                            newState["initial_state_condition"] = initialStatesCondition[newState['id']]
+
+                    onentry = getCallbackName(xmlFind(curState, "onentry"))
+                    onexit = getCallbackName(xmlFind(curState, "onexit"))
+                    invoke = getCallbackName(xmlFind(curState, "invoke"))
+
+                    if onentry is not None:
+                        newState["onentry"] = onentry
+                    if onexit is not None:
+                        newState["onexit"] = onexit
+                    if invoke is not None:
+                        newState["onstate"] = invoke
+
+                    for curTransition in xmlFindAll(curState, "transition"):
+                        if "event" in curTransition.attrib:
+                            newTransition = {"event": curTransition.attrib["event"]}
+                            validateIdentifier(newTransition["event"])
+
+                            if "target" in curTransition.attrib:
+                                newTransition["target"] = namePrefix + curTransition.attrib["target"]
+                            else:
+                                newTransition["target"] = namePrefix + newState["id"]
+
+                            if "cond" in curTransition.attrib:
+                                newTransition["condition"] = getCallbackName(curTransition)
+
+                            transitionCallback = getCallbackName(xmlFind(curTransition, "script"))
+                            if transitionCallback is not None:
+                                newTransition["callback"] = transitionCallback
+
+                            newState["transitions"].append(newTransition)
+                        else:
+                            print(f"WARNING: transition without event was skipped because it's not supported by hsmcpp\n{dumpXmlElement(curTransition)}")
+
+                    for nodeName in nodesWithChildren:
+                        if (xmlFind(curState, nodeName) is not None) or ('src' in curState.attrib):
+                            newState["states"] = parseScxmlStates(curState, rootDir, namePrefix)
+                            break
+                    states.append(newState)
     return states
 
 
@@ -214,7 +230,7 @@ def parseScxml(path, namePrefix = ""):
                     curState['initial_state'] = True
                     isCorrectInitialState = True
                     break
-
+            
             if (isCorrectInitialState == True) or (len(initialState) == 0):
                 hsm = states
             else:

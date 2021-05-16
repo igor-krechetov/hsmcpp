@@ -93,7 +93,11 @@ private:
     };
 
     // NOTE: just an alias to make code more readable
+#ifdef WIN32
+    #define HsmEventStatus_t   typename HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::HsmEventStatus
+#else
     #define HsmEventStatus_t   HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::HsmEventStatus
+#endif
 
     struct StateCallbacks
     {
@@ -1463,10 +1467,13 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::logHsmAction(const Hs
         auto currentTimePoint = std::chrono::system_clock::now();
         const std::time_t tt = std::chrono::system_clock::to_time_t(currentTimePoint);
         std::tm timeinfo = {0};
-        const std::tm* tmResult = nullptr;
+        const std::tm* tmResult = nullptr;// this is just to check that localtime was executed correctly
 
 #ifdef WIN32
-        tmResult = ::localtime_s(&timeinfo, &tt);
+        if (0 == ::localtime_s(&timeinfo, &tt))
+        {
+            tmResult = &timeinfo;
+        }
 #else
         tmResult = localtime(&tt);
         if (nullptr != tmResult)

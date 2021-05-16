@@ -1,4 +1,3 @@
-rmdir .\build /S /Q
 mkdir .\build
 cd .\build
 

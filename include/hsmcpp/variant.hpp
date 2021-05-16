@@ -144,6 +144,6 @@ private:
     Type type = Type::UNKNOWN;
 };
 
-template class std::pair<Variant, Variant>;
+template struct std::pair<Variant, Variant>;
 
 #endif  // __HSMCPP_VARIANT_HPP__

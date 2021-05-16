@@ -87,7 +87,9 @@ file (GLOB SRC_LIBRARY
 add_definitions(${HSM_DEFINITIONS_BASE})
 add_library(${HSM_LIBRARY_NAME} STATIC ${SRC_LIBRARY})
 target_include_directories(${HSM_LIBRARY_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_compile_options(${HSM_LIBRARY_NAME} PRIVATE "-fPIC")
+if (NOT WIN32)
+    target_compile_options(${HSM_LIBRARY_NAME} PRIVATE "-fPIC")
+endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # ================================================

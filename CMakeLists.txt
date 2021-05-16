@@ -56,7 +56,6 @@ if (HSMBUILD_DISPATCHER_GLIB)
 endif()
 
 add_subdirectory(tools/cmake)
-installGoogleTest()
 
 # ================================================
 # HSMCPP library

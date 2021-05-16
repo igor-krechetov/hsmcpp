@@ -1,5 +1,7 @@
 set(TEST_BIN_NAME_TEMPLATE hsmUnitTests)
 
+installGoogleTest()
+
 # ================================================
 # INCLUDES
 include_directories(

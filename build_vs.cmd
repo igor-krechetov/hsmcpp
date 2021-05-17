@@ -2,6 +2,7 @@ mkdir .\build
 cd .\build
 
 @rem Fix path according to your system
+@rem call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
 call "c:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 
 @rem Change Qt5_DIR to match your system if you want to enable Qt dispatcher

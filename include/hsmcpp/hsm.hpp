@@ -216,6 +216,8 @@ public:
     template <typename... Args>
     bool isTransitionPossible(const HsmEventEnum event, Args... args);
 
+    // By default log will be written to ./dump.hsmlog file.
+    // This location can be overwritten by setting ENV_DUMPPATH environment variable with desired path.
     bool enableHsmDebugging();
     bool enableHsmDebugging(const std::string& dumpPath);
     void disableHsmDebugging();

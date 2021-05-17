@@ -13,9 +13,10 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
 
 # Key Features
 ## Generic
+- visual state machine editors (through [thirdparty editors](https://github.com/igor-krechetov/hsmcpp/wiki/Code-Generation#scxml-editors))
 - code generation (using state machine described in SCXML format as an input)
 - PlantUML diagrams generation (from SCXML files)
-- asynchronous / synchronous operation
+- asynchronous / synchronous execution
 - thread safety
 - configurable event dispatchers:
   - std::thread based
@@ -38,6 +39,34 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
 - transition cancelation
 - support for std::function and lambdas as callbacks
 
+# Documentation
+Documentation is available in [Wiki](https://github.com/igor-krechetov/hsmcpp/wiki).
+
+
+# HSM GUI Editors
+Check out [documentation](https://github.com/igor-krechetov/hsmcpp/wiki/Code-Generation#scxml-editors) to learn more about available editors.
+
+![Editing HSM in Qt Creator](https://github.com/igor-krechetov/hsmcpp/blob/main/doc/wiki/editors/editor_qt.png)
+
+![Editing HSM in scxmlgui](https://github.com/igor-krechetov/hsmcpp/blob/main/doc/wiki/editors/editor_scxmlgui.png)
+
+
+# hsmdebugger
+Read [documentation](https://github.com/igor-krechetov/hsmcpp/wiki/hsmdebugger) for details on how to use debugger.
+
+![hsmdebugger demo](https://github.com/igor-krechetov/hsmcpp/blob/main/doc/readme/hsmdebugger_demo.gif)
+
+
+# Installation
+```bash
+git clone https://github.com/igor-krechetov/hsmcpp.git
+cd ./hsmcpp
+mkdir ./build; cd ./build
+cmake ..
+make install
+```
+You can check detailed instructions in [documentation](https://github.com/igor-krechetov/hsmcpp/wiki/Getting-Started#building).
+
 # Dependencies
 - For library:
   - C++11 or newer
@@ -54,23 +83,6 @@ If you are not familiar with HSM/FSM and which problems then can solve in your c
   - PyYaml (pip3 install PyYaml)
   - PySide6 (pip3 install PySide6)
   - plantuml
-
-# Installation
-- `git clone https://github.com/igor-krechetov/hsmcpp.git`
-- `cd ./hsmcpp`
-- `mkdir ./build; cd ./build`
-- `cmake ..`
-- `make install`
-
-# Documentation
-Documentation is available in [Wiki](https://github.com/igor-krechetov/hsmcpp/wiki).
-
-# hsmdebugger
-**NOTE: work in progress. not a final design.**
-
-![hsmdebugger demo](https://github.com/igor-krechetov/hsmcpp/blob/main/doc/readme/hsmdebugger_demo.gif)
-
-**TODO**
 
 # Creating a simple State Machine
 HSM structure:
@@ -128,6 +140,7 @@ int main(const int argc, const char**argv)
 See [/examples/cmake_templates](https://github.com/igor-krechetov/hsmcpp/tree/main/examples/cmake_templates) for CMake configuration examples.
 
 For other examples see [Wiki](https://github.com/igor-krechetov/hsmcpp/wiki/Getting-Started) or [/examples](https://github.com/igor-krechetov/hsmcpp/tree/main/examples).
+
 
 ## Notable FSM/HSM libraries
 - [Qt](https://github.com/qt/qtscxml) (using QStateMachine or QScxmlStateMachine)

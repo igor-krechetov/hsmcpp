@@ -25,7 +25,7 @@ class QSettingsDialog:
         settings = QSettings(self.configPath, QSettings.IniFormat)
         self.pathScxml2gen = settings.value("environment/scxml2gen", str(Path("../scxml2gen/scxml2gen.py")))
         self.pathPlantuml = settings.value("environment/plantuml", defaultPlantuml)
-        self.loadLastHSM = bool(settings.value("common/load_last_hsm", True))
+        self.loadLastHSM = (settings.value("common/load_last_hsm", "true") != "false")
         self.styleColors = {"active_state": settings.value("style/active_state", "38EB4B"),
                             "blocked_transition": settings.value("style/blocked_transition", "EB8421")}
 

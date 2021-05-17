@@ -2,7 +2,7 @@
 # Distributed under MIT license. See file LICENSE for details
 
 import re
-from PySide6.QtCore import QSortFilterProxyModel, QModelIndex
+from PySide6.QtCore import QSortFilterProxyModel
 
 
 class QFramesSearchModel(QSortFilterProxyModel):

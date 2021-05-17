@@ -1,4 +1,4 @@
-from PySide6.QtCore import QSettings, Signal, Slot
+from PySide6.QtCore import QSettings
 from PySide6.QtGui import QAction
 
 class RecentFilesManager():

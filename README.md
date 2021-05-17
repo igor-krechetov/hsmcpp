@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/changelog-v0.13.2-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Generic badge](https://img.shields.io/badge/changelog-v0.13.3-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Generic badge](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
 [![Generic badge](https://img.shields.io/badge/documentation-green.svg)](https://github.com/igor-krechetov/hsmcpp/wiki)
 
@@ -7,7 +7,7 @@ HSMCPP is a C++ library providing an easy way (hopefully) to add hierarchical or
 
 It's also applicable for single threaded and synchronous applications, but it might not be the most efficient option.
 
-If you are not familiar with HSM/FSM and which problems then can solve in your code, I recommend reading:
+If you are not familiar with HSM/FSM and which problems they can solve in your code, I recommend reading:
 - [Introduction to Hierarchical State Machines](https://barrgroup.com/embedded-systems/how-to/introduction-hierarchical-state-machines)
 - [Hierarchical Finite State Machine for AI Acting Engine](https://towardsdatascience.com/hierarchical-finite-state-machine-for-ai-acting-engine-9b24efc66f2)
 
@@ -61,11 +61,13 @@ Read [documentation](https://github.com/igor-krechetov/hsmcpp/wiki/hsmdebugger) 
 ```bash
 git clone https://github.com/igor-krechetov/hsmcpp.git
 cd ./hsmcpp
-mkdir ./build; cd ./build
-cmake ..
+./build.sh
+cd ./build
 make install
 ```
-You can check detailed instructions in [documentation](https://github.com/igor-krechetov/hsmcpp/wiki/Getting-Started#building).
+By default it will build all included components, tests and examples. You can disable any of them using cmake build flags. For example you probably will not have glib or glibmm libraries available on Windows so you might want to exclude them.
+
+See detailed instructions in [documentation](https://github.com/igor-krechetov/hsmcpp/wiki/Getting-Started#building).
 
 # Dependencies
 - For library:

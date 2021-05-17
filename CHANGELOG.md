@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.13.3] - 2021-05-17
+### Fixed
+- crash in hsmdebugger while quickly switching frames
+
 ## [0.13.2] - 2021-05-16
 ### Added
 - support for Windows build

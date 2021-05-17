@@ -18,14 +18,15 @@ from impl.search import QFramesSearchModel
 from impl.utils import utils
 from impl.settings import QSettingsDialog
 
-from PySide6.QtWidgets import QApplication, QMessageBox, QLabel, QFileDialog, QInputDialog
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QMessageBox, QLabel, QInputDialog
 from PySide6.QtCore import QFile, Signal, Slot, QObject
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap, QMovie, QIcon
 from PySide6.QtUiTools import QUiLoader
 
 
 class hsmdebugger(QObject):
-    signalPlantumlDone = Signal(str)
+    signalPlantumlDone = Signal(str, str)
     appTitle = "HSM Debugger"
     appDir = Path(os.path.dirname(__file__))
     configPath = appDir / "config.ini"
@@ -181,6 +182,7 @@ class hsmdebugger(QObject):
         self.window.frameSelector.setMaximum(0)
         self.window.searchFilter.hide()
         self.window.hsmStateView.hide()
+        self.window.hsmStateView.setAttribute(Qt.WA_TranslucentBackground)
 
     def configureActions(self):
         self.window.actionOpenHsm.triggered.connect(self.onActionOpenHsm)
@@ -307,24 +309,37 @@ class hsmdebugger(QObject):
             argsPlantUml = ["java", "-jar", self.settings.pathPlantuml]
         else:
             argsPlantUml = [self.settings.pathPlantuml]
-        self.plantuml = subprocess.Popen(argsPlantUml + [format, "-o", Path("./"), srcFile])
-        rc = self.plantuml.wait()
-        if rc == 0:
-            (base, ext) = os.path.splitext(srcFile)
-            self.signalPlantumlDone.emit(str(Path(destDirectory) / f"{os.path.basename(base)}.png"))
-        else:
-            QMessageBox.critical(None, "Error", f"Failed to run Plantuml. Check that path to binary is correctly specified",
-                                 buttons=QMessageBox.Ok)
+        try:
+            self.plantuml = subprocess.Popen(argsPlantUml + [format, "-o", Path("./"), srcFile])
+        except FileNotFoundError:
+            self.signalPlantumlDone.emit("", "not_found")
+
+        if self.plantuml:
+            rc = self.plantuml.wait()
+            if rc == 0:
+                (base, ext) = os.path.splitext(srcFile)
+                self.signalPlantumlDone.emit(str(Path(destDirectory) / f"{os.path.basename(base)}.png"), "ok")
+            else:
+                self.signalPlantumlDone.emit("", "cancelled")
 
     @Slot(str)
-    def plantumlGenerationDone(self, path):
+    def plantumlGenerationDone(self, path, status):
         self.plantuml = None
         self.threadPlantuml = None
         if len(path) > 0:
-            self.window.hsmStateView.setPixmap(QPixmap(path))
-            self.scaleView(self.hsmViewScaleFactor)
+            if len(path) > 0:
+                self.window.hsmStateView.setPixmap(QPixmap(path))
+                self.scaleView(self.hsmViewScaleFactor)
+                self.window.hsmStateViewWait.hide()
+                self.window.hsmStateView.show()
+        elif status == "not_found":
+            self.window.hsmStateView.setPixmap(QPixmap(str(self.appDir / "res" / "failed.png")))
+            self.scaleView(0.5)
             self.window.hsmStateViewWait.hide()
             self.window.hsmStateView.show()
+            QMessageBox.critical(None, "Error",
+                                 f"Failed to run Plantuml. Check that path to binary is correctly specified",
+                                 buttons=QMessageBox.Ok)
 
     def plantumlGeneratePng(self, src, outDir):
         if self.threadPlantuml:
@@ -444,7 +459,7 @@ class hsmdebugger(QObject):
             self.plantumlGeneratePng(pathPlantumlFile, dirHsmCache)
         else:
             print(f"Use existing image: {pathFrameImage}")
-            self.signalPlantumlDone.emit(pathFrameImage)
+            self.signalPlantumlDone.emit(pathFrameImage, "ok")
 
     def getFileChecksum(self, path):
         hash_md5 = hashlib.md5()

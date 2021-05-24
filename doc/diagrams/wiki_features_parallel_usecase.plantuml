@@ -1,0 +1,28 @@
+@startuml
+
+[*] --> Idle
+Idle --> DisplaysOn: SYSTEM_ON
+DisplaysOn --> Idle: SYSTEM_OFF
+
+state DisplaysOn {
+    [*] --> Display2
+    [*] --> Display1
+
+    Display1 --> MediaRunning: OPEN_MEDIA
+    Display1 --> WeatherRunning: OPEN_WEATHER
+    Display1 --> NavigationRunning: OPEN_NAVIGATION
+    MediaRunning -up-> Display1: CLOSE_MEDIA
+    WeatherRunning -up-> Display1: CLOSE_WEATHER
+    NavigationRunning -up-> Display1: CLOSE_NAVIGATION
+
+    Display2 --> MediaRunning: OPEN_MEDIA
+    Display2 --> WeatherRunning: OPEN_WEATHER
+    Display2 --> NavigationRunning: OPEN_NAVIGATION
+    MediaRunning -up-> Display2: CLOSE_MEDIA
+    WeatherRunning -up-> Display2: CLOSE_WEATHER
+    NavigationRunning -up-> Display2: CLOSE_NAVIGATION
+
+    MediaRunning -[hidden]-> NavigationRunning
+    NavigationRunning -[hidden]-> WeatherRunning
+}
+@enduml

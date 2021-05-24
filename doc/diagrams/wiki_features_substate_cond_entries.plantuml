@@ -1,0 +1,15 @@
+@startuml
+
+[*] --> Idle
+Idle --> Playback: LOAD
+Playback --> Restart: RESTART
+Restart -> Playback: RESTART_DONE
+
+state Playback {
+    [*] --> Paused
+    [*] --> Playing: RESTART_DONE
+    Paused -right-> Playing: PLAY
+    Playing -left-> Paused: PAUSE
+}
+
+@enduml

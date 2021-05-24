@@ -6,8 +6,6 @@
 
 #include <fstream>
 #include <ctime>
-#include <cstdlib>// for log
-#include <cstring>// for log
 #include <algorithm>
 #include <functional>
 #include <atomic>
@@ -19,6 +17,11 @@
 #include "IHsmEventDispatcher.hpp"
 #include "variant.hpp"
 #include "logging.hpp"
+
+#ifdef HSMBUILD_DEBUGGING
+  #include <cstdlib>
+  #include <cstring>
+#endif
 
 // WIN, access
 #ifdef WIN32
@@ -299,8 +302,10 @@ private:
     std::mutex mEventsSync;
 #endif// HSM_DISABLE_THREADSAFETY
 
+#ifdef HSMBUILD_DEBUGGING
     std::filebuf mHsmLogFile;
     std::shared_ptr<std::ostream> mHsmLog;
+#endif // HSMBUILD_DEBUGGING
 };
 
 // ============================================================================
@@ -1418,14 +1423,20 @@ std::string HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getEventName(c
 template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::enableHsmDebugging()
 {
+#ifdef HSMBUILD_DEBUGGING
     char* envPath = std::getenv(ENV_DUMPPATH);
 
     return enableHsmDebugging(nullptr == envPath ? DEFAULT_DUMP_PATH : std::string(envPath));
+#else
+    return true;
+#endif
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::enableHsmDebugging(const std::string& dumpPath)
 {
+#ifdef HSMBUILD_DEBUGGING
+    bool res = false;
     bool isNewLog = (access(dumpPath.c_str(), F_OK) != 0);
 
     if (nullptr != mHsmLogFile.open(dumpPath.c_str(), std::ios::out | std::ios::app))
@@ -1437,15 +1448,22 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::enableHsmDebugging(co
             *mHsmLog << "---\n";
             mHsmLog->flush();
         }
+
+        res = true;
     }
 
+    return res;
+#else
     return true;
+#endif
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::disableHsmDebugging()
 {
+#ifdef HSMBUILD_DEBUGGING
     mHsmLogFile.close();
+#endif
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -1456,6 +1474,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::logHsmAction(const Hs
                                                                         const bool hasFailed,
                                                                         const VariantList_t& args)
 {
+#ifdef HSMBUILD_DEBUGGING
     if (true == mHsmLogFile.is_open())
     {
         static const std::map<HsmLogAction, std::string> actionsMap = {std::make_pair(HsmLogAction::IDLE, "idle"),
@@ -1519,6 +1538,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::logHsmAction(const Hs
 
         mHsmLog->flush();
     }
+#endif // HSMBUILD_DEBUGGING
 }
 
 #endif  // __HSMCPP_HSM_HPP__

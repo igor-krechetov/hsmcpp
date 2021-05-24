@@ -1,0 +1,7 @@
+@startuml
+
+[*] --> Idle
+Idle --> WeatherRunning: OPEN_WEATHER
+WeatherRunning -up-> Idle: CLOSE_WEATHER
+
+@enduml

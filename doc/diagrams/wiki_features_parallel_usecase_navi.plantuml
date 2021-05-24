@@ -1,0 +1,7 @@
+@startuml
+
+[*] --> Idle
+Idle --> NavigationRunning: OPEN_NAVIGATION
+NavigationRunning -up-> Idle: CLOSE_NAVIGATION
+
+@enduml

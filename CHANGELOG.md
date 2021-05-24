@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.13.4] - 2021-05-24
+### Added
+- HSMBUILD_DEBUGGING build option
+- diagrams for wiki
+
 ## [0.13.3] - 2021-05-17
 ### Fixed
 - crash in hsmdebugger while quickly switching frames

@@ -1,0 +1,7 @@
+@startuml
+
+[*] --> Idle
+Idle --> MediaRunning: OPEN_MEDIA
+MediaRunning -up-> Idle: CLOSE_MEDIA
+
+@enduml

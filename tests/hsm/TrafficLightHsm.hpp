@@ -4,6 +4,9 @@
 #include "TestsCommon.hpp"
 #include "hsmcpp/hsm.hpp"
 
+#undef __TRACE_CLASS__
+#define __TRACE_CLASS__                         "TrafficLightHsm"
+
 enum class TrafficLightState
 {
     OFF,

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="04_history" qt:editorversion="4.14.2">
+    <state id="Idle">
+        <qt:editorinfo geometry="302.02;150.94;-60;-50;120;100" scenegeometry="302.02;150.94;242.02;100.94;120;100"/>
+        <transition type="external" event="START" target="Player">
+            <qt:editorinfo movePoint="18.35;3.06"/>
+        </transition>
+    </state>
+    <state id="Player">
+        <qt:editorinfo geometry="106.19;326.35;-73.22;-84.77;536.06;497.81" scenegeometry="106.19;326.35;32.97;241.58;536.06;497.81"/>
+        <transition type="external" event="ON_CALL" target="Call">
+            <qt:editorinfo endTargetFactors="8.03;45.09" startTargetFactors="96.51;30.63"/>
+        </transition>
+        <state id="NoMedia">
+            <qt:editorinfo geometry="6.78;115.68;-60;-50;120;100" scenegeometry="112.97;442.03;52.97;392.03;120;100"/>
+            <transition type="external" event="LOADING_DONE" target="MediaLoaded">
+                <qt:editorinfo endTargetFactors="6.23;31.41" movePoint="7.14;6.12"/>
+            </transition>
+        </state>
+        <state id="MediaLoaded">
+            <qt:editorinfo geometry="281.10;117.28;-109.58;-108.70;173.65;345.63" scenegeometry="387.29;443.63;277.71;334.93;173.65;345.63"/>
+            <state id="Playing">
+                <qt:editorinfo geometry="-29.58;2.04;-60;-50;120;100" scenegeometry="357.71;445.67;297.71;395.67;120;100"/>
+                <transition type="external" event="PAUSE" target="Paused">
+                    <qt:editorinfo endTargetFactors="25.31;12.16" movePoint="17.34;0" startTargetFactors="26.21;89.57"/>
+                </transition>
+            </state>
+            <state id="Paused">
+                <qt:editorinfo geometry="-28.30;162.16;-60;-50;120;100" scenegeometry="358.99;605.79;298.99;555.79;120;100"/>
+                <transition type="external" event="PLAY" target="Playing">
+                    <qt:editorinfo endTargetFactors="74.18;84.24" movePoint="43.85;2.04" startTargetFactors="76.22;13.07"/>
+                </transition>
+            </state>
+        </state>
+        <history type="deep" id="PlayerHistory">
+            <qt:editorinfo geometry="415.98;110.14;-20;-20;40;40" scenegeometry="522.17;436.49;502.17;416.49;40;40"/>
+        </history>
+    </state>
+    <state id="Call">
+        <qt:editorinfo geometry="751.63;388.56;-60;-50;120;128.50" scenegeometry="751.63;388.56;691.63;338.56;120;128.50"/>
+        <transition type="external" event="CALL_ENDED" target="PlayerHistory">
+            <qt:editorinfo movePoint="13.26;-18.36" startTargetFactors="8.75;77.53"/>
+        </transition>
+    </state>
+</scxml>

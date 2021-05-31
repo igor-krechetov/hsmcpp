@@ -1,5 +1,6 @@
 #include "hsm/TrafficLightHsm.hpp"
 #include "hsm/ABCHsm.hpp"
+#include "hsm/AsyncHsm.hpp"
 
 TEST_F(ABCHsm, substate_entrypoint)
 {
@@ -15,6 +16,8 @@ TEST_F(ABCHsm, substate_entrypoint)
     EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::C) );
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+
+    initializeHsm();
 
     //-------------------------------------------
     // ACTIONS
@@ -41,6 +44,8 @@ TEST_F(ABCHsm, substate_multiple_entrypoints_conditional)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E2);
     registerTransition(AbcState::P1, AbcState::A, AbcEvent::E3);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
@@ -76,6 +81,8 @@ TEST_F(ABCHsm, substate_multiple_entrypoints_default)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E2);
     registerTransition(AbcState::P1, AbcState::A, AbcEvent::E3);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
@@ -113,6 +120,8 @@ TEST_F(ABCHsm, substate_block_conditional_entry_transition)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E2);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
@@ -141,6 +150,8 @@ TEST_F(ABCHsm, substate_entrypoint_substate)
     EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P2, AbcState::P3) );
     EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P3, AbcState::B) );
     EXPECT_TRUE( registerSubstate(AbcState::P3, AbcState::C) );
+
+    initializeHsm();
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
@@ -204,6 +215,8 @@ TEST_F(ABCHsm, substate_exit_multiple_layers)
     registerTransition(AbcState::C, AbcState::P3, AbcEvent::E1);
     registerTransition(AbcState::P1, AbcState::A, AbcEvent::E2);
 
+    initializeHsm();
+
     //-------------------------------------------
     // ACTIONS
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
@@ -257,10 +270,11 @@ TEST_F(ABCHsm, substate_safe_registration)
     EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P3, AbcState::P1) );
     EXPECT_FALSE( registerSubstateEntryPoint(AbcState::P2, AbcState::P4) );// prevent recursion: (P4) -> P3 -> P1 -> P2 -X (P4)
 
+    initializeHsm();
+
     //-------------------------------------------
     // VALIDATION
 }
-
 
 TEST_F(ABCHsm, substate_error_no_entrypoint)
 {
@@ -275,6 +289,8 @@ TEST_F(ABCHsm, substate_error_no_entrypoint)
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
@@ -284,4 +300,25 @@ TEST_F(ABCHsm, substate_error_no_entrypoint)
     //-------------------------------------------
     // VALIDATION
     EXPECT_EQ(getLastActiveState(), AbcState::A);
+}
+
+TEST_F(AsyncHsm, substate_parent_as_initial)
+{
+    TEST_DESCRIPTION("when parent state is set as initial it should automatically transition into substate on startup");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    setInitialState(AsyncHsmState::P1);
+    registerState<AsyncHsm>(AsyncHsmState::B, this, &AsyncHsm::onStateChanged);
+    ASSERT_TRUE(registerSubstateEntryPoint(AsyncHsmState::P1, AsyncHsmState::P2));
+    ASSERT_TRUE(registerSubstateEntryPoint(AsyncHsmState::P2, AsyncHsmState::B));
+
+    //-------------------------------------------
+    // ACTIONS
+    initializeHsm();
+    ASSERT_TRUE(waitAsyncOperation(200));
+
+    //-------------------------------------------
+    // VALIDATION
+    ASSERT_EQ(getLastActiveState(), AsyncHsmState::B);
 }

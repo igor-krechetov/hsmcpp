@@ -17,6 +17,8 @@ TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
     registerTransition(AsyncHsmState::P1, AsyncHsmState::C, AsyncHsmEvent::EXIT_SUBSTATE);
     registerTransition(AsyncHsmState::C, AsyncHsmState::A, AsyncHsmEvent::NEXT_STATE);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AsyncHsmState::A);
 
     //-------------------------------------------
@@ -58,6 +60,8 @@ TEST_F(ABCHsm, multithreaded_deleting_running_dispatcher)
 
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition(AbcState::B, AbcState::A, AbcEvent::E1);
+
+    initializeHsm();
 
     //-------------------------------------------
     // ACTIONS

@@ -13,6 +13,8 @@ TEST_F(ABCHsm, parallel_transition_01)
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::C, AbcEvent::E1);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
@@ -39,6 +41,8 @@ TEST_F(ABCHsm, parallel_transition_02)
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
@@ -64,6 +68,8 @@ TEST_F(ABCHsm, parallel_transition_05)
 
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
@@ -92,6 +98,8 @@ TEST_F(ABCHsm, parallel_transition_03)
 
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
@@ -122,6 +130,8 @@ TEST_F(ABCHsm, parallel_transition_04)
     registerTransition(AbcState::P1, AbcState::C, AbcEvent::E1);
     registerTransition(AbcState::P1, AbcState::D, AbcEvent::E1);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
@@ -147,6 +157,8 @@ TEST_F(ABCHsm, parallel_transition_06)
 
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
@@ -174,6 +186,8 @@ TEST_F(ABCHsm, parallel_transition_07)
 
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
@@ -203,6 +217,8 @@ TEST_F(ABCHsm, parallel_transition_08)
     registerTransition(AbcState::B, AbcState::A, AbcEvent::E1);
     registerTransition(AbcState::C, AbcState::A, AbcEvent::E1);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
@@ -231,6 +247,8 @@ TEST_F(ABCHsm, parallel_transition_09)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition<ABCHsm>(AbcState::P1, AbcState::D, AbcEvent::E2, this, &ABCHsm::onE2Transition);
     registerTransition<ABCHsm>(AbcState::P1, AbcState::P1, AbcEvent::E2, this, &ABCHsm::onSelfTransition);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
@@ -276,6 +294,8 @@ TEST_F(ABCHsm, parallel_transition_10_internal_priority)
     registerTransition(AbcState::A, AbcState::C, AbcEvent::E1);
     registerTransition(AbcState::P1, AbcState::D, AbcEvent::E1);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
@@ -303,6 +323,8 @@ TEST_F(ABCHsm, parallel_transition_canceled_01)
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition<ABCHsm>(AbcState::P1, AbcState::D, AbcEvent::E2, this, &ABCHsm::onE2Transition);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
@@ -345,6 +367,8 @@ TEST_F(ABCHsm, parallel_transition_canceled_02)
     registerTransition(AbcState::B, AbcState::D, AbcEvent::E2);
     registerTransition(AbcState::B, AbcState::E, AbcEvent::E2);
     registerTransition(AbcState::C, AbcState::F, AbcEvent::E2);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
@@ -393,6 +417,8 @@ TEST_F(ABCHsm, parallel_transition_mult2one_01)
     registerTransition(AbcState::B, AbcState::A, AbcEvent::E2);
     registerTransition(AbcState::C, AbcState::A, AbcEvent::E2);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AbcState::A);
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
@@ -424,6 +450,8 @@ TEST_F(ABCHsm, parallel_transition_mult2one_02)
     registerTransition(AbcState::B, AbcState::A, AbcEvent::E2);
     registerTransition(AbcState::P1, AbcState::A, AbcEvent::E2);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AbcState::A);
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
@@ -451,6 +479,8 @@ TEST_F(ABCHsm, parallel_callbacks)
     registerTransition<ABCHsm>(AbcState::A, AbcState::C, AbcEvent::E1, this, &ABCHsm::onE1Transition);
     registerTransition<ABCHsm>(AbcState::B, AbcState::A, AbcEvent::E2, this, &ABCHsm::onE2Transition);
     registerTransition<ABCHsm>(AbcState::C, AbcState::A, AbcEvent::E2, this, &ABCHsm::onE2Transition);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
@@ -496,6 +526,8 @@ TEST_F(ABCHsm, parallel_selftransition)
     registerTransition<ABCHsm>(AbcState::A, AbcState::A, AbcEvent::E1, this, &ABCHsm::onE1Transition);
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1, this, &ABCHsm::onE1Transition);
 
+    initializeHsm();
+
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 
     //-------------------------------------------
@@ -523,6 +555,8 @@ TEST_F(ABCHsm, parallel_selftransition_multiple)
     registerTransition<ABCHsm>(AbcState::A, AbcState::A, AbcEvent::E1, this, &ABCHsm::onE1Transition);
     registerTransition<ABCHsm>(AbcState::A, AbcState::A, AbcEvent::E1, this, &ABCHsm::onE2Transition);
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E3, this, &ABCHsm::onE3Transition);
+
+    initializeHsm();
 
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 

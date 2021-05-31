@@ -11,6 +11,8 @@ TEST_F(ABCHsm, callbacks_class_pointers)
 
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1, this, &ABCHsm::onE1Transition, &ABCHsm::conditionTrue);
 
+    initializeHsm();
+
     //-------------------------------------------
     // ACTIONS
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY, "test", 7));
@@ -63,6 +65,8 @@ TEST_F(ABCHsm, callbacks_lambdas)
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1,
                        [&](const VariantList_t& args){ ++transitionCounterE1; transitionArgsE1 = args; return true; },
                        [&](const VariantList_t& args){ ++conditionTrueCounter; argsConditionTrue = args; return true; });
+
+    initializeHsm();
 
     //-------------------------------------------
     // ACTIONS

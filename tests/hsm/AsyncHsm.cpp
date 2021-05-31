@@ -14,7 +14,6 @@ AsyncHsm::~AsyncHsm()
 
 void AsyncHsm::SetUp()
 {
-    INITIALIZE_HSM();
     mSyncVariableCheck = false;
 }
 

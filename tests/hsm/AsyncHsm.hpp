@@ -7,6 +7,9 @@
 #include <atomic>
 #include <condition_variable>
 
+#undef __TRACE_CLASS__
+#define __TRACE_CLASS__                         "AsyncHsm"
+
 enum class AsyncHsmState
 {
     A, B, C, D, E,
@@ -29,6 +32,11 @@ public:
 
     void SetUp() override;
     void TearDown() override;
+
+    inline void initializeHsm()
+    {
+        INITIALIZE_HSM();
+    }
 
     bool onExit();
     bool onEnter(const VariantList_t& args);

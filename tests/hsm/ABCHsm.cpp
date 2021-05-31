@@ -17,7 +17,6 @@ bool ABCHsm::conditionTrue(const VariantList_t& args)
 
 void ABCHsm::SetUp()
 {
-    INITIALIZE_HSM();
 }
 
 void ABCHsm::TearDown()

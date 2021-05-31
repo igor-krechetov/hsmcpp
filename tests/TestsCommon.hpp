@@ -4,7 +4,11 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "hsmcpp/IHsmEventDispatcher.hpp"
+#include "hsmcpp/logging.hpp"
 #include <list>
+
+#undef __TRACE_CLASS__
+#define __TRACE_CLASS__                         "TestsCommon"
 
 // ======================================================
 // GTest namespace
@@ -44,6 +48,23 @@ bool compareStateLists(const std::list<HsmStateEnum> l1, const std::list<HsmStat
                 equalLists = false;
                 break;
             }
+        }
+    }
+
+    if (false == equalLists)
+    {
+        __TRACE_CALL_DEBUG_ARGS__("states are different");
+
+        __TRACE_DEBUG__("Expected:");
+        for(auto it  = l2.begin(); it != l2.end(); ++it)
+        {
+            __TRACE_DEBUG__("%d", SC2INT(*it));
+        }
+
+        __TRACE_DEBUG__("Was:");
+        for(auto it  = l1.begin(); it != l1.end(); ++it)
+        {
+            __TRACE_DEBUG__("%d", SC2INT(*it));
         }
     }
 

@@ -4,9 +4,13 @@
 #include "TestsCommon.hpp"
 #include "hsmcpp/hsm.hpp"
 
+#undef __TRACE_CLASS__
+#define __TRACE_CLASS__                         "ABCHsm"
+
 enum class AbcState
 {
     A, B, C, D, E, F,
+    H, H2,
     P1, P2, P3, P4
 };
 
@@ -29,12 +33,20 @@ public:
     DEF_STATE_ACTION_IMPL(E)
     DEF_STATE_ACTION_IMPL(F)
 
+    DEF_STATE_ACTION_IMPL(H)
+    DEF_TRANSITION_IMPL(RestoreHistory)
+
     DEF_TRANSITION_IMPL(E1)
     DEF_TRANSITION_IMPL(E2)
     DEF_TRANSITION_IMPL(E3)
     DEF_TRANSITION_IMPL(Self)
 
     bool conditionTrue(const VariantList_t& args);
+
+    inline void initializeHsm()
+    {
+        INITIALIZE_HSM();
+    }
 
 protected:
     void SetUp() override;

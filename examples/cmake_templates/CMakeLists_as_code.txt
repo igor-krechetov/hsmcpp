@@ -6,10 +6,11 @@ set(BINARY_NAME "example")
 set(CMAKE_CXX_STANDARD 14)
 
 # Configure HSMCPP library
-SET(HSMBUILD_EXAMPLES ON CACHE BOOL "Disable HSM examples")
-SET(HSMBUILD_TESTS ON CACHE BOOL "Disable HSM tests")
+SET(HSMBUILD_EXAMPLES OFF CACHE BOOL "Disable HSM examples")
+SET(HSMBUILD_TESTS OFF CACHE BOOL "Disable HSM tests")
 SET(HSMBUILD_DISPATCHER_GLIB OFF CACHE BOOL "Disable Glib dispatcher")
 SET(HSMBUILD_DISPATCHER_GLIBMM OFF CACHE BOOL "Disable Glibmm dispatcher")
+SET(HSMBUILD_DISPATCHER_QT OFF CACHE BOOL "Disable Qt dispatcher")
 SET(HSMBUILD_DISPATCHER_STD ON CACHE BOOL "Enable STD dispatcher")
 
 # Include hsmcpp directory (this is folder where hsmcpp code was checked out from Git)
@@ -19,7 +20,7 @@ add_subdirectory(hsmcpp)
 # Apply compiler flags needed for HSMCPP
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HSMCPP_CXX_FLAGS}")
 # Apply HSMCPP definitions
-add_definitions(${HSMCPP_DEFINITIONS})
+add_definitions(${HSM_DEFINITIONS_STD})
 
 add_executable(${BINARY_NAME} main.cpp)
 # Add HSMCPP include directory

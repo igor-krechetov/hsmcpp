@@ -1,0 +1,24 @@
+@startuml
+
+state StateD
+
+[*] -> StateA
+StateA -> Parent1
+
+state Parent1 {
+    [*] -> StateB
+    StateB -> Parent2
+
+    state Parent2 {
+        [*] -> StateC
+        StateC -> StateE
+
+        state StateE #00FF00
+    }
+
+    StateD -up-> [H]: E2
+}
+
+Parent1 -down-> StateD: E1
+
+@enduml

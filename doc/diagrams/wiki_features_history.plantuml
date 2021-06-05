@@ -1,0 +1,19 @@
+@startuml
+
+state PowerOff
+
+[*] -> Idle
+Idle -down-> Running: start
+Running -> Idle: finished
+
+state Running {
+    [*] -> Washing
+    Washing -> Rinsing
+    Rinsing -> Spinning
+
+    PowerOff -up-> [H]: restore power
+}
+
+Running -down-> PowerOff: power cut
+
+@enduml

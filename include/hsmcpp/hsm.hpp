@@ -304,7 +304,7 @@ private:
     bool isSubstateOf(const HsmStateEnum parent, const HsmStateEnum child);
 
     bool getHistoryParent(const HsmStateEnum historyState, HsmStateEnum& outParent);
-    void updateHistory(const HsmStateEnum topLevelState, const std::list<HsmStateEnum> activeStates);
+    void updateHistory(const HsmStateEnum topLevelState, const std::list<HsmStateEnum>& activeStates);
 
     template <typename... Args>
     bool isTransitionPossible(const HsmStateEnum fromState, const HsmEventEnum event, Args... args);
@@ -977,7 +977,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getHistoryParent(cons
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::updateHistory(const HsmStateEnum topLevelState,
-                                                                         const std::list<HsmStateEnum> activeStates)
+                                                                         const std::list<HsmStateEnum>& activeStates)
 {
     __TRACE_CALL_DEBUG_ARGS__("topLevelState=%d, activeStates.size=%ld", SC2INT(topLevelState), activeStates.size());
 

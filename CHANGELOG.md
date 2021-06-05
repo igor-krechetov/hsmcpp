@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.14.1] - 2021-06-05
+### Added
+- support for history states in scxml2gen
+- example for history usage
+- generateHsmDiagram() CMake function
+### Fixed
+- hsmdebugger: selecting jar file for plantuml wasn't working on Ubuntu
+
 ## [0.14.0] - 2021-05-31
 ### Added
 - support for history states (not supported in generator yet)

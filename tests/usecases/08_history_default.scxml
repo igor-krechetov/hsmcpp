@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="08_history" qt:editorversion="4.14.2" initial="F">
     <qt:editorinfo initialGeometry="0;0;-20;-20;40;40"/>
-    <state id="P1">
-        <qt:editorinfo geometry="345.69;166.24;-252.14;-73.32;381.10;305.22" scenegeometry="345.69;166.24;93.55;92.92;381.10;305.22"/>
+    <state id="P1" initial="A">
+        <qt:editorinfo geometry="345.69;166.24;-252.14;-74.46;381.10;306.36" scenegeometry="345.69;166.24;93.55;91.78;381.10;306.36"/>
         <state id="A">
-            <qt:editorinfo geometry="-165.22;39.77;-60;-50;120;100" scenegeometry="181.53;206.01;121.53;156.01;120;100"/>
+            <qt:editorinfo geometry="-165.22;39.77;-60;-50;120;100" scenegeometry="180.47;206.01;120.47;156.01;120;100"/>
             <transition type="external" event="E1" target="B"/>
         </state>
         <state id="B">
             <qt:editorinfo geometry="18.08;79.29;-60;-50;120;100" scenegeometry="363.77;245.53;303.77;195.53;120;100"/>
         </state>
         <history type="shallow" id="History_1">
-            <qt:editorinfo geometry="87.23;4.99;-20;-20;40;40" scenegeometry="432.92;171.23;412.92;151.23;40;40"/>
+            <qt:editorinfo geometry="87.23;3.92;-20;-20;40;40" scenegeometry="432.92;170.16;412.92;150.16;40;40"/>
             <transition type="external" event="Transition_1" target="D">
-                <qt:editorinfo localGeometry="0;147.13"/>
+                <qt:editorinfo localGeometry="0;148.20"/>
+                <script>onHistoryTransition</script>
             </transition>
         </history>
         <transition type="external" event="E2" target="C">
-            <qt:editorinfo endTargetFactors="27.91;82.81" startTargetFactors="96.45;52.13"/>
+            <qt:editorinfo endTargetFactors="27.91;82.81" movePoint="-1.26;0" startTargetFactors="96.45;52.13"/>
         </transition>
         <state id="D">
             <qt:editorinfo geometry="-165.75;152.12;-60;-50;120;100" scenegeometry="179.94;318.36;119.94;268.36;120;100"/>
@@ -28,8 +29,9 @@
     </state>
     <state id="C">
         <qt:editorinfo geometry="647.69;219.80;-60;-94.15;120;144.15" scenegeometry="647.69;219.80;587.69;125.65;120;144.15"/>
-        <transition type="external" event="E3" target="History_1">
-            <qt:editorinfo movePoint="17.34;12.24" startTargetFactors="9.18;34.16"/>
+        <transition type="external" event="E3" target="History_1" cond="checkFromC">
+            <qt:editorinfo movePoint="16.27;11.17" startTargetFactors="9.18;34.16"/>
+            <script>onE3Callback</script>
         </transition>
     </state>
     <state id="F">

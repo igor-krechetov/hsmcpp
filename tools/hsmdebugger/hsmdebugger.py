@@ -305,10 +305,11 @@ class hsmdebugger(QObject):
         return loaded
 
     def threadPlantumlGeneration(self, format, destDirectory, srcFile):
-        if sys.platform == "win32":
+        if self.settings.pathPlantuml.endswith(".jar"):
             argsPlantUml = ["java", "-jar", self.settings.pathPlantuml]
         else:
             argsPlantUml = [self.settings.pathPlantuml]
+
         try:
             self.plantuml = subprocess.Popen(argsPlantUml + [format, "-o", Path("./"), srcFile])
         except FileNotFoundError:

@@ -56,3 +56,23 @@ function(generateHsmEx genTarget scxml className classSuffix templateHpp templat
 
     add_custom_target(genTarget DEPENDS ${destCpp})
 endfunction()
+
+# Generates PlantUML diagram for HSM
+#
+# IN
+#  - genTarget: new target name (used later for add_dependencies() call)
+#  - scxml: path to scxml file
+#  - destFile: path where to save generated diagram
+function(generateHsmDiagram genTarget scxml destFile)
+    include(FindPythonInterp)
+
+    message("Generating HSM Diagram from: ${scxml}")
+    message(" -- output: ${destFile}")
+
+    add_custom_command(OUTPUT ${destFile}
+                       COMMAND ${PYTHON_EXECUTABLE} ${TOOLS_DIR}/scxml2gen.py -plantuml -s ${scxml} -o ${destFile}
+                       DEPENDS ${scxml}
+                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+    add_custom_target(${genTarget} DEPENDS ${destFile})
+endfunction()

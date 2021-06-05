@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/changelog-v0.14.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Generic badge](https://img.shields.io/badge/changelog-v0.14.1-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Generic badge](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
 [![Generic badge](https://img.shields.io/badge/documentation-green.svg)](https://github.com/igor-krechetov/hsmcpp/wiki)
 
@@ -85,7 +85,7 @@ See detailed instructions in [documentation](https://github.com/igor-krechetov/h
   - Python 3
   - PyYaml (pip3 install PyYaml)
   - PySide6 (pip3 install PySide6)
-  - plantuml
+  - plantuml (minimal version: V1.2020.11)
 
 # Creating a simple State Machine
 HSM structure:

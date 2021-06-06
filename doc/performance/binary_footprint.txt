@@ -1,0 +1,104 @@
+---------------------------------
+---   BINARY SIZE FOOTPRINT   ---
+---------------------------------
+
+Build options:
+  HSMBUILD_VERBOSE = OFF
+  HSMBUILD_STRUCTURE_VALIDATION = ON
+  HSMBUILD_THREAD_SAFETY = ON
+  HSMBUILD_DEBUGGING = OFF
+  HSMBUILD_DISPATCHER_GLIB = OFF
+  HSMBUILD_DISPATCHER_GLIBMM = OFF
+  HSMBUILD_DISPATCHER_STD = ON
+  HSMBUILD_DISPATCHER_QT = OFF
+
+Strip settings:
+  strip -s -R .comment -R .gnu.version
+
+
+           (Release + -O3)    (Release + -Os)
+Simple HSM app:
+  regular:      124Kb              114Kb
+  stripped:      99Kb               83Kb
+
+Empty app:
+  regular:       17Kb               17Kb
+  stripped:      14Kb               14Kb
+
+Diff:
+  regular:       107Kb              97Kb
+  stripped:       85Kb              69Kb
+
+
+==========================================================================================
+EMPTY APP SECTION (diff only)
+==========================================================================================
+
+Section Headers:
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+
+  [ 5] .gnu.hash         GNU_HASH        00000000000003a0 0003a0 00005c 00   A  6   0  8
+  [ 6] .dynsym           DYNSYM          0000000000000400 000400 0001f8 18   A  7   1  8
+  [ 7] .dynstr           STRTAB          00000000000005f8 0005f8 000160 00   A  0   0  1
+  [ 8] .gnu.version      VERSYM          0000000000000758 000758 00002a 02   A  6   0  2
+  [ 9] .gnu.version_r    VERNEED         0000000000000788 000788 000030 00   A  7   1  8
+  [10] .rela.dyn         RELA            00000000000007b8 0007b8 0000c0 18   A  6   0  8
+  [11] .rela.plt         RELA            0000000000000878 000878 000060 18  AI  6  24  8
+
+  [13] .plt              PROGBITS        0000000000001020 001020 000050 10  AX  0   0 16
+
+  [15] .plt.sec          PROGBITS        0000000000001080 001080 000040 10  AX  0   0 16
+  [16] .text             PROGBITS        00000000000010c0 0010c0 000285 00  AX  0   0 16
+
+  [18] .rodata           PROGBITS        0000000000002000 002000 00000b 00   A  0   0  4
+  [19] .eh_frame_hdr     PROGBITS        000000000000200c 00200c 00004c 00   A  0   0  4
+  [20] .eh_frame         PROGBITS        0000000000002058 002058 000130 00   A  0   0  8
+
+
+
+
+  [23] .dynamic          DYNAMIC         0000000000003db0 002db0 0001f0 10  WA  7   0  8
+  [24] .got              PROGBITS        0000000000003fa0 002fa0 000060 08  WA  0   0  8
+  [25] .data             PROGBITS        0000000000004000 003000 000010 00  WA  0   0  8
+
+
+  [28] .symtab           SYMTAB          0000000000000000 003038 000678 18     29  49  8
+  [29] .strtab           STRTAB          0000000000000000 0036b0 0002a9 00      0   0  1
+  [30] .shstrtab         STRTAB          0000000000000000 003959 00011a 00      0   0  1
+
+
+==========================================================================================
+HSM APP SECTION (diff only)
+==========================================================================================
+
+Section Headers:
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+
+  [ 5] .gnu.hash         GNU_HASH        00000000000003a0 0003a0 000620 00   A  6   0  8
+  [ 6] .dynsym           DYNSYM          00000000000009c0 0009c0 0017b8 18   A  7   1  8
+  [ 7] .dynstr           STRTAB          0000000000002178 002178 003c96 00   A  0   0  1
+  [ 8] .gnu.version      VERSYM          0000000000005e0e 005e0e 0001fa 02   A  6   0  2
+  [ 9] .gnu.version_r    VERNEED         0000000000006008 006008 000140 00   A  7   4  8
+  [10] .rela.dyn         RELA            0000000000006148 006148 000a98 18   A  6   0  8
+  [11] .rela.plt         RELA            0000000000006be0 006be0 000468 18  AI  6  26  8
+
+  [13] .plt              PROGBITS        0000000000008020 008020 000300 10  AX  0   0 16
+
+  [15] .plt.sec          PROGBITS        0000000000008330 008330 0002f0 10  AX  0   0 16
+  [16] .text             PROGBITS        0000000000008620 008620 00b8c5 00  AX  0   0 16
+
+  [18] .rodata           PROGBITS        0000000000014000 014000 000768 00   A  0   0 32
+  [19] .eh_frame_hdr     PROGBITS        0000000000014768 014768 0004a4 00   A  0   0  4
+  [20] .eh_frame         PROGBITS        0000000000014c10 014c10 001a70 00   A  0   0  8
+  [21] .gcc_except_table PROGBITS        0000000000016680 016680 0005b2 00   A  0   0  4
+
+
+  [24] .data.rel.ro      PROGBITS        0000000000018890 017890 000368 00  WA  0   0  8
+  [25] .dynamic          DYNAMIC         0000000000018bf8 017bf8 000220 10  WA  7   0  8
+  [26] .got              PROGBITS        0000000000018e18 017e18 0001e8 08  WA  0   0  8
+  [27] .data             PROGBITS        0000000000019000 018000 000018 00  WA  0   0  8
+
+
+  [30] .symtab           SYMTAB          0000000000000000 018040 001ed8 18     31  77  8
+  [31] .strtab           STRTAB          0000000000000000 019f18 00453e 00      0   0  1
+  [32] .shstrtab         STRTAB          0000000000000000 01e456 000139 00      0   0  1

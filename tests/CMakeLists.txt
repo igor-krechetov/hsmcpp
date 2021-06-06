@@ -59,6 +59,15 @@ if (HSMBUILD_DISPATCHER_STD)
     target_include_directories(${TEST_BIN_STD} PRIVATE ${HSMCPP_STD_INCLUDE})
     target_link_libraries(${TEST_BIN_STD} PRIVATE ${HSMCPP_STD_LIB} gmock_main)
     target_compile_options(${TEST_BIN_STD} PRIVATE ${HSMCPP_STD_CXX_FLAGS})
+
+    if (NOT WIN32)
+        # this tool uses Linux specific mallinfo() API
+        add_executable(test_memory_footprint test_memory_footprint.cpp)
+        target_compile_definitions(test_memory_footprint PUBLIC -DTEST_HSM_STD)
+        target_include_directories(test_memory_footprint PRIVATE ${HSMCPP_STD_INCLUDE})
+        target_link_libraries(test_memory_footprint PRIVATE ${HSMCPP_STD_LIB})
+        target_compile_options(test_memory_footprint PRIVATE ${HSMCPP_STD_CXX_FLAGS})
+    endif()
 endif()
 
 # ================================================
@@ -75,3 +84,5 @@ if (HSMBUILD_DISPATCHER_QT)
     deployQtApp(${TEST_BIN_QT})
 endif()
 
+# Used to compare binary size footprint (compared to 00_helloworld_std)
+add_executable(emptyapp emptyapp.cpp)

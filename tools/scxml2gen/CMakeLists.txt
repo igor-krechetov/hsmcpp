@@ -13,7 +13,7 @@ function(generateHsm genTarget scxml className destDirectory outSrcVariableName)
     set(templateHpp ${TOOLS_DIR}/template.hpp)
     set(templateCpp ${TOOLS_DIR}/template.cpp)
 
-    include(FindPythonInterp)
+    include(FindPython3)
 
     message("Generating HSM from: ${scxml}")
     message(" -- class: ${className}")
@@ -23,7 +23,7 @@ function(generateHsm genTarget scxml className destDirectory outSrcVariableName)
     set(${outSrcVariableName} ${GEN_CPP} PARENT_SCOPE)
 
     add_custom_command(OUTPUT ${GEN_CPP}
-                       COMMAND ${PYTHON_EXECUTABLE} ${TOOLS_DIR}/scxml2gen.py -code -s ${scxml} -c ${className} -thpp ${templateHpp} -tcpp ${templateCpp} -d ${destDirectory}
+                       COMMAND ${Python3_EXECUTABLE} ${TOOLS_DIR}/scxml2gen.py -code -s ${scxml} -c ${className} -thpp ${templateHpp} -tcpp ${templateCpp} -d ${destDirectory}
                        DEPENDS ${scxml} ${templateHpp} ${templateCpp}
                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -41,7 +41,7 @@ endfunction()
 #  - templateHpp, templateCpp: path to HPP and CPP templates
 #  - destHpp, destCpp: destination path for generated HPP and CPP files
 function(generateHsmEx genTarget scxml className classSuffix templateHpp templateCpp destHpp destCpp)
-    include(FindPythonInterp)
+    include(FindPython3)
 
     message("Generating HSM from: ${scxml}")
     message(" -- class: ${className}")
@@ -50,7 +50,7 @@ function(generateHsmEx genTarget scxml className classSuffix templateHpp templat
     message(" -- output: ${destHpp}, ${destCpp}")
 
     add_custom_command(OUTPUT ${destCpp}
-                       COMMAND ${PYTHON_EXECUTABLE} ${TOOLS_DIR}/scxml2gen.py -code -s ${scxml} -c ${className} -cs ${classSuffix} -thpp ${templateHpp} -tcpp ${templateCpp} -dhpp ${destHpp} -dcpp ${destCpp}
+                       COMMAND ${Python3_EXECUTABLE} ${TOOLS_DIR}/scxml2gen.py -code -s ${scxml} -c ${className} -cs ${classSuffix} -thpp ${templateHpp} -tcpp ${templateCpp} -dhpp ${destHpp} -dcpp ${destCpp}
                        DEPENDS ${scxml}
                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -64,13 +64,13 @@ endfunction()
 #  - scxml: path to scxml file
 #  - destFile: path where to save generated diagram
 function(generateHsmDiagram genTarget scxml destFile)
-    include(FindPythonInterp)
+    include(FindPython3)
 
     message("Generating HSM Diagram from: ${scxml}")
     message(" -- output: ${destFile}")
 
     add_custom_command(OUTPUT ${destFile}
-                       COMMAND ${PYTHON_EXECUTABLE} ${TOOLS_DIR}/scxml2gen.py -plantuml -s ${scxml} -o ${destFile}
+                       COMMAND ${Python3_EXECUTABLE} ${TOOLS_DIR}/scxml2gen.py -plantuml -s ${scxml} -o ${destFile}
                        DEPENDS ${scxml}
                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 

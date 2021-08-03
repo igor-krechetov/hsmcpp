@@ -4,8 +4,8 @@
 #include "TestsCommon.hpp"
 #include "hsmcpp/hsm.hpp"
 
-#undef __TRACE_CLASS__
-#define __TRACE_CLASS__                         "ABCHsm"
+#undef __HSM_TRACE_CLASS__
+#define __HSM_TRACE_CLASS__                         "ABCHsm"
 
 enum class AbcState
 {

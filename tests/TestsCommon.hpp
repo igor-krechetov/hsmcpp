@@ -7,8 +7,8 @@
 #include "hsmcpp/logging.hpp"
 #include <list>
 
-#undef __TRACE_CLASS__
-#define __TRACE_CLASS__                         "TestsCommon"
+#undef __HSM_TRACE_CLASS__
+#define __HSM_TRACE_CLASS__                         "TestsCommon"
 
 // ======================================================
 // GTest namespace
@@ -53,18 +53,18 @@ bool compareStateLists(const std::list<HsmStateEnum> l1, const std::list<HsmStat
 
     if (false == equalLists)
     {
-        __TRACE_CALL_DEBUG_ARGS__("states are different");
+        __HSM_TRACE_CALL_DEBUG_ARGS__("states are different");
 
-        __TRACE_DEBUG__("Expected:");
+        __HSM_TRACE_DEBUG__("Expected:");
         for(auto it  = l2.begin(); it != l2.end(); ++it)
         {
-            __TRACE_DEBUG__("%d", SC2INT(*it));
+            __HSM_TRACE_DEBUG__("%d", SC2INT(*it));
         }
 
-        __TRACE_DEBUG__("Was:");
+        __HSM_TRACE_DEBUG__("Was:");
         for(auto it  = l1.begin(); it != l1.end(); ++it)
         {
-            __TRACE_DEBUG__("%d", SC2INT(*it));
+            __HSM_TRACE_DEBUG__("%d", SC2INT(*it));
         }
     }
 
@@ -119,7 +119,7 @@ bool executeOnMainThread(std::function<bool()> func);
     bool on##_state()                                                   \
     {                                                                   \
         ++mStateCounter##_state;                                        \
-        __TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
+        __HSM_TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
         return (_ret);                                                  \
     }
 
@@ -129,7 +129,7 @@ bool executeOnMainThread(std::function<bool()> func);
     bool on##_state(const VariantList_t& args)                          \
     {                                                                   \
         ++mStateCounter##_state;                                        \
-        __TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
+        __HSM_TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
         mArgs##_state = args;                                           \
         return (_ret);                                                  \
     }
@@ -140,7 +140,7 @@ bool executeOnMainThread(std::function<bool()> func);
     void on##_name##Transition(const VariantList_t& args)              \
     {                                                                  \
         ++mTransitionCounter##_name;                                   \
-        __TRACE_CALL_ARGS__("----> on" #_name "Transition\n");         \
+        __HSM_TRACE_CALL_ARGS__("----> on" #_name "Transition\n");         \
         mTransitionArgs##_name = args;                                 \
     }
 
@@ -150,7 +150,7 @@ bool executeOnMainThread(std::function<bool()> func);
     void on##_state(const VariantList_t& args)                          \
     {                                                                   \
         ++mStateCounter##_state;                                        \
-        __TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
+        __HSM_TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
         mArgs##_state = args;                                           \
     }                                                                   \
     DEF_EXIT_ACTION_IMPL(_state##Exit, true)                            \

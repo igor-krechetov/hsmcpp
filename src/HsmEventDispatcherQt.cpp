@@ -6,8 +6,8 @@
 #include <QCoreApplication>
 #include <QAbstractEventDispatcher>
 
-#undef __TRACE_CLASS__
-#define __TRACE_CLASS__                         "HsmEventDispatcherQt"
+#undef __HSM_TRACE_CLASS__
+#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherQt"
 
 #define QT_EVENT_OFFSET                         (777)
 
@@ -19,14 +19,14 @@ HsmEventDispatcherQt::HsmEventDispatcherQt() : QObject(nullptr)
 
 HsmEventDispatcherQt::~HsmEventDispatcherQt()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
 
     unregisterAllEventHandlers();
 }
 
 bool HsmEventDispatcherQt::start()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     bool result = true;
 
     if (QEvent::None == mQtEventType)
@@ -57,7 +57,7 @@ bool HsmEventDispatcherQt::start()
 
 int HsmEventDispatcherQt::registerEventHandler(std::function<void(void)> handler)
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     int id = getNextHandlerID();
 
     mEventHandlers.emplace(id, handler);
@@ -69,7 +69,7 @@ void HsmEventDispatcherQt::unregisterEventHandler(const int handlerId)
 {
     std::lock_guard<std::mutex> lck(mHandlersSync);
 
-    __TRACE_CALL_DEBUG_ARGS__("handlerId=%d", handlerId);
+    __HSM_TRACE_CALL_DEBUG_ARGS__("handlerId=%d", handlerId);
     auto it = mEventHandlers.find(handlerId);
 
     if (it != mEventHandlers.end())
@@ -80,7 +80,7 @@ void HsmEventDispatcherQt::unregisterEventHandler(const int handlerId)
 
 void HsmEventDispatcherQt::emitEvent()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
 
     if (QEvent::None != mQtEventType)
     {
@@ -90,7 +90,7 @@ void HsmEventDispatcherQt::emitEvent()
 
 void HsmEventDispatcherQt::unregisterAllEventHandlers()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     std::lock_guard<std::mutex> lck(mHandlersSync);
 
     // NOTE: can be called only in destructor after thread was already stopped
@@ -99,7 +99,7 @@ void HsmEventDispatcherQt::unregisterAllEventHandlers()
 
 bool HsmEventDispatcherQt::event(QEvent* ev)
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     bool processed = false;
 
     if (ev->type() == mQtEventType)

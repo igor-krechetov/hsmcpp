@@ -5,8 +5,8 @@
 #include "hsmcpp/logging.hpp"
 #include <unistd.h>
 
-#undef __TRACE_CLASS__
-#define __TRACE_CLASS__                         "HsmEventDispatcherGLib"
+#undef __HSM_TRACE_CLASS__
+#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherGLib"
 
 HsmEventDispatcherGLib::HsmEventDispatcherGLib()
 {
@@ -19,7 +19,7 @@ HsmEventDispatcherGLib::HsmEventDispatcherGLib(GMainContext* context)
 
 HsmEventDispatcherGLib::~HsmEventDispatcherGLib()
 {
-    __TRACE_CALL__();
+    __HSM_TRACE_CALL__();
     std::unique_lock<std::mutex> lck(mSyncEventHandlers);
 
     mStopDispatcher = true;
@@ -43,7 +43,7 @@ HsmEventDispatcherGLib::~HsmEventDispatcherGLib()
 
 int HsmEventDispatcherGLib::registerEventHandler(std::function<void(void)> handler)
 {
-    __TRACE_CALL__();
+    __HSM_TRACE_CALL__();
     int id = getNextHandlerID();
 
     mEventHandlers.emplace(id, handler);
@@ -53,7 +53,7 @@ int HsmEventDispatcherGLib::registerEventHandler(std::function<void(void)> handl
 
 void HsmEventDispatcherGLib::unregisterEventHandler(const int handlerId)
 {
-    __TRACE_CALL__();
+    __HSM_TRACE_CALL__();
     std::lock_guard<std::mutex> lck(mSyncEventHandlers);
     auto it = mEventHandlers.find(handlerId);
 
@@ -65,7 +65,7 @@ void HsmEventDispatcherGLib::unregisterEventHandler(const int handlerId)
 
 void HsmEventDispatcherGLib::emitEvent()
 {
-    __TRACE_CALL__();
+    __HSM_TRACE_CALL__();
     if (mPipeFD[1] > 0)
     {
         std::lock_guard<std::mutex> lck(mSyncPipe);
@@ -79,7 +79,7 @@ void HsmEventDispatcherGLib::emitEvent()
 
 bool HsmEventDispatcherGLib::start()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     bool result = false;
 
     // check if dispatcher was already started
@@ -103,17 +103,17 @@ bool HsmEventDispatcherGLib::start()
                 }
                 else
                 {
-                    __TRACE_ERROR__("failed to create io source");
+                    __HSM_TRACE_ERROR__("failed to create io source");
                 }
             }
             else
             {
-                __TRACE_ERROR__("failed to create io channel");
+                __HSM_TRACE_ERROR__("failed to create io channel");
             }
         }
         else
         {
-            __TRACE_ERROR__("failed to create pipe (errno=%d)", errno);
+            __HSM_TRACE_ERROR__("failed to create pipe (errno=%d)", errno);
         }
 
         if (false == result)
@@ -148,7 +148,7 @@ void HsmEventDispatcherGLib::unregisterAllEventHandlers()
 
 gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOCondition condition, gpointer data)
 {
-    __TRACE_CALL__();
+    __HSM_TRACE_CALL__();
     gboolean continueDispatching = TRUE;
     HsmEventDispatcherGLib* pThis = static_cast<HsmEventDispatcherGLib*>(data);
 
@@ -157,7 +157,7 @@ gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOConditi
         pThis->mDispatchingIterationRunning = true;
 
         std::lock_guard<std::mutex> lck(pThis->mSyncEventHandlers);
-        __TRACE__("condition=%d, G_IO_HUP=%s, G_IO_IN=%s", static_cast<int>(condition), BOOL2STR(condition & G_IO_HUP), BOOL2STR(condition & G_IO_IN));
+        __HSM_TRACE__("condition=%d, G_IO_HUP=%s, G_IO_IN=%s", static_cast<int>(condition), BOOL2STR(condition & G_IO_HUP), BOOL2STR(condition & G_IO_IN));
 
         if (!(condition & G_IO_HUP))
         {

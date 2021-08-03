@@ -7,8 +7,8 @@
 #include <atomic>
 #include <condition_variable>
 
-#undef __TRACE_CLASS__
-#define __TRACE_CLASS__                         "AsyncHsm"
+#undef __HSM_TRACE_CLASS__
+#define __HSM_TRACE_CLASS__                         "AsyncHsm"
 
 enum class AsyncHsmState
 {

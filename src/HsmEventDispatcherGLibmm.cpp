@@ -4,30 +4,30 @@
 #include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
 #include "hsmcpp/logging.hpp"
 
-#undef __TRACE_CLASS__
-#define __TRACE_CLASS__                         "HsmEventDispatcherGLibmm"
+#undef __HSM_TRACE_CLASS__
+#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherGLibmm"
 
 HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm()
     : mDispatcher(std::make_unique<Glib::Dispatcher>())
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
 }
 
 HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context)
     : mDispatcher(std::make_unique<Glib::Dispatcher>(context))
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
 }
 
 HsmEventDispatcherGLibmm::~HsmEventDispatcherGLibmm()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     unregisterAllEventHandlers();
 }
 
 int HsmEventDispatcherGLibmm::registerEventHandler(std::function<void(void)> handler)
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     int id = INVALID_HSM_DISPATCHER_HANDLER_ID;
 
     if (mDispatcher)
@@ -41,7 +41,7 @@ int HsmEventDispatcherGLibmm::registerEventHandler(std::function<void(void)> han
 
 void HsmEventDispatcherGLibmm::unregisterEventHandler(const int handlerId)
 {
-    __TRACE_CALL_DEBUG_ARGS__("handlerId=%d", handlerId);
+    __HSM_TRACE_CALL_DEBUG_ARGS__("handlerId=%d", handlerId);
     auto it = mEventHandlers.find(handlerId);
 
     if (it != mEventHandlers.end())
@@ -53,7 +53,7 @@ void HsmEventDispatcherGLibmm::unregisterEventHandler(const int handlerId)
 
 void HsmEventDispatcherGLibmm::emitEvent()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     if (mDispatcher)
     {
         mDispatcher->emit();

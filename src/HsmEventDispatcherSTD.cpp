@@ -4,8 +4,8 @@
 #include "hsmcpp/HsmEventDispatcherSTD.hpp"
 #include "hsmcpp/logging.hpp"
 
-#undef __TRACE_CLASS__
-#define __TRACE_CLASS__                         "HsmEventDispatcherSTD"
+#undef __HSM_TRACE_CLASS__
+#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherSTD"
 
 HsmEventDispatcherSTD::HsmEventDispatcherSTD()
 {
@@ -13,7 +13,7 @@ HsmEventDispatcherSTD::HsmEventDispatcherSTD()
 
 HsmEventDispatcherSTD::~HsmEventDispatcherSTD()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
 
     unregisterAllEventHandlers();
     stop();
@@ -22,7 +22,7 @@ HsmEventDispatcherSTD::~HsmEventDispatcherSTD()
 
 int HsmEventDispatcherSTD::registerEventHandler(std::function<void(void)> handler)
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     int id = getNextHandlerID();
 
     mEventHandlers.emplace(id, handler);
@@ -34,7 +34,7 @@ void HsmEventDispatcherSTD::unregisterEventHandler(const int handlerId)
 {
     std::lock_guard<std::mutex> lck(mHandlersSync);
 
-    __TRACE_CALL_DEBUG_ARGS__("handlerId=%d", handlerId);
+    __HSM_TRACE_CALL_DEBUG_ARGS__("handlerId=%d", handlerId);
     auto it = mEventHandlers.find(handlerId);
 
     if (it != mEventHandlers.end())
@@ -45,7 +45,7 @@ void HsmEventDispatcherSTD::unregisterEventHandler(const int handlerId)
 
 void HsmEventDispatcherSTD::emitEvent()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     if (true == mDispatcherThread.joinable())
     {
         std::lock_guard<std::mutex> lck(mEmitSync);
@@ -57,12 +57,12 @@ void HsmEventDispatcherSTD::emitEvent()
 
 bool HsmEventDispatcherSTD::start()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
     bool result = false;
 
     if (false == mDispatcherThread.joinable())
     {
-        __TRACE_DEBUG__("starting thread...");
+        __HSM_TRACE_DEBUG__("starting thread...");
         mStopDispatcher = false;
         mDispatcherThread = std::thread(&HsmEventDispatcherSTD::doDispatching, this);
         result = mDispatcherThread.joinable();
@@ -77,7 +77,7 @@ bool HsmEventDispatcherSTD::start()
 
 void HsmEventDispatcherSTD::stop()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
 
     if (true == mDispatcherThread.joinable())
     {
@@ -88,7 +88,7 @@ void HsmEventDispatcherSTD::stop()
 
 void HsmEventDispatcherSTD::join()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
 
     if (true == mDispatcherThread.joinable())
     {
@@ -109,13 +109,13 @@ void HsmEventDispatcherSTD::unregisterAllEventHandlers()
 
 void HsmEventDispatcherSTD::doDispatching()
 {
-    __TRACE_CALL_DEBUG__();
+    __HSM_TRACE_CALL_DEBUG__();
 
     while (false == mStopDispatcher)
     {
         while ((mPendingEmitCount > 0) && (mEventHandlers.size() > 0))
         {
-            __TRACE_DEBUG__("handle emit event... (%d)", mPendingEmitCount);
+            __HSM_TRACE_DEBUG__("handle emit event... (%d)", mPendingEmitCount);
 
             {
                 std::lock_guard<std::mutex> lck(mHandlersSync);
@@ -124,7 +124,7 @@ void HsmEventDispatcherSTD::doDispatching()
                 {
                     if (true == mStopDispatcher)
                     {
-                        __TRACE_DEBUG__("stopping...");
+                        __HSM_TRACE_DEBUG__("stopping...");
                         break;
                     }
 
@@ -136,7 +136,7 @@ void HsmEventDispatcherSTD::doDispatching()
 
             if (true == mStopDispatcher)
             {
-                __TRACE_DEBUG__("stopping...");
+                __HSM_TRACE_DEBUG__("stopping...");
                 break;
             }
         }
@@ -147,12 +147,12 @@ void HsmEventDispatcherSTD::doDispatching()
 
             if (mPendingEmitCount == 0)
             {
-                __TRACE_DEBUG__("wait for emit...");
+                __HSM_TRACE_DEBUG__("wait for emit...");
                 mEmitEvent.wait(lck, [=](){ return (mPendingEmitCount > 0) || (true == mStopDispatcher); });
-                __TRACE_DEBUG__("woke up. pending events=%d", mPendingEmitCount);
+                __HSM_TRACE_DEBUG__("woke up. pending events=%d", mPendingEmitCount);
             }
         }
     }
 
-    __TRACE_DEBUG__("EXIT");
+    __HSM_TRACE_DEBUG__("EXIT");
 }

@@ -1794,10 +1794,10 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::logHsmAction(const Hs
                                                                        std::make_pair(HsmLogAction::CALLBACK_ENTER, "callback_enter"),
                                                                        std::make_pair(HsmLogAction::CALLBACK_STATE, "callback_state")};
         char bufTime[80] = { 0 };
-        char bufTimeMs[5] = { 0 };
+        char bufTimeMs[6] = { 0 };
         auto currentTimePoint = std::chrono::system_clock::now();
         const std::time_t tt = std::chrono::system_clock::to_time_t(currentTimePoint);
-        std::tm timeinfo = {0};
+        std::tm timeinfo;
         const std::tm* tmResult = nullptr;// this is just to check that localtime was executed correctly
 
 #ifdef WIN32

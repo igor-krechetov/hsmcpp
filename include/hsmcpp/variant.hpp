@@ -4,9 +4,10 @@
 #ifndef __HSMCPP_VARIANT_HPP__
 #define __HSMCPP_VARIANT_HPP__
 
-#include <string>
-#include <utility>
 #include <map>
+#include <string>
+#include <vector>
+#include <utility>
 
 class Variant;
 typedef std::map<std::string, Variant> VariantDict_t;
@@ -39,6 +40,7 @@ public:
         BOOL,
 
         STRING,         // std::string
+        BYTEARRAY,      // std::vector<char>
 
         DICTIONARY,     // VariantDict_t
         PAIR,           // VariantPair_t
@@ -64,6 +66,7 @@ public:
     static Variant make(const double v);
     static Variant make(const bool v);
     static Variant make(const std::string& v);
+    static Variant make(const std::vector<char>& v);
     static Variant make(const char* v);
     static Variant make(const VariantDict_t& v);
     static Variant make(const Variant& first, const Variant& second);
@@ -89,6 +92,7 @@ public:
     DEF_OPERATOR_ASSIGN(double, Type::DOUBLE)
     DEF_OPERATOR_ASSIGN(bool, Type::BOOL)
     DEF_OPERATOR_ASSIGN(std::string, Type::STRING)
+    DEF_OPERATOR_ASSIGN(std::vector<char>, Type::BYTEARRAY)
     DEF_OPERATOR_ASSIGN(VariantDict_t, Type::DICTIONARY)
     DEF_OPERATOR_ASSIGN(VariantPair_t, Type::PAIR)
 
@@ -98,6 +102,7 @@ public:
     }
 
     bool isString() const;
+    bool isByteArray() const;
     bool isNumeric() const;
     bool isSignedNumeric() const;
     bool isUnsignedNumeric() const;
@@ -110,6 +115,7 @@ public:
     }
 
     std::string toString() const;
+    std::vector<char> toByteArray() const;
     int64_t toInt64() const;
     uint64_t toUInt64() const;
     double toDouble() const;

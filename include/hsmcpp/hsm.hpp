@@ -131,10 +131,17 @@ private:
 
     struct TransitionInfo
     {
-        HsmStateEnum fromState;
-        HsmStateEnum destinationState;
+        HsmStateEnum fromState = INVALID_HSM_STATE_ID;
+        HsmStateEnum destinationState = INVALID_HSM_STATE_ID;
         HsmTransitionCallback_t onTransition = nullptr;
         HsmTransitionConditionCallback_t checkCondition = nullptr;
+
+        TransitionInfo()
+           : fromState(INVALID_HSM_STATE_ID)
+           , destinationState(INVALID_HSM_STATE_ID)
+           , onTransition(nullptr)
+           , checkCondition(nullptr)
+        {}
 
         TransitionInfo(const HsmStateEnum from,
                        const HsmStateEnum to,
@@ -839,6 +846,7 @@ template <typename... Args>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::makeVariantList(VariantList_t& vList, Args&&... args)
 {
     volatile int make_variant[] = {0, (vList.push_back(Variant::make(std::forward<Args>(args))), 0)...};
+    (void)make_variant;
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -1038,7 +1046,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(
     __HSM_TRACE_CALL_DEBUG_ARGS__("event=%d", SC2INT(event));
 
     HsmStateEnum currentState = fromState;
-    TransitionInfo possibleTransition;
+    std::list<TransitionInfo> possibleTransitions;
     HsmEventEnum nextEvent;
     VariantList_t transitionArgs;
     bool possible = true;
@@ -1051,11 +1059,19 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(
         for (auto it = mPendingEvents.begin(); (it != mPendingEvents.end()) && (true == possible); ++it)
         {
             nextEvent = it->type;
-            possible = findTransitionTarget(currentState, nextEvent, transitionArgs, possibleTransition);
+            possible = findTransitionTarget(currentState, nextEvent, transitionArgs, possibleTransitions);
 
             if (true == possible)
             {
-                currentState = possibleTransition.destinationState;
+                if (possibleTransitions.size() > 0)
+                {
+                    currentState = possibleTransitions.front().destinationState;
+                }
+                else
+                {
+                    possible = false;
+                    break;
+                }
             }
         }
     }
@@ -1063,7 +1079,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(
     if (true == possible)
     {
         nextEvent = event;
-        possible = findTransitionTarget(currentState, nextEvent, transitionArgs, possibleTransition);
+        possible = findTransitionTarget(currentState, nextEvent, transitionArgs, possibleTransitions);
     }
 
     __HSM_TRACE_CALL_RESULT__("%d", BOOL2INT(possible));

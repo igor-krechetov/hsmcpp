@@ -2,6 +2,7 @@
 // Distributed under MIT license. See file LICENSE for details
 
 #include "hsmcpp/variant.hpp"
+#include <cstring>
 
 Variant Variant::make(const int8_t v) { return Variant(new int8_t(v), Type::BYTE_1); }
 Variant Variant::make(const int16_t v) { return Variant(new int16_t(v), Type::BYTE_2); }
@@ -14,6 +15,7 @@ Variant Variant::make(const uint64_t v) { return Variant(new uint64_t(v), Type::
 Variant Variant::make(const double v) { return Variant(new double(v), Type::DOUBLE); }
 Variant Variant::make(const bool v) { return Variant(new bool(v), Type::BOOL); }
 Variant Variant::make(const std::string& v) { return Variant(new std::string(v), Type::STRING); }
+Variant Variant::make(const std::vector<char>& v) { return Variant(new std::vector<char>(v), Type::BYTEARRAY); }
 Variant Variant::make(const char* v) { return make(std::string(v)); }
 Variant Variant::make(const VariantDict_t& v) { return Variant(new VariantDict_t(v), Type::DICTIONARY); }
 Variant Variant::make(const Variant& first, const Variant& second) { return Variant(new VariantPair_t(first, second), Type::PAIR); }
@@ -87,6 +89,10 @@ Variant& Variant::operator=(const Variant& v)
                 *this = *v.value<std::string>();
                 break;
 
+            case Type::BYTEARRAY:
+                *this = *v.value<std::vector<char>>();
+                break;
+
             case Type::DICTIONARY:
                 *this = *v.value<VariantDict_t>();
                 break;
@@ -147,6 +153,13 @@ bool Variant::operator>(const Variant& val) const
     else if ((Type::STRING == type) || (Type::STRING == val.type))
     {
         isGreater = (*value<std::string>() > *(val.value<std::string>()));
+    }
+    else if ((Type::BYTEARRAY == type) || (Type::BYTEARRAY == val.type))
+    {
+        std::vector<char>* left = value<std::vector<char>>();
+        std::vector<char>* right = val.value<std::vector<char>>();
+
+        isGreater = (left->size() > right->size());
     }
     else if ((Type::BOOL == type) || (Type::BOOL == val.type))
     {
@@ -216,6 +229,10 @@ bool Variant::operator==(const Variant& val) const
                 equal = (*value<std::string>() == *val.value<std::string>());
                 break;
 
+            case Type::BYTEARRAY:
+                equal = (*value<std::vector<char>>() == *val.value<std::vector<char>>());
+                break;
+
             case Type::DICTIONARY:
             {
                 VariantDict_t* left = value<VariantDict_t>();
@@ -263,7 +280,12 @@ bool Variant::operator==(const Variant& val) const
 
 bool Variant::isString() const
 {
-    return type == Type::STRING;
+    return (type == Type::STRING);
+}
+
+bool Variant::isByteArray() const
+{
+    return (type == Type::BYTEARRAY);
 }
 
 bool Variant::isNumeric() const
@@ -286,6 +308,7 @@ bool Variant::isNumeric() const
 
         case Type::BOOL:
         case Type::STRING:
+        case Type::BYTEARRAY:
         case Type::DICTIONARY:
         case Type::PAIR:
         default:
@@ -383,6 +406,13 @@ std::string Variant::toString() const
         case Type::STRING:
             result = *(value<std::string>());
             break;
+        case Type::BYTEARRAY:
+        {
+            std::vector<char>* val = value<std::vector<char>>();
+
+            result.assign(val->data(), val->size());
+            break;
+        }
         case Type::DICTIONARY:
         {
             VariantDict_t* dict = value<VariantDict_t>();
@@ -394,8 +424,78 @@ std::string Variant::toString() const
             break;
         }
         case Type::PAIR:
-            result = "(" + value<VariantPair_t>()->first.toString() + ", " + value<VariantPair_t>()->first.toString() + ")";
+            result = "(" + value<VariantPair_t>()->first.toString() + ", " + value<VariantPair_t>()->second.toString() + ")";
             break;
+        default:
+            break;
+    }
+
+    return result;
+}
+
+std::vector<char> Variant::toByteArray() const
+{
+    std::vector<char> result;
+
+    switch (getType())
+    {
+        case Type::BYTE_1:
+        case Type::UBYTE_1:
+            result.resize(sizeof(int8_t));
+            std::memcpy(result.data(), data, sizeof(int8_t));
+            break;
+        case Type::BYTE_2:
+        case Type::UBYTE_2:
+            result.resize(sizeof(int16_t));
+            memcpy(result.data(), data, sizeof(int16_t));
+            break;
+        case Type::BYTE_4:
+        case Type::UBYTE_4:
+            result.resize(sizeof(int32_t));
+            memcpy(result.data(), data, sizeof(int32_t));
+            break;
+        case Type::BYTE_8:
+        case Type::UBYTE_8:
+            result.resize(sizeof(int64_t));
+            memcpy(result.data(), data, sizeof(int64_t));
+            break;
+        case Type::DOUBLE:
+            result.resize(sizeof(double));
+            memcpy(result.data(), data, sizeof(double));
+            break;
+        case Type::BOOL:
+            result.push_back(*(value<bool>()) == true ? 1 : 0);
+            break;
+        case Type::STRING:
+        {
+            std::string* val = value<std::string>();
+
+            result.assign(val->begin(), val->end());
+            break;
+        }
+        case Type::BYTEARRAY:
+            result = *(value<std::vector<char>>());
+            break;
+        case Type::DICTIONARY:
+        {
+            VariantDict_t* dict = value<VariantDict_t>();
+
+            for (auto it = dict->begin() ; it != dict->end(); ++it)
+            {
+                std::vector<char> curValue = it->second.toByteArray();
+
+                result.insert(result.end(), curValue.begin(), curValue.end());
+            }
+            break;
+        }
+        case Type::PAIR:
+        {
+            std::vector<char> secondValue = value<VariantPair_t>()->second.toByteArray();
+
+            result = value<VariantPair_t>()->first.toByteArray();
+            result.insert(result.end(), secondValue.begin(), secondValue.end());
+            break;
+        }
         default:
             break;
     }
@@ -441,6 +541,7 @@ int64_t Variant::toInt64() const
 
         case Type::BOOL:
         case Type::STRING:
+        case Type::BYTEARRAY:
         case Type::DICTIONARY:
         case Type::PAIR:
         default:
@@ -488,6 +589,7 @@ uint64_t Variant::toUInt64() const
 
         case Type::BOOL:
         case Type::STRING:
+        case Type::BYTEARRAY:
         case Type::DICTIONARY:
         case Type::PAIR:
         default:
@@ -535,6 +637,7 @@ double Variant::toDouble() const
 
         case Type::BOOL:
         case Type::STRING:
+        case Type::BYTEARRAY:
         case Type::DICTIONARY:
         case Type::PAIR:
         default:
@@ -600,6 +703,10 @@ void Variant::free()
 
         case Type::STRING:
             delete static_cast<std::string*>(data);
+            break;
+
+        case Type::BYTEARRAY:
+            delete static_cast<std::vector<char>*>(data);
             break;
 
         case Type::DICTIONARY:

@@ -11,6 +11,7 @@
 __HSM_TRACE_PREINIT__();
 
 using namespace std::chrono_literals;
+using namespace hsmcpp;
 
 enum class TrafficLightState
 {

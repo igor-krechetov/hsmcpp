@@ -2,6 +2,8 @@
 #include "hsmcpp/hsm.hpp"
 #include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
 
+using namespace hsmcpp;
+
 enum class TrafficLightState
 {
     OFF,

@@ -19,7 +19,7 @@ enum class @ENUM_EVENTS@
 ~~~BLOCK_END~~~
 };
 
-class @CLASS_NAME@: public HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>
+class @CLASS_NAME@: public hsmcpp::HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>
 {
 public:
     @CLASS_NAME@();

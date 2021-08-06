@@ -6,6 +6,9 @@
 
 #include "IHsmEventDispatcher.hpp"
 
+namespace hsmcpp
+{
+    
 class HsmEventDispatcherBase: public IHsmEventDispatcher
 {
 public:
@@ -18,4 +21,5 @@ private:
     int mNextHandlerId = 1;
 };
 
+}// namespace hsmcpp
 #endif // __HSMCPP_HSMEVENTDISPATCHERBASE_HPP__

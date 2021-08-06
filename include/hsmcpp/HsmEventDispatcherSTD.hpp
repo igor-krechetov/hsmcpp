@@ -12,6 +12,9 @@
 #include <functional>
 #include <condition_variable>
 
+namespace hsmcpp
+{
+
 class HsmEventDispatcherSTD: public HsmEventDispatcherBase
 {
 public:
@@ -45,5 +48,7 @@ private:
     int mPendingEmitCount = 0;
     bool mStopDispatcher = false;
 };
+
+} // namespace hsmcpp
 
 #endif // __HSMCPP_HSMEVENTDISPATCHERSTD_HPP__

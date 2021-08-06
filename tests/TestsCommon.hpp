@@ -28,6 +28,8 @@ using ::testing::ReturnRefOfCopy;
 using ::testing::SaveArg;
 using ::testing::_;
 
+using namespace hsmcpp;
+
 // ======================================================
 // Utility functions
 void configureGTest();

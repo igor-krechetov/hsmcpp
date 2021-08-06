@@ -9,6 +9,9 @@
 #include <vector>
 #include <utility>
 
+namespace hsmcpp
+{
+
 class Variant;
 typedef std::map<std::string, Variant> VariantDict_t;
 typedef std::pair<Variant, Variant> VariantPair_t;
@@ -150,6 +153,9 @@ private:
     Type type = Type::UNKNOWN;
 };
 
-template struct std::pair<Variant, Variant>;
+} // namespace hsmcpp
+
+template struct std::pair<hsmcpp::Variant, hsmcpp::Variant>;
+
 
 #endif  // __HSMCPP_VARIANT_HPP__

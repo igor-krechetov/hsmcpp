@@ -3,7 +3,7 @@
 #include "@HPP_FILE@"
 
 @CLASS_NAME@::@CLASS_NAME@()
-    : HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>(@ENUM_STATES@::@INITIAL_STATE@)
+    : hsmcpp::HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>(@ENUM_STATES@::@INITIAL_STATE@)
 {
     configureHsm();
 }
@@ -32,7 +32,7 @@ std::string @CLASS_NAME@::getStateName(const @ENUM_STATES@ state)
             break;
 ~~~BLOCK_END~~~
         default:
-            stateName = HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>::getStateName(state);
+            stateName = hsmcpp::HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>::getStateName(state);
             break;
     }
 
@@ -51,7 +51,7 @@ std::string @CLASS_NAME@::getEventName(const @ENUM_EVENTS@ event)
             break;
 ~~~BLOCK_END~~~
         default:
-            eventName = HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>::getEventName(event);
+            eventName = hsmcpp::HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>::getEventName(event);
             break;
     }
 

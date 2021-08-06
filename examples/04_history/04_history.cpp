@@ -4,6 +4,7 @@
 #include "gen/PlayerHsmBase.hpp"
 
 using namespace std::chrono_literals;
+using namespace hsmcpp;
 
 class PlayerHsm: public PlayerHsmBase
 {

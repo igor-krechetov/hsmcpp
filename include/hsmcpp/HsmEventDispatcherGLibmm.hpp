@@ -9,6 +9,9 @@
 #include <memory>
 #include <map>
 
+namespace hsmcpp
+{
+
 // NOTE: this implementation is based on Glib::Dispatcher class so it has to follow the same rules.
 //       Most important one are:
 //        * HsmEventDispatcherGLibmm must be constructred and destroyed in the receiver
@@ -41,5 +44,7 @@ private:
     std::unique_ptr<Glib::Dispatcher> mDispatcher;
     std::map<int, sigc::connection> mEventHandlers;
 };
+
+} // namespace hsmcpp
 
 #endif // __HSMCPP_HSMEVENTDISPATCHERGLIBMM_HPP__

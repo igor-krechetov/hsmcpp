@@ -6,6 +6,8 @@
 
 #include <functional>
 
+namespace hsmcpp
+{
 #define INVALID_HSM_DISPATCHER_HANDLER_ID          (0)
 
 class IHsmEventDispatcher
@@ -30,5 +32,7 @@ public:
     // dispatcher must guarantee that emit call is thread-safe
     virtual void emitEvent() = 0;
 };
+
+}// namespace hsmcpp
 
 #endif // __HSMCPP_IHSMEVENTDISPATCHER_HPP__

@@ -6,6 +6,9 @@
 #include <QCoreApplication>
 #include <QAbstractEventDispatcher>
 
+namespace hsmcpp
+{
+
 #undef __HSM_TRACE_CLASS__
 #define __HSM_TRACE_CLASS__                         "HsmEventDispatcherQt"
 
@@ -116,3 +119,5 @@ bool HsmEventDispatcherQt::event(QEvent* ev)
 
     return processed;
 }
+
+} // namespace hsmcpp

@@ -3,6 +3,9 @@
 
 #include "hsmcpp/HsmEventDispatcherBase.hpp"
 
+namespace hsmcpp
+{
+
 HsmEventDispatcherBase::~HsmEventDispatcherBase()
 {
 }
@@ -11,3 +14,5 @@ int HsmEventDispatcherBase::getNextHandlerID()
 {
     return mNextHandlerId++;
 }
+
+} // namespace hsmcpp

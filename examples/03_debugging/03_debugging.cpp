@@ -1,6 +1,8 @@
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
 #include "gen/DebugTestHsmBase.hpp"
 
+using namespace hsmcpp;
+
 class DebugTestHsm: public DebugTestHsmBase
 {
 public:

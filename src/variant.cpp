@@ -4,6 +4,9 @@
 #include "hsmcpp/variant.hpp"
 #include <cstring>
 
+namespace hsmcpp
+{
+
 Variant Variant::make(const int8_t v) { return Variant(new int8_t(v), Type::BYTE_1); }
 Variant Variant::make(const int16_t v) { return Variant(new int16_t(v), Type::BYTE_2); }
 Variant Variant::make(const int32_t v) { return Variant(new int32_t(v), Type::BYTE_4); }
@@ -724,3 +727,5 @@ void Variant::free()
     data = nullptr;
     type = Type::UNKNOWN;
 }
+
+} // namespace hsmcpp

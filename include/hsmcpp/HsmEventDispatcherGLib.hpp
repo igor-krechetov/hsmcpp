@@ -10,6 +10,9 @@
 #include <mutex>
 #include <condition_variable>
 
+namespace hsmcpp
+{
+
 class HsmEventDispatcherGLib: public HsmEventDispatcherBase
 {
 public:
@@ -41,5 +44,7 @@ private:
     std::mutex mSyncEventHandlers;
     std::condition_variable mDispatchingDoneEvent;
 };
+
+} // namespace hsmcpp
 
 #endif // __HSMCPP_HSMEVENTDISPATCHERGLIB_HPP__

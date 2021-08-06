@@ -4,6 +4,9 @@
 #include "hsmcpp/HsmEventDispatcherSTD.hpp"
 #include "hsmcpp/logging.hpp"
 
+namespace hsmcpp
+{
+
 #undef __HSM_TRACE_CLASS__
 #define __HSM_TRACE_CLASS__                         "HsmEventDispatcherSTD"
 
@@ -155,4 +158,6 @@ void HsmEventDispatcherSTD::doDispatching()
     }
 
     __HSM_TRACE_DEBUG__("EXIT");
+}
+
 }

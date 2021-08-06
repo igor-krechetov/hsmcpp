@@ -4,6 +4,8 @@
 #include "hsmcpp/HsmEventDispatcherGLib.hpp"
 #include "hsmcpp/logging.hpp"
 #include <unistd.h>
+namespace hsmcpp
+{
 
 #undef __HSM_TRACE_CLASS__
 #define __HSM_TRACE_CLASS__                         "HsmEventDispatcherGLib"
@@ -188,3 +190,5 @@ gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOConditi
 
     return continueDispatching;
 }
+
+} // namespace hsmcpp

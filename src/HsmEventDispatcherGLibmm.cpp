@@ -4,6 +4,9 @@
 #include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
 #include "hsmcpp/logging.hpp"
 
+namespace hsmcpp
+{
+
 #undef __HSM_TRACE_CLASS__
 #define __HSM_TRACE_CLASS__                         "HsmEventDispatcherGLibmm"
 
@@ -77,3 +80,5 @@ void HsmEventDispatcherGLibmm::unregisterAllEventHandlers()
 
     mEventHandlers.clear();
 }
+
+} // namespace hsmcpp

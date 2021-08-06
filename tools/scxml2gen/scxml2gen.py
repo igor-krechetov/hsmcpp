@@ -337,19 +337,19 @@ def generateFile(genVars, templatePath, destPath):
 
 
 def prepareHsmcppTransitionCallbackDeclaration(funcName):
-    return f"virtual void {funcName}(const VariantList_t& args) = 0;"
+    return f"virtual void {funcName}(const hsmcpp::VariantList_t& args) = 0;"
 
 
 def prepareHsmcppConditionCallbackDeclaration(funcName):
-    return f"virtual bool {funcName}(const VariantList_t& args) = 0;"
+    return f"virtual bool {funcName}(const hsmcpp::VariantList_t& args) = 0;"
 
 
 def prepareHsmcppStateCallbackDeclaration(funcName):
-    return f"virtual void {funcName}(const VariantList_t& args) = 0;"
+    return f"virtual void {funcName}(const hsmcpp::VariantList_t& args) = 0;"
 
 
 def prepareHsmcppStateEnterCallbackDeclaration(funcName):
-    return f"virtual bool {funcName}(const VariantList_t& args) = 0;"
+    return f"virtual bool {funcName}(const hsmcpp::VariantList_t& args) = 0;"
 
 
 def prepareHsmcppStateExitCallbackDeclaration(funcName):

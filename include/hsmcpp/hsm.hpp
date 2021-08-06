@@ -33,6 +33,8 @@
   #include <time.h>
 #endif
 
+namespace hsmcpp
+{
 // If defined, HSM will performe safety checks during states and substates registration.
 // Normally HSM structure should be static, so this feature is usefull only
 // during development since it reduces performance a bit
@@ -1866,5 +1868,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::logHsmAction(const Hs
     }
 #endif // HSMBUILD_DEBUGGING
 }
+
+} // namespace hsmcpp
 
 #endif  // __HSMCPP_HSM_HPP__

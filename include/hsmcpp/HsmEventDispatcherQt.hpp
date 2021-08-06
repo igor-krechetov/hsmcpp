@@ -12,6 +12,9 @@
 #include <QObject>
 #include <QEvent>
 
+namespace hsmcpp
+{
+
 class HsmEventDispatcherQt: public QObject
                           , public HsmEventDispatcherBase
 {
@@ -37,5 +40,7 @@ private:
     std::mutex mHandlersSync;
     std::map<int, std::function<void(void)>> mEventHandlers;
 };
+
+} // namespace hsmcpp
 
 #endif // __HSMCPP_HSMEVENTDISPATCHERQT_HPP__

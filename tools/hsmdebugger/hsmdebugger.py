@@ -395,7 +395,7 @@ class hsmdebugger(QObject):
     def updateHsmFrame(self, index):
         if (self.hsmLog is not None) and (index < len(self.hsmLog)):
             logEntry = self.hsmLog[index]
-            highlight = {"active_states": [], "callback": {}, "transitions": {}}
+            highlight = {"active_states": [], "callback": {}, "transitions": {}, "state_actions": {}}
             callbackStateId = None
             transitionStateId = None
 
@@ -426,15 +426,22 @@ class hsmdebugger(QObject):
             elif logEntry["action"] == "callback_exit":
                 callbackStateId = logEntry["from_state"]
                 highlight["callback"][callbackStateId] = {"onexit": logEntry['status'] != "failed"}
+            elif logEntry["action"] == "onenter_actions":
+                callbackStateId = logEntry["target_state"]
+                highlight["state_actions"][callbackStateId] = "onentry"
+            elif logEntry["action"] == "onexit_actions":
+                callbackStateId = logEntry["target_state"]
+                highlight["state_actions"][callbackStateId] = "onexit"
 
             # Store args if needed
-            if "args" in logEntry:
+            if ("args" in logEntry) and (logEntry["args"] is not None):
                 if transitionStateId:
                     highlight["transitions"][transitionStateId]["args"] = logEntry["args"]
                 elif callbackStateId:
                     highlight["callback"][callbackStateId]["args"] = logEntry["args"]
 
             highlight["style"] = self.settings.styleColors
+
 
             self.window.hsmStateView.hide()
             self.window.hsmStateViewWait.show()

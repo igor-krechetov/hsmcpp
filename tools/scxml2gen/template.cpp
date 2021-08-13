@@ -18,6 +18,10 @@ void @CLASS_NAME@::configureHsm()
     @REGISTER_SUBSTATES@
 
     @REGISTER_TRANSITIONS@
+
+    @REGISTER_TIMERS@
+
+    @REGISTER_ACTIONS@
 }
 
 std::string @CLASS_NAME@::getStateName(const @ENUM_STATES@ state)

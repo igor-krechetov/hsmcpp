@@ -19,6 +19,13 @@ enum class @ENUM_EVENTS@
 ~~~BLOCK_END~~~
 };
 
+enum class @ENUM_TIMERS@
+{
+~~~BLOCK:ENUM_TIMERS_ITEM~~~
+    @ENUM_TIMERS_ITEM@,
+~~~BLOCK_END~~~
+};
+
 class @CLASS_NAME@: public hsmcpp::HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>
 {
 public:

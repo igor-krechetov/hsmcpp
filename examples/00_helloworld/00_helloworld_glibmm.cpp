@@ -23,8 +23,6 @@ int main(const int argc, const char**argv)
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();
     HierarchicalStateMachine<States, Events> hsm(States::OFF);
 
-    hsm.initialize(std::make_shared<HsmEventDispatcherGLibmm>());
-
     hsm.registerState(States::OFF, [&hsm](const VariantList_t& args)
     {
         printf("Off\n");
@@ -41,6 +39,7 @@ int main(const int argc, const char**argv)
     hsm.registerTransition(States::OFF, States::ON, Events::SWITCH);
     hsm.registerTransition(States::ON, States::OFF, Events::SWITCH);
 
+    hsm.initialize(std::make_shared<HsmEventDispatcherGLibmm>());
     hsm.transition(Events::SWITCH);
     mainLoop->run();
 

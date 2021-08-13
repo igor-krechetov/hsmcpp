@@ -43,17 +43,17 @@ HsmEventDispatcherGLib::~HsmEventDispatcherGLib()
     mPipeFD[1] = -1;
 }
 
-int HsmEventDispatcherGLib::registerEventHandler(std::function<void(void)> handler)
+HandlerID_t HsmEventDispatcherGLib::registerEventHandler(const EventHandlerFunc_t& handler)
 {
     __HSM_TRACE_CALL__();
-    int id = getNextHandlerID();
+    HandlerID_t id = getNextHandlerID();
 
     mEventHandlers.emplace(id, handler);
 
     return id;
 }
 
-void HsmEventDispatcherGLib::unregisterEventHandler(const int handlerId)
+void HsmEventDispatcherGLib::unregisterEventHandler(const HandlerID_t handlerId)
 {
     __HSM_TRACE_CALL__();
     std::lock_guard<std::mutex> lck(mSyncEventHandlers);

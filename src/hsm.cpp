@@ -3,9 +3,4 @@
 
 #include "hsmcpp/logging.hpp"
 
-namespace hsmcpp
-{
-
 __HSM_TRACE_PREINIT__()
-
-} // namespace hsmcpp

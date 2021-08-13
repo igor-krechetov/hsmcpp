@@ -20,8 +20,8 @@ public:
     explicit HsmEventDispatcherGLib(GMainContext* context);
     virtual ~HsmEventDispatcherGLib();
 
-    virtual int registerEventHandler(std::function<void(void)> handler) override;
-    virtual void unregisterEventHandler(const int handlerId) override;
+    virtual HandlerID_t registerEventHandler(const EventHandlerFunc_t& handler) override;
+    virtual void unregisterEventHandler(const HandlerID_t handlerID) override;
     virtual void emitEvent() override;
 
     virtual bool start() override;
@@ -36,7 +36,7 @@ private:
     GMainContext* mContext = nullptr;
     GIOChannel* mReadChannel = nullptr;
     GSource* mIoSource = nullptr;
-    std::map<int, std::function<void(void)>> mEventHandlers;
+    std::map<HandlerID_t, EventHandlerFunc_t> mEventHandlers;
     std::mutex mSyncPipe;
     int mPipeFD[2] = {-1, -1};
     bool mStopDispatcher = false;

@@ -5,6 +5,19 @@ import argparse
 
 # ==========================================================================================================
 # FUNCTIONS
+def isStateActionDefinition(identifier):
+    isAction = False
+    actionFunc = ""
+    actionArgs = []
+    p = re.compile("^(start_timer|stop_timer|restart_timer)\((.*)\)$")
+    m = p.match(identifier)
+    if m is not None:
+        isAction = True
+        actionFunc = m.group(1).strip(' \r\n\t')
+        actionArgs = m.group(2).strip(' \r\n\t').split(',')
+    return (isAction, actionFunc, actionArgs)
+
+
 def validateIdentifier(identifier):
     isCorrect = False
     p = re.compile("^[a-zA-Z_]+[\w]*$")
@@ -27,10 +40,15 @@ def getCallbackName(elem):
     callback = None
     if elem is not None:
         if (getTag(elem.tag) == "onentry") or (getTag(elem.tag) == "onexit"):
-            elemCallback = xmlFind(elem, "script")
-            if (elemCallback is not None) and (elemCallback.text is not None):
-                callback = elemCallback.text
-            else:
+            foundScript = False
+            # we can have multiple script objects defined (for callback and state actions)
+            for elemCallback in xmlFindAll(elem, "script"):
+                if elemCallback.text is not None:
+                    foundScript = True
+                    if isStateActionDefinition(elemCallback.text)[0] is False:
+                        callback = elemCallback.text
+                        break
+            if foundScript is False:
                 print(f"WARNING: skipping {getTag(elem.tag)} element because it doesn't have callback defined "
                       f"(<script> element is not defined or has empty value)\n{dumpXmlElement(elem)}")
         elif (getTag(elem.tag) == "invoke"):
@@ -51,6 +69,28 @@ def getCallbackName(elem):
         validateIdentifier(callback)
 
     return callback
+
+
+def getStateActions(elem):
+    actions = {}
+    nodes = ["onentry", "onexit"]
+    p = re.compile("^(start_timer|stop_timer|restart_timer)\((.*)\)$")
+
+    for nodeName in nodes:
+        curNode = xmlFind(elem, nodeName)
+        curActions = []
+        if curNode is not None:
+            for curScript in xmlFindAll(curNode, "script"):
+                if curScript.text is not None:
+                    actionInfo = isStateActionDefinition(curScript.text)
+                    if actionInfo[0] is True:
+                        curActions.append({"action": actionInfo[1], "args": actionInfo[2]})
+        if len(curActions) > 0:
+            actions[nodeName + "_actions"] = curActions
+    if len(actions) == 0:
+        actions = None
+
+    return actions
 
 
 def dumpXmlElement(elem):
@@ -154,6 +194,7 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
                     onentry = getCallbackName(xmlFind(curState, "onentry"))
                     onexit = getCallbackName(xmlFind(curState, "onexit"))
                     invoke = getCallbackName(xmlFind(curState, "invoke"))
+                    actions = getStateActions(curState)
 
                     if onentry is not None:
                         newState["onentry"] = onentry
@@ -161,6 +202,8 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
                         newState["onexit"] = onexit
                     if invoke is not None:
                         newState["onstate"] = invoke
+                    if actions is not None:
+                        newState["actions"] = actions
 
                     for curTransition in xmlFindAll(curState, "transition"):
                         if "event" in curTransition.attrib:
@@ -201,6 +244,14 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
 #                "onstate": "",
 #                "onentry": "",
 #                "onexit": "",
+#                "actions": {
+#                   "onentry_actions": [
+#                       {"action": "start_timer", "args": [TIMER1, 1000, false]},
+#                       {"action": "stop_timer", "args": [TIMER1]},
+#                       {"action": "restart_timer", "args": [TIMER1]},
+#                   ],
+#                   "onexit_actions": [ ... ],
+#                }
 #                "transitions": [
 #                    {
 #                        "event": "NEXT_STATE",
@@ -356,14 +407,40 @@ def prepareHsmcppStateExitCallbackDeclaration(funcName):
     return f"virtual bool {funcName}() = 0;"
 
 
+def prepareRegisterTimerFunc(eventsEnum, timersEnum, timerName):
+    return f"registerTimer(static_cast<int>({timersEnum}::{timerName}), {eventsEnum}::ON_TIMER_{timerName});"
+
+
+def prepareRegisterActionFunction(state, timersEnum, trigger, actionInfo):
+    func = ""
+    if len(actionInfo['args']) > 0:
+        timerName = f"{timersEnum}::{actionInfo['args'][0]}"
+        actionTrigger = ""
+        action = f"StateAction::{actionInfo['action'].upper()}"
+        args = ""
+
+        if trigger == "onentry_actions":
+            actionTrigger = "StateActionTrigger::ON_STATE_ENTRY"
+        elif trigger == "onexit_actions":
+            actionTrigger = "StateActionTrigger::ON_STATE_EXIT"
+
+        for i in range(1, len(actionInfo['args'])):
+            args += f", {actionInfo['args'][i]}"
+
+        func = f"registerStateAction({state}, {actionTrigger}, {action}, static_cast<int>({timerName}){args});"
+    return func
+
+
 def generateCppCode(hsm, pathHpp, pathCpp):
     pendingStates = hsm
 
     genVars = {"ENUM_STATES_ITEM": [],
                "ENUM_EVENTS_ITEM": set(),
+               "ENUM_TIMERS_ITEM": set(),
                "CLASS_NAME": args.class_name + args.class_suffix,
                "ENUM_STATES": f"{args.class_name}States",
                "ENUM_EVENTS": f"{args.class_name}Events",
+               "ENUM_TIMERS": f"{args.class_name}Timers",
                "INITIAL_STATE": "",
                "HSM_STATE_ACTIONS": set(),
                "HSM_STATE_ENTERING_ACTIONS": set(),
@@ -374,6 +451,8 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                "REGISTER_STATES": [],
                "REGISTER_SUBSTATES": [],
                "REGISTER_TRANSITIONS": [],
+               "REGISTER_TIMERS": [],
+               "REGISTER_ACTIONS": [],
                "ENUM_STATES_GETNAME_CASES": [],
                "ENUM_EVENTS_GETNAME_CASES": []}
 
@@ -455,6 +534,17 @@ def generateCppCode(hsm, pathHpp, pathCpp):
             else:
                 registerCallbacks += ", nullptr"
 
+            if 'actions' in curState:
+                for actionTrigger in curState['actions']:
+                    for curAction in curState['actions'][actionTrigger]:
+                        if '_timer' in curAction['action']:
+                            genVars["ENUM_TIMERS_ITEM"].add(curAction['args'][0])
+                            stateId = f"{genVars['ENUM_STATES']}::{curState['id']}"
+                            genVars["REGISTER_ACTIONS"].append(prepareRegisterActionFunction(stateId,
+                                                                                             genVars['ENUM_TIMERS'],
+                                                                                             actionTrigger,
+                                                                                             curAction))
+
             if "&" in registerCallbacks:
                 registerCallbacks = ", this" + registerCallbacks
             else:
@@ -487,6 +577,18 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                                                                                                  f"{genVars['ENUM_EVENTS']}::{curTransition['event']}" +
                                                                                                  registerCallbacks + ");")
         pendingStates = substates
+
+
+    # at this point we can be sure that all timers were identified
+    genVars["ENUM_TIMERS_ITEM"] = set(sorted(genVars["ENUM_TIMERS_ITEM"]))
+
+    for curTimerName in genVars["ENUM_TIMERS_ITEM"]:
+        # generate 1 event per timer (most of them are probably already available since they were used somewhere in the HSM)
+        genVars["ENUM_EVENTS_ITEM"].add(f"ON_TIMER_{curTimerName}")
+        genVars["REGISTER_TIMERS"].append(prepareRegisterTimerFunc(genVars["ENUM_EVENTS"], genVars["ENUM_TIMERS"], curTimerName))
+
+    genVars["ENUM_STATES_ITEM"] = sorted(genVars["ENUM_STATES_ITEM"])
+    genVars["ENUM_EVENTS_ITEM"] = set(sorted(genVars["ENUM_EVENTS_ITEM"]))
 
     generateFile(genVars, args.template_hpp, pathHpp)
     generateFile(genVars, args.template_cpp, pathCpp)
@@ -586,6 +688,7 @@ def preparePlantumlTransition(offset, fromState, toState, curTransition, highlig
 # hightlight = {"style": {"active_state": "00FF00", "blocked_transition": "FFAA00"},
 #               "active_states": ["state_3", ...],
 #               "callback": {"state_1": {"onstate|onexit|onentry": False, "args": [...]}, ...},
+#               "state_actions": {"state_1": "onexit|onentry"},
 #               "transitions": {"parent_2": {"from": "parent_1", "event": "event_next_parent", "args": [...]}, # regular
 #                               "state_4": {"from": "state_4", "event": "event_self", "args": [...]},          # self
 #                               "state_3": {"from": "", "event": "event_self", "args": [...]}, ...}}           # entry
@@ -645,39 +748,89 @@ def generatePlantumlState(hsm, stateData, level, highlight=None):
     elif ("is_final" in stateData) and (stateData["is_final"] == True):
         finalStates = [stateData['id']]
     else:
+        highlightOnEntryGroup = ""
         highlightOnEntry = ""
+        highlightOnEntryActions = ""
+        highlightOnExitGroup = ""
         highlightOnExit = ""
+        highlightOnExitActions = ""
         highlightOnState = ""
         highlightState = False
         callbackFailedMsg = ""
         callbackArgs = ""
 
-        if highlight and stateData['id'] in highlight['active_states']:
-            highlightState = True
-        if highlight and stateData['id'] in highlight['callback']:
-            highlightState = True
-            stateHighlightInfo = highlight['callback'][stateData['id']]
-            if "onentry" in stateHighlightInfo:
-                highlightOnEntry = "**"
-                if stateHighlightInfo["onentry"] is False:
-                    callbackFailedMsg = stateData['onentry']
-            if "onexit" in stateHighlightInfo:
-                highlightOnExit = "**"
-                if stateHighlightInfo["onexit"] is False:
-                    callbackFailedMsg = stateData['onexit']
-            if "onstate" in stateHighlightInfo:
-                highlightOnState = "**"
-                if stateHighlightInfo["onstate"] is False:
-                    callbackFailedMsg = stateData['onstate']
-            if 'args' in stateHighlightInfo:
-                callbackArgs = stateHighlightInfo['args']
+        if highlight:
+            if stateData['id'] in highlight['active_states']:
+                highlightState = True
+            if stateData['id'] in highlight['state_actions']:
+                if highlight['state_actions'][stateData['id']] == "onentry":
+                    highlightOnEntryGroup = "**"
+                    highlightOnEntryActions = "**"
+                elif highlight['state_actions'][stateData['id']] == "onexit":
+                    highlightOnExitGroup = "**"
+                    highlightOnExitActions = "**"
+            if stateData['id'] in highlight['callback']:
+                # highlightState = True
+                stateHighlightInfo = highlight['callback'][stateData['id']]
+                if "onentry" in stateHighlightInfo:
+                    highlightOnEntryGroup = "**"
+                    highlightOnEntry = "**"
+                    if stateHighlightInfo["onentry"] is False:
+                        callbackFailedMsg = stateData['onentry']
+                if "onexit" in stateHighlightInfo:
+                    highlightOnExitGroup = "**"
+                    highlightOnExit = "**"
+                    if stateHighlightInfo["onexit"] is False:
+                        callbackFailedMsg = stateData['onexit']
+                if "onstate" in stateHighlightInfo:
+                    highlightOnState = "**"
+                    if stateHighlightInfo["onstate"] is False:
+                        callbackFailedMsg = stateData['onstate']
+                if 'args' in stateHighlightInfo:
+                    callbackArgs = stateHighlightInfo['args']
 
-        if "onentry" in stateData:
-            plantumlState += f"\n{offset}{stateData['id']} : {highlightOnEntry}-> {stateData['onentry']}{highlightOnEntry}\n"
+        # Gather state actions
+        onEntryActions = ""
+        onExitActions = ""
+        if "actions" in stateData:
+            for curActionTrigger in stateData['actions']:
+                for curAction in stateData['actions'][curActionTrigger]:
+                    actionDescription = f"{curAction['action']}{curAction['args']}"
+                    if curActionTrigger == "onentry_actions":
+                        onEntryActions += f"{offset}{stateData['id']} : {highlightOnEntryActions}- {actionDescription}{highlightOnEntryActions}\n"
+                    elif curActionTrigger == "onexit_actions":
+                        onExitActions += f"{offset}{stateData['id']} : {highlightOnExitActions}- {actionDescription}{highlightOnExitActions}\n"
+
+        plantumlOnState = ""
+        plantumlOnEntry = ""
+        plantumlOnExit = ""
+
         if "onstate" in stateData:
-            plantumlState += f"\n{offset}{stateData['id']} : {highlightOnState}{stateData['onstate']}{highlightOnState}\n"
-        if "onexit" in stateData:
-            plantumlState += f"\n{offset}{stateData['id']} : {highlightOnExit}<- {stateData['onexit']}{highlightOnExit}\n"
+            plantumlOnState += f"{offset}{stateData['id']} : {highlightOnState}{stateData['onstate']}{highlightOnState}\n"
+
+        if ("onentry" in stateData) or (len(onEntryActions) > 0):
+            plantumlOnEntry += f"{offset}{stateData['id']} : {highlightOnEntryGroup}<on entry>{highlightOnEntryGroup}\n"
+            if "onentry" in stateData:
+                plantumlOnEntry += f"{offset}{stateData['id']} : {highlightOnEntry}- {stateData['onentry']}{highlightOnEntry}\n"
+            if len(onEntryActions) > 0:
+                plantumlOnEntry += onEntryActions
+
+        if ("onexit" in stateData) or (len(onExitActions) > 0):
+            plantumlOnExit += f"{offset}{stateData['id']} : {highlightOnExitGroup}<on exit>{highlightOnExitGroup}\n"
+            if "onexit" in stateData:
+                plantumlOnExit += f"{offset}{stateData['id']} : {highlightOnExit}- {stateData['onexit']}{highlightOnExit}\n"
+            if len(onExitActions) > 0:
+                plantumlOnExit += onExitActions
+
+        # combine state description
+        plantumlState += "\n"
+        plantumlState += plantumlOnState
+        if (len(plantumlOnEntry) > 0) and (len(plantumlOnState) > 0):
+            plantumlState += f"{offset}{stateData['id']} : \n"
+        plantumlState += plantumlOnEntry
+        if ((len(plantumlOnEntry) > 0) or (len(plantumlOnState) > 0)) and (len(plantumlOnExit) > 0):
+            plantumlState += f"{offset}{stateData['id']} : \n"
+        plantumlState += plantumlOnExit
 
         if highlightState and (stateData['is_history'] is False):
             if len(callbackFailedMsg) > 0:

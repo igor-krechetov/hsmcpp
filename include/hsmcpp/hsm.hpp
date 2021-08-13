@@ -85,6 +85,17 @@ public:
         DEEP
     };
 
+    enum class StateActionTrigger {
+        ON_STATE_ENTRY,
+        ON_STATE_EXIT
+    };
+
+    enum class StateAction {
+        START_TIMER, // ARGS: int timerID, int intervalMs, bool singleshot
+        STOP_TIMER, // ARGS: int timerID
+        RESTART_TIMER, // ARGS: int timerID
+    };
+
 private:
     enum class HsmLogAction
     {
@@ -93,7 +104,9 @@ private:
         TRANSITION_ENTRYPOINT,
         CALLBACK_EXIT,
         CALLBACK_ENTER,
-        CALLBACK_STATE
+        CALLBACK_STATE,
+        ON_ENTER_ACTIONS,
+        ON_EXIT_ACTIONS,
     };
 
     enum class HsmEventStatus
@@ -190,6 +203,11 @@ private:
         {}
     };
 
+    struct StateActionInfo {
+        StateAction action;
+        VariantList_t actionArgs;
+    };
+
 public:
     explicit HierarchicalStateMachine(const HsmStateEnum initialState);
     // Uses unregisterEventHandler from Dispatcher. Usually HSM has to be destroyed from the same thread it was created.
@@ -244,6 +262,14 @@ public:
 
     bool registerSubstate(const HsmStateEnum parent, const HsmStateEnum substate);
     bool registerSubstateEntryPoint(const HsmStateEnum parent, const HsmStateEnum substate, const HsmEventEnum onEvent = INVALID_HSM_EVENT_ID);
+
+    void registerTimer(const TimerID_t timerID, const HsmEventEnum event);
+
+    template <typename... Args>
+    bool registerStateAction(const HsmStateEnum state,
+                             const StateActionTrigger actionTrigger,
+                             const StateAction action,
+                             Args... args);
 
     template <class HsmHandlerClass>
     void registerTransition(const HsmStateEnum from,
@@ -304,10 +330,13 @@ private:
                           const HsmEventEnum eventCondition = INVALID_HSM_EVENT_ID);
 
     void dispatchEvents();
+    void dispatchTimerEvent(const TimerID_t id);
 
     bool onStateExiting(const HsmStateEnum state);
     bool onStateEntering(const HsmStateEnum state, const VariantList_t& args);
     void onStateChanged(const HsmStateEnum state, const VariantList_t& args);
+
+    void executeStateAction(const HsmStateEnum state, const StateActionTrigger actionTrigger);
 
     bool getParentState(const HsmStateEnum child, HsmStateEnum& outParent);
     bool isSubstateOf(const HsmStateEnum parent, const HsmStateEnum child);
@@ -355,6 +384,11 @@ protected:
     virtual std::string getEventName(const HsmEventEnum event);
 
 private:
+    std::shared_ptr<IHsmEventDispatcher> mDispatcher;
+    HandlerID_t mEventsHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
+    HandlerID_t mTimerHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
+    bool mStopDispatching = false;
+
     HsmStateEnum mInitialState;
     std::list<HsmStateEnum> mActiveStates;
     std::multimap<std::pair<HsmStateEnum, HsmEventEnum>, TransitionInfo> mTransitionsByEvent; // FROM_STATE, EVENT => TO
@@ -362,15 +396,16 @@ private:
     std::multimap<HsmStateEnum, HsmStateEnum> mSubstates;
     std::multimap<HsmStateEnum, StateEntryPoint> mSubstateEntryPoints;
     std::list<PendingEventInfo> mPendingEvents;
-    std::shared_ptr<IHsmEventDispatcher> mDispatcher;
+    std::map<TimerID_t, HsmEventEnum> mTimers;
 
     // parent state, history state
     std::multimap<HsmStateEnum, HsmStateEnum> mHistoryStates;
     // history state id, data
     std::map<HsmStateEnum, HistoryInfo> mHistoryData;
 
-    int mDispatcherHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
-    bool mStopDispatching = false;
+    std::multimap<std::pair<HsmStateEnum, StateActionTrigger>, StateActionInfo> mRegisteredActions;
+
+
 
 #ifdef HSM_ENABLE_SAFE_STRUCTURE
     std::list<HsmStateEnum> mTopLevelStates; // list of states which are not substates and dont have substates of their own
@@ -427,15 +462,21 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::initialize(const std:
             if (true == dispatcher->start())
             {
                 mDispatcher = dispatcher;
-                mDispatcherHandlerId = mDispatcher->registerEventHandler(std::bind(&HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchEvents,
-                                                                        this));
+                mEventsHandlerId = mDispatcher->registerEventHandler(std::bind(&HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchEvents,
+                                                                     this));
+                mTimerHandlerId = mDispatcher->registerTimerHandler(std::bind(&HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchTimerEvent,
+                                                                    this, std::placeholders::_1));
 
-                result = (INVALID_HSM_DISPATCHER_HANDLER_ID != mDispatcherHandlerId);
-
-                if (true == result)
+                if ((INVALID_HSM_DISPATCHER_HANDLER_ID != mEventsHandlerId) && (INVALID_HSM_DISPATCHER_HANDLER_ID != mTimerHandlerId))
                 {
                     logHsmAction(HsmLogAction::IDLE, INVALID_HSM_STATE_ID, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, false, VariantList_t());
                     handleStartup();
+                    result = true;
+                }
+                else
+                {
+                    mDispatcher->unregisterEventHandler(mEventsHandlerId);
+                    mDispatcher->unregisterTimerHandler(mTimerHandlerId);
                 }
             }
             else
@@ -466,9 +507,9 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::release()
 
     if (mDispatcher)
     {
-        mDispatcher->unregisterEventHandler(mDispatcherHandlerId);
+        mDispatcher->unregisterEventHandler(mEventsHandlerId);
         mDispatcher.reset();
-        mDispatcherHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
+        mEventsHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
     }
 }
 
@@ -580,6 +621,12 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstateEntry
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerTimer(const TimerID_t timerID, const HsmEventEnum event)
+{
+    mTimers.emplace(timerID, event);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstate(const HsmStateEnum parent,
                                                                             const HsmStateEnum substate,
                                                                             const bool isEntryPoint,
@@ -641,6 +688,45 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstate(cons
     }
 
     return registrationAllowed;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+template <typename... Args>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerStateAction(const HsmStateEnum state,
+                                                                               const StateActionTrigger actionTrigger,
+                                                                               const StateAction action,
+                                                                               Args... args)
+{
+    bool result = false;
+    bool argsValid = false;
+    StateActionInfo newAction;
+
+    makeVariantList(newAction.actionArgs, args...);
+
+    // validate arguments
+    switch (action) {
+        case StateAction::START_TIMER:
+            argsValid = (newAction.actionArgs.size() == 3) &&
+                         newAction.actionArgs[0].isNumeric() &&
+                         newAction.actionArgs[1].isNumeric() &&
+                         newAction.actionArgs[2].isBool();
+            break;
+        case StateAction::RESTART_TIMER:
+        case StateAction::STOP_TIMER:
+            argsValid = (newAction.actionArgs.size() == 1) && newAction.actionArgs[0].isNumeric();
+            break;
+        default:
+            // do nothing
+            break;
+    }
+
+    if (true == argsValid) {
+        newAction.action = action;
+        mRegisteredActions.emplace(std::make_pair(state, actionTrigger), newAction);
+        result = true;
+    }
+
+    return result;
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -775,8 +861,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionSync(const 
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 template <typename... Args>
-void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionWithQueueClear(const HsmEventEnum event,
-                                                                                    Args... args)
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionWithQueueClear(const HsmEventEnum event, Args... args)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("event=%d", SC2INT(event));
 
@@ -785,8 +870,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionWithQueueCl
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 template <typename... Args>
-bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(const HsmEventEnum event,
-                                                                                Args... args)
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(const HsmEventEnum event, Args... args)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("event=%d", SC2INT(event));
     bool possible = false;
@@ -854,7 +938,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::makeVariantList(Varia
 template <typename HsmStateEnum, typename HsmEventEnum>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchEvents()
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("dispatchEvents: mPendingEvents.size()=%ld", mPendingEvents.size());
+    __HSM_TRACE_CALL_DEBUG_ARGS__("mPendingEvents.size=%ld", mPendingEvents.size());
 
     if (false == mStopDispatching)
     {
@@ -870,7 +954,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchEvents()
 
             HsmEventStatus_t transitiontStatus = doTransition(pendingEvent);
 
-            __HSM_TRACE_DEBUG__("dispatchEvents: unlock with status %d", SC2INT(transitiontStatus));
+            __HSM_TRACE_DEBUG__("unlock with status %d", SC2INT(transitiontStatus));
             pendingEvent.unlock(transitiontStatus);
         }
 
@@ -880,10 +964,22 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchEvents()
         }
     }
 }
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchTimerEvent(const TimerID_t id)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("id=%d", SC2INT(id));
+    auto it = mTimers.find(id);
+
+    if (mTimers.end() != it)
+    {
+        transition(it->second);
+    }
+}
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateExiting(const HsmStateEnum state)
 {
+    __HSM_TRACE_CALL_DEBUG_ARGS__("state=%d", SC2INT(state));
     bool res = true;
     auto it = mRegisteredStates.find(state);
 
@@ -893,6 +989,12 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateExiting(const 
         logHsmAction(HsmLogAction::CALLBACK_EXIT, state, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, (false == res), VariantList_t());
     }
 
+    // execute state action only if transition was accepted by client
+    if (true == res)
+    {
+        executeStateAction(state, StateActionTrigger::ON_STATE_EXIT);
+    }
+
     return res;
 }
 
@@ -900,6 +1002,7 @@ template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateEntering(const HsmStateEnum state,
                                                                            const VariantList_t& args)
 {
+    __HSM_TRACE_CALL_DEBUG_ARGS__("state=%d", SC2INT(state));
     bool res = true;
 
     // since we can have a situation when same state is entered twice (parallel transitions) there
@@ -912,6 +1015,12 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateEntering(const
         {
             res = it->second.onEntering(args);
             logHsmAction(HsmLogAction::CALLBACK_ENTER, INVALID_HSM_STATE_ID, state, INVALID_HSM_EVENT_ID, (false == res), args);
+        }
+
+        // execute state action only if transition was accepted by client
+        if (true == res)
+        {
+            executeStateAction(state, StateActionTrigger::ON_STATE_ENTRY);
         }
     }
 
@@ -933,6 +1042,53 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateChanged(const 
     else
     {
         __HSM_TRACE_WARNING__("no callback registered for state <%d>", SC2INT(state));
+    }
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::executeStateAction(const HsmStateEnum state,
+                                                                              const StateActionTrigger actionTrigger)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("state=%d, actionTrigger=%d", SC2INT(state), SC2INT(actionTrigger));
+    auto key = std::make_pair(state, actionTrigger);
+    auto itRange = mRegisteredActions.equal_range(key);
+
+    if (itRange.first != itRange.second)
+    {
+        switch (actionTrigger)
+        {
+            case StateActionTrigger::ON_STATE_ENTRY:
+                logHsmAction(HsmLogAction::ON_ENTER_ACTIONS, INVALID_HSM_STATE_ID, state);
+                break;
+            case StateActionTrigger::ON_STATE_EXIT:
+                logHsmAction(HsmLogAction::ON_EXIT_ACTIONS, INVALID_HSM_STATE_ID, state);
+                break;
+        }
+
+        for (auto it = itRange.first; it != itRange.second; ++it)
+        {
+            const StateActionInfo& actionInfo = it->second;
+
+            if (StateAction::START_TIMER == actionInfo.action)
+            {
+                mDispatcher->startTimer(mTimerHandlerId,
+                                        actionInfo.actionArgs[0].toInt64(),
+                                        actionInfo.actionArgs[1].toInt64(),
+                                        actionInfo.actionArgs[2].toBool());
+            }
+            else if (StateAction::STOP_TIMER == actionInfo.action)
+            {
+                mDispatcher->stopTimer(actionInfo.actionArgs[0].toInt64());
+            }
+            else if (StateAction::RESTART_TIMER == actionInfo.action)
+            {
+                mDispatcher->restartTimer(actionInfo.actionArgs[0].toInt64());
+            }
+            else
+            {
+                __HSM_TRACE_WARNING__("unsupported action <%d>", SC2INT(actionInfo.action));
+            }
+        }
     }
 }
 
@@ -1431,7 +1587,6 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
 
                                 for (HsmStateEnum defaultTargetState: historyTargets)
                                 {
-                                    __HSM_TRACE_LINE__();
                                     defHistoryTransitionEvent.forcedTransitionsInfo = std::make_shared<std::list<TransitionInfo>>();
                                     defHistoryTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
                                                                                                   defaultTargetState,
@@ -1447,7 +1602,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                         else if (true == getEntryPoints(it->destinationState, event.type, entryPoints))
                         {
                             __HSM_TRACE_DEBUG__("state <%d> has substates with %d entry points (first: %d)",
-                                            SC2INT(it->destinationState), SC2INT(entryPoints.size()), SC2INT(entryPoints.front()));
+                                                SC2INT(it->destinationState), SC2INT(entryPoints.size()), SC2INT(entryPoints.front()));
                             PendingEventInfo entryPointTransitionEvent = event;
 
                             entryPointTransitionEvent.transitionType = TransitionType::ENTRYPOINT;
@@ -1810,7 +1965,9 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::logHsmAction(const Hs
                                                                        std::make_pair(HsmLogAction::TRANSITION_ENTRYPOINT, "transition_entrypoint"),
                                                                        std::make_pair(HsmLogAction::CALLBACK_EXIT, "callback_exit"),
                                                                        std::make_pair(HsmLogAction::CALLBACK_ENTER, "callback_enter"),
-                                                                       std::make_pair(HsmLogAction::CALLBACK_STATE, "callback_state")};
+                                                                       std::make_pair(HsmLogAction::CALLBACK_STATE, "callback_state"),
+                                                                       std::make_pair(HsmLogAction::ON_ENTER_ACTIONS, "onenter_actions"),
+                                                                       std::make_pair(HsmLogAction::ON_EXIT_ACTIONS, "onexit_actions")};
         char bufTime[80] = { 0 };
         char bufTimeMs[6] = { 0 };
         auto currentTimePoint = std::chrono::system_clock::now();
@@ -1849,13 +2006,13 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::logHsmAction(const Hs
 
         for (auto itState = mActiveStates.begin(); itState != mActiveStates.end(); ++itState)
         {
-            *mHsmLog << "\n    - " << getStateName(*itState);
+            *mHsmLog << "\n    - \"" << getStateName(*itState) << "\"";
         }
 
         *mHsmLog << "\n  action: " << actionsMap.at(action) << "\n"
-                    "  from_state: " << getStateName(fromState) << "\n"
-                    "  target_state: " << getStateName(targetState) << "\n"
-                    "  event: " << getEventName(event) << "\n"
+                    "  from_state: \"" << getStateName(fromState) << "\"\n"
+                    "  target_state: \"" << getStateName(targetState) << "\"\n"
+                    "  event: \"" << getEventName(event) << "\"\n"
                     "  status: " << (hasFailed ? "failed" : "") << "\n"
                     "  args:";
 

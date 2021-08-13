@@ -23,17 +23,17 @@ HsmEventDispatcherSTD::~HsmEventDispatcherSTD()
     join();
 }
 
-int HsmEventDispatcherSTD::registerEventHandler(std::function<void(void)> handler)
+HandlerID_t HsmEventDispatcherSTD::registerEventHandler(const EventHandlerFunc_t& handler)
 {
     __HSM_TRACE_CALL_DEBUG__();
-    int id = getNextHandlerID();
+    HandlerID_t id = getNextHandlerID();
 
     mEventHandlers.emplace(id, handler);
 
     return id;
 }
 
-void HsmEventDispatcherSTD::unregisterEventHandler(const int handlerId)
+void HsmEventDispatcherSTD::unregisterEventHandler(const HandlerID_t handlerId)
 {
     std::lock_guard<std::mutex> lck(mHandlersSync);
 

@@ -52,7 +52,7 @@
   #define __HSM_TRACE_COMMON__(msg, ...)          __HSM_TRACE_CONSOLE__(msg,## __VA_ARGS__)
   // ---------------------------------------------------------------------------------
 
-  #define __HSM_TRACE_PREINIT__()                 int g_hsm_traces_pid = 0
+  #define __HSM_TRACE_PREINIT__()                 int g_hsm_traces_pid = 0;
   #define __HSM_TRACE_INIT__()                    if (0 == g_hsm_traces_pid){ g_hsm_traces_pid = getpid(); }
   #define __HSM_TRACE__(msg, ...)                 __HSM_TRACE_COMMON__(msg,## __VA_ARGS__)
   #define __HSM_TRACE_WARNING__(msg, ...)         __HSM_TRACE_COMMON__("[WARNING] " msg,## __VA_ARGS__)

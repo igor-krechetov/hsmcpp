@@ -34,8 +34,6 @@ class TrafficLight: public HierarchicalStateMachine<TrafficLightState, TrafficLi
 public:
     TrafficLight() : HierarchicalStateMachine(TrafficLightState::OFF)
     {
-        initialize(std::make_shared<HsmEventDispatcherGLibmm>());
-
         registerState<TrafficLight>(TrafficLightState::OFF, this, &TrafficLight::onOff, nullptr, nullptr);
         registerState<TrafficLight>(TrafficLightState::STARTING, this, &TrafficLight::onStarting, nullptr, nullptr);
         registerState<TrafficLight>(TrafficLightState::RED, this, &TrafficLight::onRed, nullptr, nullptr);
@@ -47,6 +45,8 @@ public:
         registerTransition(TrafficLightState::RED, TrafficLightState::YELLOW, TrafficLightEvent::NEXT_STATE, this, &TrafficLight::onNextStateTransition);
         registerTransition(TrafficLightState::YELLOW, TrafficLightState::GREEN, TrafficLightEvent::NEXT_STATE, this, &TrafficLight::onNextStateTransition);
         registerTransition(TrafficLightState::GREEN, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE, this, &TrafficLight::onNextStateTransition);
+
+        initialize(std::make_shared<HsmEventDispatcherGLibmm>());
     }
 
     void onNextStateTransition(const VariantList_t& args)

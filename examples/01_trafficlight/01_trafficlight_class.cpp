@@ -30,8 +30,6 @@ public:
         : HierarchicalStateMachine(TrafficLightState::OFF)
         , mLoop(loop)
     {
-        initialize(std::make_shared<HsmEventDispatcherGLibmm>());
-
         registerState(TrafficLightState::OFF, this, &TrafficLight::onOff);
         registerState(TrafficLightState::INITIALIZING, this, &TrafficLight::onInitializing);
         registerState(TrafficLightState::RED, this, &TrafficLight::onRed);
@@ -50,6 +48,8 @@ public:
         registerTransition(TrafficLightState::RED, TrafficLightState::YELLOW, TrafficLightEvent::NEXT_STATE);
         registerTransition(TrafficLightState::YELLOW, TrafficLightState::GREEN, TrafficLightEvent::NEXT_STATE);
         registerTransition(TrafficLightState::GREEN, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE);
+
+        initialize(std::make_shared<HsmEventDispatcherGLibmm>());
     }
 
     void onOff(const VariantList_t& args)

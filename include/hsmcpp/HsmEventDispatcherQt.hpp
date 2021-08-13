@@ -26,8 +26,8 @@ public:
 
     bool start() override;
 
-    int registerEventHandler(std::function<void(void)> handler) override;
-    void unregisterEventHandler(const int handlerId) override;
+    HandlerID_t registerEventHandler(const EventHandlerFunc_t& handler) override;
+    void unregisterEventHandler(const HandlerID_t handlerID) override;
     void emitEvent() override;
 
 protected:
@@ -38,7 +38,7 @@ private:
     static QEvent::Type mQtEventType;
 
     std::mutex mHandlersSync;
-    std::map<int, std::function<void(void)>> mEventHandlers;
+    std::map<HandlerID_t, EventHandlerFunc_t> mEventHandlers;
 };
 
 } // namespace hsmcpp

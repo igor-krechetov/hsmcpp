@@ -23,8 +23,6 @@ int main(int argc, char** argv)
     QCoreApplication app(argc, argv);
     HierarchicalStateMachine<States, Events> hsm(States::OFF);
 
-    hsm.initialize(std::make_shared<HsmEventDispatcherQt>());
-
     hsm.registerState(States::OFF, [&hsm](const VariantList_t& args)
     {
         printf("Off\n");
@@ -41,6 +39,7 @@ int main(int argc, char** argv)
     hsm.registerTransition(States::OFF, States::ON, Events::SWITCH);
     hsm.registerTransition(States::ON, States::OFF, Events::SWITCH);
 
+    hsm.initialize(std::make_shared<HsmEventDispatcherQt>());
     hsm.transition(Events::SWITCH);
 
     app.exec();

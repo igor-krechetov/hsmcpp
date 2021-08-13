@@ -58,17 +58,17 @@ bool HsmEventDispatcherQt::start()
     return result;
 }
 
-int HsmEventDispatcherQt::registerEventHandler(std::function<void(void)> handler)
+HandlerID_t HsmEventDispatcherQt::registerEventHandler(const EventHandlerFunc_t& handler)
 {
     __HSM_TRACE_CALL_DEBUG__();
-    int id = getNextHandlerID();
+    HandlerID_t id = getNextHandlerID();
 
     mEventHandlers.emplace(id, handler);
 
     return id;
 }
 
-void HsmEventDispatcherQt::unregisterEventHandler(const int handlerId)
+void HsmEventDispatcherQt::unregisterEventHandler(const HandlerID_t handlerId)
 {
     std::lock_guard<std::mutex> lck(mHandlersSync);
 

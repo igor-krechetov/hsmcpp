@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" name="05_timers" qt:editorversion="4.14.2" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" initial="Idle">
+    <state id="Idle">
+        <qt:editorinfo geometry="260.06;169.29;-60;-50;120;100" scenegeometry="260.06;169.29;200.06;119.29;120;100"/>
+        <transition type="external" event="START" target="Off">
+            <qt:editorinfo movePoint="40.79;7.14"/>
+        </transition>
+        <onexit>
+            <script>start_timer(SWITCH,1000,false)</script>
+        </onexit>
+    </state>
+    <state id="Off">
+        <qt:editorinfo geometry="260.06;381.42;-60;-50;120.03;100" scenegeometry="260.06;381.42;200.06;331.42;120.03;100"/>
+        <transition type="external" event="ON_TIMER_SWITCH" target="On"/>
+        <invoke srcexpr="Off"/>
+        <onentry>
+            <script>stop_timer(SWITCH)</script>
+        </onentry>
+    </state>
+    <state id="On">
+        <qt:editorinfo geometry="556.84;381.42;-60;-50;120;100" scenegeometry="556.84;381.42;496.84;331.42;120;100"/>
+        <transition type="external" event="ON_TIMER_SWITCH" target="Off">
+            <qt:editorinfo endTargetFactors="88.93;72.85" startTargetFactors="7.26;71.94"/>
+        </transition>
+        <invoke srcexpr="On"/>
+        <onentry>
+            <script>restart_timer(T2)</script>
+            <script>start_timer(SWITCH,1000,false)</script>
+            <script>entryCallback</script>
+        </onentry>
+    </state>
+</scxml>

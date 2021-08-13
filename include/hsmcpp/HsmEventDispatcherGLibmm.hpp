@@ -31,18 +31,26 @@ public:
     explicit HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context);
     virtual ~HsmEventDispatcherGLibmm();
 
-    virtual int registerEventHandler(std::function<void(void)> handler) override;
-    virtual void unregisterEventHandler(const int handlerId) override;
-    virtual void emitEvent() override;
-
     virtual bool start() override;
+
+    virtual HandlerID_t registerEventHandler(const EventHandlerFunc_t& handler) override;
+    virtual void unregisterEventHandler(const HandlerID_t handlerID) override;
+    virtual void emitEvent() override;
 
 protected:
     void unregisterAllEventHandlers();
+    void unregisterAllTimerHandlers();
+
+    void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
+    void stopTimerImpl(const TimerID_t timerID) override;
+
+    bool onTimerEvent(const TimerID_t timerID);
 
 private:
+    Glib::RefPtr<Glib::MainContext> mMainContext;
     std::unique_ptr<Glib::Dispatcher> mDispatcher;
-    std::map<int, sigc::connection> mEventHandlers;
+    std::map<HandlerID_t, sigc::connection> mEventHandlers;// <handlerID, connection>
+    std::map<TimerID_t, sigc::connection> mTimerHandlers;// <timerID, connection>
 };
 
 } // namespace hsmcpp

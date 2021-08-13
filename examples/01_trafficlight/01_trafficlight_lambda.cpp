@@ -30,8 +30,6 @@ int main(const int argc, const char**argv)
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();
     HierarchicalStateMachine<TrafficLightState, TrafficLightEvent> hsm(TrafficLightState::OFF);
 
-    hsm.initialize(std::make_shared<HsmEventDispatcherGLibmm>());
-
     hsm.registerState(TrafficLightState::OFF, [mainLoop](const VariantList_t& args)
     {
         printf("onOff\n");
@@ -77,6 +75,7 @@ int main(const int argc, const char**argv)
     hsm.registerTransition(TrafficLightState::YELLOW, TrafficLightState::GREEN, TrafficLightEvent::NEXT_STATE);
     hsm.registerTransition(TrafficLightState::GREEN, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE);
 
+    hsm.initialize(std::make_shared<HsmEventDispatcherGLibmm>());
     hsm.transition(TrafficLightEvent::POWER_ON);
 
     mainLoop->run();

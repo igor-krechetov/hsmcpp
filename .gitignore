@@ -12,3 +12,4 @@ out.cpp
 out.hpp
 cache
 *.autosave
+test.plantuml

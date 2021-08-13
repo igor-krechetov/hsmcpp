@@ -19,6 +19,7 @@ set(SRC_UNITTESTS_COMMON 01_states.cpp
                          06_dispatchers.cpp
                          07_parallel.cpp
                          08_history.cpp
+                         09_timers.cpp
                          TestsCommon.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/ABCHsm.cpp

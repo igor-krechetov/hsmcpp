@@ -61,23 +61,26 @@ namespace hsmcpp
 #define ENV_DUMPPATH                            "HSMCPP_DUMP_PATH"
 #define DEFAULT_DUMP_PATH                       "./dump.hsmlog"
 
-typedef std::vector<Variant> VariantList_t;
+using VariantList_t = std::vector<Variant>;
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 class HierarchicalStateMachine
 {
 public:
-    typedef std::function<void(const VariantList_t&)> HsmTransitionCallback_t;
-    typedef std::function<bool(const VariantList_t&)> HsmTransitionConditionCallback_t;
-    typedef std::function<void(const VariantList_t&)> HsmStateChangedCallback_t;
-    typedef std::function<bool(const VariantList_t&)> HsmStateEnterCallback_t;
-    typedef std::function<bool(void)>                 HsmStateExitCallback_t;
+    using HsmTransitionCallback_t = std::function<void(const VariantList_t&)>;
+    using HsmTransitionConditionCallback_t = std::function<bool(const VariantList_t&)>;
+    using HsmStateChangedCallback_t = std::function<void(const VariantList_t&)>;
+    using HsmStateEnterCallback_t = std::function<bool(const VariantList_t&)>;
+    using HsmStateExitCallback_t = std::function<bool(void)>;
+    using HsmTransitionFailedCallback_t = std::function<void(const HsmEventEnum, const VariantList_t&)>;
 
     #define HsmTransitionCallbackPtr_t(_class, _func)              void (_class::*_func)(const VariantList_t&)
     #define HsmTransitionConditionCallbackPtr_t(_class, _func)     bool (_class::*_func)(const VariantList_t&)
     #define HsmStateChangedCallbackPtr_t(_class, _func)            void (_class::*_func)(const VariantList_t&)
     #define HsmStateEnterCallbackPtr_t(_class, _func)              bool (_class::*_func)(const VariantList_t&)
     #define HsmStateExitCallbackPtr_t(_class, _func)               bool (_class::*_func)()
+    #define HsmTransitionFailedCallbackPtr_t(_class, _func)        void (_class::*_func)(const HsmEventEnum, const VariantList_t&)
+
 
     enum class HistoryType
     {
@@ -231,6 +234,12 @@ public:
     //       for multithreaded environment where it's impossible to delete HSM on the same thread where it was initialized.
     //       Then you must call release() on the Dispatcher's thread before deleting HSM instance on another thread.
     void release();
+
+    void registerFailedTransitionCallback(const HsmTransitionFailedCallback_t& onFailedTransition);
+
+    template <class HsmHandlerClass>
+    void registerFailedTransitionCallback(HsmHandlerClass* handler,
+                                          HsmTransitionFailedCallbackPtr_t(HsmHandlerClass, onFailedTransition));
 
     // If state has substates its callbacks will be ignored
     template <class HsmHandlerClass>
@@ -389,6 +398,8 @@ private:
     HandlerID_t mTimerHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
     bool mStopDispatching = false;
 
+    HsmTransitionFailedCallback_t mFailedTransitionCallback;
+
     HsmStateEnum mInitialState;
     std::list<HsmStateEnum> mActiveStates;
     std::multimap<std::pair<HsmStateEnum, HsmEventEnum>, TransitionInfo> mTransitionsByEvent; // FROM_STATE, EVENT => TO
@@ -404,8 +415,6 @@ private:
     std::map<HsmStateEnum, HistoryInfo> mHistoryData;
 
     std::multimap<std::pair<HsmStateEnum, StateActionTrigger>, StateActionInfo> mRegisteredActions;
-
-
 
 #ifdef HSM_ENABLE_SAFE_STRUCTURE
     std::list<HsmStateEnum> mTopLevelStates; // list of states which are not substates and dont have substates of their own
@@ -511,6 +520,20 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::release()
         mDispatcher.reset();
         mEventsHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
     }
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerFailedTransitionCallback(const HsmTransitionFailedCallback_t& onFailedTransition)
+{
+    mFailedTransitionCallback = onFailedTransition;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+template <class HsmHandlerClass>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerFailedTransitionCallback(HsmHandlerClass* handler,
+                                                                                            HsmTransitionFailedCallbackPtr_t(HsmHandlerClass, onFailedTransition))
+{
+    mFailedTransitionCallback = std::bind(onFailedTransition, handler, std::placeholders::_1, std::placeholders::_2);
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -1356,13 +1379,18 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                     }
                     break;
                 case HsmEventStatus_t::CANCELED:
-                    break;
                 case HsmEventStatus_t::DONE_FAILED:
                 default:
                     // do nothing
                     break;
             }
         }
+    }
+
+    if (mFailedTransitionCallback && ((HsmEventStatus_t::DONE_FAILED == res) || (HsmEventStatus_t::CANCELED == res)))
+    {
+        __HSM_TRACE_LINE__();
+        mFailedTransitionCallback(event.type, event.args);
     }
 
     __HSM_TRACE_CALL_RESULT__("%d", SC2INT(res));

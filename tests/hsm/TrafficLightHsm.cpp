@@ -2,6 +2,7 @@
 
 TrafficLightHsm::TrafficLightHsm() : HierarchicalStateMachine(TrafficLightState::OFF)
 {
+    registerFailedTransitionCallback<TrafficLightHsm>(this, &TrafficLightHsm::onTransitionFailed);
 }
 
 TrafficLightHsm::~TrafficLightHsm()
@@ -55,6 +56,13 @@ bool TrafficLightHsm::checkConditionOff2On(const VariantList_t& args)
     }
 
     return result;
+}
+
+void TrafficLightHsm::onTransitionFailed(const TrafficLightEvent event, const VariantList_t& args)
+{
+    mFailedTransitionCounter++;
+    mLastFailedTransition = event;
+    mLastFailedTransitionArgs = args;
 }
 
 void TrafficLightHsm::SetUp()

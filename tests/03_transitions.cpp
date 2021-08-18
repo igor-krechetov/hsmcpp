@@ -38,7 +38,7 @@ TEST_F(TrafficLightHsm, transition_with_args)
     EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
     EXPECT_EQ(mTransitionCounterNextState, 1);
 
-    EXPECT_EQ(mTransitionArgsNextState.size(), 4);
+    ASSERT_EQ(mTransitionArgsNextState.size(), 4);
 
     EXPECT_TRUE(mTransitionArgsNextState[0].isNumeric());
     EXPECT_EQ(mTransitionArgsNextState[0].toInt64(), 12);
@@ -51,6 +51,30 @@ TEST_F(TrafficLightHsm, transition_with_args)
 
     EXPECT_TRUE(mTransitionArgsNextState[3].isBool());
     EXPECT_FALSE(mTransitionArgsNextState[3].toBool());
+}
+
+TEST_F(TrafficLightHsm, transition_failed_notification)
+{
+    TEST_DESCRIPTION("Clients can receive notifications about failed transitions");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    setupDefault();
+
+    //-------------------------------------------
+    // ACTIONS
+    TrafficLightState prevState = getLastActiveState();
+
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY, 123));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_EQ(mFailedTransitionCounter, 1);
+    EXPECT_EQ(mLastFailedTransition, TrafficLightEvent::NEXT_STATE);
+
+    ASSERT_EQ(mLastFailedTransitionArgs.size(), 1);
+    EXPECT_TRUE(mLastFailedTransitionArgs[0].isNumeric());
+    EXPECT_EQ(mLastFailedTransitionArgs[0].toInt64(), 123);
 }
 
 TEST_F(TrafficLightHsm, transition_non_existent)
@@ -72,6 +96,10 @@ TEST_F(TrafficLightHsm, transition_non_existent)
     EXPECT_EQ(getLastActiveState(), prevState);
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 0);
+
+    EXPECT_EQ(mFailedTransitionCounter, 1);
+    EXPECT_EQ(mLastFailedTransition, TrafficLightEvent::NEXT_STATE);
+    EXPECT_TRUE(mLastFailedTransitionArgs.empty());
 }
 
 TEST_F(TrafficLightHsm, transition_cancel_on_exit)
@@ -96,6 +124,10 @@ TEST_F(TrafficLightHsm, transition_cancel_on_exit)
     EXPECT_EQ(mStateCounterEnter, 0);
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 0);
+
+    EXPECT_EQ(mFailedTransitionCounter, 1);
+    EXPECT_EQ(mLastFailedTransition, TrafficLightEvent::TURN_ON);
+    EXPECT_TRUE(mLastFailedTransitionArgs.empty());
 }
 
 TEST_F(TrafficLightHsm, transition_cancel_on_enter)
@@ -121,6 +153,10 @@ TEST_F(TrafficLightHsm, transition_cancel_on_enter)
     EXPECT_EQ(mStateCounterEnterCancel, 1);
     EXPECT_EQ(mStateCounterOff, 1);
     EXPECT_EQ(mStateCounterStarting, 0);
+
+    EXPECT_EQ(mFailedTransitionCounter, 1);
+    EXPECT_EQ(mLastFailedTransition, TrafficLightEvent::TURN_ON);
+    EXPECT_TRUE(mLastFailedTransitionArgs.empty());
 }
 
 TEST_F(TrafficLightHsm, transition_self)
@@ -212,6 +248,11 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_false)
     // VALIDATION
     EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
     EXPECT_EQ(mTransitionCounterNextState, 0);
+
+    EXPECT_EQ(mFailedTransitionCounter, 3);
+    EXPECT_EQ(mLastFailedTransition, TrafficLightEvent::TURN_ON);
+    ASSERT_EQ(mLastFailedTransitionArgs.size(), 1);
+    EXPECT_EQ(mLastFailedTransitionArgs[0].toString(), "turn off");
 }
 
 TEST_F(TrafficLightHsm, transition_conditional_multiple)
@@ -228,16 +269,21 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple)
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "ignore"));
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn on"));
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));// fail
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "ignore"));// fail
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));// ok: off->off
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn on"));// ok: off->starting
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));// fail
 
     //-------------------------------------------
     // VALIDATION
     EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
     EXPECT_EQ(mTransitionCounterNextState, 2);
+
+    EXPECT_EQ(mFailedTransitionCounter, 3);
+    EXPECT_EQ(mLastFailedTransition, TrafficLightEvent::TURN_ON);
+    ASSERT_EQ(mLastFailedTransitionArgs.size(), 1);
+    EXPECT_EQ(mLastFailedTransitionArgs[0].toString(), "turn off");
 }
 
 // NOTE: test is obsolete with introduction of parallel feature

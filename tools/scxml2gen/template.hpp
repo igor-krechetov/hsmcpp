@@ -49,6 +49,9 @@ protected:
 
 // HSM transition callbacks
 protected:
+    // NOTE: override this method in child class if needed
+    virtual void onTransitionFailed(const @ENUM_EVENTS@ event, const hsmcpp::VariantList_t& args);
+
     @HSM_TRANSITION_ACTIONS@
 
 // HSM transition condition callbacks

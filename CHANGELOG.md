@@ -1,5 +1,41 @@
 # Changelog
-All notable changes to this project will be documented in this file.
+All notable changes to project will be documented in this file.
+
+## [0.17.0] - 2021-08-18
+### Added
+- callback for notifications about failed transitions
+
+## [0.16.0] - 2021-08-13
+### Added
+- timers support to hsmcpp
+- timers support in GLibmm dispatcher
+- scxml2gen: support of timers
+- scxml2gen: improve state description format when generating plantuml diagram
+- hsmdebugger: support of timers
+
+## [0.15.0] 2021-08-06
+### Fixed
+- added namespace for hsmcpp
+
+## [0.14.4] 2021-08-04
+### Added
+- BYTEARRAY type to Variant
+### Fixed
+- fix build issue related with no default constructor for TransitionInfo
+
+## [0.14.3] 2021-08-03
+### Fixed
+- fix build warnings
+- renamed trace macroses to avoid potential name conflicts
+
+## [0.14.1] 2021-06-13
+### Updated
+- memory footprint test
+- add new template to use hsmcpp directly from GitHub
+- diagrams for wiki (history)
+### Fixed
+- fix build script to explicitly use python 3
+- fix variables export
 
 ## [0.14.1] - 2021-06-05
 ### Added

@@ -13,6 +13,8 @@
 
 void @CLASS_NAME@::configureHsm()
 {
+    registerFailedTransitionCallback<@CLASS_NAME@>(this, &@CLASS_NAME@::onTransitionFailed);
+
     @REGISTER_STATES@
 
     @REGISTER_SUBSTATES@
@@ -22,6 +24,11 @@ void @CLASS_NAME@::configureHsm()
     @REGISTER_TIMERS@
 
     @REGISTER_ACTIONS@
+}
+
+void @CLASS_NAME@::onTransitionFailed(const @ENUM_EVENTS@ event, const hsmcpp::VariantList_t& args)
+{
+    // do nothing
 }
 
 std::string @CLASS_NAME@::getStateName(const @ENUM_STATES@ state)

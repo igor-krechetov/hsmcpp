@@ -55,9 +55,16 @@ public:
     bool checkConditionOff2Off(const VariantList_t& args);
     bool checkConditionOff2On(const VariantList_t& args);
 
+    void onTransitionFailed(const TrafficLightEvent event, const VariantList_t& args);
+
 protected:
     void SetUp() override;
     void TearDown() override;
+
+public:
+    int mFailedTransitionCounter = 0;
+    TrafficLightEvent mLastFailedTransition;
+    VariantList_t mLastFailedTransitionArgs;
 };
 
 #endif // __HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP__

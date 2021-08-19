@@ -13,7 +13,7 @@ namespace hsmcpp
 {
 
 class Variant;
-typedef std::map<std::string, Variant> VariantDict_t;
+typedef std::map<Variant, Variant> VariantDict_t;
 typedef std::pair<Variant, Variant> VariantPair_t;
 
 #define DEF_OPERATOR_ASSIGN(_val_type, _internal_type)              \
@@ -74,6 +74,9 @@ public:
     static Variant make(const VariantDict_t& v);
     static Variant make(const Variant& first, const Variant& second);
     static Variant make(const Variant& v);
+
+    template <typename K, typename V>
+    static Variant make(const std::map<K, V>& v);
 
 public:
     Variant() = default;
@@ -153,9 +156,21 @@ private:
     Type type = Type::UNKNOWN;
 };
 
+template <typename K, typename V>
+Variant Variant::make(const std::map<K, V>& v)
+{
+    VariantDict_t* dict = new VariantDict_t();
+
+    for (auto it = v.begin() ; it != v.end(); ++it)
+    {
+        dict->emplace(make(it->first), make(it->second));
+    }
+
+    return Variant(dict, Type::DICTIONARY);
+}
+
 } // namespace hsmcpp
 
 template struct std::pair<hsmcpp::Variant, hsmcpp::Variant>;
-
 
 #endif  // __HSMCPP_VARIANT_HPP__

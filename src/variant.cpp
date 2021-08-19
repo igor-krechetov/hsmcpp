@@ -422,7 +422,7 @@ std::string Variant::toString() const
 
             for (auto it = dict->begin() ; it != dict->end(); ++it)
             {
-                result += it->first + "=[" + it->second.toString() + "], ";
+                result += it->first.toString() + "=[" + it->second.toString() + "], ";
             }
             break;
         }

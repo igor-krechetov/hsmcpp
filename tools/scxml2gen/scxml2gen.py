@@ -63,10 +63,23 @@ def getCallbackName(elem):
             else:
                 print(f"WARNING: skipping {getTag(elem.tag)} element (doesnt have any value)\n{dumpXmlElement(elem)}")
         elif (getTag(elem.tag) == "transition") and ("cond" in elem.attrib):
-            callback = elem.attrib["cond"]
+            temp = elem.attrib["cond"].split(" is ")
+            if len(temp) == 2:
+                callback = [temp[0].strip(" \t"), temp[1].strip(" \t").lower()]
+            elif len(temp) == 1:
+                callback = [temp[0].strip(" \t"), "true"]
+            else:
+                print(f"ERROR: invalid 'cond' value (format: '<callback> is {{ true | false }}'): {elem.attrib['cond']}")
+                exit(3)
 
     if callback is not None:
-        validateIdentifier(callback)
+        if type(callback) is list:
+            validateIdentifier(callback[0])
+            if (callback[1] != "true") and (callback[1] != "false"):
+                print(f"ERROR: invalid 'cond' value (format: '<callback> is {{ true | false }}'): {elem.attrib['cond']}")
+                exit(3)
+        else:
+            validateIdentifier(callback)
 
     return callback
 
@@ -105,7 +118,7 @@ def xmlFind(node, tag):
             res = child
             break
     return res
-    
+
 
 def xmlFindAll(node, tag):
     for child in node:
@@ -256,7 +269,7 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
 #                    {
 #                        "event": "NEXT_STATE",
 #                        "target": "Yellow",
-#                        "condition": "checkYellowTransition"
+#                        "condition": ["checkYellowTransition", "true"],
 #                        "callback": "onTransition"
 #                    }
 #                ],
@@ -285,7 +298,7 @@ def parseScxml(path, namePrefix = ""):
                     curState['initial_state'] = True
                     isCorrectInitialState = True
                     break
-            
+
             if (isCorrectInitialState == True) or (len(initialState) == 0):
                 hsm = states
             else:
@@ -339,6 +352,7 @@ def applySingleVariableToLine(line, variableName, variableValue):
                         curValue = curValue.upper()
                     newLine += offset + curValue + "\n"
     return newLine
+
 
 def applyGenVariablesToLine(genVars, line):
     newLine = line
@@ -489,11 +503,11 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                                     historyCallback += f", &{genVars['CLASS_NAME']}::{defaultTransition['callback']}"
 
                             genVars["REGISTER_SUBSTATES"].append(
-                                                    f"registerHistory({genVars['ENUM_STATES']}::{curState['id']}, " +
-                                                    f"{genVars['ENUM_STATES']}::{curSubstate['id']}, " +
-                                                    f"{historyType}" +
-                                                    f"{defaultTarget}"
-                                                    f"{historyCallback});")
+                                f"registerHistory({genVars['ENUM_STATES']}::{curState['id']}, " +
+                                f"{genVars['ENUM_STATES']}::{curSubstate['id']}, " +
+                                f"{historyType}" +
+                                f"{defaultTarget}"
+                                f"{historyCallback});")
                         else:
                             registerSubstateFunc = "registerSubstate"
                             isInitialState = ("initial_state" in curSubstate) and (curSubstate["initial_state"] == True)
@@ -510,8 +524,8 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                                 continue
 
                             genVars["REGISTER_SUBSTATES"].append(f"{registerSubstateFunc}({genVars['ENUM_STATES']}::{curState['id']}, " +
-                                                                                        f"{genVars['ENUM_STATES']}::{curSubstate['id']}" +
-                                                                                        f"{initialStateCondition});")
+                                                                 f"{genVars['ENUM_STATES']}::{curSubstate['id']}" +
+                                                                 f"{initialStateCondition});")
 
             genVars["ENUM_STATES_ITEM"].append({curState['id']})
             registerCallbacks = ""
@@ -564,8 +578,8 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                         registerCallbacks += ", nullptr"
 
                     if 'condition' in curTransition:
-                        genVars["HSM_TRANSITION_CONDITIONS"].add(prepareHsmcppConditionCallbackDeclaration(curTransition['condition']))
-                        registerCallbacks += f", &{genVars['CLASS_NAME']}::{curTransition['condition']}"
+                        genVars["HSM_TRANSITION_CONDITIONS"].add(prepareHsmcppConditionCallbackDeclaration(curTransition['condition'][0]))
+                        registerCallbacks += f", &{genVars['CLASS_NAME']}::{curTransition['condition'][0]}, {curTransition['condition'][1]}"
 
                     if "&" in registerCallbacks:
                         registerCallbacks = ", this" + registerCallbacks
@@ -573,11 +587,10 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                         registerCallbacks = ""
 
                     genVars["REGISTER_TRANSITIONS"].append(f"registerTransition<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}, " +
-                                                                                                 f"{genVars['ENUM_STATES']}::{curTransition['target']}, " +
-                                                                                                 f"{genVars['ENUM_EVENTS']}::{curTransition['event']}" +
-                                                                                                 registerCallbacks + ");")
+                                                           f"{genVars['ENUM_STATES']}::{curTransition['target']}, " +
+                                                           f"{genVars['ENUM_EVENTS']}::{curTransition['event']}" +
+                                                           registerCallbacks + ");")
         pendingStates = substates
-
 
     # at this point we can be sure that all timers were identified
     genVars["ENUM_TIMERS_ITEM"] = set(sorted(genVars["ENUM_TIMERS_ITEM"]))
@@ -678,7 +691,7 @@ def preparePlantumlTransition(offset, fromState, toState, curTransition, highlig
     plantumlTransition = f"{offset}{fromState} -{highlightTransition}-> {toState}: {highlightTransitionEvent}{curTransition['event']}{highlightTransitionEvent}"
 
     if "condition" in curTransition:
-        plantumlTransition += f"\\n{highlightTransitionEvent}[{curTransition['condition']}]{highlightTransitionEvent}"
+        plantumlTransition += f"\\n{highlightTransitionEvent}[{curTransition['condition'][0]} is {curTransition['condition'][1]}]{highlightTransitionEvent}"
     if "callback" in curTransition:
         plantumlTransition += f"\\n{highlightTransitionEvent}<{curTransition['callback']}>{highlightTransitionEvent}"
     plantumlTransition += "\n"
@@ -723,12 +736,12 @@ def generatePlantumlState(hsm, stateData, level, highlight=None):
 
         if highlight and (stateData['id'] in highlight['transitions']):
             highlightEntryTransitionInfo = highlight['transitions'][stateData['id']]
-            if (highlightEntryTransitionInfo["from"] == "") and\
-               (('initial_state_condition' not in stateData) or\
+            if (highlightEntryTransitionInfo["from"] == "") and \
+                (('initial_state_condition' not in stateData) or \
                 highlightEntryTransitionInfo["event"] == stateData['initial_state_condition']):
-                    highlightEntryTransition = f"[#{highlightColorActive},bold]"
-                    if "args" in highlightEntryTransitionInfo:
-                        entryTransitionArgs = highlightEntryTransitionInfo['args']
+                highlightEntryTransition = f"[#{highlightColorActive},bold]"
+                if "args" in highlightEntryTransitionInfo:
+                    entryTransitionArgs = highlightEntryTransitionInfo['args']
 
         plantumlState += f"{generateOffset(level * 4)}[*] -{highlightEntryTransition}-> {stateData['id']}{condition}\n"
         if entryTransitionArgs and len(entryTransitionArgs) > 0:
@@ -835,7 +848,7 @@ def generatePlantumlState(hsm, stateData, level, highlight=None):
         if highlightState and (stateData['is_history'] is False):
             if len(callbackFailedMsg) > 0:
                 plantumlState += f"{offset}state \"**{stateData['id']}**\" as {stateData['id']} #{highlightColorBlocked}\n"
-                plantumlState += f"note left of {stateData['id']} : "\
+                plantumlState += f"note left of {stateData['id']} : " \
                                  f"**Transition blocked**\\n{callbackFailedMsg}() returned FALSE"
                 if len(callbackArgs) > 0:
                     plantumlState += f"\\n\\n**Arguments**\\n\\n{callbackArgs}"
@@ -848,9 +861,9 @@ def generatePlantumlState(hsm, stateData, level, highlight=None):
     # highlighting transition targets must be done AFTER state is fully defined (since transitions can appear earlier)
     # but skip self transitions since in this case state will be active
     if highlight \
-       and (stateData['is_history'] is False) \
-       and (stateData['id'] in highlight['transitions']) \
-       and (stateData['id'] != highlight['transitions'][stateData['id']]["from"]):
+            and (stateData['is_history'] is False) \
+            and (stateData['id'] in highlight['transitions']) \
+            and (stateData['id'] != highlight['transitions'][stateData['id']]["from"]):
         plantumlState += f"{offset}state {stateData['id']} ##[dotted]{highlightColorActive}\n"
 
     # -----------------------------------

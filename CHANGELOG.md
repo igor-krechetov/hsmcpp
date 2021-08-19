@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.18.0] - 2021-08-19
+### Added
+- added posibility to set expected condition value for transitions
+### Updated
+- improved internal HSM traces
+
+## [0.17.1] - 2021-08-19
+### Added
+- Variant::make to convert std::map to VariantDict_t
+### Updated
+- improve VariantDict_t to accept Variant as a key
+
 ## [0.17.0] - 2021-08-18
 ### Added
 - callback for notifications about failed transitions

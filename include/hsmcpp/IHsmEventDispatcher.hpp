@@ -43,8 +43,10 @@ public:
 
     /**
      * dispatcher must guarantee that emit call is thread-safe
+     *
+     * @param handlerID     id of the handler that should be called
      */
-    virtual void emitEvent() = 0;
+    virtual void emitEvent(const HandlerID_t handlerID) = 0;
 
     /**
      * Used by HSM to receive notifications about timer events.

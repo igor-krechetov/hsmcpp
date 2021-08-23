@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.18.1] - 2021-08-20
+### Added
+- Variant::toMap()
+- Variant::isDictionary()
+### Updated
+- improved dispatcher emit logic when used with multiple HSM instances
+### Fixed
+- fixed 05_timers_generated example
+
 ## [0.18.0] - 2021-08-19
 ### Added
 - added posibility to set expected condition value for transitions

@@ -6,8 +6,6 @@
 
 #include "HsmEventDispatcherBase.hpp"
 #include <glib.h>
-#include <map>
-#include <mutex>
 #include <condition_variable>
 
 namespace hsmcpp
@@ -22,12 +20,9 @@ public:
 
     virtual HandlerID_t registerEventHandler(const EventHandlerFunc_t& handler) override;
     virtual void unregisterEventHandler(const HandlerID_t handlerID) override;
-    virtual void emitEvent() override;
+    virtual void emitEvent(const HandlerID_t handlerID) override;
 
     virtual bool start() override;
-
-protected:
-    void unregisterAllEventHandlers();
 
 private:
     static gboolean onPipeDataAvailable(GIOChannel* gio, GIOCondition condition, gpointer data);
@@ -36,12 +31,10 @@ private:
     GMainContext* mContext = nullptr;
     GIOChannel* mReadChannel = nullptr;
     GSource* mIoSource = nullptr;
-    std::map<HandlerID_t, EventHandlerFunc_t> mEventHandlers;
-    std::mutex mSyncPipe;
+    std::mutex mPipeSync;
     int mPipeFD[2] = {-1, -1};
     bool mStopDispatcher = false;
     bool mDispatchingIterationRunning = false;
-    std::mutex mSyncEventHandlers;
     std::condition_variable mDispatchingDoneEvent;
 };
 

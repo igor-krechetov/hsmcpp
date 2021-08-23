@@ -7,7 +7,6 @@
 #include "HsmEventDispatcherBase.hpp"
 #include <glibmm.h>
 #include <memory>
-#include <map>
 
 namespace hsmcpp
 {
@@ -22,7 +21,7 @@ namespace hsmcpp
 //       Not following these rules will result in an occasional SIGSEGV crash (usually when deleting dispatcher instance).
 //
 //       Unless you really have to it's always better to reuse a single dispatcher instance for multiple HSMs instead of
-//       creating/deliting multiple ones(they will anyway handle events sequentially since they use same Glib main loop)
+//       creating/deleting multiple ones(they will anyway handle events sequentially since they use same Glib main loop)
 
 class HsmEventDispatcherGLibmm: public HsmEventDispatcherBase
 {
@@ -33,23 +32,21 @@ public:
 
     virtual bool start() override;
 
-    virtual HandlerID_t registerEventHandler(const EventHandlerFunc_t& handler) override;
-    virtual void unregisterEventHandler(const HandlerID_t handlerID) override;
-    virtual void emitEvent() override;
+    virtual void emitEvent(const HandlerID_t handlerID) override;
 
 protected:
-    void unregisterAllEventHandlers();
     void unregisterAllTimerHandlers();
 
     void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
     void stopTimerImpl(const TimerID_t timerID) override;
 
+    void onDispatchEvents();
     bool onTimerEvent(const TimerID_t timerID);
 
 private:
     Glib::RefPtr<Glib::MainContext> mMainContext;
     std::unique_ptr<Glib::Dispatcher> mDispatcher;
-    std::map<HandlerID_t, sigc::connection> mEventHandlers;// <handlerID, connection>
+    sigc::connection mDispatcherConnection;
     std::map<TimerID_t, sigc::connection> mTimerHandlers;// <timerID, connection>
 };
 

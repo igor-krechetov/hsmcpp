@@ -20,12 +20,6 @@ protected:
     {
         printf("Off\n");
     }
-
-    bool entryCallback(const hsmcpp::VariantList_t& args) override
-    {
-        printf("entryCallback\n");
-        return true;
-    }
 };
 
 int main(const int argc, const char**argv)

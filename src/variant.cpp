@@ -291,6 +291,11 @@ bool Variant::isByteArray() const
     return (type == Type::BYTEARRAY);
 }
 
+bool Variant::isDictionary() const
+{
+    return (type == Type::DICTIONARY);
+}
+
 bool Variant::isNumeric() const
 {
     bool numeric = false;

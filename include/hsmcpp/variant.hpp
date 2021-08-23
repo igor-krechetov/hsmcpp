@@ -109,6 +109,7 @@ public:
 
     bool isString() const;
     bool isByteArray() const;
+    bool isDictionary() const;
     bool isNumeric() const;
     bool isSignedNumeric() const;
     bool isUnsignedNumeric() const;
@@ -126,6 +127,9 @@ public:
     uint64_t toUInt64() const;
     double toDouble() const;
     bool toBool() const;
+
+    template <typename K, typename V>
+    std::map<K, V> toMap() const;
 
     operator bool() const;
 
@@ -167,6 +171,27 @@ Variant Variant::make(const std::map<K, V>& v)
     }
 
     return Variant(dict, Type::DICTIONARY);
+}
+
+template <typename K, typename V>
+std::map<K, V> Variant::toMap() const
+{
+    std::map<K, V> result;
+
+    if (true == isDictionary())
+    {
+        VariantDict_t* dict = value<VariantDict_t>();
+
+        if (nullptr != dict)
+        {
+            for (auto it = dict->begin(); it != dict->end(); ++it)
+            {
+                result.emplace(*(it->first.value<K>()), *(it->second.value<V>()));
+            }
+        }
+    }
+
+    return result;
 }
 
 } // namespace hsmcpp

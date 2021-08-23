@@ -13,6 +13,35 @@ HsmEventDispatcherBase::~HsmEventDispatcherBase()
 {
 }
 
+HandlerID_t HsmEventDispatcherBase::registerEventHandler(const EventHandlerFunc_t& handler)
+{
+    __HSM_TRACE_CALL_DEBUG__();
+    HandlerID_t id = getNextHandlerID();
+    std::unique_lock<std::mutex> lck(mHandlersSync);
+
+    mEventHandlers.emplace(id, handler);
+
+    return id;
+}
+
+void HsmEventDispatcherBase::unregisterEventHandler(const HandlerID_t handlerID)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("handlerID=%d", handlerID);
+    std::unique_lock<std::mutex> lck(mHandlersSync);
+
+    mEventHandlers.erase(handlerID);
+}
+
+void HsmEventDispatcherBase::emitEvent(const HandlerID_t handlerID)
+{
+    __HSM_TRACE_CALL_DEBUG__();
+    std::unique_lock<std::mutex> lck(mEmitSync);
+
+    mPendingEvents.push_back(handlerID);
+
+    // NOTE: this is not a full implementations. child classes must implement additional logic
+}
+
 HandlerID_t HsmEventDispatcherBase::registerTimerHandler(const TimerHandlerFunc_t& handler)
 {
     const HandlerID_t newID = getNextHandlerID();
@@ -116,6 +145,12 @@ int HsmEventDispatcherBase::getNextHandlerID()
     return mNextHandlerId++;
 }
 
+void HsmEventDispatcherBase::unregisterAllEventHandlers()
+{
+    std::unique_lock<std::mutex> lck(mHandlersSync);
+    mEventHandlers.clear();
+}
+
 HsmEventDispatcherBase::TimerInfo HsmEventDispatcherBase::getTimerInfo(const TimerID_t timerID) const
 {
     TimerInfo result;
@@ -148,6 +183,34 @@ void HsmEventDispatcherBase::startTimerImpl(const TimerID_t timerID, const unsig
 
 void HsmEventDispatcherBase::stopTimerImpl(const TimerID_t timerID) {
     // do nothing. must be implemented in platfrom specific dispatcher
+}
+
+void HsmEventDispatcherBase::dispatchPendingEvents()
+{
+    __HSM_TRACE_CALL_DEBUG__();
+
+    if (mPendingEvents.size() > 0)
+    {
+        std::list<HandlerID_t> events;
+
+        {
+            std::unique_lock<std::mutex> lck(mEmitSync);
+
+            events = std::move(mPendingEvents);
+        }
+
+        std::unique_lock<std::mutex> lck(mHandlersSync);
+
+        for (auto it = events.begin(); it != events.end(); ++it)
+        {
+            auto itHandler = mEventHandlers.find(*it);
+
+            if (itHandler != mEventHandlers.end())
+            {
+                itHandler->second();
+            }
+        }
+    }
 }
 
 } // namespace hsmcpp

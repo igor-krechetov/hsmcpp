@@ -23,37 +23,13 @@ HsmEventDispatcherSTD::~HsmEventDispatcherSTD()
     join();
 }
 
-HandlerID_t HsmEventDispatcherSTD::registerEventHandler(const EventHandlerFunc_t& handler)
+void HsmEventDispatcherSTD::emitEvent(const HandlerID_t handlerID)
 {
     __HSM_TRACE_CALL_DEBUG__();
-    HandlerID_t id = getNextHandlerID();
 
-    mEventHandlers.emplace(id, handler);
-
-    return id;
-}
-
-void HsmEventDispatcherSTD::unregisterEventHandler(const HandlerID_t handlerId)
-{
-    std::lock_guard<std::mutex> lck(mHandlersSync);
-
-    __HSM_TRACE_CALL_DEBUG_ARGS__("handlerId=%d", handlerId);
-    auto it = mEventHandlers.find(handlerId);
-
-    if (it != mEventHandlers.end())
-    {
-        mEventHandlers.erase(it);
-    }
-}
-
-void HsmEventDispatcherSTD::emitEvent()
-{
-    __HSM_TRACE_CALL_DEBUG__();
     if (true == mDispatcherThread.joinable())
     {
-        std::lock_guard<std::mutex> lck(mEmitSync);
-
-        ++mPendingEmitCount;
+        HsmEventDispatcherBase::emitEvent(handlerID);
         mEmitEvent.notify_one();
     }
 }
@@ -99,60 +75,23 @@ void HsmEventDispatcherSTD::join()
     }
 }
 
-void HsmEventDispatcherSTD::unregisterAllEventHandlers()
-{
-    std::lock_guard<std::mutex> lck(mHandlersSync);
-
-    // NOTE: can be called only in destructor after thread was already stopped
-    if (false == mDispatcherThread.joinable())
-    {
-        mEventHandlers.clear();
-    }
-}
-
 void HsmEventDispatcherSTD::doDispatching()
 {
     __HSM_TRACE_CALL_DEBUG__();
 
     while (false == mStopDispatcher)
     {
-        while ((mPendingEmitCount > 0) && (mEventHandlers.size() > 0))
-        {
-            __HSM_TRACE_DEBUG__("handle emit event... (%d)", mPendingEmitCount);
-
-            {
-                std::lock_guard<std::mutex> lck(mHandlersSync);
-
-                for (auto it = mEventHandlers.begin(); it != mEventHandlers.end(); ++it)
-                {
-                    if (true == mStopDispatcher)
-                    {
-                        __HSM_TRACE_DEBUG__("stopping...");
-                        break;
-                    }
-
-                    it->second();
-                }
-            }
-
-            --mPendingEmitCount;
-
-            if (true == mStopDispatcher)
-            {
-                __HSM_TRACE_DEBUG__("stopping...");
-                break;
-            }
-        }
+        HsmEventDispatcherBase::dispatchPendingEvents();
 
         if (false == mStopDispatcher)
         {
             std::unique_lock<std::mutex> lck(mEmitSync);
 
-            if (mPendingEmitCount == 0)
+            if (true == mPendingEvents.empty())
             {
                 __HSM_TRACE_DEBUG__("wait for emit...");
-                mEmitEvent.wait(lck, [=](){ return (mPendingEmitCount > 0) || (true == mStopDispatcher); });
-                __HSM_TRACE_DEBUG__("woke up. pending events=%d", mPendingEmitCount);
+                mEmitEvent.wait(lck, [=](){ return (false == mPendingEvents.empty()) || (true == mStopDispatcher); });
+                __HSM_TRACE_DEBUG__("woke up. pending events=%lu", mPendingEvents.size());
             }
         }
     }

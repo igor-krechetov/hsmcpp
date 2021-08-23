@@ -22,7 +22,7 @@ HsmEventDispatcherGLib::HsmEventDispatcherGLib(GMainContext* context)
 HsmEventDispatcherGLib::~HsmEventDispatcherGLib()
 {
     __HSM_TRACE_CALL__();
-    std::unique_lock<std::mutex> lck(mSyncEventHandlers);
+    std::unique_lock<std::mutex> lck(mHandlersSync);
 
     mStopDispatcher = true;
     unregisterAllEventHandlers();
@@ -43,34 +43,14 @@ HsmEventDispatcherGLib::~HsmEventDispatcherGLib()
     mPipeFD[1] = -1;
 }
 
-HandlerID_t HsmEventDispatcherGLib::registerEventHandler(const EventHandlerFunc_t& handler)
-{
-    __HSM_TRACE_CALL__();
-    HandlerID_t id = getNextHandlerID();
-
-    mEventHandlers.emplace(id, handler);
-
-    return id;
-}
-
-void HsmEventDispatcherGLib::unregisterEventHandler(const HandlerID_t handlerId)
-{
-    __HSM_TRACE_CALL__();
-    std::lock_guard<std::mutex> lck(mSyncEventHandlers);
-    auto it = mEventHandlers.find(handlerId);
-
-    if (it != mEventHandlers.end())
-    {
-        mEventHandlers.erase(it);
-    }
-}
-
-void HsmEventDispatcherGLib::emitEvent()
+void HsmEventDispatcherGLib::emitEvent(const HandlerID_t handlerID)
 {
     __HSM_TRACE_CALL__();
     if (mPipeFD[1] > 0)
     {
-        std::lock_guard<std::mutex> lck(mSyncPipe);
+        HsmEventDispatcherBase::emitEvent(handlerID);
+
+        std::lock_guard<std::mutex> lck(mPipeSync);
         char dummy = 1;
 
         // we just need to trigger the callback. there is no need to pass any real data there
@@ -143,11 +123,6 @@ bool HsmEventDispatcherGLib::start()
     return result;
 }
 
-void HsmEventDispatcherGLib::unregisterAllEventHandlers()
-{
-    mEventHandlers.clear();
-}
-
 gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOCondition condition, gpointer data)
 {
     __HSM_TRACE_CALL__();
@@ -158,7 +133,7 @@ gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOConditi
     {
         pThis->mDispatchingIterationRunning = true;
 
-        std::lock_guard<std::mutex> lck(pThis->mSyncEventHandlers);
+        std::lock_guard<std::mutex> lck(pThis->mHandlersSync);
         __HSM_TRACE__("condition=%d, G_IO_HUP=%s, G_IO_IN=%s", static_cast<int>(condition), BOOL2STR(condition & G_IO_HUP), BOOL2STR(condition & G_IO_IN));
 
         if (!(condition & G_IO_HUP))
@@ -168,10 +143,7 @@ gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOConditi
 
             if (1 == bytes)
             {
-                for (auto it = pThis->mEventHandlers.begin(); (it != pThis->mEventHandlers.end()) && (false == pThis->mStopDispatcher); ++it)
-                {
-                    it->second();
-                }
+                pThis->dispatchPendingEvents();
             }
         }
 

@@ -58,46 +58,15 @@ bool HsmEventDispatcherQt::start()
     return result;
 }
 
-HandlerID_t HsmEventDispatcherQt::registerEventHandler(const EventHandlerFunc_t& handler)
-{
-    __HSM_TRACE_CALL_DEBUG__();
-    HandlerID_t id = getNextHandlerID();
-
-    mEventHandlers.emplace(id, handler);
-
-    return id;
-}
-
-void HsmEventDispatcherQt::unregisterEventHandler(const HandlerID_t handlerId)
-{
-    std::lock_guard<std::mutex> lck(mHandlersSync);
-
-    __HSM_TRACE_CALL_DEBUG_ARGS__("handlerId=%d", handlerId);
-    auto it = mEventHandlers.find(handlerId);
-
-    if (it != mEventHandlers.end())
-    {
-        mEventHandlers.erase(it);
-    }
-}
-
-void HsmEventDispatcherQt::emitEvent()
+void HsmEventDispatcherQt::emitEvent(const HandlerID_t handlerID)
 {
     __HSM_TRACE_CALL_DEBUG__();
 
     if (QEvent::None != mQtEventType)
     {
+        HsmEventDispatcherBase::emitEvent(handlerID);
         QCoreApplication::postEvent(this, new QEvent(mQtEventType));
     }
-}
-
-void HsmEventDispatcherQt::unregisterAllEventHandlers()
-{
-    __HSM_TRACE_CALL_DEBUG__();
-    std::lock_guard<std::mutex> lck(mHandlersSync);
-
-    // NOTE: can be called only in destructor after thread was already stopped
-    mEventHandlers.clear();
 }
 
 bool HsmEventDispatcherQt::event(QEvent* ev)
@@ -107,12 +76,7 @@ bool HsmEventDispatcherQt::event(QEvent* ev)
 
     if (ev->type() == mQtEventType)
     {
-        std::lock_guard<std::mutex> lck(mHandlersSync);
-
-        for (auto it = mEventHandlers.begin(); it != mEventHandlers.end(); ++it)
-        {
-            it->second();
-        }
+        HsmEventDispatcherBase::dispatchPendingEvents();
 
         processed = true;
     }

@@ -872,7 +872,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionEx(const Hs
     }
 
     __HSM_TRACE_DEBUG__("transitionEx: emit");
-    mDispatcher->emitEvent();
+    mDispatcher->emitEvent(mEventsHandlerId);
 
     if (true == sync)
     {
@@ -969,7 +969,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::handleStartup()
 
         if (mPendingEvents.size() > 0)
         {
-            mDispatcher->emitEvent();
+            mDispatcher->emitEvent(mEventsHandlerId);
         }
     }
 }
@@ -1007,7 +1007,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchEvents()
 
         if ((false == mStopDispatching) && (false == mPendingEvents.empty()))
         {
-            mDispatcher->emitEvent();
+            mDispatcher->emitEvent(mEventsHandlerId);
         }
     }
 }
@@ -1733,7 +1733,7 @@ HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::PendingEventInfo::~Pending
 {
     if (true == cvLock.unique())
     {
-        __HSM_TRACE_CALL_DEBUG_ARGS__("event=%d was deleted. releasing lock", SC2INT(type));
+        __HSM_TRACE_CALL_DEBUG_ARGS__("event=<%s> was deleted. releasing lock", getEventName(type).c_str());
         unlock(HsmEventStatus_t::DONE_FAILED);
         cvLock.reset();
         syncProcessed.reset();

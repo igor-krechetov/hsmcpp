@@ -26,7 +26,7 @@ void @CLASS_NAME@::configureHsm()
     @REGISTER_ACTIONS@
 }
 
-void @CLASS_NAME@::onTransitionFailed(const @ENUM_EVENTS@ event, const hsmcpp::VariantList_t& args)
+void @CLASS_NAME@::onTransitionFailed(const @ENUM_EVENTS@ event, const hsmcpp::VariantVector_t& args)
 {
     // do nothing
 }

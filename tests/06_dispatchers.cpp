@@ -18,8 +18,8 @@ TEST(dispatchers, DISABLED_stresstest_create_destroy)
     {
         HierarchicalStateMachine<AbcState, AbcEvent>* hsm;
 
-        hsm->registerState(AbcState::A, [](const VariantList_t& args){});
-        hsm->registerState(AbcState::B, [](const VariantList_t& args){});
+        hsm->registerState(AbcState::A, [](const VariantVector_t& args){});
+        hsm->registerState(AbcState::B, [](const VariantVector_t& args){});
         hsm->registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
         hsm->registerTransition(AbcState::B, AbcState::A, AbcEvent::E1);
 

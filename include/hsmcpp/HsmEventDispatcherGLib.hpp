@@ -18,8 +18,6 @@ public:
     explicit HsmEventDispatcherGLib(GMainContext* context);
     virtual ~HsmEventDispatcherGLib();
 
-    virtual HandlerID_t registerEventHandler(const EventHandlerFunc_t& handler) override;
-    virtual void unregisterEventHandler(const HandlerID_t handlerID) override;
     virtual void emitEvent(const HandlerID_t handlerID) override;
 
     virtual bool start() override;
@@ -35,6 +33,7 @@ private:
     int mPipeFD[2] = {-1, -1};
     bool mStopDispatcher = false;
     bool mDispatchingIterationRunning = false;
+    std::mutex mDispatchingSync;
     std::condition_variable mDispatchingDoneEvent;
 };
 

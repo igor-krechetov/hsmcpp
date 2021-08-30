@@ -11,12 +11,12 @@ public:
 
 // HSM state changed callbacks
 protected:
-    void On(const hsmcpp::VariantList_t& args) override
+    void On(const hsmcpp::VariantVector_t& args) override
     {
         printf("On\n");
     }
 
-    void Off(const hsmcpp::VariantList_t& args) override
+    void Off(const hsmcpp::VariantVector_t& args) override
     {
         printf("Off\n");
     }

@@ -19,7 +19,7 @@ TEST_F(ABCHsm, callbacks_class_pointers)
 
     //-------------------------------------------
     // VALIDATION
-    VariantList_t expectedArgs;
+    VariantVector_t expectedArgs;
 
     expectedArgs.push_back(Variant::make("test"));
     expectedArgs.push_back(Variant::make(7));
@@ -48,23 +48,23 @@ TEST_F(ABCHsm, callbacks_lambdas)
     int stateCounterB = 0;
     int transitionCounterE1 = 0;
     int conditionTrueCounter = 0;
-    VariantList_t argsB;
-    VariantList_t argsBEnter;
-    VariantList_t transitionArgsE1;
-    VariantList_t argsConditionTrue;
+    VariantVector_t argsB;
+    VariantVector_t argsBEnter;
+    VariantVector_t transitionArgsE1;
+    VariantVector_t argsConditionTrue;
 
     registerState(AbcState::A,
                   nullptr,
                   nullptr,
                   [&](){ ++stateCounterAExit; return true; });
     registerState(AbcState::B,
-                  [&](const VariantList_t& args){ ++stateCounterB; argsB = args; },
-                  [&](const VariantList_t& args){ ++stateCounterBEnter; argsBEnter = args; return true; },
+                  [&](const VariantVector_t& args){ ++stateCounterB; argsB = args; },
+                  [&](const VariantVector_t& args){ ++stateCounterBEnter; argsBEnter = args; return true; },
                   nullptr);
 
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1,
-                       [&](const VariantList_t& args){ ++transitionCounterE1; transitionArgsE1 = args; return true; },
-                       [&](const VariantList_t& args){ ++conditionTrueCounter; argsConditionTrue = args; return true; });
+                       [&](const VariantVector_t& args){ ++transitionCounterE1; transitionArgsE1 = args; return true; },
+                       [&](const VariantVector_t& args){ ++conditionTrueCounter; argsConditionTrue = args; return true; });
 
     initializeHsm();
 
@@ -74,7 +74,7 @@ TEST_F(ABCHsm, callbacks_lambdas)
 
     //-------------------------------------------
     // VALIDATION
-    VariantList_t expectedArgs;
+    VariantVector_t expectedArgs;
 
     expectedArgs.push_back(Variant::make("test"));
     expectedArgs.push_back(Variant::make(7));

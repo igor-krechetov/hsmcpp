@@ -39,9 +39,9 @@ public:
     }
 
     bool onExit();
-    bool onEnter(const VariantList_t& args);
-    void onStateChanged(const VariantList_t& args);
-    void onNextStateTransition(const VariantList_t& args);
+    bool onEnter(const VariantVector_t& args);
+    void onStateChanged(const VariantVector_t& args);
+    void onNextStateTransition(const VariantVector_t& args);
 
     bool waitAsyncOperation(const int timeoutMs);
     void unblockNextStep();

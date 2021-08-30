@@ -44,12 +44,12 @@ int main(const int argc, const char** argv)
     hsm->initialize(dispatcher);
     memAfterEmpty = getAllocatedHeapMemory();
 
-    hsm->registerState(States::OFF, [&hsm](const VariantList_t& args)
+    hsm->registerState(States::OFF, [&hsm](const VariantVector_t& args)
     {
         std::this_thread::sleep_for(1000ms);
         hsm->transition(Events::SWITCH);
     });
-    hsm->registerState(States::ON, [&hsm](const VariantList_t& args)
+    hsm->registerState(States::ON, [&hsm](const VariantVector_t& args)
     {
         std::this_thread::sleep_for(1000ms);
         hsm->transition(Events::SWITCH);

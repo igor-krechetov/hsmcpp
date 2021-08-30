@@ -49,7 +49,7 @@ public:
         initialize(std::make_shared<HsmEventDispatcherGLibmm>());
     }
 
-    void onNextStateTransition(const VariantList_t& args)
+    void onNextStateTransition(const VariantVector_t& args)
     {
         if (args.size() == 2)
         {
@@ -63,11 +63,11 @@ public:
         std::this_thread::sleep_for(1000ms);
     }
 
-    void onOff(const VariantList_t& args){ printf("----> OFF\n"); }
-    void onStarting(const VariantList_t& args){ printf("----> onStarting\n"); }
-    void onRed(const VariantList_t& args){ printf("----> onRed\n"); }
-    void onYellow(const VariantList_t& args){ printf("----> onYellow\n"); }
-    void onGreen(const VariantList_t& args){ printf("----> onGreen\n"); }
+    void onOff(const VariantVector_t& args){ printf("----> OFF\n"); }
+    void onStarting(const VariantVector_t& args){ printf("----> onStarting\n"); }
+    void onRed(const VariantVector_t& args){ printf("----> onRed\n"); }
+    void onYellow(const VariantVector_t& args){ printf("----> onYellow\n"); }
+    void onGreen(const VariantVector_t& args){ printf("----> onGreen\n"); }
 };
 
 Glib::RefPtr<Glib::MainLoop> mMainLoop;

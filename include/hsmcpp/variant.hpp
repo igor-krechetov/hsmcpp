@@ -5,6 +5,7 @@
 #define __HSMCPP_VARIANT_HPP__
 
 #include <map>
+#include <list>
 #include <string>
 #include <vector>
 #include <utility>
@@ -13,6 +14,8 @@ namespace hsmcpp
 {
 
 class Variant;
+typedef std::vector<Variant> VariantVector_t;
+typedef std::list<Variant> VariantList_t;
 typedef std::map<Variant, Variant> VariantDict_t;
 typedef std::pair<Variant, Variant> VariantPair_t;
 
@@ -45,6 +48,9 @@ public:
         STRING,         // std::string
         BYTEARRAY,      // std::vector<char>
 
+        LIST,
+        VECTOR,
+
         DICTIONARY,     // VariantDict_t
         PAIR,           // VariantPair_t
     };
@@ -71,12 +77,21 @@ public:
     static Variant make(const std::string& v);
     static Variant make(const std::vector<char>& v);
     static Variant make(const char* v);
-    static Variant make(const VariantDict_t& v);
-    static Variant make(const Variant& first, const Variant& second);
-    static Variant make(const Variant& v);
 
+    static Variant make(const VariantVector_t& v);
+    template <typename T>
+    static Variant make(const std::vector<T>& v);
+
+    static Variant make(const VariantList_t& v);
+    template <typename T>
+    static Variant make(const std::list<T>& v);
+
+    static Variant make(const VariantDict_t& v);
     template <typename K, typename V>
     static Variant make(const std::map<K, V>& v);
+
+    static Variant make(const Variant& first, const Variant& second);
+    static Variant make(const Variant& v);
 
 public:
     Variant() = default;
@@ -99,6 +114,8 @@ public:
     DEF_OPERATOR_ASSIGN(bool, Type::BOOL)
     DEF_OPERATOR_ASSIGN(std::string, Type::STRING)
     DEF_OPERATOR_ASSIGN(std::vector<char>, Type::BYTEARRAY)
+    DEF_OPERATOR_ASSIGN(std::vector<Variant>, Type::VECTOR)
+    DEF_OPERATOR_ASSIGN(std::list<Variant>, Type::LIST)
     DEF_OPERATOR_ASSIGN(VariantDict_t, Type::DICTIONARY)
     DEF_OPERATOR_ASSIGN(VariantPair_t, Type::PAIR)
 
@@ -109,6 +126,8 @@ public:
 
     bool isString() const;
     bool isByteArray() const;
+    bool isVector() const;
+    bool isList() const;
     bool isDictionary() const;
     bool isNumeric() const;
     bool isSignedNumeric() const;
@@ -127,6 +146,12 @@ public:
     uint64_t toUInt64() const;
     double toDouble() const;
     bool toBool() const;
+
+    template <typename T>
+    std::vector<T> toVector() const;
+
+    template <typename T>
+    std::list<T> toList() const;
 
     template <typename K, typename V>
     std::map<K, V> toMap() const;
@@ -160,6 +185,32 @@ private:
     Type type = Type::UNKNOWN;
 };
 
+template <typename T>
+Variant Variant::make(const std::vector<T>& v)
+{
+    VariantVector_t* dest = new VariantVector_t();
+
+    for (auto it = v.begin() ; it != v.end(); ++it)
+    {
+        dest->push_back(make(*it));
+    }
+
+    return Variant(dest, Type::VECTOR);
+}
+
+template <typename T>
+Variant Variant::make(const std::list<T>& v)
+{
+    VariantList_t* dest = new VariantList_t();
+
+    for (auto it = v.begin() ; it != v.end(); ++it)
+    {
+        dest->push_back(make(*it));
+    }
+
+    return Variant(dest, Type::LIST);
+}
+
 template <typename K, typename V>
 Variant Variant::make(const std::map<K, V>& v)
 {
@@ -171,6 +222,48 @@ Variant Variant::make(const std::map<K, V>& v)
     }
 
     return Variant(dict, Type::DICTIONARY);
+}
+
+template <typename T>
+std::vector<T> Variant::toVector() const
+{
+    std::vector<T> result;
+
+    if (true == isVector())
+    {
+        VariantVector_t* data = value<VariantVector_t>();
+
+        if (nullptr != data)
+        {
+            for (auto it = data->begin(); it != data->end(); ++it)
+            {
+                result.push_back(*(it->value<T>()));
+            }
+        }
+    }
+
+    return result;
+}
+
+template <typename T>
+std::list<T> Variant::toList() const
+{
+    std::list<T> result;
+
+    if (true == isList())
+    {
+        VariantList_t* data = value<VariantList_t>();
+
+        if (nullptr != data)
+        {
+            for (auto it = data->begin(); it != data->end(); ++it)
+            {
+                result.push_back(*(it->value<T>()));
+            }
+        }
+    }
+
+    return result;
 }
 
 template <typename K, typename V>

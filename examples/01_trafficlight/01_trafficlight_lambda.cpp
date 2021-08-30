@@ -30,18 +30,18 @@ int main(const int argc, const char**argv)
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();
     HierarchicalStateMachine<TrafficLightState, TrafficLightEvent> hsm(TrafficLightState::OFF);
 
-    hsm.registerState(TrafficLightState::OFF, [mainLoop](const VariantList_t& args)
+    hsm.registerState(TrafficLightState::OFF, [mainLoop](const VariantVector_t& args)
     {
         printf("onOff\n");
         mainLoop->quit();
     });
-    hsm.registerState(TrafficLightState::INITIALIZING, [&hsm](const VariantList_t& args)
+    hsm.registerState(TrafficLightState::INITIALIZING, [&hsm](const VariantVector_t& args)
     {
         printf("onInitializing\n");
         usleep(1000000);
         hsm.transition(TrafficLightEvent::INIT_DONE);
     });
-    hsm.registerState(TrafficLightState::RED, [&hsm](const VariantList_t& args)
+    hsm.registerState(TrafficLightState::RED, [&hsm](const VariantVector_t& args)
     {
         static int iteration = 0;
 
@@ -50,13 +50,13 @@ int main(const int argc, const char**argv)
         hsm.transition(iteration < 2 ? TrafficLightEvent::NEXT_STATE : TrafficLightEvent::POWER_OFF);
         ++iteration;
     });
-    hsm.registerState(TrafficLightState::YELLOW, [&hsm](const VariantList_t& args)
+    hsm.registerState(TrafficLightState::YELLOW, [&hsm](const VariantVector_t& args)
     {
         printf("onYellow\n");
         usleep(1000000);
         hsm.transition(TrafficLightEvent::NEXT_STATE);
     });
-    hsm.registerState(TrafficLightState::GREEN, [&hsm](const VariantList_t& args)
+    hsm.registerState(TrafficLightState::GREEN, [&hsm](const VariantVector_t& args)
     {
         printf("onGreen\n");
         usleep(1000000);

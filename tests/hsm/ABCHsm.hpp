@@ -41,7 +41,7 @@ public:
     DEF_TRANSITION_IMPL(E3)
     DEF_TRANSITION_IMPL(Self)
 
-    bool conditionTrue(const VariantList_t& args);
+    bool conditionTrue(const VariantVector_t& args);
 
     inline void initializeHsm()
     {
@@ -54,7 +54,7 @@ protected:
 
 protected:
     int mConditionTrueCounter = 0;
-    VariantList_t mArgsConditionTrue;
+    VariantVector_t mArgsConditionTrue;
 };
 
 #endif // __HSMCPP_TESTS_HSM_ABCHSM_HPP__

@@ -98,7 +98,6 @@ void HsmEventDispatcherGLibmm::stopTimerImpl(const TimerID_t timerID)
 
     if (mTimerHandlers.end() != it)
     {
-        __HSM_TRACE_LINE__();
         it->second.disconnect();
         mTimerHandlers.erase(it);
     }

@@ -8,7 +8,7 @@ ABCHsm::~ABCHsm()
 {
 }
 
-bool ABCHsm::conditionTrue(const VariantList_t& args)
+bool ABCHsm::conditionTrue(const VariantVector_t& args)
 {
     ++mConditionTrueCounter;
     mArgsConditionTrue = args;

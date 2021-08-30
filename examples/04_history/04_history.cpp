@@ -13,28 +13,28 @@ public:
 
 // HSM state changed callbacks
 protected:
-    void onCall(const VariantList_t& args) override
+    void onCall(const VariantVector_t& args) override
     {
         printf("onCall\n");
         std::this_thread::sleep_for(1000ms);
         transition(PlayerHsmEvents::CALL_ENDED);
     }
 
-    void onNoMedia(const VariantList_t& args) override
+    void onNoMedia(const VariantVector_t& args) override
     {
         printf("onNoMedia\n");
         std::this_thread::sleep_for(1000ms);
         transition(PlayerHsmEvents::LOADING_DONE);
     }
 
-    void onPaused(const VariantList_t& args) override
+    void onPaused(const VariantVector_t& args) override
     {
         printf("onPaused\n");
         std::this_thread::sleep_for(3000ms);
         transition(PlayerHsmEvents::ON_CALL);
     }
 
-    void onPlaying(const VariantList_t& args) override
+    void onPlaying(const VariantVector_t& args) override
     {
         printf("onPlaying\n");
         std::this_thread::sleep_for(3000ms);
@@ -43,7 +43,7 @@ protected:
 
 // HSM transition callbacks
 protected:
-    void onCallEndedTransition(const VariantList_t& args) override
+    void onCallEndedTransition(const VariantVector_t& args) override
     {
         printf("onCallEndedTransition\n");
         std::this_thread::sleep_for(250ms);

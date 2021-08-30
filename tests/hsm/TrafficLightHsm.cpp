@@ -6,7 +6,8 @@ TrafficLightHsm::TrafficLightHsm() : HierarchicalStateMachine(TrafficLightState:
 }
 
 TrafficLightHsm::~TrafficLightHsm()
-{}
+{
+}
 
 void TrafficLightHsm::setupDefault()
 {
@@ -28,7 +29,7 @@ void TrafficLightHsm::setupDefault()
     registerTransition(TrafficLightState::GREEN, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE, this, &TrafficLightHsm::onNextStateTransition);
 }
 
-bool TrafficLightHsm::checkConditionOff2Off(const VariantList_t& args)
+bool TrafficLightHsm::checkConditionOff2Off(const VariantVector_t& args)
 {
     bool result = false;
 
@@ -43,7 +44,7 @@ bool TrafficLightHsm::checkConditionOff2Off(const VariantList_t& args)
     return result;
 }
 
-bool TrafficLightHsm::checkConditionOff2On(const VariantList_t& args)
+bool TrafficLightHsm::checkConditionOff2On(const VariantVector_t& args)
 {
     bool result = false;
 
@@ -58,7 +59,7 @@ bool TrafficLightHsm::checkConditionOff2On(const VariantList_t& args)
     return result;
 }
 
-void TrafficLightHsm::onTransitionFailed(const TrafficLightEvent event, const VariantList_t& args)
+void TrafficLightHsm::onTransitionFailed(const TrafficLightEvent event, const VariantVector_t& args)
 {
     mFailedTransitionCounter++;
     mLastFailedTransition = event;

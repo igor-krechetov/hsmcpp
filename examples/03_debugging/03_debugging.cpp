@@ -10,13 +10,13 @@ public:
 
 // HSM state changed callbacks
 protected:
-    void State1OnState(const VariantList_t& args) override
+    void State1OnState(const VariantVector_t& args) override
     {
     }
 
 // HSM state entering callbacks
 protected:
-    bool State1OnEntry(const VariantList_t& args) override
+    bool State1OnEntry(const VariantVector_t& args) override
     {
         return false;
     }

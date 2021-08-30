@@ -22,13 +22,13 @@ int main(const int argc, const char**argv)
     std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
     HierarchicalStateMachine<States, Events> hsm(States::OFF);
 
-    hsm.registerState(States::OFF, [&hsm](const VariantList_t& args)
+    hsm.registerState(States::OFF, [&hsm](const VariantVector_t& args)
     {
         printf("Off\n");
         std::this_thread::sleep_for(1000ms);
         hsm.transition(Events::SWITCH);
     });
-    hsm.registerState(States::ON, [&hsm](const VariantList_t& args)
+    hsm.registerState(States::ON, [&hsm](const VariantVector_t& args)
     {
         printf("On\n");
         std::this_thread::sleep_for(1000ms);

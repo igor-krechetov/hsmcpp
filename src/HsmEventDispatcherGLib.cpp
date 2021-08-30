@@ -22,15 +22,16 @@ HsmEventDispatcherGLib::HsmEventDispatcherGLib(GMainContext* context)
 HsmEventDispatcherGLib::~HsmEventDispatcherGLib()
 {
     __HSM_TRACE_CALL__();
-    std::unique_lock<std::mutex> lck(mHandlersSync);
 
     mStopDispatcher = true;
-    unregisterAllEventHandlers();
 
     if (true == mDispatchingIterationRunning)
     {
+        std::unique_lock<std::mutex> lck(mDispatchingSync);
         mDispatchingDoneEvent.wait(lck);
     }
+
+    unregisterAllEventHandlers();
 
     g_source_destroy(mIoSource);
     g_source_unref(mIoSource);
@@ -133,7 +134,6 @@ gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOConditi
     {
         pThis->mDispatchingIterationRunning = true;
 
-        std::lock_guard<std::mutex> lck(pThis->mHandlersSync);
         __HSM_TRACE__("condition=%d, G_IO_HUP=%s, G_IO_IN=%s", static_cast<int>(condition), BOOL2STR(condition & G_IO_HUP), BOOL2STR(condition & G_IO_IN));
 
         if (!(condition & G_IO_HUP))

@@ -32,15 +32,15 @@ int main(const int argc, const char**argv)
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();
     HierarchicalStateMachine<States, Events> hsm(States::IDLE);
 
-    hsm.registerState(States::IDLE, [&hsm](const VariantList_t& args)
+    hsm.registerState(States::IDLE, [&hsm](const VariantVector_t& args)
     {
         printf("Idle\n");
     });
-    hsm.registerState(States::OFF, [&hsm](const VariantList_t& args)
+    hsm.registerState(States::OFF, [&hsm](const VariantVector_t& args)
     {
         printf("Off\n");
     });
-    hsm.registerState(States::ON, [&hsm](const VariantList_t& args)
+    hsm.registerState(States::ON, [&hsm](const VariantVector_t& args)
     {
         printf("On\n");
     });

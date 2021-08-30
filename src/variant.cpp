@@ -20,6 +20,8 @@ Variant Variant::make(const bool v) { return Variant(new bool(v), Type::BOOL); }
 Variant Variant::make(const std::string& v) { return Variant(new std::string(v), Type::STRING); }
 Variant Variant::make(const std::vector<char>& v) { return Variant(new std::vector<char>(v), Type::BYTEARRAY); }
 Variant Variant::make(const char* v) { return make(std::string(v)); }
+Variant Variant::make(const VariantVector_t& v) { return Variant(new std::vector<Variant>(v), Type::VECTOR); }
+Variant Variant::make(const VariantList_t& v)  { return Variant(new std::list<Variant>(v), Type::LIST); }
 Variant Variant::make(const VariantDict_t& v) { return Variant(new VariantDict_t(v), Type::DICTIONARY); }
 Variant Variant::make(const Variant& first, const Variant& second) { return Variant(new VariantPair_t(first, second), Type::PAIR); }
 Variant Variant::make(const Variant& v) { return v; }
@@ -96,6 +98,14 @@ Variant& Variant::operator=(const Variant& v)
                 *this = *v.value<std::vector<char>>();
                 break;
 
+            case Type::VECTOR:
+                *this = *v.value<std::vector<Variant>>();
+                break;
+
+            case Type::LIST:
+                *this = *v.value<std::list<Variant>>();
+                break;
+
             case Type::DICTIONARY:
                 *this = *v.value<VariantDict_t>();
                 break;
@@ -161,6 +171,20 @@ bool Variant::operator>(const Variant& val) const
     {
         std::vector<char>* left = value<std::vector<char>>();
         std::vector<char>* right = val.value<std::vector<char>>();
+
+        isGreater = (left->size() > right->size());
+    }
+    else if (Type::VECTOR == val.type)
+    {
+        std::vector<Variant>* left = value<std::vector<Variant>>();
+        std::vector<Variant>* right = val.value<std::vector<Variant>>();
+
+        isGreater = (left->size() > right->size());
+    }
+    else if (Type::LIST == val.type)
+    {
+        std::list<Variant>* left = value<std::list<Variant>>();
+        std::list<Variant>* right = val.value<std::list<Variant>>();
 
         isGreater = (left->size() > right->size());
     }
@@ -236,6 +260,14 @@ bool Variant::operator==(const Variant& val) const
                 equal = (*value<std::vector<char>>() == *val.value<std::vector<char>>());
                 break;
 
+            case Type::VECTOR:
+                equal = (*value<std::vector<Variant>>() == *val.value<std::vector<Variant>>());
+                break;
+
+            case Type::LIST:
+                equal = (*value<std::list<Variant>>() == *val.value<std::list<Variant>>());
+                break;
+
             case Type::DICTIONARY:
             {
                 VariantDict_t* left = value<VariantDict_t>();
@@ -291,6 +323,16 @@ bool Variant::isByteArray() const
     return (type == Type::BYTEARRAY);
 }
 
+bool Variant::isVector() const
+{
+    return (type == Type::VECTOR);
+}
+
+bool Variant::isList() const
+{
+    return (type == Type::LIST);
+}
+
 bool Variant::isDictionary() const
 {
     return (type == Type::DICTIONARY);
@@ -317,6 +359,8 @@ bool Variant::isNumeric() const
         case Type::BOOL:
         case Type::STRING:
         case Type::BYTEARRAY:
+        case Type::VECTOR:
+        case Type::LIST:
         case Type::DICTIONARY:
         case Type::PAIR:
         default:
@@ -421,6 +465,36 @@ std::string Variant::toString() const
             result.assign(val->data(), val->size());
             break;
         }
+        case Type::VECTOR:
+        {
+            std::vector<Variant>* val = value<std::vector<Variant>>();
+
+            for (auto it = val->begin(); it != val->end(); ++it)
+            {
+                if (false == result.empty())
+                {
+                    result += ", ";
+                }
+
+                result += it->toString();
+            }
+            break;
+        }
+        case Type::LIST:
+        {
+            std::list<Variant>* val = value<std::list<Variant>>();
+
+            for (auto it = val->begin(); it != val->end(); ++it)
+            {
+                if (false == result.empty())
+                {
+                    result += ", ";
+                }
+
+                result += it->toString();
+            }
+            break;
+        }
         case Type::DICTIONARY:
         {
             VariantDict_t* dict = value<VariantDict_t>();
@@ -483,6 +557,12 @@ std::vector<char> Variant::toByteArray() const
         }
         case Type::BYTEARRAY:
             result = *(value<std::vector<char>>());
+            break;
+        case Type::VECTOR:
+            // TODO
+            break;
+        case Type::LIST:
+            // TODO
             break;
         case Type::DICTIONARY:
         {
@@ -550,6 +630,8 @@ int64_t Variant::toInt64() const
         case Type::BOOL:
         case Type::STRING:
         case Type::BYTEARRAY:
+        case Type::VECTOR:
+        case Type::LIST:
         case Type::DICTIONARY:
         case Type::PAIR:
         default:
@@ -598,6 +680,8 @@ uint64_t Variant::toUInt64() const
         case Type::BOOL:
         case Type::STRING:
         case Type::BYTEARRAY:
+        case Type::VECTOR:
+        case Type::LIST:
         case Type::DICTIONARY:
         case Type::PAIR:
         default:
@@ -646,6 +730,8 @@ double Variant::toDouble() const
         case Type::BOOL:
         case Type::STRING:
         case Type::BYTEARRAY:
+        case Type::VECTOR:
+        case Type::LIST:
         case Type::DICTIONARY:
         case Type::PAIR:
         default:
@@ -715,6 +801,14 @@ void Variant::free()
 
         case Type::BYTEARRAY:
             delete static_cast<std::vector<char>*>(data);
+            break;
+
+        case Type::VECTOR:
+            delete static_cast<std::vector<Variant>*>(data);
+            break;
+
+        case Type::LIST:
+            delete static_cast<std::list<Variant>*>(data);
             break;
 
         case Type::DICTIONARY:

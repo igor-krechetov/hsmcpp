@@ -52,10 +52,10 @@ public:
     DEF_ENTER_ACTION_IMPL(EnterCancel, false)
     DEF_ENTER_ACTION_IMPL(Enter, true)
 
-    bool checkConditionOff2Off(const VariantList_t& args);
-    bool checkConditionOff2On(const VariantList_t& args);
+    bool checkConditionOff2Off(const VariantVector_t& args);
+    bool checkConditionOff2On(const VariantVector_t& args);
 
-    void onTransitionFailed(const TrafficLightEvent event, const VariantList_t& args);
+    void onTransitionFailed(const TrafficLightEvent event, const VariantVector_t& args);
 
 protected:
     void SetUp() override;
@@ -64,7 +64,7 @@ protected:
 public:
     int mFailedTransitionCounter = 0;
     TrafficLightEvent mLastFailedTransition;
-    VariantList_t mLastFailedTransitionArgs;
+    VariantVector_t mLastFailedTransitionArgs;
 };
 
 #endif // __HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP__

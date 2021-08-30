@@ -41,7 +41,7 @@ bool AsyncHsm::onExit()
     return true;
 }
 
-bool AsyncHsm::onEnter(const VariantList_t& args)
+bool AsyncHsm::onEnter(const VariantVector_t& args)
 {
     std::unique_lock<std::mutex> lck(mSyncBlockNextStep);
 
@@ -56,7 +56,7 @@ bool AsyncHsm::onEnter(const VariantList_t& args)
     return true;
 }
 
-void AsyncHsm::onStateChanged(const VariantList_t& args)
+void AsyncHsm::onStateChanged(const VariantVector_t& args)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("----> AsyncHsm::onStateChanged");
     std::unique_lock<std::mutex> lck(mSyncBlockNextStep);
@@ -70,7 +70,7 @@ void AsyncHsm::onStateChanged(const VariantList_t& args)
     __HSM_TRACE_DEBUG__("----> AsyncHsm::onStateChanged: done");
 }
 
-void AsyncHsm::onNextStateTransition(const VariantList_t& args)
+void AsyncHsm::onNextStateTransition(const VariantVector_t& args)
 {
     std::unique_lock<std::mutex> lck(mSyncBlockNextStep);
 

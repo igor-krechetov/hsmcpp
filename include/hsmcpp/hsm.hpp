@@ -61,25 +61,23 @@ namespace hsmcpp
 #define ENV_DUMPPATH                            "HSMCPP_DUMP_PATH"
 #define DEFAULT_DUMP_PATH                       "./dump.hsmlog"
 
-using VariantList_t = std::vector<Variant>;
-
 template <typename HsmStateEnum, typename HsmEventEnum>
 class HierarchicalStateMachine
 {
 public:
-    using HsmTransitionCallback_t = std::function<void(const VariantList_t&)>;
-    using HsmTransitionConditionCallback_t = std::function<bool(const VariantList_t&)>;
-    using HsmStateChangedCallback_t = std::function<void(const VariantList_t&)>;
-    using HsmStateEnterCallback_t = std::function<bool(const VariantList_t&)>;
+    using HsmTransitionCallback_t = std::function<void(const VariantVector_t&)>;
+    using HsmTransitionConditionCallback_t = std::function<bool(const VariantVector_t&)>;
+    using HsmStateChangedCallback_t = std::function<void(const VariantVector_t&)>;
+    using HsmStateEnterCallback_t = std::function<bool(const VariantVector_t&)>;
     using HsmStateExitCallback_t = std::function<bool(void)>;
-    using HsmTransitionFailedCallback_t = std::function<void(const HsmEventEnum, const VariantList_t&)>;
+    using HsmTransitionFailedCallback_t = std::function<void(const HsmEventEnum, const VariantVector_t&)>;
 
-    #define HsmTransitionCallbackPtr_t(_class, _func)              void (_class::*_func)(const VariantList_t&)
-    #define HsmTransitionConditionCallbackPtr_t(_class, _func)     bool (_class::*_func)(const VariantList_t&)
-    #define HsmStateChangedCallbackPtr_t(_class, _func)            void (_class::*_func)(const VariantList_t&)
-    #define HsmStateEnterCallbackPtr_t(_class, _func)              bool (_class::*_func)(const VariantList_t&)
+    #define HsmTransitionCallbackPtr_t(_class, _func)              void (_class::*_func)(const VariantVector_t&)
+    #define HsmTransitionConditionCallbackPtr_t(_class, _func)     bool (_class::*_func)(const VariantVector_t&)
+    #define HsmStateChangedCallbackPtr_t(_class, _func)            void (_class::*_func)(const VariantVector_t&)
+    #define HsmStateEnterCallbackPtr_t(_class, _func)              bool (_class::*_func)(const VariantVector_t&)
     #define HsmStateExitCallbackPtr_t(_class, _func)               bool (_class::*_func)()
-    #define HsmTransitionFailedCallbackPtr_t(_class, _func)        void (_class::*_func)(const HsmEventEnum, const VariantList_t&)
+    #define HsmTransitionFailedCallbackPtr_t(_class, _func)        void (_class::*_func)(const HsmEventEnum, const VariantVector_t&)
 
 
     enum class HistoryType
@@ -191,7 +189,7 @@ private:
     {
         TransitionType transitionType = TransitionType::REGULAR;
         HsmEventEnum type = INVALID_HSM_EVENT_ID;
-        VariantList_t args;
+        VariantVector_t args;
         std::shared_ptr<std::mutex> cvLock;
         std::shared_ptr<std::condition_variable> syncProcessed;
         std::shared_ptr<HsmEventStatus> transitionStatus;
@@ -223,7 +221,7 @@ private:
 
     struct StateActionInfo {
         StateAction action;
-        VariantList_t actionArgs;
+        VariantVector_t actionArgs;
     };
 
 public:
@@ -348,7 +346,7 @@ private:
     void handleStartup();
 
     template <typename... Args>
-    void makeVariantList(VariantList_t& vList, Args&&... args);
+    void makeVariantList(VariantVector_t& vList, Args&&... args);
 
     bool registerSubstate(const HsmStateEnum parent,
                           const HsmStateEnum substate,
@@ -359,8 +357,8 @@ private:
     void dispatchTimerEvent(const TimerID_t id);
 
     bool onStateExiting(const HsmStateEnum state);
-    bool onStateEntering(const HsmStateEnum state, const VariantList_t& args);
-    void onStateChanged(const HsmStateEnum state, const VariantList_t& args);
+    bool onStateEntering(const HsmStateEnum state, const VariantVector_t& args);
+    void onStateChanged(const HsmStateEnum state, const VariantVector_t& args);
 
     void executeStateAction(const HsmStateEnum state, const StateActionTrigger actionTrigger);
 
@@ -375,7 +373,7 @@ private:
 
     bool findTransitionTarget(const HsmStateEnum fromState,
                               const HsmEventEnum event,
-                              const VariantList_t& transitionArgs,
+                              const VariantVector_t& transitionArgs,
                               std::list<TransitionInfo>& outTransitions);
     HsmEventStatus doTransition(const PendingEventInfo& event);
     HsmEventStatus handleSingleTransition(const HsmStateEnum fromState, const PendingEventInfo& event);
@@ -402,7 +400,7 @@ private:
                       const HsmStateEnum targetState = INVALID_HSM_STATE_ID,
                       const HsmEventEnum event = INVALID_HSM_EVENT_ID,
                       const bool hasFailed = false,
-                      const VariantList_t& args = VariantList_t());
+                      const VariantVector_t& args = VariantVector_t());
 
 protected:
     // NOTE: clients must implement this method for debugging to work. names should match with the names in scxml file
@@ -495,7 +493,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::initialize(const std:
 
                 if ((INVALID_HSM_DISPATCHER_HANDLER_ID != mEventsHandlerId) && (INVALID_HSM_DISPATCHER_HANDLER_ID != mTimerHandlerId))
                 {
-                    logHsmAction(HsmLogAction::IDLE, INVALID_HSM_STATE_ID, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, false, VariantList_t());
+                    logHsmAction(HsmLogAction::IDLE, INVALID_HSM_STATE_ID, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, false, VariantVector_t());
                     handleStartup();
                     result = true;
                 }
@@ -976,7 +974,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::handleStartup()
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 template <typename... Args>
-void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::makeVariantList(VariantList_t& vList, Args&&... args)
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::makeVariantList(VariantVector_t& vList, Args&&... args)
 {
     volatile int make_variant[] = {0, (vList.push_back(Variant::make(std::forward<Args>(args))), 0)...};
     (void)make_variant;
@@ -1033,7 +1031,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateExiting(const 
     if ((mRegisteredStates.end() != it) && it->second.onExiting)
     {
         res = it->second.onExiting();
-        logHsmAction(HsmLogAction::CALLBACK_EXIT, state, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, (false == res), VariantList_t());
+        logHsmAction(HsmLogAction::CALLBACK_EXIT, state, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, (false == res), VariantVector_t());
     }
 
     // execute state action only if transition was accepted by client
@@ -1047,7 +1045,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateExiting(const 
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateEntering(const HsmStateEnum state,
-                                                                           const VariantList_t& args)
+                                                                           const VariantVector_t& args)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("state=<%s>", getStateName(state).c_str());
     bool res = true;
@@ -1076,7 +1074,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateEntering(const
 
 template <typename HsmStateEnum, typename HsmEventEnum>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::onStateChanged(const HsmStateEnum state,
-                                                                          const VariantList_t& args)
+                                                                          const VariantVector_t& args)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("state=<%s>", getStateName(state).c_str());
     auto it = mRegisteredStates.find(state);
@@ -1255,7 +1253,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(
     HsmStateEnum currentState = fromState;
     std::list<TransitionInfo> possibleTransitions;
     HsmEventEnum nextEvent;
-    VariantList_t transitionArgs;
+    VariantVector_t transitionArgs;
     bool possible = true;
 
     makeVariantList(transitionArgs, args...);
@@ -1296,7 +1294,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(
 template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::findTransitionTarget(const HsmStateEnum fromState,
                                                                                 const HsmEventEnum event,
-                                                                                const VariantList_t& transitionArgs,
+                                                                                const VariantVector_t& transitionArgs,
                                                                                 std::list<TransitionInfo>& outTransitions)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("fromState=<%s>, event=<%s>", getStateName(fromState).c_str(), getEventName(event).c_str());
@@ -1400,7 +1398,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                     res = singleTransitionResult;
                     break;
                 case HsmEventStatus_t::DONE_OK:
-                    logHsmAction(HsmLogAction::IDLE, INVALID_HSM_STATE_ID, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, false, VariantList_t());
+                    logHsmAction(HsmLogAction::IDLE, INVALID_HSM_STATE_ID, INVALID_HSM_STATE_ID, INVALID_HSM_EVENT_ID, false, VariantVector_t());
                     if (HsmEventStatus_t::PENDING != res)
                     {
                         res = singleTransitionResult;
@@ -1417,7 +1415,6 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
 
     if (mFailedTransitionCallback && ((HsmEventStatus_t::DONE_FAILED == res) || (HsmEventStatus_t::CANCELED == res)))
     {
-        __HSM_TRACE_LINE__();
         mFailedTransitionCallback(event.type, event.args);
     }
 
@@ -1549,9 +1546,9 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                         {
                             mActiveStates.remove(*itState);
                             // to prevent infinite loops we don't allow state to cancel transition
-                            onStateEntering(*itState, VariantList_t());
+                            onStateEntering(*itState, VariantVector_t());
                             mActiveStates.push_back(*itState);
-                            onStateChanged(*itState, VariantList_t());
+                            onStateChanged(*itState, VariantVector_t());
                         }
                     }
                 }
@@ -1684,9 +1681,9 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                         for (auto itState = exitedStates.begin(); itState != exitedStates.end(); ++itState)
                         {
                             // to prevent infinite loops we don't allow state to cancel transition
-                            onStateEntering(*itState, VariantList_t());
+                            onStateEntering(*itState, VariantVector_t());
                             addActiveState(*itState);
-                            onStateChanged(*itState, VariantList_t());
+                            onStateChanged(*itState, VariantVector_t());
                         }
                     }
                 }
@@ -1733,7 +1730,7 @@ HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::PendingEventInfo::~Pending
 {
     if (true == cvLock.unique())
     {
-        __HSM_TRACE_CALL_DEBUG_ARGS__("event=<%s> was deleted. releasing lock", getEventName(type).c_str());
+        __HSM_TRACE_CALL_DEBUG_ARGS__("event=<%d> was deleted. releasing lock", SC2INT(type));
         unlock(HsmEventStatus_t::DONE_FAILED);
         cvLock.reset();
         syncProcessed.reset();
@@ -2018,7 +2015,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::logHsmAction(const Hs
                                                                         const HsmStateEnum targetState,
                                                                         const HsmEventEnum event,
                                                                         const bool hasFailed,
-                                                                        const VariantList_t& args)
+                                                                        const VariantVector_t& args)
 {
 #ifdef HSMBUILD_DEBUGGING
     if (true == mHsmLogFile.is_open())

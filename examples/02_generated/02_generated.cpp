@@ -13,14 +13,14 @@ public:
 
 // HSM state changed callbacks
 protected:
-    void onOff(const VariantList_t& args) override
+    void onOff(const VariantVector_t& args) override
     {
         printf("Off\n");
         std::this_thread::sleep_for(1000ms);
         transition(SwitchHsmEvents::SWITCH);
     }
 
-    void onOn(const VariantList_t& args) override
+    void onOn(const VariantVector_t& args) override
     {
         printf("On\n");
         std::this_thread::sleep_for(1000ms);

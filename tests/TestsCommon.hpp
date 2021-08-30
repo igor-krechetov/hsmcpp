@@ -127,8 +127,8 @@ bool executeOnMainThread(std::function<bool()> func);
 
 #define DEF_ENTER_ACTION_IMPL(_state, _ret)                             \
     int mStateCounter##_state = 0;                                      \
-    VariantList_t mArgs##_state;                                        \
-    bool on##_state(const VariantList_t& args)                          \
+    VariantVector_t mArgs##_state;                                        \
+    bool on##_state(const VariantVector_t& args)                          \
     {                                                                   \
         ++mStateCounter##_state;                                        \
         __HSM_TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
@@ -138,8 +138,8 @@ bool executeOnMainThread(std::function<bool()> func);
 
 #define DEF_TRANSITION_IMPL(_name)                                     \
     int mTransitionCounter##_name = 0;                                 \
-    VariantList_t mTransitionArgs##_name;                              \
-    void on##_name##Transition(const VariantList_t& args)              \
+    VariantVector_t mTransitionArgs##_name;                              \
+    void on##_name##Transition(const VariantVector_t& args)              \
     {                                                                  \
         ++mTransitionCounter##_name;                                   \
         __HSM_TRACE_CALL_ARGS__("----> on" #_name "Transition\n");         \
@@ -148,8 +148,8 @@ bool executeOnMainThread(std::function<bool()> func);
 
 #define DEF_STATE_ACTION_IMPL(_state)                                   \
     int mStateCounter##_state = 0;                                      \
-    VariantList_t mArgs##_state;                                        \
-    void on##_state(const VariantList_t& args)                          \
+    VariantVector_t mArgs##_state;                                        \
+    void on##_state(const VariantVector_t& args)                          \
     {                                                                   \
         ++mStateCounter##_state;                                        \
         __HSM_TRACE_CALL_ARGS__("----> on" #_state "\n");                   \

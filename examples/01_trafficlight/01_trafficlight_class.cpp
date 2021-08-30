@@ -52,20 +52,20 @@ public:
         initialize(std::make_shared<HsmEventDispatcherGLibmm>());
     }
 
-    void onOff(const VariantList_t& args)
+    void onOff(const VariantVector_t& args)
     {
         printf("onOff\n");
         mLoop->quit();
     }
 
-    void onInitializing(const VariantList_t& args)
+    void onInitializing(const VariantVector_t& args)
     {
         printf("onInitializing\n");
         usleep(1000000);
         transition(TrafficLightEvent::INIT_DONE);
     }
 
-    void onRed(const VariantList_t& args)
+    void onRed(const VariantVector_t& args)
     {
         static int iteration = 0;
 
@@ -75,14 +75,14 @@ public:
         ++iteration;
     }
 
-    void onYellow(const VariantList_t& args)
+    void onYellow(const VariantVector_t& args)
     {
         printf("onYellow\n");
         usleep(1000000);
         transition(TrafficLightEvent::NEXT_STATE);
     }
 
-    void onGreen(const VariantList_t& args)
+    void onGreen(const VariantVector_t& args)
     {
         printf("onGreen\n");
         usleep(1000000);

@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.19.1] - 2021-09-01
+### Fixed
+- recursive lock in GLib base dispatcher
+
+[0.19.0] - 2021-08-30
+### Added
+- support for vector and list types to Variant (VariantVector_t, VariantList_t)
+### Fixed
+- deadlock in GLib dispatcher
+- fixed build with enabled traces
+
 ## [0.18.1] - 2021-08-20
 ### Added
 - Variant::toMap()

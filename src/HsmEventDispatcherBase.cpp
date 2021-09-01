@@ -17,7 +17,7 @@ HandlerID_t HsmEventDispatcherBase::registerEventHandler(const EventHandlerFunc_
 {
     __HSM_TRACE_CALL_DEBUG__();
     HandlerID_t id = getNextHandlerID();
-    std::unique_lock<std::mutex> lck(mHandlersSync);
+    std::lock_guard<std::mutex> lck(mHandlersSync);
 
     mEventHandlers.emplace(id, handler);
 
@@ -27,7 +27,7 @@ HandlerID_t HsmEventDispatcherBase::registerEventHandler(const EventHandlerFunc_
 void HsmEventDispatcherBase::unregisterEventHandler(const HandlerID_t handlerID)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("handlerID=%d", handlerID);
-    std::unique_lock<std::mutex> lck(mHandlersSync);
+    std::lock_guard<std::mutex> lck(mHandlersSync);
 
     mEventHandlers.erase(handlerID);
 }
@@ -35,7 +35,7 @@ void HsmEventDispatcherBase::unregisterEventHandler(const HandlerID_t handlerID)
 void HsmEventDispatcherBase::emitEvent(const HandlerID_t handlerID)
 {
     __HSM_TRACE_CALL_DEBUG__();
-    std::unique_lock<std::mutex> lck(mEmitSync);
+    std::lock_guard<std::mutex> lck(mEmitSync);
 
     mPendingEvents.push_back(handlerID);
 
@@ -147,7 +147,7 @@ int HsmEventDispatcherBase::getNextHandlerID()
 
 void HsmEventDispatcherBase::unregisterAllEventHandlers()
 {
-    std::unique_lock<std::mutex> lck(mHandlersSync);
+    std::lock_guard<std::mutex> lck(mHandlersSync);
     mEventHandlers.clear();
 }
 
@@ -194,18 +194,24 @@ void HsmEventDispatcherBase::dispatchPendingEvents()
         std::list<HandlerID_t> events;
 
         {
-            std::unique_lock<std::mutex> lck(mEmitSync);
+            std::lock_guard<std::mutex> lck(mEmitSync);
 
             events = std::move(mPendingEvents);
         }
 
-        std::unique_lock<std::mutex> lck(mHandlersSync);
+        std::map<HandlerID_t, EventHandlerFunc_t> eventHandlersCopy;
+
+        {
+            // TODO: workaround to prevent recursive lock if registerEventHandler is called from another handler
+            std::lock_guard<std::mutex> lck(mHandlersSync);
+            eventHandlersCopy = mEventHandlers;
+        }
 
         for (auto it = events.begin(); it != events.end(); ++it)
         {
-            auto itHandler = mEventHandlers.find(*it);
+            auto itHandler = eventHandlersCopy.find(*it);
 
-            if (itHandler != mEventHandlers.end())
+            if (itHandler != eventHandlersCopy.end())
             {
                 itHandler->second();
             }

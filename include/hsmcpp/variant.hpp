@@ -19,6 +19,11 @@ typedef std::list<Variant> VariantList_t;
 typedef std::map<Variant, Variant> VariantDict_t;
 typedef std::pair<Variant, Variant> VariantPair_t;
 
+#define DEF_CONSTRUCTOR(_val_type, _internal_type)                  \
+    explicit Variant(const _val_type& v) {                          \
+        assign<_val_type>(v, _internal_type);                       \
+    }
+
 #define DEF_OPERATOR_ASSIGN(_val_type, _internal_type)              \
     Variant& operator=(const _val_type& v) {                        \
         assign<_val_type>(v, _internal_type);                       \
@@ -75,8 +80,10 @@ public:
     static Variant make(const double v);
     static Variant make(const bool v);
     static Variant make(const std::string& v);
-    static Variant make(const std::vector<char>& v);
     static Variant make(const char* v);
+
+    static Variant make(const std::vector<char>& v);
+    static Variant make(const char* binaryData, const size_t bytesCount);
 
     static Variant make(const VariantVector_t& v);
     template <typename T>
@@ -95,9 +102,30 @@ public:
 
 public:
     Variant() = default;
-    Variant(const Variant& v);
-    Variant(Variant&& v);
+    Variant(const Variant& v);// copy constructor
+    Variant(Variant&& v);// move constructor
     ~Variant();
+
+    DEF_CONSTRUCTOR(int8_t, Type::BYTE_1)
+    DEF_CONSTRUCTOR(int16_t, Type::BYTE_2)
+    DEF_CONSTRUCTOR(int32_t, Type::BYTE_4)
+    DEF_CONSTRUCTOR(int64_t, Type::BYTE_8)
+    DEF_CONSTRUCTOR(uint8_t, Type::UBYTE_1)
+    DEF_CONSTRUCTOR(uint16_t, Type::UBYTE_2)
+    DEF_CONSTRUCTOR(uint32_t, Type::UBYTE_4)
+    DEF_CONSTRUCTOR(uint64_t, Type::UBYTE_8)
+    DEF_CONSTRUCTOR(double, Type::DOUBLE)
+    DEF_CONSTRUCTOR(bool, Type::BOOL)
+    DEF_CONSTRUCTOR(std::string, Type::STRING)
+    explicit Variant(const char* v);
+
+    DEF_CONSTRUCTOR(std::vector<char>, Type::BYTEARRAY)
+    explicit Variant(const char* binaryData, const size_t bytesCount);
+
+    DEF_CONSTRUCTOR(VariantVector_t, Type::VECTOR)
+    DEF_CONSTRUCTOR(VariantList_t, Type::LIST)
+    DEF_CONSTRUCTOR(VariantDict_t, Type::DICTIONARY)
+    DEF_CONSTRUCTOR(VariantPair_t, Type::PAIR)
 
     Variant& operator=(const Variant& v);
     Variant& operator=(Variant&& v);

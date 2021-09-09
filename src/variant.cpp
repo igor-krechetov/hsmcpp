@@ -18,8 +18,9 @@ Variant Variant::make(const uint64_t v) { return Variant(new uint64_t(v), Type::
 Variant Variant::make(const double v) { return Variant(new double(v), Type::DOUBLE); }
 Variant Variant::make(const bool v) { return Variant(new bool(v), Type::BOOL); }
 Variant Variant::make(const std::string& v) { return Variant(new std::string(v), Type::STRING); }
-Variant Variant::make(const std::vector<char>& v) { return Variant(new std::vector<char>(v), Type::BYTEARRAY); }
 Variant Variant::make(const char* v) { return make(std::string(v)); }
+Variant Variant::make(const std::vector<char>& v) { return Variant(new std::vector<char>(v), Type::BYTEARRAY); }
+Variant Variant::make(const char* binaryData, const size_t bytesCount){ return Variant(new std::vector<char>(binaryData, binaryData + bytesCount), Type::BYTEARRAY); }
 Variant Variant::make(const VariantVector_t& v) { return Variant(new std::vector<Variant>(v), Type::VECTOR); }
 Variant Variant::make(const VariantList_t& v)  { return Variant(new std::list<Variant>(v), Type::LIST); }
 Variant Variant::make(const VariantDict_t& v) { return Variant(new VariantDict_t(v), Type::DICTIONARY); }
@@ -49,6 +50,15 @@ Variant::Variant(Variant&& v)
 
     v.data = nullptr;
     v.type = Type::UNKNOWN;
+}
+
+Variant::Variant(const char* v) : Variant(std::string(v))
+{
+}
+
+Variant::Variant(const char* binaryData, const size_t bytesCount)
+    : Variant(std::vector<char>(binaryData, binaryData + bytesCount))
+{
 }
 
 Variant& Variant::operator=(const Variant& v)

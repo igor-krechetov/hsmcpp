@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.19.2] - 2021-09-09
+### Added
+- new Variant constructors
+- Variant unit-tests (basic)
+
 [0.19.1] - 2021-09-01
 ### Fixed
 - recursive lock in GLib base dispatcher

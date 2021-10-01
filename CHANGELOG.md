@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.20.0] - 2021-09-30
+### Added
+- new state action: transition. It makes possible go initiate HSM transitions from within HSM.
+
 [0.19.2] - 2021-09-09
 ### Added
 - new Variant constructors

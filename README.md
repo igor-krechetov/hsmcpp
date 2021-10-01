@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/changelog-v0.19.2-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Generic badge](https://img.shields.io/badge/changelog-v0.20.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Generic badge](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
 [![Generic badge](https://img.shields.io/badge/documentation-green.svg)](https://github.com/igor-krechetov/hsmcpp/wiki)
 
@@ -37,6 +37,7 @@ If you are not familiar with HSM/FSM and which problems they can solve in your c
 - parallel states
 - conditional transitions
 - conditional entry points
+- state actions
 - self transitions
 - transition cancelation
 - support for std::function and lambdas as callbacks
@@ -95,9 +96,12 @@ HSM structure:
 
 Implementation using HsmEventDispatcherSTD:
 ```C++
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 #include <hsmcpp/hsm.hpp>
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
+
+using namespace std::chrono_literals;
 
 enum class States
 {
@@ -112,21 +116,21 @@ enum class Events
 
 int main(const int argc, const char**argv)
 {
-    std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
-    HierarchicalStateMachine<States, Events> hsm(States::OFF);
+    std::shared_ptr<hsmcpp::HsmEventDispatcherSTD> dispatcher = std::make_shared<hsmcpp::HsmEventDispatcherSTD>();
+    hsmcpp::HierarchicalStateMachine<States, Events> hsm(States::OFF);
 
     hsm.initialize(dispatcher);
 
     hsm.registerState(States::OFF, [&hsm](const VariantList_t& args)
     {
         printf("Off\n");
-        usleep(1000000);
+        std::this_thread::sleep_for(1000ms);
         hsm.transition(Events::SWITCH);
     });
     hsm.registerState(States::ON, [&hsm](const VariantList_t& args)
     {
         printf("On\n");
-        usleep(1000000);
+        std::this_thread::sleep_for(1000ms);
         hsm.transition(Events::SWITCH);
     });
 

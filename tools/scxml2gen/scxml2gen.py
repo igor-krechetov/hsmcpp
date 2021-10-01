@@ -9,7 +9,7 @@ def isStateActionDefinition(identifier):
     isAction = False
     actionFunc = ""
     actionArgs = []
-    p = re.compile("^(start_timer|stop_timer|restart_timer)\((.*)\)$")
+    p = re.compile("^(start_timer|stop_timer|restart_timer|transition)\((.*)\)$")
     m = p.match(identifier)
     if m is not None:
         isAction = True
@@ -87,7 +87,7 @@ def getCallbackName(elem):
 def getStateActions(elem):
     actions = {}
     nodes = ["onentry", "onexit"]
-    p = re.compile("^(start_timer|stop_timer|restart_timer)\((.*)\)$")
+    p = re.compile("^(start_timer|stop_timer|restart_timer|transition)\((.*)\)$")
 
     for nodeName in nodes:
         curNode = xmlFind(elem, nodeName)
@@ -262,6 +262,7 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
 #                       {"action": "start_timer", "args": [TIMER1, 1000, false]},
 #                       {"action": "stop_timer", "args": [TIMER1]},
 #                       {"action": "restart_timer", "args": [TIMER1]},
+#                       {"action": "transition", "args": [EVENT1, arg1, ...]},
 #                   ],
 #                   "onexit_actions": [ ... ],
 #                }
@@ -425,10 +426,9 @@ def prepareRegisterTimerFunc(eventsEnum, timersEnum, timerName):
     return f"registerTimer(static_cast<int>({timersEnum}::{timerName}), {eventsEnum}::ON_TIMER_{timerName});"
 
 
-def prepareRegisterActionFunction(state, timersEnum, trigger, actionInfo):
+def prepareRegisterActionFunction(state, eventsEnum, timersEnum, trigger, actionInfo):
     func = ""
     if len(actionInfo['args']) > 0:
-        timerName = f"{timersEnum}::{actionInfo['args'][0]}"
         actionTrigger = ""
         action = f"StateAction::{actionInfo['action'].upper()}"
         args = ""
@@ -441,7 +441,13 @@ def prepareRegisterActionFunction(state, timersEnum, trigger, actionInfo):
         for i in range(1, len(actionInfo['args'])):
             args += f", {actionInfo['args'][i]}"
 
-        func = f"registerStateAction({state}, {actionTrigger}, {action}, static_cast<int>({timerName}){args});"
+        print(f"action=<{action}>, {'_TIMER' in action}")
+        if "_TIMER" in action:
+            timerName = f"{timersEnum}::{actionInfo['args'][0]}"
+            func = f"registerStateAction({state}, {actionTrigger}, {action}, static_cast<int>({timerName}){args});"
+        else:
+            eventName = f"{eventsEnum}::{actionInfo['args'][0]}"
+            func = f"registerStateAction({state}, {actionTrigger}, {action}, static_cast<int>({eventName}){args});"
     return func
 
 
@@ -553,11 +559,12 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                     for curAction in curState['actions'][actionTrigger]:
                         if '_timer' in curAction['action']:
                             genVars["ENUM_TIMERS_ITEM"].add(curAction['args'][0])
-                            stateId = f"{genVars['ENUM_STATES']}::{curState['id']}"
-                            genVars["REGISTER_ACTIONS"].append(prepareRegisterActionFunction(stateId,
-                                                                                             genVars['ENUM_TIMERS'],
-                                                                                             actionTrigger,
-                                                                                             curAction))
+                        stateId = f"{genVars['ENUM_STATES']}::{curState['id']}"
+                        genVars["REGISTER_ACTIONS"].append(prepareRegisterActionFunction(stateId,
+                                                                                         genVars['ENUM_EVENTS'],
+                                                                                         genVars['ENUM_TIMERS'],
+                                                                                         actionTrigger,
+                                                                                         curAction))
 
             if "&" in registerCallbacks:
                 registerCallbacks = ", this" + registerCallbacks

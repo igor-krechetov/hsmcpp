@@ -20,6 +20,7 @@ set(SRC_UNITTESTS_COMMON 01_states.cpp
                          07_parallel.cpp
                          08_history.cpp
                          09_timers.cpp
+                         10_state_actions.cpp
                          20_variant.cpp
                          TestsCommon.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp

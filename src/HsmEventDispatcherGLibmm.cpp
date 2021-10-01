@@ -64,26 +64,26 @@ bool HsmEventDispatcherGLibmm::start()
 
 void HsmEventDispatcherGLibmm::unregisterAllTimerHandlers()
 {
-    for (auto it = mTimerHandlers.begin(); it != mTimerHandlers.end(); ++it)
+    for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it)
     {
         it->second.disconnect();
     }
 
-    mTimerHandlers.clear();
+    mNativeTimerHandlers.clear();
 }
 
 void HsmEventDispatcherGLibmm::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d, intervalMs=%d, isSingleShot=%d",
                                   SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
-    auto it = mTimerHandlers.find(timerID);
+    auto it = mNativeTimerHandlers.find(timerID);
 
-    if (mTimerHandlers.end() == it)
+    if (mNativeTimerHandlers.end() == it)
     {
         sigc::connection newTimerConnection;
 
         newTimerConnection = mMainContext->signal_timeout().connect(sigc::bind(sigc::mem_fun(this, &HsmEventDispatcherGLibmm::onTimerEvent), timerID), intervalMs);
-        mTimerHandlers.emplace(timerID, newTimerConnection);
+        mNativeTimerHandlers.emplace(timerID, newTimerConnection);
     }
     else
     {
@@ -94,12 +94,12 @@ void HsmEventDispatcherGLibmm::startTimerImpl(const TimerID_t timerID, const uns
 void HsmEventDispatcherGLibmm::stopTimerImpl(const TimerID_t timerID)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
-    auto it = mTimerHandlers.find(timerID);
+    auto it = mNativeTimerHandlers.find(timerID);
 
-    if (mTimerHandlers.end() != it)
+    if (mNativeTimerHandlers.end() != it)
     {
         it->second.disconnect();
-        mTimerHandlers.erase(it);
+        mNativeTimerHandlers.erase(it);
     }
 }
 
@@ -129,11 +129,11 @@ bool HsmEventDispatcherGLibmm::onTimerEvent(const TimerID_t timerID)
 
     if (false == restartTimer)
     {
-        auto itTimer = mTimerHandlers.find(timerID);
+        auto itTimer = mNativeTimerHandlers.find(timerID);
 
-        if (mTimerHandlers.end() != itTimer)
+        if (mNativeTimerHandlers.end() != itTimer)
         {
-            mTimerHandlers.erase(itTimer);
+            mNativeTimerHandlers.erase(itTimer);
         }
         else
         {

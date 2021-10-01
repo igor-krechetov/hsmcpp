@@ -95,6 +95,7 @@ public:
         START_TIMER, // ARGS: int timerID, int intervalMs, bool singleshot
         STOP_TIMER, // ARGS: int timerID
         RESTART_TIMER, // ARGS: int timerID
+        TRANSITION, // ARGS: int eventID
     };
 
 private:
@@ -323,6 +324,14 @@ public:
     // basic async transition
     template <typename... Args>
     void transition(const HsmEventEnum event, Args... args);
+
+    // same as regular functions, but uses VariantVector_t for arguments
+    void transitionWithArgsArray(const HsmEventEnum event, const VariantVector_t& args);
+    bool transitionExWithArgsArray(const HsmEventEnum event,
+                                   const bool clearQueue,
+                                   const bool sync,
+                                   const int timeoutMs,
+                                   const VariantVector_t& args);
 
     // sync transition
     template <typename... Args>
@@ -735,6 +744,8 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerStateAction(c
                                                                                const StateAction action,
                                                                                Args... args)
 {
+    __HSM_TRACE_CALL_DEBUG_ARGS__("state=<%s>, actionTrigger=%d, action=%d",
+                                  getStateName(state).c_str(), SC2INT(actionTrigger), SC2INT(action));
     bool result = false;
     bool argsValid = false;
     StateActionInfo newAction;
@@ -753,6 +764,9 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerStateAction(c
         case StateAction::STOP_TIMER:
             argsValid = (newAction.actionArgs.size() == 1) && newAction.actionArgs[0].isNumeric();
             break;
+        case StateAction::TRANSITION:
+            argsValid = (newAction.actionArgs.size() >= 1) && newAction.actionArgs[0].isNumeric();
+            break;
         default:
             // do nothing
             break;
@@ -762,6 +776,8 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerStateAction(c
         newAction.action = action;
         mRegisteredActions.emplace(std::make_pair(state, actionTrigger), newAction);
         result = true;
+    } else {
+        __HSM_TRACE_ERROR__("invalid arguments");
     }
 
     return result;
@@ -846,12 +862,46 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionEx(const Hs
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("transitionEx: event=<%s>, clearQueue=%s, sync=%s",
                                   getEventName(event).c_str(), BOOL2STR(clearQueue), BOOL2STR(sync));
+    VariantVector_t eventArgs;
+
+    makeVariantList(eventArgs, args...);
+
+    return transitionExWithArgsArray(event, clearQueue, sync, timeoutMs, eventArgs);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+template <typename... Args>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transition(const HsmEventEnum event, Args... args)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("event=<%s>", getEventName(event).c_str());
+
+    transitionEx(event, false, false, 0, args...);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionWithArgsArray(const HsmEventEnum event,
+                                                                                   const VariantVector_t& args)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("event=<%s>, args.size=%lu", getEventName(event).c_str(), args.size());
+
+    transitionExWithArgsArray(event, false, false, 0, args);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionExWithArgsArray(const HsmEventEnum event,
+                                                                                     const bool clearQueue,
+                                                                                     const bool sync,
+                                                                                     const int timeoutMs,
+                                                                                     const VariantVector_t& args)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("event=<%s>, clearQueue=%s, sync=%s, args.size=%lu",
+                                  getEventName(event).c_str(), BOOL2STR(clearQueue), BOOL2STR(sync), args.size());
 
     bool status = false;
     PendingEventInfo eventInfo;
 
     eventInfo.type = event;
-    makeVariantList(eventInfo.args, args...);
+    eventInfo.args = args;
 
     if (true == sync)
     {
@@ -885,15 +935,6 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionEx(const Hs
     }
 
     return status;
-}
-
-template <typename HsmStateEnum, typename HsmEventEnum>
-template <typename... Args>
-void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transition(const HsmEventEnum event, Args... args)
-{
-    __HSM_TRACE_CALL_DEBUG_ARGS__("event=<%s>", getEventName(event).c_str());
-
-    transitionEx(event, false, false, 0, args...);
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -1128,6 +1169,22 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::executeStateAction(co
             else if (StateAction::RESTART_TIMER == actionInfo.action)
             {
                 mDispatcher->restartTimer(actionInfo.actionArgs[0].toInt64());
+            }
+            else if (StateAction::TRANSITION == actionInfo.action)
+            {
+                VariantVector_t transitionArgs;
+
+                if (actionInfo.actionArgs.size() > 1)
+                {
+                    transitionArgs.reserve(actionInfo.actionArgs.size() - 1);
+
+                    for (int i = 1; i < actionInfo.actionArgs.size(); ++i)
+                    {
+                        transitionArgs.push_back(actionInfo.actionArgs[i]);
+                    }
+                }
+
+                transitionWithArgsArray(static_cast<HsmEventEnum>(actionInfo.actionArgs[0].toInt64()), transitionArgs);
             }
             else
             {

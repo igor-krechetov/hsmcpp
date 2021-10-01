@@ -47,7 +47,7 @@ private:
     Glib::RefPtr<Glib::MainContext> mMainContext;
     std::unique_ptr<Glib::Dispatcher> mDispatcher;
     sigc::connection mDispatcherConnection;
-    std::map<TimerID_t, sigc::connection> mTimerHandlers;// <timerID, connection>
+    std::map<TimerID_t, sigc::connection> mNativeTimerHandlers;// <timerID, connection>
 };
 
 } // namespace hsmcpp

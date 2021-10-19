@@ -481,6 +481,8 @@ def generateCppCode(hsm, pathHpp, pathCpp):
             genVars['INITIAL_STATE'] = curState['id']
             break
 
+    definedCallbacks = []
+
     while len(pendingStates) > 0:
         substates = []
         for curState in pendingStates:
@@ -505,7 +507,9 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                                 defaultTransition = curSubstate['transitions'][0]
                                 defaultTarget = f", {genVars['ENUM_STATES']}::{defaultTransition['target']}"
                                 if 'callback' in defaultTransition:
-                                    genVars["HSM_TRANSITION_ACTIONS"].add(prepareHsmcppTransitionCallbackDeclaration(defaultTransition['callback']))
+                                    if defaultTransition['callback'] not in definedCallbacks:
+                                        genVars["HSM_TRANSITION_ACTIONS"].add(prepareHsmcppTransitionCallbackDeclaration(defaultTransition['callback']))
+                                        definedCallbacks.append(defaultTransition['callback'])
                                     historyCallback += f", &{genVars['CLASS_NAME']}::{defaultTransition['callback']}"
 
                             genVars["REGISTER_SUBSTATES"].append(
@@ -537,13 +541,17 @@ def generateCppCode(hsm, pathHpp, pathCpp):
             registerCallbacks = ""
 
             if 'onstate' in curState:
-                genVars["HSM_STATE_ACTIONS"].add(prepareHsmcppStateCallbackDeclaration(curState['onstate']))
+                if curState['onstate'] not in definedCallbacks:
+                    genVars["HSM_STATE_ACTIONS"].add(prepareHsmcppStateCallbackDeclaration(curState['onstate']))
+                    definedCallbacks.append(curState['onstate'])
                 registerCallbacks += f", &{genVars['CLASS_NAME']}::{curState['onstate']}"
             else:
                 registerCallbacks += ", nullptr"
 
             if 'onentry' in curState:
-                genVars["HSM_STATE_ENTERING_ACTIONS"].add(prepareHsmcppStateEnterCallbackDeclaration(curState['onentry']))
+                if curState['onentry'] not in definedCallbacks:
+                    genVars["HSM_STATE_ENTERING_ACTIONS"].add(prepareHsmcppStateEnterCallbackDeclaration(curState['onentry']))
+                    definedCallbacks.append(curState['onentry'])
                 registerCallbacks += f", &{genVars['CLASS_NAME']}::{curState['onentry']}"
             else:
                 registerCallbacks += ", nullptr"
@@ -579,7 +587,9 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                     genVars["ENUM_EVENTS_ITEM"].add(curTransition['event'])
 
                     if 'callback' in curTransition:
-                        genVars["HSM_TRANSITION_ACTIONS"].add(prepareHsmcppTransitionCallbackDeclaration(curTransition['callback']))
+                        if curTransition['callback'] not in definedCallbacks:
+                            genVars["HSM_TRANSITION_ACTIONS"].add(prepareHsmcppTransitionCallbackDeclaration(curTransition['callback']))
+                            definedCallbacks.append(curTransition['callback'])
                         registerCallbacks += f", &{genVars['CLASS_NAME']}::{curTransition['callback']}"
                     else:
                         registerCallbacks += ", nullptr"

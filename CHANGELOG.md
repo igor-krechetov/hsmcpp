@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.21.0] - 2021-11-04
+### Added
+- support for condition callbacks in entry transitions
+### Fixed
+- scxml2gen: multiple conditional entry transitions were not handled correctly
+
 [0.20.0] - 2021-09-30
 ### Added
 - new state action: transition. It makes possible go initiate HSM transitions from within HSM.

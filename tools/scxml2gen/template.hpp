@@ -28,6 +28,13 @@ enum class @ENUM_TIMERS@
 
 class @CLASS_NAME@: public hsmcpp::HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>
 {
+    using @CLASS_NAME@TransitionCallbackPtr_t           = void (@CLASS_NAME@::*)(const hsmcpp::VariantVector_t&);
+    using @CLASS_NAME@TransitionConditionCallbackPtr_t  = bool (@CLASS_NAME@::*)(const hsmcpp::VariantVector_t&);
+    using @CLASS_NAME@StateChangedCallbackPtr_t         = void (@CLASS_NAME@::*)(const hsmcpp::VariantVector_t&);
+    using @CLASS_NAME@StateEnterCallbackPtr_t           = bool (@CLASS_NAME@::*)(const hsmcpp::VariantVector_t&);
+    using @CLASS_NAME@StateExitCallbackPtr_t            = bool (@CLASS_NAME@::*)();
+    using @CLASS_NAME@TransitionFailedCallbackPtr_t     = void (@CLASS_NAME@::*)(const @ENUM_EVENTS@, const hsmcpp::VariantVector_t&);
+
 public:
     @CLASS_NAME@();
     virtual ~@CLASS_NAME@();

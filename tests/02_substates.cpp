@@ -101,6 +101,34 @@ TEST_F(ABCHsm, substate_multiple_entrypoints_default)
     // VALIDATION
 }
 
+TEST_F(ABCHsm, substate_multiple_entrypoints_conditions)
+{
+    TEST_DESCRIPTION("entry point transitions can have condition callbacks defined");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
+
+    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B, AbcEvent::E1, [](const hsmcpp::VariantVector_t&){ return true; }, false) );
+    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::C, AbcEvent::E1, [](const hsmcpp::VariantVector_t&){ return false; }, false) );
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+
+    initializeHsm();
+
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_EQ(getLastActiveState(), AbcState::C);
+}
+
 TEST_F(ABCHsm, substate_block_conditional_entry_transition)
 {
     TEST_DESCRIPTION("if state doesnt have matching entry points for ongoing transition, then transition will be canceled");

@@ -187,7 +187,7 @@ TEST_F(TrafficLightHsm, transition_self)
 
 TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition)
 {
-    TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be cancled");
+    TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be canceled");
 
     //-------------------------------------------
     // PRECONDITIONS

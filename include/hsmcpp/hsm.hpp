@@ -142,8 +142,10 @@ private:
 
     struct StateEntryPoint
     {
-        HsmStateEnum state;
-        HsmEventEnum onEvent;
+        HsmStateEnum state = INVALID_HSM_STATE_ID;
+        HsmEventEnum onEvent = INVALID_HSM_EVENT_ID;
+        HsmTransitionConditionCallback_t checkCondition = nullptr;
+        bool expectedConditionValue = true;
     };
 
     struct TransitionInfo
@@ -284,7 +286,18 @@ public:
                          HsmTransitionCallback_t transitionCallback = nullptr);
 
     bool registerSubstate(const HsmStateEnum parent, const HsmStateEnum substate);
-    bool registerSubstateEntryPoint(const HsmStateEnum parent, const HsmStateEnum substate, const HsmEventEnum onEvent = INVALID_HSM_EVENT_ID);
+    template <class HsmHandlerClass>
+    bool registerSubstateEntryPoint(const HsmStateEnum parent,
+                                    const HsmStateEnum substate,
+                                    const HsmEventEnum onEvent = INVALID_HSM_EVENT_ID,
+                                    HsmHandlerClass* handler = nullptr,
+                                    HsmTransitionConditionCallbackPtr_t(HsmHandlerClass, conditionCallback) = nullptr,
+                                    const bool expectedConditionValue = true);
+    bool registerSubstateEntryPoint(const HsmStateEnum parent,
+                                    const HsmStateEnum substate,
+                                    const HsmEventEnum onEvent = INVALID_HSM_EVENT_ID,
+                                    const HsmTransitionConditionCallback_t& conditionCallback = nullptr,
+                                    const bool expectedConditionValue = true);
 
     void registerTimer(const TimerID_t timerID, const HsmEventEnum event);
 
@@ -360,7 +373,9 @@ private:
     bool registerSubstate(const HsmStateEnum parent,
                           const HsmStateEnum substate,
                           const bool isEntryPoint,
-                          const HsmEventEnum eventCondition = INVALID_HSM_EVENT_ID);
+                          const HsmEventEnum eventCondition = INVALID_HSM_EVENT_ID,
+                          const HsmTransitionConditionCallback_t& conditionCallback = nullptr,
+                          const bool expectedConditionValue = true);
 
     void dispatchEvents();
     void dispatchTimerEvent(const TimerID_t id);
@@ -391,7 +406,10 @@ private:
     bool hasSubstates(const HsmStateEnum parent) const;
     bool hasEntryPoint(const HsmStateEnum state) const;
     // TODO: return enum instead of bool (no entrypoint registered, no matching entry, ok)
-    bool getEntryPoints(const HsmStateEnum state, const HsmEventEnum onEvent, std::list<HsmStateEnum>& outEntryPoints) const;
+    bool getEntryPoints(const HsmStateEnum state,
+                        const HsmEventEnum onEvent,
+                        const VariantVector_t& transitionArgs,
+                        std::list<HsmStateEnum>& outEntryPoints) const;
 
     // returns TRUE if newState was added to a list of active states
     bool replaceActiveState(const HsmStateEnum oldState, const HsmStateEnum newState);
@@ -660,11 +678,32 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstate(cons
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
+template <class HsmHandlerClass>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstateEntryPoint(const HsmStateEnum parent,
                                                                                       const HsmStateEnum substate,
-                                                                                      const HsmEventEnum onEvent)
+                                                                                      const HsmEventEnum onEvent,
+                                                                                      HsmHandlerClass* handler,
+                                                                                      HsmTransitionConditionCallbackPtr_t(HsmHandlerClass, conditionCallback),
+                                                                                      const bool expectedConditionValue)
 {
-    return registerSubstate(parent, substate, true, onEvent);
+    HsmTransitionConditionCallback_t condition;
+
+    if ((nullptr != handler) && (nullptr != conditionCallback))
+    {
+        condition = std::bind(conditionCallback, handler, std::placeholders::_1);
+    }
+
+    return registerSubstateEntryPoint(parent, substate, onEvent, condition, expectedConditionValue);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstateEntryPoint(const HsmStateEnum parent,
+                                                                                      const HsmStateEnum substate,
+                                                                                      const HsmEventEnum onEvent,
+                                                                                      const HsmTransitionConditionCallback_t& conditionCallback,
+                                                                                      const bool expectedConditionValue)
+{
+    return registerSubstate(parent, substate, true, onEvent, conditionCallback, expectedConditionValue);
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -677,7 +716,9 @@ template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstate(const HsmStateEnum parent,
                                                                             const HsmStateEnum substate,
                                                                             const bool isEntryPoint,
-                                                                            const HsmEventEnum onEvent)
+                                                                            const HsmEventEnum onEvent,
+                                                                            const HsmTransitionConditionCallback_t& conditionCallback,
+                                                                            const bool expectedConditionValue)
 {
     bool registrationAllowed = false;
 
@@ -719,7 +760,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstate(cons
     {
         if (isEntryPoint)
         {
-            StateEntryPoint entryInfo = {substate, onEvent};
+            StateEntryPoint entryInfo = {substate, onEvent, conditionCallback, expectedConditionValue};
 
             mSubstateEntryPoints.emplace(parent, entryInfo);
         }
@@ -994,7 +1035,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::handleStartup()
             {
                 __HSM_TRACE_DEBUG__("state=<%s>", getStateName(*it).c_str());
 
-                if (true == getEntryPoints(*it, INVALID_HSM_EVENT_ID, entryPoints))
+                if (true == getEntryPoints(*it, INVALID_HSM_EVENT_ID, VariantVector_t(), entryPoints))
                 {
                     PendingEventInfo entryPointTransitionEvent;
 
@@ -1402,7 +1443,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::findTransitionTarget(
                                 __HSM_TRACE_DEBUG__("state <%s> has entrypoints", getStateName(currentParent).c_str());
                                 std::list<HsmStateEnum> entryPoints;
 
-                                if (true == getEntryPoints(currentParent, event, entryPoints))
+                                if (true == getEntryPoints(currentParent, event, transitionArgs, entryPoints))
                                 {
                                     parentStates.splice(parentStates.end(), entryPoints);
                                 }
@@ -1504,7 +1545,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
     {
         std::list<HsmStateEnum> entryStates;
 
-        isCorrectTransition = getEntryPoints(fromState, event.type, entryStates);
+        isCorrectTransition = getEntryPoints(fromState, event.type, event.args, entryStates);
 
         if (true == isCorrectTransition)
         {
@@ -1681,7 +1722,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                                         __HSM_TRACE_DEBUG__("found parent=<%s> for history state=<%s>",
                                                             getStateName(historyParent).c_str(),
                                                             getStateName(it->destinationState).c_str());
-                                        getEntryPoints(historyParent, event.type, historyTargets);
+                                        getEntryPoints(historyParent, event.type, event.args, historyTargets);
                                     }
                                     else
                                     {
@@ -1712,7 +1753,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                             res = HsmEventStatus_t::PENDING;
                         }
                         // check if new state has substates and initiate entry transition
-                        else if (true == getEntryPoints(it->destinationState, event.type, entryPoints))
+                        else if (true == getEntryPoints(it->destinationState, event.type, event.args, entryPoints))
                         {
                             __HSM_TRACE_DEBUG__("state <%s> has substates with %d entry points (first: <%s>)",
                                                 getStateName(it->destinationState).c_str(),
@@ -1882,6 +1923,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::hasEntryPoint(const H
 template <typename HsmStateEnum, typename HsmEventEnum>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getEntryPoints(const HsmStateEnum state,
                                                                           const HsmEventEnum onEvent,
+                                                                          const VariantVector_t& transitionArgs,
                                                                           std::list<HsmStateEnum>& outEntryPoints) const
 {
     bool hasEntryPoint = false;
@@ -1892,11 +1934,19 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getEntryPoints(const 
 
     for (auto it = itRange.first; it != itRange.second; ++it)
     {
-        if (INVALID_HSM_EVENT_ID == it->second.onEvent)
+        bool conditionResult = true;
+
+        // check transition condition if it was defined
+        if (nullptr != it->second.checkCondition)
+        {
+            conditionResult = it->second.checkCondition(transitionArgs) == it->second.expectedConditionValue;
+        }
+
+        if ((INVALID_HSM_EVENT_ID == it->second.onEvent) && (nullptr == it->second.checkCondition))
         {
             nonconditionalEntryPoints.push_back(it->second.state);
         }
-        else if (onEvent == it->second.onEvent)
+        else if ((onEvent == it->second.onEvent) && (true == conditionResult))
         {
             outEntryPoints.push_back(it->second.state);
         }

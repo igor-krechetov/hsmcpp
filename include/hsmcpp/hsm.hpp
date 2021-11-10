@@ -1219,7 +1219,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::executeStateAction(co
                 {
                     transitionArgs.reserve(actionInfo.actionArgs.size() - 1);
 
-                    for (int i = 1; i < actionInfo.actionArgs.size(); ++i)
+                    for (size_t i = 1; i < actionInfo.actionArgs.size(); ++i)
                     {
                         transitionArgs.push_back(actionInfo.actionArgs[i]);
                     }

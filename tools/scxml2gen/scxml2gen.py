@@ -473,7 +473,7 @@ def prepareStateChangedCallbackPtr(name):
 
 
 def prepareStateEnterCallbackPtr(name):
-    return f"static_cast<{genVars['CLASS_NAME']}StateEnterCallbackPtr>(&{genVars['CLASS_NAME']}::{name})"
+    return f"static_cast<{genVars['CLASS_NAME']}StateEnterCallbackPtr_t>(&{genVars['CLASS_NAME']}::{name})"
 
 
 def prepareStateExitCallbackPtr(name):
@@ -644,7 +644,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
 
                     if 'condition' in curTransition:
                         genVars["HSM_TRANSITION_CONDITIONS"].add(prepareHsmcppConditionCallbackDeclaration(curTransition['condition'][0]))
-                        registerCallbacks += f", {prepareTransitionConditionCallbackPtr(curTransition['condition'][0])}, {curTransition['condition'][1]})"
+                        registerCallbacks += f", {prepareTransitionConditionCallbackPtr(curTransition['condition'][0])}, {curTransition['condition'][1]}"
 
                     if "&" in registerCallbacks:
                         registerCallbacks = ", this" + registerCallbacks

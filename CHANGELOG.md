@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.21.1] - 2021-11-10
+### Fixed
+- incorrect code generation from scxml
+
 [0.21.0] - 2021-11-04
 ### Added
 - support for condition callbacks in entry transitions

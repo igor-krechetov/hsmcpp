@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.21.0")
+set(PROJECT_VERSION "0.21.1")
 set(PROJECT_DESCRIPTION "C++ library that implements simple hierarchical state machines / finite state machines")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_VERBOSE_MAKEFILE OFF)

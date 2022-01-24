@@ -13,7 +13,7 @@ namespace hsmcpp
 
 HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm()
     : mMainContext(Glib::MainContext::get_default())
-    , mDispatcher(std::make_unique<Glib::Dispatcher>())
+    , mDispatcher(new Glib::Dispatcher())
 {
     __HSM_TRACE_CALL_DEBUG__();
 
@@ -21,7 +21,7 @@ HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm()
 
 HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context)
     : mMainContext(context)
-    , mDispatcher(std::make_unique<Glib::Dispatcher>(context))
+    , mDispatcher(new Glib::Dispatcher(context))
 {
     __HSM_TRACE_CALL_DEBUG__();
 }

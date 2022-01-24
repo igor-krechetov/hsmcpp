@@ -3,7 +3,6 @@
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
 #include "gen/PlayerHsmBase.hpp"
 
-using namespace std::chrono_literals;
 using namespace hsmcpp;
 
 class PlayerHsm: public PlayerHsmBase
@@ -16,28 +15,28 @@ protected:
     void onCall(const VariantVector_t& args) override
     {
         printf("onCall\n");
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         transition(PlayerHsmEvents::CALL_ENDED);
     }
 
     void onNoMedia(const VariantVector_t& args) override
     {
         printf("onNoMedia\n");
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         transition(PlayerHsmEvents::LOADING_DONE);
     }
 
     void onPaused(const VariantVector_t& args) override
     {
         printf("onPaused\n");
-        std::this_thread::sleep_for(3000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         transition(PlayerHsmEvents::ON_CALL);
     }
 
     void onPlaying(const VariantVector_t& args) override
     {
         printf("onPlaying\n");
-        std::this_thread::sleep_for(3000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         transition(PlayerHsmEvents::PAUSE);
     }
 
@@ -46,7 +45,7 @@ protected:
     void onCallEndedTransition(const VariantVector_t& args) override
     {
         printf("onCallEndedTransition\n");
-        std::this_thread::sleep_for(250ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
     }
 };
 

@@ -760,7 +760,12 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSubstate(cons
     {
         if (isEntryPoint)
         {
-            StateEntryPoint entryInfo = {substate, onEvent, conditionCallback, expectedConditionValue};
+            StateEntryPoint entryInfo;
+
+            entryInfo.state = substate;
+            entryInfo.onEvent = onEvent;
+            entryInfo.checkCondition = conditionCallback;
+            entryInfo.expectedConditionValue = expectedConditionValue;
 
             mSubstateEntryPoints.emplace(parent, entryInfo);
         }
@@ -1241,7 +1246,10 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getParentState(const 
 {
     bool wasFound = false;
     auto it = std::find_if(mSubstates.begin(), mSubstates.end(),
-                          [child](const auto& itemIt){ return (child == itemIt.second); });
+                          [child](const std::pair<HsmStateEnum, HsmStateEnum>& item)
+                          {
+                              return (child == item.second);
+                          });
 
     if (mSubstates.end() != it)
     {
@@ -1273,7 +1281,10 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getHistoryParent(cons
 {
     bool wasFound = false;
     auto it = std::find_if(mHistoryStates.begin(), mHistoryStates.end(),
-                          [historyState](const auto& itemIt){ return (historyState == itemIt.second); });
+                          [historyState](const std::pair<HsmStateEnum, HsmStateEnum>& item)
+                          {
+                              return (historyState == item.second);
+                          });
 
     if (mHistoryStates.end() != it)
     {

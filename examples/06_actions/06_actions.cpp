@@ -1,7 +1,6 @@
 #include "gen/ActionsHsmBase.hpp"
 #include <hsmcpp/HsmEventDispatcherGLibmm.hpp>
 
-using namespace std::chrono_literals;
 using namespace hsmcpp;
 
 class ActionsHsm: public ActionsHsmBase
@@ -24,6 +23,11 @@ protected:
     void onNextStep(const hsmcpp::VariantVector_t& args) override
     {
         printf("onNextStep: <%s>, %ld\n", args[0].toString().c_str(), args[1].toInt64());
+    }
+
+    bool isTransitionAllowed(const VariantVector_t&) override
+    {
+        return true;
     }
 };
 

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="05_timers" qt:editorversion="4.14.2" initial="Idle">
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="05_timers" qt:editorversion="5.0.2" initial="Idle">
     <qt:editorinfo initialGeometry="260.06;54.25;-20;-20;40;40"/>
     <state id="Idle">
-        <qt:editorinfo geometry="260.06;169.29;-60;-50;120;100" scenegeometry="260.06;169.29;200.06;119.29;120;100"/>
+        <qt:editorinfo scenegeometry="260.06;169.29;200.06;119.29;120;100" geometry="260.06;169.29;-60;-50;120;100"/>
         <transition type="external" event="START" target="Off">
             <qt:editorinfo movePoint="40.79;7.14"/>
         </transition>
     </state>
     <state id="Off">
-        <qt:editorinfo geometry="260.06;381.42;-60;-50;120.03;100" scenegeometry="260.06;381.42;200.06;331.42;120.03;100"/>
+        <qt:editorinfo scenegeometry="260.06;381.42;200.06;331.42;120.03;100" geometry="260.06;381.42;-60;-50;120.03;100"/>
         <transition type="external" event="ON_TIMER_SWITCH" target="TRANSITION_ACTION">
             <qt:editorinfo endTargetFactors="25.98;59.88" movePoint="-71.99;24"/>
         </transition>
@@ -18,14 +18,14 @@
         </onentry>
     </state>
     <state id="On">
-        <qt:editorinfo geometry="556.84;381.42;-60;-50;120;100" scenegeometry="556.84;381.42;496.84;331.42;120;100"/>
+        <qt:editorinfo scenegeometry="556.84;381.42;496.84;331.42;120;100" geometry="556.84;381.42;-60;-50;120;100"/>
         <transition type="external" event="ON_TIMER_SWITCH" target="Off">
             <qt:editorinfo startTargetFactors="7.26;71.94" endTargetFactors="88.93;72.85" movePoint="12.52;-21.91"/>
         </transition>
         <invoke srcexpr="On"/>
     </state>
     <state id="TRANSITION_ACTION">
-        <qt:editorinfo geometry="372.46;585.31;-60;-50;217.64;100" scenegeometry="372.46;585.31;312.46;535.31;217.64;100"/>
+        <qt:editorinfo scenegeometry="372.46;585.31;312.46;535.31;217.64;100" geometry="372.46;585.31;-60;-50;217.64;100"/>
         <transition type="external" event="NEXT_STEP" target="On">
             <qt:editorinfo movePoint="59.47;16.69"/>
             <script>onNextStep</script>
@@ -36,5 +36,19 @@
         <onexit>
             <script>start_timer(SWITCH,1000,true)</script>
         </onexit>
+    </state>
+    <state id="State_5">
+        <qt:editorinfo scenegeometry="829.13;253.94;769.13;191.29;456.70;401.24" geometry="829.13;253.94;-60;-62.65;456.70;401.24"/>
+        <state id="State_6">
+            <qt:editorinfo scenegeometry="877.07;448.74;817.07;398.74;120;100" geometry="49.98;194.80;-60;-50;120;100"/>
+        </state>
+        <state id="State_7">
+            <qt:editorinfo scenegeometry="1096.33;450.77;1036.33;400.77;120;100" geometry="269.24;196.83;-60;-50;120;100"/>
+        </state>
+        <initial>
+            <qt:editorinfo scenegeometry="986.20;280.46;966.20;260.46;40;40" geometry="159.11;26.52;-20;-20;40;40"/>
+            <transition type="external" event="Transition_1" target="State_6" cond="isTransitionAllowed is false" />
+            <transition type="external" event="Transition_1" target="State_7" cond="isTransitionAllowed is true" />
+        </initial>
     </state>
 </scxml>

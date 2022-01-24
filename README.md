@@ -1,9 +1,9 @@
-[![Generic badge](https://img.shields.io/badge/changelog-v0.21.1-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Generic badge](https://img.shields.io/badge/changelog-v0.21.2-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Generic badge](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
 [![Generic badge](https://img.shields.io/badge/documentation-green.svg)](https://github.com/igor-krechetov/hsmcpp/wiki)
 
 # Overview
-HSMCPP is a C++ library providing an easy way (hopefully) to add hierarchical or finite state machine to your code. Main motivation behind making it was lack of suitable alternatives which do not involve large frameworks (usually commercial) and could satisfy needs of the projects I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multithreading or event driven applications.
+HSMCPP is a C++ library providing an easy way (hopefully) to add hierarchical (HSM) or finite state machine (FSM) to your project. Main motivation behind making it was lack of suitable alternatives which do not involve large frameworks (often commercial). And even they couldn't satisfy projects needs that I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multithreading or event driven applications.
 
 It's also applicable for single threaded and synchronous applications, but it might not be the most efficient option.
 
@@ -101,8 +101,6 @@ Implementation using HsmEventDispatcherSTD:
 #include <hsmcpp/hsm.hpp>
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
 
-using namespace std::chrono_literals;
-
 enum class States
 {
     OFF,
@@ -124,13 +122,13 @@ int main(const int argc, const char**argv)
     hsm.registerState(States::OFF, [&hsm](const VariantList_t& args)
     {
         printf("Off\n");
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
     });
     hsm.registerState(States::ON, [&hsm](const VariantList_t& args)
     {
         printf("On\n");
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
     });
 
@@ -145,7 +143,7 @@ int main(const int argc, const char**argv)
 }
 ```
 
-See [/examples/cmake_templates](https://github.com/igor-krechetov/hsmcpp/tree/main/examples/cmake_templates) for CMake configuration examples.
+See [/examples/07_build](https://github.com/igor-krechetov/hsmcpp/tree/main/examples/07_build) for CMake configuration examples.
 
 For other examples see [Wiki](https://github.com/igor-krechetov/hsmcpp/wiki/Getting-Started) or [/examples](https://github.com/igor-krechetov/hsmcpp/tree/main/examples).
 

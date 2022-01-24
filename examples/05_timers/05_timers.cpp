@@ -3,7 +3,6 @@
 #include <hsmcpp/hsm.hpp>
 #include <hsmcpp/HsmEventDispatcherGLibmm.hpp>
 
-using namespace std::chrono_literals;
 using namespace hsmcpp;
 
 enum class States

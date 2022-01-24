@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.21.2] - 2022-01-24
+### Added
+- scxml2gen is now correctly installed after build
+- improved cmake and pkg-config usability
+- added better CMake script examples
+### Fixed
+- fixed support for C++11
+
 [0.21.1] - 2021-11-10
 ### Fixed
 - incorrect code generation from scxml

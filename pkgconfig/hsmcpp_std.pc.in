@@ -4,4 +4,4 @@ Version: @PROJECT_VERSION@
 
 Requires: hsmcpp
 Libs: -pthread -lhsmcpp_std
-Cflags: @HSM_DEFINITIONS_STD@
+Cflags: -DHSM_DISPATCHER_STD

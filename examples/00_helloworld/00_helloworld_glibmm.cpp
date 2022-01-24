@@ -3,7 +3,6 @@
 #include <hsmcpp/hsm.hpp>
 #include <hsmcpp/HsmEventDispatcherGLibmm.hpp>
 
-using namespace std::chrono_literals;
 using namespace hsmcpp;
 
 enum class States
@@ -26,13 +25,13 @@ int main(const int argc, const char**argv)
     hsm.registerState(States::OFF, [&hsm](const VariantVector_t& args)
     {
         printf("Off\n");
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
     });
     hsm.registerState(States::ON, [&hsm](const VariantVector_t& args)
     {
         printf("On\n");
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
     });
 

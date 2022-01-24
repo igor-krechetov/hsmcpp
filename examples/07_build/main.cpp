@@ -1,6 +1,7 @@
 #include <chrono>
 #include <thread>
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
+#include <hsmcpp/HsmEventDispatcherGLibmm.hpp>
 #include "gen/SwitchHsmBase.hpp"
 
 using namespace hsmcpp;
@@ -30,6 +31,9 @@ protected:
 int main(const int argc, const char**argv)
 {
     std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
+    // NOTE: Second dispatched is only for build testing.
+    //       In real situation one type of dispatcher is usually enough.
+    std::shared_ptr<HsmEventDispatcherGLibmm> dispatcher2 = std::make_shared<HsmEventDispatcherGLibmm>();
     SwitchHsm hsm;
 
     hsm.initialize(dispatcher);

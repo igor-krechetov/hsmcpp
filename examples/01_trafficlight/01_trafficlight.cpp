@@ -10,7 +10,6 @@
 
 __HSM_TRACE_PREINIT__();
 
-using namespace std::chrono_literals;
 using namespace hsmcpp;
 
 enum class TrafficLightState
@@ -60,7 +59,7 @@ public:
             printf("----> onNextStateTransition (no args)\n");
         }
 
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     void onOff(const VariantVector_t& args){ printf("----> OFF\n"); }
@@ -78,17 +77,17 @@ void simulate()
     int index = 0;
 
     printf("[T0] wait 2000 ms...\n");
-    std::this_thread::sleep_for(2000ms);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     printf("[T0] starting work...\n");
 
     tl->transition(TrafficLightEvent::TURN_ON);
-    std::this_thread::sleep_for(2000ms);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
     while(true)
     {
         tl->transition(TrafficLightEvent::NEXT_STATE);
         index++;
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
@@ -97,11 +96,11 @@ void simulateSync1()
     int index = 0;
 
     printf("[T1] wait 2000 ms...\n");
-    std::this_thread::sleep_for(2000ms);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     printf("[T1] starting work...\n");
 
     tl->transition(TrafficLightEvent::TURN_ON);
-    std::this_thread::sleep_for(2000ms);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
     while(true)
     {
@@ -111,7 +110,7 @@ void simulateSync1()
         status = tl->transitionEx(TrafficLightEvent::NEXT_STATE, true, true, HSM_WAIT_INDEFINITELY, 1, index);
         printf("[T1] AFTER transition: %d\n", (int)status);
         index++;
-        std::this_thread::sleep_for(3000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     }
 }
 
@@ -120,11 +119,11 @@ void simulateSync2()
     int index = 0;
 
     printf("[T2] wait 2000 ms...\n");
-    std::this_thread::sleep_for(2000ms);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     printf("[T2] starting work...\n");
 
     tl->transition(TrafficLightEvent::TURN_ON);
-    std::this_thread::sleep_for(2000ms);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
     while(true)
     {
@@ -134,7 +133,7 @@ void simulateSync2()
         status = tl->transitionEx(TrafficLightEvent::NEXT_STATE, true, true, HSM_WAIT_INDEFINITELY, 2, index);
         printf("[T2] AFTER transition: %d\n", (int)status);
         index++;
-        std::this_thread::sleep_for(3000ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     }
 }
 

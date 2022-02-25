@@ -11,12 +11,14 @@ enum class AbcState
 {
     A, B, C, D, E, F,
     H, H2,
-    P1, P2, P3, P4
+    P1, P2, P3, P4,
+    F1, F2, F3
 };
 
 enum class AbcEvent
 {
-    E1, E2, E3
+    E1, E2, E3,
+    EXIT1, EXIT2
 };
 
 class ABCHsm: public testing::Test

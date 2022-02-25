@@ -270,6 +270,20 @@ public:
                        HsmStateEnterCallback_t onEntering = nullptr,
                        HsmStateExitCallback_t onExiting = nullptr);
 
+    template <class HsmHandlerClass>
+    void registerFinalState(const HsmStateEnum state,
+                            const HsmEventEnum event = INVALID_HSM_EVENT_ID,
+                            HsmHandlerClass* handler = nullptr,
+                            HsmStateChangedCallbackPtr_t(HsmHandlerClass, onStateChanged) = nullptr,
+                            HsmStateEnterCallbackPtr_t(HsmHandlerClass, onEntering) = nullptr,
+                            HsmStateExitCallbackPtr_t(HsmHandlerClass, onExiting) = nullptr);
+
+    void registerFinalState(const HsmStateEnum state,
+                            const HsmEventEnum event = INVALID_HSM_EVENT_ID,
+                            HsmStateChangedCallback_t onStateChanged = nullptr,
+                            HsmStateEnterCallback_t onEntering = nullptr,
+                            HsmStateExitCallback_t onExiting = nullptr);
+
     // TODO: check structure and return FALSE?
     template <class HsmHandlerClass>
     void registerHistory(const HsmStateEnum parent,
@@ -446,6 +460,7 @@ private:
     std::list<HsmStateEnum> mActiveStates;
     std::multimap<std::pair<HsmStateEnum, HsmEventEnum>, TransitionInfo> mTransitionsByEvent; // FROM_STATE, EVENT => TO
     std::map<HsmStateEnum, StateCallbacks> mRegisteredStates;
+    std::map<HsmStateEnum, HsmEventEnum> mFinalStates;
     std::multimap<HsmStateEnum, HsmStateEnum> mSubstates;
     std::multimap<HsmStateEnum, StateEntryPoint> mSubstateEntryPoints;
     std::list<PendingEventInfo> mPendingEvents;
@@ -635,6 +650,30 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerState(const H
 
         __HSM_TRACE_CALL_DEBUG_ARGS__("mRegisteredStates.size=%ld", mRegisteredStates.size());
     }
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+template <class HsmHandlerClass>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerFinalState(const HsmStateEnum state,
+                                                                              const HsmEventEnum event,
+                                                                              HsmHandlerClass* handler,
+                                                                              HsmStateChangedCallbackPtr_t(HsmHandlerClass, onStateChanged),
+                                                                              HsmStateEnterCallbackPtr_t(HsmHandlerClass, onEntering),
+                                                                              HsmStateExitCallbackPtr_t(HsmHandlerClass, onExiting))
+{
+    mFinalStates.emplace(state, event);
+    registerState(state, handler, onStateChanged, onEntering, onExiting);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerFinalState(const HsmStateEnum state,
+                                                                              const HsmEventEnum event,
+                                                                              HsmStateChangedCallback_t onStateChanged,
+                                                                              HsmStateEnterCallback_t onEntering,
+                                                                              HsmStateExitCallback_t onExiting)
+{
+    mFinalStates.emplace(state, event);
+    registerState(state, onStateChanged, onEntering, onExiting);
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -1542,6 +1581,8 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
     bool isCorrectTransition = false;
     std::list<TransitionInfo> matchingTransitions;
 
+    // ========================================================
+    // determine target state based on current transition
     if (TransitionType::REGULAR == event.transitionType)
     {
         isCorrectTransition = findTransitionTarget(fromState, event.type, event.args, matchingTransitions);
@@ -1578,6 +1619,8 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
         isCorrectTransition = true;
     }
 
+    // ========================================================
+    // handle transition if it passed validation and has a target state
     if (true == isCorrectTransition)
     {
         bool isExitAllowed = true;
@@ -1664,6 +1707,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
             }
         }
 
+        // proceed if transition was not blocked during state exit
         if (true == isExitAllowed)
         {
             for (auto it = matchingTransitions.begin(); it != matchingTransitions.end(); ++it)
@@ -1688,101 +1732,136 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                             onStateChanged(it->destinationState, event.args);
                         }
 
-                        // we transitioned into history state
-                        auto itHistoryData = mHistoryData.find(it->destinationState);
+                        // check if current state is a final state
+                        const auto itFinalStateEvent = mFinalStates.find(it->destinationState);
 
-                        if (itHistoryData != mHistoryData.end())
+                        if (itFinalStateEvent != mFinalStates.end())
                         {
-                            __HSM_TRACE_DEBUG__("state=<%s> is a history state with %ld stored states",
-                                                getStateName(it->destinationState).c_str(),
-                                                itHistoryData->second.previousActiveStates.size());
+                            HsmStateEnum parentState = INVALID_HSM_STATE_ID;
 
-                            // we need to transition to previous states or to default state
-                            if (itHistoryData->second.previousActiveStates.size() > 0)
+                            // don't generate events for top level final states since no one can process them
+                            if (true == getParentState(it->destinationState, parentState))
                             {
-                                _HSM_SYNC_EVENTS_QUEUE();
+                                PendingEventInfo finalStateEvent;
 
-                                PendingEventInfo historyTransitionEvent = event;
+                                finalStateEvent.transitionType = TransitionType::REGULAR;
+                                finalStateEvent.args = event.args;
 
-                                historyTransitionEvent.transitionType = TransitionType::FORCED;
-                                historyTransitionEvent.forcedTransitionsInfo = std::make_shared<std::list<TransitionInfo>>();
-
-                                for (auto itPrevState = itHistoryData->second.previousActiveStates.begin();
-                                     itPrevState != itHistoryData->second.previousActiveStates.end();
-                                     ++itPrevState)
+                                if (INVALID_HSM_EVENT_ID != itFinalStateEvent->second)
                                 {
-                                    historyTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
-                                                                                               *itPrevState,
-                                                                                               itHistoryData->second.transitionCallback,
-                                                                                               nullptr);
-                                }
-
-                                itHistoryData->second.previousActiveStates.clear();
-                                mPendingEvents.push_front(historyTransitionEvent);
-                            }
-                            else
-                            {
-                                std::list<HsmStateEnum> historyTargets;
-
-                                if (INVALID_HSM_STATE_ID == itHistoryData->second.defaultTarget)
-                                {
-                                    HsmStateEnum historyParent;
-
-                                    if (true == getHistoryParent(it->destinationState, historyParent))
-                                    {
-                                        __HSM_TRACE_DEBUG__("found parent=<%s> for history state=<%s>",
-                                                            getStateName(historyParent).c_str(),
-                                                            getStateName(it->destinationState).c_str());
-                                        getEntryPoints(historyParent, event.type, event.args, historyTargets);
-                                    }
-                                    else
-                                    {
-                                        __HSM_TRACE_ERROR__("parent for history state=<%s> wasnt found",
-                                                            getStateName(it->destinationState).c_str());
-                                    }
+                                    finalStateEvent.type = itFinalStateEvent->second;
                                 }
                                 else
                                 {
-                                    historyTargets.push_back(itHistoryData->second.defaultTarget);
+                                    finalStateEvent.type = event.type;
                                 }
 
-                                PendingEventInfo defHistoryTransitionEvent = event;
-
-                                defHistoryTransitionEvent.transitionType = TransitionType::FORCED;
-
-                                for (HsmStateEnum defaultTargetState: historyTargets)
                                 {
-                                    defHistoryTransitionEvent.forcedTransitionsInfo = std::make_shared<std::list<TransitionInfo>>();
-                                    defHistoryTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
-                                                                                                  defaultTargetState,
-                                                                                                  itHistoryData->second.transitionCallback,
-                                                                                                  nullptr);
-                                    mPendingEvents.push_front(defHistoryTransitionEvent);
+                                    _HSM_SYNC_EVENTS_QUEUE();
+                                    mPendingEvents.push_front(finalStateEvent);
                                 }
                             }
 
-                            res = HsmEventStatus_t::PENDING;
-                        }
-                        // check if new state has substates and initiate entry transition
-                        else if (true == getEntryPoints(it->destinationState, event.type, event.args, entryPoints))
-                        {
-                            __HSM_TRACE_DEBUG__("state <%s> has substates with %d entry points (first: <%s>)",
-                                                getStateName(it->destinationState).c_str(),
-                                                SC2INT(entryPoints.size()),
-                                                getStateName(entryPoints.front()).c_str());
-                            PendingEventInfo entryPointTransitionEvent = event;
-
-                            entryPointTransitionEvent.transitionType = TransitionType::ENTRYPOINT;
-
-                            {
-                                _HSM_SYNC_EVENTS_QUEUE();
-                                mPendingEvents.push_front(entryPointTransitionEvent);
-                            }
-                            res = HsmEventStatus_t::PENDING;
+                            res = HsmEventStatus_t::DONE_OK;
                         }
                         else
                         {
-                            res = HsmEventStatus_t::DONE_OK;
+                            // check if we transitioned into history state
+                            auto itHistoryData = mHistoryData.find(it->destinationState);
+
+                            if (itHistoryData != mHistoryData.end())
+                            {
+                                __HSM_TRACE_DEBUG__("state=<%s> is a history state with %ld stored states",
+                                                    getStateName(it->destinationState).c_str(),
+                                                    itHistoryData->second.previousActiveStates.size());
+
+                                // we need to transition to previous states or to default state
+                                if (itHistoryData->second.previousActiveStates.size() > 0)
+                                {
+                                    _HSM_SYNC_EVENTS_QUEUE();
+
+                                    PendingEventInfo historyTransitionEvent = event;
+
+                                    historyTransitionEvent.transitionType = TransitionType::FORCED;
+                                    historyTransitionEvent.forcedTransitionsInfo = std::make_shared<std::list<TransitionInfo>>();
+
+                                    for (auto itPrevState = itHistoryData->second.previousActiveStates.begin();
+                                        itPrevState != itHistoryData->second.previousActiveStates.end();
+                                        ++itPrevState)
+                                    {
+                                        historyTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
+                                                                                                *itPrevState,
+                                                                                                itHistoryData->second.transitionCallback,
+                                                                                                nullptr);
+                                    }
+
+                                    itHistoryData->second.previousActiveStates.clear();
+                                    mPendingEvents.push_front(historyTransitionEvent);
+                                }
+                                else
+                                {
+                                    std::list<HsmStateEnum> historyTargets;
+
+                                    if (INVALID_HSM_STATE_ID == itHistoryData->second.defaultTarget)
+                                    {
+                                        HsmStateEnum historyParent;
+
+                                        if (true == getHistoryParent(it->destinationState, historyParent))
+                                        {
+                                            __HSM_TRACE_DEBUG__("found parent=<%s> for history state=<%s>",
+                                                                getStateName(historyParent).c_str(),
+                                                                getStateName(it->destinationState).c_str());
+                                            getEntryPoints(historyParent, event.type, event.args, historyTargets);
+                                        }
+                                        else
+                                        {
+                                            __HSM_TRACE_ERROR__("parent for history state=<%s> wasnt found",
+                                                                getStateName(it->destinationState).c_str());
+                                        }
+                                    }
+                                    else
+                                    {
+                                        historyTargets.push_back(itHistoryData->second.defaultTarget);
+                                    }
+
+                                    PendingEventInfo defHistoryTransitionEvent = event;
+
+                                    defHistoryTransitionEvent.transitionType = TransitionType::FORCED;
+
+                                    for (HsmStateEnum defaultTargetState: historyTargets)
+                                    {
+                                        defHistoryTransitionEvent.forcedTransitionsInfo = std::make_shared<std::list<TransitionInfo>>();
+                                        defHistoryTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
+                                                                                                    defaultTargetState,
+                                                                                                    itHistoryData->second.transitionCallback,
+                                                                                                    nullptr);
+                                        mPendingEvents.push_front(defHistoryTransitionEvent);
+                                    }
+                                }
+
+                                res = HsmEventStatus_t::PENDING;
+                            }
+                            // check if new state has substates and initiate entry transition
+                            else if (true == getEntryPoints(it->destinationState, event.type, event.args, entryPoints))
+                            {
+                                __HSM_TRACE_DEBUG__("state <%s> has substates with %d entry points (first: <%s>)",
+                                                    getStateName(it->destinationState).c_str(),
+                                                    SC2INT(entryPoints.size()),
+                                                    getStateName(entryPoints.front()).c_str());
+                                PendingEventInfo entryPointTransitionEvent = event;
+
+                                entryPointTransitionEvent.transitionType = TransitionType::ENTRYPOINT;
+
+                                {
+                                    _HSM_SYNC_EVENTS_QUEUE();
+                                    mPendingEvents.push_front(entryPointTransitionEvent);
+                                }
+                                res = HsmEventStatus_t::PENDING;
+                            }
+                            else
+                            {
+                                res = HsmEventStatus_t::DONE_OK;
+                            }
                         }
                     }
                     else

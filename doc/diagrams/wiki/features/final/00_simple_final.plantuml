@@ -1,0 +1,10 @@
+@startuml
+left to right direction
+
+state StateB #LightGreen
+
+[*] --> StateA
+StateA --> StateB
+StateB --> [*]: EVENT_1
+
+@enduml

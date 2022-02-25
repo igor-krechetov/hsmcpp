@@ -1,0 +1,14 @@
+@startuml
+left to right direction
+
+[*] --> ParentState
+
+state ParentState #LightSalmon {
+    state StateA #LightGreen
+    [*] --> StateA
+    StateA --> [*]: **EVENT_1**
+}
+
+ParentState --> StateB: EVENT_2
+
+@enduml

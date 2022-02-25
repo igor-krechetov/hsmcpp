@@ -1,0 +1,15 @@
+@startuml
+left to right direction
+
+[*] --> ParentState
+
+state ParentState #LightSalmon {
+    state "//exit1//" as exit1 <<exitpoint>> #LightSalmon
+    state StateA #LightGreen
+    [*] --> StateA
+    StateA --> exit1: **EVENT_1**
+}
+
+exit1 --> StateB: EVENT_1
+
+@enduml

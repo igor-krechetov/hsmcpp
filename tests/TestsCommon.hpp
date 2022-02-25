@@ -74,7 +74,7 @@ bool compareStateLists(const std::list<HsmStateEnum> l1, const std::list<HsmStat
 }
 
 // ======================================================
-#define TEST_DESCRIPTION(desc)                  RecordProperty("description", desc)
+#define TEST_DESCRIPTION(desc)                  ::testing::Test::RecordProperty("description", desc)
 
 #define EXPECT_EQ_IF(cond, val1, val2)          if (cond){ EXPECT_EQ((val1), (val2)); }
 

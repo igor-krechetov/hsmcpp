@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.22.0] - 2022-02-25
+### Added
+- support for final states & exit points (library only)
+
 [0.21.2] - 2022-01-24
 ### Added
 - scxml2gen is now correctly installed after build

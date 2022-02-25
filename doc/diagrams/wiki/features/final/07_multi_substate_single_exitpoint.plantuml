@@ -1,0 +1,18 @@
+@startuml
+left to right direction
+
+[*] --> ParentState
+
+state ParentState {
+    state StateB #LightGreen
+    state exit1 <<exitpoint>> #LightGreen
+    [*] --> StateA
+    StateA -up-> StateB
+    StateA --> exit1: EVENT_1
+    StateB --> exit1: **EVENT_2**
+}
+
+state StateC #LightSkyBlue
+exit1 --> StateC: **ON_EXIT1**
+
+@enduml

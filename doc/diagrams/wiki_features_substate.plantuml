@@ -1,13 +1,15 @@
 @startuml
 
-[*] --> StateA
-StateA --> ParentState: EVENT_1
-ParentState --> StateA: EVENT_CANCEL
+[*] -right-> ParentState
 
 state ParentState {
-    [*] --> StateB
-    StateB -right-> StateC: EVENT_2
-    StateC -left-> StateB: EVENT_3
+    [*] -right-> StateA
+
+    state EXIT_1 <<exitPoint>>
+    StateA -right-> EXIT_1: EVENT_2
+    StateA --> [*]: EVENT_3
 }
+
+EXIT_1 -right-> StateB: ON_EXIT_1
 
 @enduml

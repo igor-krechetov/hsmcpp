@@ -1,0 +1,18 @@
+@startuml
+left to right direction
+
+[*] --> ParentState
+
+state ParentState {
+    state StateB #LightGreen
+    [*] --> StateA
+    StateA --> StateB
+    StateA --> [*]: EVENT_1
+    StateB --> [*]: **EVENT_2**
+}
+
+state StateD #LightSkyBlue
+ParentState --> StateC: EVENT_1
+ParentState --> StateD: **EVENT_2**
+
+@enduml

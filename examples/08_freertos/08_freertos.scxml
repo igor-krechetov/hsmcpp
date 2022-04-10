@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="02_generated.scxml" qt:editorversion="7.0.0" initial="Init">
+    <state id="Paused">
+        <qt:editorinfo geometry="857.23;301.57;-60;-94.42;120;190.86" scenegeometry="857.23;301.57;797.23;207.15;120;190.86"/>
+        <transition type="external" event="ON_TIMER_RESUME" target="History_1">
+            <qt:editorinfo startTargetFactors="11.70;76.86" movePoint="3.06;-18.37"/>
+        </transition>
+        <onentry>
+            <script>start_timer(RESUME, 2000, true)</script>
+        </onentry>
+        <invoke srcexpr="onPaused"/>
+    </state>
+    <state id="Operable" initial="On">
+        <qt:editorinfo geometry="202.06;257.17;-60;-18.39;491.87;198.99" scenegeometry="202.06;257.17;142.06;238.78;491.87;198.99"/>
+        <state id="On">
+            <qt:editorinfo geometry="40.68;101.88;-60;-50;120;100" scenegeometry="242.74;359.05;182.74;309.05;120;100"/>
+            <transition type="external" event="SWITCH" target="Off">
+                <qt:editorinfo startTargetFactors="91.95;22.76" movePoint="3.06;9.18" endTargetFactors="20.77;23.68"/>
+            </transition>
+            <invoke srcexpr="onOn"/>
+        </state>
+        <state id="Off">
+            <qt:editorinfo geometry="298.70;99.84;-60;-50;120;100" scenegeometry="500.76;357.01;440.76;307.01;120;100"/>
+            <transition type="external" event="SWITCH" target="On">
+                <qt:editorinfo startTargetFactors="22.99;71.91" movePoint="6.12;-17.34" endTargetFactors="35.75;71.10"/>
+            </transition>
+            <invoke srcexpr="onOff"/>
+        </state>
+        <transition type="external" event="ON_TIMER_PAUSE" target="Paused">
+            <qt:editorinfo movePoint="-1.02;10.21"/>
+        </transition>
+        <history type="shallow" id="History_1">
+            <qt:editorinfo geometry="391.87;96.95;-20;-20;40;40" scenegeometry="593.93;354.12;573.93;334.12;40;40"/>
+        </history>
+    </state>
+    <state id="Init">
+        <qt:editorinfo geometry="378.81;146.96;-60;-50;120;100" scenegeometry="378.81;146.96;318.81;96.96;120;100"/>
+        <transition type="external" event="SWITCH" target="Operable">
+            <qt:editorinfo movePoint="25.51;2.04" endTargetFactors="48.75;23.67"/>
+        </transition>
+        <onexit>
+            <script>start_timer(PAUSE, 5000, false)</script>
+        </onexit>
+    </state>
+</scxml>

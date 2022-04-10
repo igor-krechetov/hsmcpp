@@ -1,3 +1,5 @@
+// Copyright (C) 2021 Igor Krechetov
+// Distributed under MIT license. See file LICENSE for details
 #include "hsm/TrafficLightHsm.hpp"
 #include "hsm/ABCHsm.hpp"
 #include "hsm/AsyncHsm.hpp"

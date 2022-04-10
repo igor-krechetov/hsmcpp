@@ -2,14 +2,31 @@
 
 mkdir ./build
 cd ./build
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DHSMBUILD_TESTS=ON -DHSMBUILD_VERBOSE=OFF ..
-make -j2
 
-./tests/hsmUnitTestsSTD
-./tests/hsmUnitTestsGLib
-./tests/hsmUnitTestsGLibmm
-./tests/hsmUnitTestsQt
+# export Qt6_DIR=/home/ikrechetov/Qt/6.3.0/gcc_64/lib/cmake/Qt6
+export Qt5_DIR=/home/ikrechetov/Qt/5.15.2/gcc_64/lib/cmake/Qt5
 
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DHSMBUILD_TESTS=off -DHSMBUILD_VERBOSE=off ..
-cppcheck --enable=warning,performance,portability,information,information --suppressions-list=../etc/cppcheck_suppress.txt --project=compile_commands.json
-# --addon=misra.py --rule-texts=???
+if [ ${PWD##*/} = "build" ]
+then
+    rm -Rvf ./*
+    cmake -DHSMBUILD_VERBOSE=OFF \
+        -DHSMBUILD_DISPATCHER_GLIB=ON \
+        -DHSMBUILD_DISPATCHER_GLIBMM=ON \
+        -DHSMBUILD_DISPATCHER_STD=ON \
+        -DHSMBUILD_DISPATCHER_QT=ON \
+        -DHSMBUILD_TESTS=ON \
+        -DHSMBUILD_EXAMPLES=ON \
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+        -DCMAKE_TOOLCHAIN_FILE=/home/ikrechetov/Qt/6.3.0/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake \
+        ..
+    make -j5
+
+    ./tests/hsmUnitTestsSTD
+    ./tests/hsmUnitTestsGLib
+    ./tests/hsmUnitTestsGLibmm
+    ./tests/hsmUnitTestsQt
+
+    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DHSMBUILD_TESTS=OFF -DHSMBUILD_VERBOSE=OFF ..
+    cppcheck --enable=warning,performance,portability,information,information --suppressions-list=../etc/cppcheck_suppress.txt --project=compile_commands.json
+    # --addon=misra.py --rule-texts=???
+fi

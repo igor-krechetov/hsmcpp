@@ -24,15 +24,25 @@
 // #define __HSM_TRACE_CLASS__                         "default"
 
 #ifndef HSM_DISABLE_TRACES
+ #ifndef PLATFORM_FREERTOS
   #include <sys/syscall.h>
   #include <unistd.h>
+ #else
+  #include <stdio.h>
+ #endif
 
   // ---------------------------------------------------------------------------------
   //                     PRIVATE MACROSES
   // Don't use this in the code. It's for internal usage only
   extern int g_hsm_traces_pid;
 
+ #ifndef PLATFORM_FREERTOS
   #define __HSM_TRACE_CALL_COMMON__()             const int _tid = syscall(__NR_gettid); (void)_tid
+  #define __HSM_TRACE_INIT__()                    if (0 == g_hsm_traces_pid){ g_hsm_traces_pid = getpid(); }
+ #else
+  #define __HSM_TRACE_CALL_COMMON__()             const int _tid = 0; (void)_tid
+  #define __HSM_TRACE_INIT__()
+ #endif
 
   #define __HSM_TRACE_CONSOLE_FORCE__(msg, ...) \
       printf("[PID:%d, TID:%d] " __HSM_TRACE_CLASS__ "::%s: " msg "\n", g_hsm_traces_pid, _tid, __func__,## __VA_ARGS__)
@@ -53,17 +63,16 @@
   // ---------------------------------------------------------------------------------
 
   #define __HSM_TRACE_PREINIT__()                 int g_hsm_traces_pid = (0);
-  #define __HSM_TRACE_INIT__()                    if (0 == g_hsm_traces_pid){ g_hsm_traces_pid = getpid(); }
   #define __HSM_TRACE__(msg, ...)                 __HSM_TRACE_COMMON__(msg,## __VA_ARGS__)
   #define __HSM_TRACE_WARNING__(msg, ...)         __HSM_TRACE_COMMON__("[WARNING] " msg,## __VA_ARGS__)
   #define __HSM_TRACE_ERROR__(msg, ...)           __HSM_TRACE_COMMON__("[ERROR] " msg,## __VA_ARGS__); \
-                                              __HSM_TRACE_ERROR_CONSOLE__("[ERROR] " msg,## __VA_ARGS__)
-  #ifdef HSM_EXIT_ON_FATAL
-    #define __HSM_TRACE_FATAL__(msg, ...)           __HSM_TRACE_COMMON__("[FATAL] " msg,## __VA_ARGS__); \
+                                                  __HSM_TRACE_ERROR_CONSOLE__("[ERROR] " msg,## __VA_ARGS__)
+  #if defined(HSM_EXIT_ON_FATAL) && !defined(PLATFORM_FREERTOS)
+    #define __HSM_TRACE_FATAL__(msg, ...)       __HSM_TRACE_COMMON__("[FATAL] " msg,## __VA_ARGS__); \
                                                 __HSM_TRACE_ERROR_CONSOLE__("[FATAL] " msg,## __VA_ARGS__); \
                                                 exit(1)
   #else
-    #define __HSM_TRACE_FATAL__(msg, ...)           __HSM_TRACE_COMMON__("[FATAL] " msg,## __VA_ARGS__); \
+    #define __HSM_TRACE_FATAL__(msg, ...)       __HSM_TRACE_COMMON__("[FATAL] " msg,## __VA_ARGS__); \
                                                 __HSM_TRACE_ERROR_CONSOLE__("[FATAL] " msg,## __VA_ARGS__)
   #endif  // HSM_EXIT_ON_FATAL
   #define __HSM_TRACE_CALL__()                    __HSM_TRACE_CALL_COMMON__(); \

@@ -134,7 +134,7 @@ gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOConditi
     {
         pThis->mDispatchingIterationRunning = true;
 
-        __HSM_TRACE__("condition=%d, G_IO_HUP=%s, G_IO_IN=%s", static_cast<int>(condition), BOOL2STR(condition & G_IO_HUP), BOOL2STR(condition & G_IO_IN));
+        __HSM_TRACE_DEBUG__("condition=%d, G_IO_HUP=%s, G_IO_IN=%s", static_cast<int>(condition), BOOL2STR(condition & G_IO_HUP), BOOL2STR(condition & G_IO_IN));
 
         if (!(condition & G_IO_HUP))
         {

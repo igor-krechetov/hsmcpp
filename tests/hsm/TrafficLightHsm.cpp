@@ -1,3 +1,5 @@
+// Copyright (C) 2021 Igor Krechetov
+// Distributed under MIT license. See file LICENSE for details
 #include "TrafficLightHsm.hpp"
 
 TrafficLightHsm::TrafficLightHsm() : HierarchicalStateMachine(TrafficLightState::OFF)

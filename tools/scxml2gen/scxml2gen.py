@@ -239,6 +239,7 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
                             transitionCallback = getCallbackName(xmlFind(curTransition, "script"))
                             if transitionCallback is not None:
                                 newTransition["callback"] = transitionCallback
+                            # TODO: add support for script actions to transitions
 
                             newState["transitions"].append(newTransition)
                         else:

@@ -12,12 +12,18 @@ option(HSMBUILD_VERBOSE "Enable/disable HSM verbosity [feature for DEBUG]" OFF)
 option(HSMBUILD_STRUCTURE_VALIDATION "Enable/disable HSM structure validation" ON)
 option(HSMBUILD_THREAD_SAFETY "Enable/disable HSM thread safety" ON)
 option(HSMBUILD_DEBUGGING "Enable/disable HSM debugging" ON)
-option(HSMBUILD_DISPATCHER_GLIB "Enable GLib dispatcher" ON)
-option(HSMBUILD_DISPATCHER_GLIBMM "Enable GLibmm dispatcher" ON)
+option(HSMBUILD_DISPATCHER_GLIB "Enable GLib dispatcher" OFF)
+option(HSMBUILD_DISPATCHER_GLIBMM "Enable GLibmm dispatcher" OFF)
 option(HSMBUILD_DISPATCHER_STD "Enable std::thread based dispatcher" ON)
-option(HSMBUILD_DISPATCHER_QT "Enable Qt based dispatcher" ON)
+option(HSMBUILD_DISPATCHER_QT "Enable Qt based dispatcher" OFF)
 option(HSMBUILD_TESTS "Build unittests" ON)
 option(HSMBUILD_EXAMPLES "Build examples" ON)
+
+set(HSMBUILD_PLATFORM "" CACHE STRING "Specifies platform")# Possible values: empty, FREERTOS
+set(HSMBUILD_FREERTOS_ROOT "" CACHE STRING "FreeRTOS sources root folder")
+set(HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/os/freertos" CACHE STRING "Path to folder with FreeRTOSConfig.h")
+option(HSMBUILD_DISPATCHER_FREERTOS "Enable FreeRTOS based dispatcher" OFF)
+option(HSMBUILD_FREERTOS_DEFAULT_ISR_DETECT "Enable to add default xPortIsInsideInterrupt implementation" OFF)
 
 message("--------------------------------------")
 message("HSM build settings:\n")
@@ -29,11 +35,17 @@ message("HSMBUILD_DISPATCHER_GLIB = ${HSMBUILD_DISPATCHER_GLIB}")
 message("HSMBUILD_DISPATCHER_GLIBMM = ${HSMBUILD_DISPATCHER_GLIBMM}")
 message("HSMBUILD_DISPATCHER_STD = ${HSMBUILD_DISPATCHER_STD}")
 message("HSMBUILD_DISPATCHER_QT = ${HSMBUILD_DISPATCHER_QT}")
+message("HSMBUILD_DISPATCHER_FREERTOS = ${HSMBUILD_DISPATCHER_FREERTOS}")
 message("HSMBUILD_TESTS = ${HSMBUILD_TESTS}")
 message("HSMBUILD_EXAMPLES = ${HSMBUILD_EXAMPLES}")
+message("")
+message("HSMBUILD_PLATFORM = ${HSMBUILD_PLATFORM}")
+message("HSMBUILD_FREERTOS_ROOT = ${HSMBUILD_FREERTOS_ROOT}")
+message("HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY = ${HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY}")
+message("HSMBUILD_FREERTOS_DEFAULT_ISR_DETECT = ${HSMBUILD_FREERTOS_DEFAULT_ISR_DETECT}")
 message("--------------------------------------")
 
-# ================================================
+# ================================================================================================
 # Common modules
 if (NOT WIN32)
     include(FindPkgConfig)
@@ -59,7 +71,7 @@ endif()
 
 add_subdirectory(tools/cmake)
 
-# ================================================
+# ================================================================================================
 # HSMCPP library
 set(HSM_LIBRARY_NAME "hsmcpp")
 
@@ -87,7 +99,19 @@ file (GLOB SRC_LIBRARY
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hsm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/variant.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherBase.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/common/LockGuard.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/common/UniqueLock.cpp
 )
+
+# add platform specific code
+if (HSMBUILD_PLATFORM STREQUAL "FREERTOS")
+    SET (SRC_LIBRARY ${SRC_LIBRARY} ${CMAKE_CURRENT_SOURCE_DIR}/src/os/freertos/Mutex.cpp
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/freertos/ConditionVariable.cpp
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/freertos/CriticalSection.cpp
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/src/os/freertos/FreeRtosPort.cpp)
+else()
+    SET (SRC_LIBRARY ${SRC_LIBRARY} ${CMAKE_CURRENT_SOURCE_DIR}/src/os/stl/ConditionVariable.cpp)
+endif()
 
 add_definitions(${HSM_DEFINITIONS_BASE})
 add_library(${HSM_LIBRARY_NAME} STATIC ${SRC_LIBRARY})
@@ -97,7 +121,15 @@ if (NOT WIN32)
 endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# ================================================
+# ================================================================================================
+# Platform: FREERTOS
+if (HSMBUILD_PLATFORM STREQUAL "FREERTOS")
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/freertos-config.cmake)
+    target_include_directories(${HSM_LIBRARY_NAME} PRIVATE ${FREERTOS_INCLUDE}
+                                                           ${HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY})
+endif()
+
+# ================================================================================================
 # Export variables
 set(HSMCPP_DEFINITIONS ${HSM_DEFINITIONS_BASE} CACHE STRING "" FORCE)
 if (NOT WIN32)
@@ -109,7 +141,7 @@ endif()
 set(HSMCPP_LIB ${HSM_LIBRARY_NAME} CACHE STRING "" FORCE)
 set(HSMCPP_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE STRING "" FORCE)
 
-# ================================================
+# ================================================================================================
 # DISPATCHER: GLIB
 if (HSMBUILD_DISPATCHER_GLIB)
     pkg_check_modules(GLIB REQUIRED glib-2.0)
@@ -126,7 +158,7 @@ if (HSMBUILD_DISPATCHER_GLIB)
     set(HSMCPP_GLIB_INCLUDE ${HSMCPP_INCLUDE} ${GLIB_INCLUDE_DIRS} CACHE STRING "" FORCE)
 endif()
 
-# ================================================
+# ================================================================================================
 # DISPATCHER: GLIBMM
 if (HSMBUILD_DISPATCHER_GLIBMM)
     pkg_check_modules(GLIB REQUIRED glib-2.0)
@@ -144,7 +176,7 @@ if (HSMBUILD_DISPATCHER_GLIBMM)
     set(HSMCPP_GLIBMM_INCLUDE ${HSMCPP_INCLUDE} ${GLIB_INCLUDE_DIRS} ${GLIBMM_INCLUDE_DIRS} CACHE STRING "" FORCE)
 endif()
 
-# ================================================
+# ================================================================================================
 # DISPATCHER: STD
 if (HSMBUILD_DISPATCHER_STD)
     set(HSM_DEFINITIONS_STD ${HSM_DEFINITIONS_BASE} -DHSM_BUILD_HSMBUILD_DISPATCHER_STD CACHE STRING "" FORCE)
@@ -162,11 +194,12 @@ if (HSMBUILD_DISPATCHER_STD)
     set(HSMCPP_STD_INCLUDE ${HSMCPP_INCLUDE} CACHE STRING "" FORCE)
 endif()
 
-# ================================================
+# ================================================================================================
 # DISPATCHER: Qt
 if (HSMBUILD_DISPATCHER_QT)
     # For Qt build to work make sure Qt5_DIR environment variable is set. For example:
     # export Qt5_DIR=/home/user/qt/5.13.2/gcc_64/lib/cmake/Qt5/
+
 
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
@@ -180,13 +213,25 @@ if (HSMBUILD_DISPATCHER_QT)
         set(CMAKE_INCLUDE_CURRENT_DIR ON)
     endif()
 
-    find_package(Qt5 COMPONENTS Core REQUIRED)
+    if (NOT $ENV{Qt5_DIR} STREQUAL "")
+        find_package(Qt5 COMPONENTS Core REQUIRED)
+
+        qt5_wrap_cpp(SRC_DISPATCHER_QT ${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/HsmEventDispatcherQt.hpp)
+        SET(QtCore_INCLUDE_DIRS ${Qt5Core_INCLUDE_DIRS})
+    else()
+        # TODO: add support for Qt6 build
+        find_package(Qt6 COMPONENTS Core REQUIRED)
+        qt_standard_project_setup()
+
+        qt6_wrap_cpp(SRC_DISPATCHER_QT ${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/HsmEventDispatcherQt.hpp)
+        SET(QtCore_INCLUDE_DIRS ${Qt6Core_INCLUDE_DIRS})
+    endif()
 
     set(HSM_DEFINITIONS_QT ${HSM_DEFINITIONS_BASE} -DDHSM_BUILD_HSMBUILD_DISPATCHER_QT CACHE STRING "" FORCE)
-    qt5_wrap_cpp(SRC_DISPATCHER_QT ${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/HsmEventDispatcherQt.hpp)
     add_definitions(-DHSM_BUILD_HSMBUILD_DISPATCHER_QT)
     add_library(${HSM_LIBRARY_NAME}_qt STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherQt.cpp ${SRC_DISPATCHER_QT})
-    target_include_directories(${HSM_LIBRARY_NAME}_qt PUBLIC ${Qt5Core_INCLUDE_DIRS})
+    target_include_directories(${HSM_LIBRARY_NAME}_qt PUBLIC ${QtCore_INCLUDE_DIRS})
+
     target_compile_options(${HSM_LIBRARY_NAME}_qt PRIVATE "-fPIC")
 
     set(CMAKE_AUTOMOC OFF)
@@ -195,14 +240,34 @@ if (HSMBUILD_DISPATCHER_QT)
 
     # Export variables
     set(HSMCPP_QT_CXX_FLAGS ${HSMCPP_CXX_FLAGS} CACHE STRING "" FORCE)
-    set(HSMCPP_QT_INCLUDE ${HSMCPP_INCLUDE} ${Qt5Core_INCLUDE_DIRS} CACHE STRING "" FORCE)
+    set(HSMCPP_QT_INCLUDE ${HSMCPP_INCLUDE} ${QtCore_INCLUDE_DIRS} CACHE STRING "" FORCE)
     set(HSMCPP_QT_LIB ${HSM_LIBRARY_NAME}_qt ${HSMCPP_LIB} CACHE STRING "" FORCE)
 
     registerQtWindeploy()
 endif()
 
+# ================================================================================================
+# DISPATCHER: FreeRTOS
+if (HSMBUILD_DISPATCHER_FREERTOS)
+    set(HSM_DEFINITIONS_FREERTOS ${HSM_DEFINITIONS_BASE} -DHSM_BUILD_HSMBUILD_DISPATCHER_FREERTOS CACHE STRING "" FORCE)
+    add_definitions(-DHSM_BUILD_HSMBUILD_DISPATCHER_FREERTOS)
+    add_library(${HSM_LIBRARY_NAME}_freertos STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherFreeRTOS.cpp)
+    target_compile_options(${HSM_LIBRARY_NAME}_freertos PRIVATE -fPIC)
+    target_include_directories(${HSM_LIBRARY_NAME}_freertos PRIVATE ${FREERTOS_INCLUDE}
+                                                                    ${HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY})
 
-# ================================================
+    # Export variables
+    set(HSMCPP_FREERTOS_CXX_FLAGS ${HSMCPP_CXX_FLAGS} CACHE STRING "" FORCE)
+    set(HSMCPP_FREERTOS_LIB ${HSM_LIBRARY_NAME}_freertos ${HSMCPP_LIB} ${CMAKE_THREAD_LIBS_INIT} CACHE STRING "" FORCE)
+    set(HSMCPP_FREERTOS_INCLUDE ${HSMCPP_INCLUDE} ${FREERTOS_INCLUDE} CACHE STRING "" FORCE)
+
+    if (HSMBUILD_FREERTOS_DEFAULT_ISR_DETECT)
+        set(HSMCPP_FREERTOS_CXX_FLAGS ${HSMCPP_FREERTOS_CXX_FLAGS} -DBUILD_FREERTOS_DEFAULT_ISR_DETECT=1 CACHE STRING "" FORCE)
+    endif()
+endif()
+
+
+# ================================================================================================
 # Installation
 set(HSM_INCLUDES_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/")
 set(CMAKE_INSTALL_INCLUDEDIR "include/hsmcpp")
@@ -250,7 +315,7 @@ if (HSMBUILD_DISPATCHER_QT)
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake/
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/pkgconfig/cmake/
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${HSM_LIBRARY_NAME})
 install(FILES
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/CMakeLists.txt
@@ -259,7 +324,7 @@ install(FILES
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/template.hpp
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${HSM_LIBRARY_NAME}/scxml2gen)
 
-# ================================================
+# ================================================================================================
 add_subdirectory(tools/scxml2gen)
 
 if (HSMBUILD_EXAMPLES)

@@ -1,11 +1,14 @@
+// Copyright (C) 2021 Igor Krechetov
+// Distributed under MIT license. See file LICENSE for details
 #ifndef __HSMCPP_TESTS_HSM_ASYNCHSM_HPP__
 #define __HSMCPP_TESTS_HSM_ASYNCHSM_HPP__
 
 #include "TestsCommon.hpp"
-#include "hsmcpp/hsm.hpp"
-#include <mutex>
 #include <atomic>
-#include <condition_variable>
+
+#include "hsmcpp/hsm.hpp"
+#include "hsmcpp/os/Mutex.hpp"
+#include "hsmcpp/os/ConditionVariable.hpp"
 
 #undef __HSM_TRACE_CLASS__
 #define __HSM_TRACE_CLASS__                         "AsyncHsm"
@@ -47,12 +50,12 @@ public:
     void unblockNextStep();
 
 protected:
-    std::mutex mSyncLock;
-    std::condition_variable mSyncVariable;
+    hsmcpp::Mutex mSyncLock;
+    hsmcpp::ConditionVariable mSyncVariable;
     std::atomic<bool> mSyncVariableCheck;
 
-    std::mutex mSyncBlockNextStep;
-    std::condition_variable mBlockNextStep;
+    hsmcpp::Mutex mSyncBlockNextStep;
+    hsmcpp::ConditionVariable mBlockNextStep;
 };
 
 #endif // __HSMCPP_TESTS_HSM_ASYNCHSM_HPP__

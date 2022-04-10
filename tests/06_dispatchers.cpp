@@ -1,3 +1,5 @@
+// Copyright (C) 2021 Igor Krechetov
+// Distributed under MIT license. See file LICENSE for details
 #include "TestsCommon.hpp"
 #include "hsm/ABCHsm.hpp"
 
@@ -48,23 +50,24 @@ TEST(dispatchers, stresstest_create_destroy)
 
 TEST(dispatchers, create_hsm_from_callback)
 {
-    TEST_DESCRIPTION("check that it's possible to destroy HSM and disconnect from dispatcher when there are events pending");
+    TEST_DESCRIPTION("check that it's possible create a statemachine inside another HSM callback");
 
     //-------------------------------------------
     // PRECONDITIONS
     HierarchicalStateMachine<AbcState, AbcEvent>* hsm = new HierarchicalStateMachine<AbcState, AbcEvent>(AbcState::A);
+    auto dispatcher = CREATE_DISPATCHER();
 
     hsm->registerState(AbcState::A);
-    hsm->registerState(AbcState::B, [](const VariantVector_t& args)
+    hsm->registerState(AbcState::B, [&](const VariantVector_t& args)
                       {
                           HierarchicalStateMachine<AbcState, AbcEvent> hsm2(AbcState::A);
-                          hsm2.initialize(CREATE_DISPATCHER());
+                          hsm2.initialize(dispatcher);
                       });
     hsm->registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
 
     ASSERT_TRUE(executeOnMainThread([&]()
     {
-        return hsm->initialize(CREATE_DISPATCHER());
+        return hsm->initialize(dispatcher);
     }));
 
     //-------------------------------------------
@@ -74,6 +77,7 @@ TEST(dispatchers, create_hsm_from_callback)
     //-------------------------------------------
     // VALIDATION
     // NOTE: test is ok if there is no dead-lock or unexpected behaviour in hsm2.initialize()
+    dispatcher.reset();
 
     executeOnMainThread([&]()
     {

@@ -3,6 +3,8 @@
 
 #include "hsmcpp/HsmEventDispatcherBase.hpp"
 #include "hsmcpp/logging.hpp"
+#include "hsmcpp/os/LockGuard.hpp"
+
 namespace hsmcpp
 {
 
@@ -17,7 +19,7 @@ HandlerID_t HsmEventDispatcherBase::registerEventHandler(const EventHandlerFunc_
 {
     __HSM_TRACE_CALL_DEBUG__();
     HandlerID_t id = getNextHandlerID();
-    std::lock_guard<std::mutex> lck(mHandlersSync);
+    LockGuard lck(mHandlersSync);
 
     mEventHandlers.emplace(id, handler);
 
@@ -27,7 +29,7 @@ HandlerID_t HsmEventDispatcherBase::registerEventHandler(const EventHandlerFunc_
 void HsmEventDispatcherBase::unregisterEventHandler(const HandlerID_t handlerID)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("handlerID=%d", handlerID);
-    std::lock_guard<std::mutex> lck(mHandlersSync);
+    LockGuard lck(mHandlersSync);
 
     mEventHandlers.erase(handlerID);
 }
@@ -35,11 +37,36 @@ void HsmEventDispatcherBase::unregisterEventHandler(const HandlerID_t handlerID)
 void HsmEventDispatcherBase::emitEvent(const HandlerID_t handlerID)
 {
     __HSM_TRACE_CALL_DEBUG__();
-    std::lock_guard<std::mutex> lck(mEmitSync);
+    LockGuard lck(mEmitSync);
 
     mPendingEvents.push_back(handlerID);
 
     // NOTE: this is not a full implementations. child classes must implement additional logic
+}
+
+HandlerID_t HsmEventDispatcherBase::registerEnqueuedEventHandler(const EnqueuedEventHandlerFunc_t& handler)
+{
+    __HSM_TRACE_CALL_DEBUG__();
+    HandlerID_t id = getNextHandlerID();
+    LockGuard lck(mHandlersSync);
+
+    mEnqueuedEventHandlers.emplace(id, handler);
+
+    return id;
+}
+
+void HsmEventDispatcherBase::unregisterEnqueuedEventHandler(const HandlerID_t handlerID)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("handlerID=%d", handlerID);
+    LockGuard lck(mHandlersSync);
+
+    mEnqueuedEventHandlers.erase(handlerID);
+}
+
+bool HsmEventDispatcherBase::enqueueEvent(const HandlerID_t handlerID, const EventID_t event)
+{
+    // NOTE: should be implemented if support for transitions for interupts is needed
+    return false;
 }
 
 HandlerID_t HsmEventDispatcherBase::registerTimerHandler(const TimerHandlerFunc_t& handler)
@@ -147,8 +174,21 @@ int HsmEventDispatcherBase::getNextHandlerID()
 
 void HsmEventDispatcherBase::unregisterAllEventHandlers()
 {
-    std::lock_guard<std::mutex> lck(mHandlersSync);
+    LockGuard lck(mHandlersSync);
     mEventHandlers.clear();
+}
+
+EnqueuedEventHandlerFunc_t HsmEventDispatcherBase::getEnqueuedEventHandlerFunc(const HandlerID_t handlerID) const
+{
+    EnqueuedEventHandlerFunc_t func;
+    auto it = mEnqueuedEventHandlers.find(handlerID);
+
+    if (mEnqueuedEventHandlers.end() != it)
+    {
+        func = it->second;
+    }
+
+    return func;
 }
 
 HsmEventDispatcherBase::TimerInfo HsmEventDispatcherBase::getTimerInfo(const TimerID_t timerID) const
@@ -177,33 +217,63 @@ TimerHandlerFunc_t HsmEventDispatcherBase::getTimerHandlerFunc(const HandlerID_t
     return func;
 }
 
-void HsmEventDispatcherBase::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) {
+void HsmEventDispatcherBase::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot)
+{
     // do nothing. must be implemented in platfrom specific dispatcher
 }
 
-void HsmEventDispatcherBase::stopTimerImpl(const TimerID_t timerID) {
+void HsmEventDispatcherBase::stopTimerImpl(const TimerID_t timerID)
+{
     // do nothing. must be implemented in platfrom specific dispatcher
+}
+
+bool HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+    bool restartTimer = false;
+
+    if (INVALID_HSM_TIMER_ID != timerID)
+    {
+        TimerInfo curTimer = getTimerInfo(timerID);
+
+        __HSM_TRACE_DEBUG__("curTimer.handlerID=%d", curTimer.handlerID);
+
+        if (INVALID_HSM_DISPATCHER_HANDLER_ID != curTimer.handlerID)
+        {
+            TimerHandlerFunc_t timerHandler = getTimerHandlerFunc(curTimer.handlerID);
+
+            timerHandler(timerID);
+
+            restartTimer = (true == curTimer.isSingleShot ? false : true);
+        }
+    }
+
+    return restartTimer;
 }
 
 void HsmEventDispatcherBase::dispatchPendingEvents()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    std::list<HandlerID_t> events;
 
-    if (mPendingEvents.size() > 0)
     {
-        std::list<HandlerID_t> events;
+        LockGuard lck(mEmitSync);
+        events = std::move(mPendingEvents);
+    }
 
-        {
-            std::lock_guard<std::mutex> lck(mEmitSync);
+    dispatchPendingEvents(events);
+}
 
-            events = std::move(mPendingEvents);
-        }
+void HsmEventDispatcherBase::dispatchPendingEvents(const std::list<HandlerID_t>& events)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("events.size=%zu", events.size());
 
+    if (events.size() > 0)
+    {
         std::map<HandlerID_t, EventHandlerFunc_t> eventHandlersCopy;
 
         {
             // TODO: workaround to prevent recursive lock if registerEventHandler is called from another handler
-            std::lock_guard<std::mutex> lck(mHandlersSync);
+            LockGuard lck(mHandlersSync);
             eventHandlersCopy = mEventHandlers;
         }
 

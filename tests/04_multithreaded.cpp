@@ -1,5 +1,10 @@
+// Copyright (C) 2021 Igor Krechetov
+// Distributed under MIT license. See file LICENSE for details
 #include "hsm/AsyncHsm.hpp"
 #include "hsm/ABCHsm.hpp"
+#ifndef WIN32
+  #include <signal.h>
+#endif
 
 TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
 {
@@ -74,3 +79,49 @@ TEST_F(ABCHsm, multithreaded_deleting_running_dispatcher)
     // VALIDATION
 }
 #endif // !TEST_HSM_QT
+
+#ifndef WIN32
+// Disable test because we don't have signals on Windows platfroms
+
+AsyncHsm *gAsyncHsmInstance = nullptr;
+
+void sigHandler(int signo, siginfo_t *info, void *context)
+{
+    if (nullptr != gAsyncHsmInstance)
+    {
+        gAsyncHsmInstance->transitionInterruptSafe(AsyncHsmEvent::NEXT_STATE);
+    }
+}
+
+TEST_F(AsyncHsm, multithreaded_transition_from_interrupt)
+{
+    TEST_DESCRIPTION("Simple transition from interrupts");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    gAsyncHsmInstance = this;
+
+    registerState<AsyncHsm>(AsyncHsmState::A, this, &AsyncHsm::onStateChanged);
+    registerState<AsyncHsm>(AsyncHsmState::B, this, &AsyncHsm::onStateChanged);
+
+    registerTransition(AsyncHsmState::A, AsyncHsmState::B, AsyncHsmEvent::NEXT_STATE);
+    registerTransition(AsyncHsmState::B, AsyncHsmState::A, AsyncHsmEvent::NEXT_STATE);
+
+    initializeHsm();
+
+    struct sigaction act = { 0 };
+
+    act.sa_flags = SA_SIGINFO;
+    act.sa_sigaction = &sigHandler;
+    ASSERT_NE(sigaction(SIGUSR1, &act, NULL), (-1));
+
+    //-------------------------------------------
+    // ACTIONS
+    raise(SIGUSR1);
+    waitAsyncOperation(200);
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_EQ(getLastActiveState(), AsyncHsmState::B);
+}
+#endif // !WIN32

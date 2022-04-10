@@ -1,3 +1,5 @@
+// Copyright (C) 2021 Igor Krechetov
+// Distributed under MIT license. See file LICENSE for details
 #ifndef __HSMCPP_TESTS_HSM_ABCHSM_HPP__
 #define __HSMCPP_TESTS_HSM_ABCHSM_HPP__
 

@@ -6,7 +6,7 @@
 
 #include <map>
 #include <list>
-#include <mutex>
+#include "os/Mutex.hpp"
 #include "IHsmEventDispatcher.hpp"
 
 namespace hsmcpp
@@ -29,6 +29,10 @@ public:
     virtual void unregisterEventHandler(const HandlerID_t handlerID) override;
     virtual void emitEvent(const HandlerID_t handlerID) = 0;
 
+    virtual HandlerID_t registerEnqueuedEventHandler(const EnqueuedEventHandlerFunc_t& handler) override;
+    virtual void unregisterEnqueuedEventHandler(const HandlerID_t handlerID) override;
+    virtual bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) override;
+
     virtual HandlerID_t registerTimerHandler(const TimerHandlerFunc_t& handler) override;
     virtual void unregisterTimerHandler(const HandlerID_t handlerID) override;
 
@@ -45,23 +49,35 @@ protected:
 
     void unregisterAllEventHandlers();
 
+    EnqueuedEventHandlerFunc_t getEnqueuedEventHandlerFunc(const HandlerID_t handlerID) const;
+
     TimerInfo getTimerInfo(const TimerID_t timerID) const;
     TimerHandlerFunc_t getTimerHandlerFunc(const HandlerID_t handlerID) const;
 
     virtual void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot);
     virtual void stopTimerImpl(const TimerID_t timerID);
 
+    /**
+     * Handles common logic for handling timer events
+     * 
+     * @param timerID     id of the expired timer
+     *
+     * @return TRUE if timer should be restarted, FALSE if timer can be deleted
+     */
+    bool handleTimerEvent(const TimerID_t timerID);
+
     void dispatchPendingEvents();
+    void dispatchPendingEvents(const std::list<HandlerID_t>& events);
 
 protected:
     HandlerID_t mNextHandlerId = 1;
     std::map<TimerID_t, TimerInfo> mActiveTimers;
     std::map<HandlerID_t, EventHandlerFunc_t> mEventHandlers;
+    std::map<HandlerID_t, EnqueuedEventHandlerFunc_t> mEnqueuedEventHandlers;
     std::map<HandlerID_t, TimerHandlerFunc_t> mTimerHandlers;
     std::list<HandlerID_t> mPendingEvents;
-    std::mutex mEmitSync;
-    std::mutex mHandlersSync;
-
+    Mutex mEmitSync;
+    Mutex mHandlersSync;
 };
 
 }// namespace hsmcpp

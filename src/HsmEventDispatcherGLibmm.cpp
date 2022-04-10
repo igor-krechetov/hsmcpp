@@ -113,22 +113,11 @@ void HsmEventDispatcherGLibmm::onDispatchEvents()
 bool HsmEventDispatcherGLibmm::onTimerEvent(const TimerID_t timerID)
 {
     __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
-    bool restartTimer = false;
-    TimerInfo curTimer = getTimerInfo(timerID);
-
-    __HSM_TRACE_DEBUG__("curTimer.handlerID=%d", curTimer.handlerID);
-
-    if (INVALID_HSM_DISPATCHER_HANDLER_ID != curTimer.handlerID)
-    {
-        TimerHandlerFunc_t timerHandler = getTimerHandlerFunc(curTimer.handlerID);
-
-        timerHandler(timerID);
-
-        restartTimer = (true == curTimer.isSingleShot ? false : true);
-    }
+    const bool restartTimer = handleTimerEvent(timerID);
 
     if (false == restartTimer)
     {
+        // TODO:  mNativeTimerHandlers is not thread-safe
         auto itTimer = mNativeTimerHandlers.find(timerID);
 
         if (mNativeTimerHandlers.end() != itTimer)

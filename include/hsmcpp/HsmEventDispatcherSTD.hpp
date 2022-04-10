@@ -6,7 +6,7 @@
 
 #include "HsmEventDispatcherBase.hpp"
 #include <thread>
-#include <condition_variable>
+#include "os/ConditionVariable.hpp"
 
 namespace hsmcpp
 {
@@ -14,7 +14,7 @@ namespace hsmcpp
 class HsmEventDispatcherSTD: public HsmEventDispatcherBase
 {
 public:
-    HsmEventDispatcherSTD();
+    HsmEventDispatcherSTD() = default;
     virtual ~HsmEventDispatcherSTD();
 
     virtual void emitEvent(const HandlerID_t handlerID) override;
@@ -32,9 +32,8 @@ protected:
 
 private:
     std::thread mDispatcherThread;
-    std::condition_variable mEmitEvent;
-    std::mutex mStartupSync;
-    std::condition_variable mStartupEvent;
+    // NOTE: ideally it would be better to use a semaphore here, but there are no semaphores in C++11
+    ConditionVariable mEmitEvent;
     bool mStopDispatcher = false;
 };
 

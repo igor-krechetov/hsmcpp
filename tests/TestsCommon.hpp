@@ -108,6 +108,11 @@ bool executeOnMainThread(std::function<bool()> func);
     #include "hsmcpp/HsmEventDispatcherQt.hpp"
 
     #define CREATE_DISPATCHER()           std::make_shared<HsmEventDispatcherQt>()
+#elif defined(TEST_HSM_FREERTOS)
+    #include "hsmcpp/HsmEventDispatcherFreeRTOS.hpp"
+
+    // NOTE: priority should be higher than priority of the task where gTest is running
+    #define CREATE_DISPATCHER()           std::make_shared<HsmEventDispatcherFreeRTOS>(configMINIMAL_STACK_SIZE, tskIDLE_PRIORITY + 1)
 #else
     #error HSM Dispatcher not specified
 #endif

@@ -8,16 +8,22 @@
 #include <ctime>
 #include <algorithm>
 #include <functional>
-#include <atomic>
 #include <map>
 #include <set>
 #include <list>
 #include <vector>
-#include <mutex>
-#include <condition_variable>
+#include <memory>
+#include <stdio.h>
+#include "os/Mutex.hpp"
+#include "os/ConditionVariable.hpp"
+#include "os/LockGuard.hpp"
 #include "IHsmEventDispatcher.hpp"
 #include "variant.hpp"
 #include "logging.hpp"
+
+#if !defined(HSM_DISABLE_THREADSAFETY) && defined(FREERTOS_AVAILABLE)
+  #include "os/CriticalSection.hpp"
+#endif
 
 #ifdef HSMBUILD_DEBUGGING
   #include <cstdlib>
@@ -47,8 +53,10 @@ namespace hsmcpp
 
 #ifdef HSM_DISABLE_THREADSAFETY
   #define _HSM_SYNC_EVENTS_QUEUE()
+#elif defined(FREERTOS_AVAILABLE)
+  #define _HSM_SYNC_EVENTS_QUEUE()                CriticalSection lck
 #else
-  #define _HSM_SYNC_EVENTS_QUEUE()                std::lock_guard<std::mutex> lck(mEventsSync)
+  #define _HSM_SYNC_EVENTS_QUEUE()                LockGuard lck(mEventsSync)
 #endif // HSM_DISABLE_THREADSAFETY
 
 #undef __HSM_TRACE_CLASS__
@@ -193,8 +201,8 @@ private:
         TransitionType transitionType = TransitionType::REGULAR;
         HsmEventEnum type = INVALID_HSM_EVENT_ID;
         VariantVector_t args;
-        std::shared_ptr<std::mutex> cvLock;
-        std::shared_ptr<std::condition_variable> syncProcessed;
+        std::shared_ptr<Mutex> cvLock;
+        std::shared_ptr<ConditionVariable> syncProcessed;
         std::shared_ptr<HsmEventStatus> transitionStatus;
         std::shared_ptr<std::list<TransitionInfo>> forcedTransitionsInfo;
 
@@ -242,6 +250,8 @@ public:
     // NOTE: after calling this function HSM becomes operable. So HSM structure must be registered BEFORE calling it.
     //       changing structure after this call can result in undefined behaviour and is not advised.
     bool initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
+
+    inline bool isInitialized() const;
 
     // Releases dispatcher and resets all internal resources. HSM cant be reused after calling this API.
     // Must be called on the same thread as initialize()
@@ -368,6 +378,25 @@ public:
     template <typename... Args>
     void transitionWithQueueClear(const HsmEventEnum event, Args... args);
 
+    /**
+     * @brief Interrupt/signal safe version of transition
+     * @details This is a simplified version of transition that can be safely used from an interrupt/signal. There are no 
+     *          restrictions to use other transition APIs inside an interrupt, but all of them use dynamic heap memory 
+     *          allocation (which can cause heap corruption on some platfroms).
+     *          This version of the transition relies on dispatcher implementation and might not be available 
+     *          everywhere (please check dispatcher description). It also might fail if internal dispatcher events queue
+     *          will get full.
+     * 
+     * @param event hsm event
+     * 
+     * @return true - event was added to queue
+     * @return false - failed to add event to queue because it's not supported by dispatcher or queue limit was reached
+     * 
+     * @threadsafe
+     * @interruptsafe
+     */
+    bool transitionInterruptSafe(const HsmEventEnum event);
+
     template <typename... Args>
     bool isTransitionPossible(const HsmEventEnum event, Args... args);
 
@@ -477,6 +506,7 @@ protected:
 private:
     std::shared_ptr<IHsmEventDispatcher> mDispatcher;
     HandlerID_t mEventsHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
+    HandlerID_t mEnqueuedEventsHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
     HandlerID_t mTimerHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
     bool mStopDispatching = false;
 
@@ -504,7 +534,7 @@ private:
 #endif // HSM_ENABLE_SAFE_STRUCTURE
 
 #ifndef HSM_DISABLE_THREADSAFETY
-    std::mutex mEventsSync;
+    Mutex mEventsSync;
 #endif// HSM_DISABLE_THREADSAFETY
 
 #ifdef HSMBUILD_DEBUGGING
@@ -558,6 +588,9 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::initialize(const std:
                                                                      this));
                 mTimerHandlerId = mDispatcher->registerTimerHandler(std::bind(&HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::dispatchTimerEvent,
                                                                     this, std::placeholders::_1));
+                mEnqueuedEventsHandlerId = mDispatcher->registerEnqueuedEventHandler([&](const EventID_t event){
+                    transition(static_cast<HsmEventEnum>(event));
+                });
 
                 if ((INVALID_HSM_DISPATCHER_HANDLER_ID != mEventsHandlerId) && (INVALID_HSM_DISPATCHER_HANDLER_ID != mTimerHandlerId))
                 {
@@ -568,6 +601,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::initialize(const std:
                 else
                 {
                     mDispatcher->unregisterEventHandler(mEventsHandlerId);
+                    mDispatcher->unregisterEnqueuedEventHandler(mEnqueuedEventsHandlerId);
                     mDispatcher->unregisterTimerHandler(mTimerHandlerId);
                 }
             }
@@ -590,6 +624,12 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::initialize(const std:
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
+inline bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isInitialized() const
+{
+    return (nullptr != mDispatcher);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
 void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::release()
 {
     mStopDispatching = true;
@@ -600,6 +640,8 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::release()
     if (mDispatcher)
     {
         mDispatcher->unregisterEventHandler(mEventsHandlerId);
+        mDispatcher->unregisterEnqueuedEventHandler(mEnqueuedEventsHandlerId);
+        mDispatcher->unregisterTimerHandler(mTimerHandlerId);
         mDispatcher.reset();
         mEventsHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
     }
@@ -1066,6 +1108,19 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionWithQueueCl
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
+bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::transitionInterruptSafe(const HsmEventEnum event)
+{
+    bool res = false;
+
+    if (mDispatcher)
+    {
+        res = mDispatcher->enqueueEvent(mEnqueuedEventsHandlerId, static_cast<EventID_t>(event));
+    }
+
+    return res;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
 template <typename... Args>
 bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(const HsmEventEnum event, Args... args)
 {
@@ -1128,8 +1183,6 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::handleStartup()
         {
             std::list<HsmStateEnum> entryPoints;
 
-            _HSM_SYNC_EVENTS_QUEUE();
-
             for (auto it = mActiveStates.begin(); it != mActiveStates.end(); ++it)
             {
                 __HSM_TRACE_DEBUG__("state=<%s>", getStateName(*it).c_str());
@@ -1141,7 +1194,10 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::handleStartup()
                     entryPointTransitionEvent.transitionType = TransitionType::ENTRYPOINT;
                     entryPointTransitionEvent.type = INVALID_HSM_EVENT_ID;
 
-                    mPendingEvents.push_front(entryPointTransitionEvent);
+                    {
+                        _HSM_SYNC_EVENTS_QUEUE();
+                        mPendingEvents.push_front(entryPointTransitionEvent);
+                    }
                 }
             }
         }
@@ -1462,6 +1518,8 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(
     makeVariantList(transitionArgs, args...);
 
     {
+        // NOTE: findTransitionTarget can be a bit heavy. possible optimization to reduce lock time is 
+        //       to make a copy of mPendingEvents and work with it
         _HSM_SYNC_EVENTS_QUEUE();
 
         for (auto it = mPendingEvents.begin(); (it != mPendingEvents.end()) && (true == possible); ++it)
@@ -1833,25 +1891,27 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                                 // we need to transition to previous states or to default state
                                 if (itHistoryData->second.previousActiveStates.size() > 0)
                                 {
-                                    _HSM_SYNC_EVENTS_QUEUE();
-
                                     PendingEventInfo historyTransitionEvent = event;
 
                                     historyTransitionEvent.transitionType = TransitionType::FORCED;
                                     historyTransitionEvent.forcedTransitionsInfo = std::make_shared<std::list<TransitionInfo>>();
 
                                     for (auto itPrevState = itHistoryData->second.previousActiveStates.begin();
-                                        itPrevState != itHistoryData->second.previousActiveStates.end();
-                                        ++itPrevState)
+                                         itPrevState != itHistoryData->second.previousActiveStates.end();
+                                         ++itPrevState)
                                     {
                                         historyTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
-                                                                                                *itPrevState,
-                                                                                                itHistoryData->second.transitionCallback,
-                                                                                                nullptr);
+                                                                                                  *itPrevState,
+                                                                                                  itHistoryData->second.transitionCallback,
+                                                                                                  nullptr);
                                     }
 
                                     itHistoryData->second.previousActiveStates.clear();
-                                    mPendingEvents.push_front(historyTransitionEvent);
+
+                                    {
+                                        _HSM_SYNC_EVENTS_QUEUE();
+                                        mPendingEvents.push_front(historyTransitionEvent);
+                                    }
                                 }
                                 else
                                 {
@@ -1985,8 +2045,8 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::PendingEventInfo::ini
 {
     if (!cvLock)
     {
-        cvLock = std::make_shared<std::mutex>();
-        syncProcessed = std::make_shared<std::condition_variable>();
+        cvLock = std::make_shared<Mutex>();
+        syncProcessed = std::make_shared<ConditionVariable>();
         transitionStatus = std::make_shared<HsmEventStatus_t>();
         *transitionStatus = HsmEventStatus_t::PENDING;
     }
@@ -2015,12 +2075,13 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::PendingEventInfo::wai
 {
     if (isSync())
     {
-        std::unique_lock<std::mutex> lck(*cvLock);
+        // NOTE: lock is needed only because we have to use cond variable
+        UniqueLock lck(*cvLock);
 
         __HSM_TRACE_CALL_DEBUG_ARGS__("trying to wait... (current status=%d, %p)", SC2INT(*transitionStatus), transitionStatus.get());
         if (timeoutMs > 0)
         {
-            syncProcessed->wait_for(lck, std::chrono::milliseconds(timeoutMs),
+            syncProcessed->wait_for(lck, timeoutMs,
                                     [=](){return (HsmEventStatus_t::PENDING != *transitionStatus);});
         }
         else
@@ -2044,7 +2105,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::PendingEventInfo::unl
 
         if (status != HsmEventStatus_t::PENDING)
         {
-            syncProcessed->notify_one();
+            syncProcessed->notify();
         }
     }
     else

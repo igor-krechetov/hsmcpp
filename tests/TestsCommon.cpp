@@ -54,8 +54,8 @@ gboolean mainThreadCallback(void* data)
 
 bool executeOnMainThread(std::function<bool()> func)
 {
-    // in case of STD and Qt dispatcher we can just call func()
-#if defined(TEST_HSM_STD) || defined(TEST_HSM_QT)
+    // in case of some dispatchers we can just call func()
+#if defined(TEST_HSM_STD) || defined(TEST_HSM_QT) || defined(TEST_HSM_FREERTOS)
     return func();
 #endif
 

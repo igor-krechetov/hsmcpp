@@ -10,10 +10,6 @@ namespace hsmcpp
 #undef __HSM_TRACE_CLASS__
 #define __HSM_TRACE_CLASS__                         "HsmEventDispatcherSTD"
 
-HsmEventDispatcherSTD::HsmEventDispatcherSTD()
-{
-}
-
 HsmEventDispatcherSTD::~HsmEventDispatcherSTD()
 {
     __HSM_TRACE_CALL_DEBUG__();
@@ -30,7 +26,7 @@ void HsmEventDispatcherSTD::emitEvent(const HandlerID_t handlerID)
     if (true == mDispatcherThread.joinable())
     {
         HsmEventDispatcherBase::emitEvent(handlerID);
-        mEmitEvent.notify_one();
+        mEmitEvent.notify();
     }
 }
 
@@ -61,7 +57,7 @@ void HsmEventDispatcherSTD::stop()
     if (true == mDispatcherThread.joinable())
     {
         mStopDispatcher = true;
-        mEmitEvent.notify_all();
+        mEmitEvent.notify();
     }
 }
 
@@ -85,7 +81,7 @@ void HsmEventDispatcherSTD::doDispatching()
 
         if (false == mStopDispatcher)
         {
-            std::unique_lock<std::mutex> lck(mEmitSync);
+            UniqueLock lck(mEmitSync);
 
             if (true == mPendingEvents.empty())
             {

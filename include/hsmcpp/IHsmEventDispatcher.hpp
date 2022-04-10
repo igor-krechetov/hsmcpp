@@ -8,13 +8,17 @@
 
 namespace hsmcpp
 {
-#define INVALID_HSM_DISPATCHER_HANDLER_ID          (0)
+#define INVALID_HSM_DISPATCHER_HANDLER_ID           (0)
+#define INVALID_HSM_TIMER_ID                        (-1000)
+
 
 using HandlerID_t = int;
 using TimerID_t = int;
+using EventID_t = int;
 
 using EventHandlerFunc_t = std::function<void(void)>;
-using TimerHandlerFunc_t = std::function<void(const int)>;
+using TimerHandlerFunc_t = std::function<void(const TimerID_t)>;
+using EnqueuedEventHandlerFunc_t = std::function<void(const EventID_t)>;
 
 class IHsmEventDispatcher
 {
@@ -30,7 +34,7 @@ public:
 
     /**
      * As a general rule registerEventHandler and unregisterEventHandler are
-     * not expected to be thread-safe and should to be used from the same thread.
+     * not expected to be thread-safe and should be used from the same thread.
      * But this depends on specific Dispatcher implementation.
      */
 
@@ -42,11 +46,22 @@ public:
     virtual void unregisterEventHandler(const HandlerID_t handlerID) = 0;
 
     /**
+     * TODO
+     */
+    virtual HandlerID_t registerEnqueuedEventHandler(const EnqueuedEventHandlerFunc_t& handler) = 0;
+    virtual void unregisterEnqueuedEventHandler(const HandlerID_t handlerID) = 0;
+
+    /**
      * dispatcher must guarantee that emit call is thread-safe
      *
      * @param handlerID     id of the handler that should be called
      */
     virtual void emitEvent(const HandlerID_t handlerID) = 0;
+
+    /**
+     * TODO
+     */
+    virtual bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) = 0;
 
     /**
      * Used by HSM to receive notifications about timer events.

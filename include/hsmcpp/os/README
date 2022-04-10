@@ -1,0 +1,6 @@
+To support build for a platform, which doesn't have concurrency primitives support in STL, following classes must be provided:
+
+* Mutex
+* ConditionVariable
+
+See implementation in stl folder for the reference.

@@ -88,5 +88,37 @@ if (HSMBUILD_DISPATCHER_QT)
     deployQtApp(${TEST_BIN_QT})
 endif()
 
+# ================================================
+# SOURCE CODE (Dispatcher: FreeRTOS)
+if (HSMBUILD_DISPATCHER_FREERTOS)
+    # ----------------------------------------------------------------------
+    # Configure FreeRTOS
+    SET(FREERTOS_LIB_DIR "${CMAKE_BINARY_DIR}/freertos")
+    SET(FREERTOS_PORT_LIB_DIR "${FREERTOS_LIB_DIR}/portable")
+    SET(FREERTOS_LIB_DIRS ${FREERTOS_LIB_DIR} ${FREERTOS_PORT_LIB_DIR})
+    SET(FREERTOS_LIBS freertos_kernel freertos_kernel_port pthread)
+
+    include(ExternalProject)
+    ExternalProject_Add(FREERTOS
+                        SOURCE_DIR "${FREERTOS_KERNEL_DIR}"
+                        BINARY_DIR "${FREERTOS_LIB_DIR}"
+                        INSTALL_DIR ""
+                        CMAKE_ARGS "-DFREERTOS_CONFIG_FILE_DIRECTORY=${HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY}"
+                                "-DFREERTOS_HEAP=3"
+                                "-DFREERTOS_PORT=GCC_POSIX"
+                        INSTALL_COMMAND ""
+                        )
+
+    set(TEST_BIN_FREERTOS ${TEST_BIN_NAME_TEMPLATE}FreeRTOS)
+
+    add_executable(${TEST_BIN_FREERTOS} mainFreeRTOS.cpp ${FREERTOS_SRC} ${SRC_UNITTESTS_COMMON})
+    target_compile_definitions(${TEST_BIN_FREERTOS} PUBLIC -DTEST_HSM_FREERTOS)
+    target_include_directories(${TEST_BIN_FREERTOS} PRIVATE ${HSMCPP_FREERTOS_INCLUDE} ${HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY})
+    target_link_directories(${TEST_BIN_FREERTOS} PUBLIC ${FREERTOS_LIB_DIRS})
+    target_link_libraries(${TEST_BIN_FREERTOS} PRIVATE ${HSMCPP_FREERTOS_LIB} gmock_main ${FREERTOS_LIBS})
+    target_compile_options(${TEST_BIN_FREERTOS} PRIVATE ${HSMCPP_FREERTOS_CXX_FLAGS})
+endif()
+
+# ================================================
 # Used to compare binary size footprint (compared to 00_helloworld_std)
 add_executable(emptyapp emptyapp.cpp)

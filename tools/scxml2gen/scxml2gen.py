@@ -432,7 +432,7 @@ def prepareHsmcppStateExitCallbackDeclaration(funcName):
 
 
 def prepareRegisterTimerFunc(eventsEnum, timersEnum, timerName):
-    return f"registerTimer(static_cast<int>({timersEnum}::{timerName}), {eventsEnum}::ON_TIMER_{timerName});"
+    return f"registerTimer(static_cast<hsmcpp::TimerID_t>({timersEnum}::{timerName}), {eventsEnum}::ON_TIMER_{timerName});"
 
 
 def prepareRegisterActionFunction(state, eventsEnum, timersEnum, trigger, actionInfo):
@@ -453,10 +453,10 @@ def prepareRegisterActionFunction(state, eventsEnum, timersEnum, trigger, action
         print(f"action=<{action}>, {'_TIMER' in action}")
         if "_TIMER" in action:
             timerName = f"{timersEnum}::{actionInfo['args'][0]}"
-            func = f"registerStateAction({state}, {actionTrigger}, {action}, static_cast<int>({timerName}){args});"
+            func = f"registerStateAction({state}, {actionTrigger}, {action}, static_cast<hsmcpp::TimerID_t>({timerName}){args});"
         else:
             eventName = f"{eventsEnum}::{actionInfo['args'][0]}"
-            func = f"registerStateAction({state}, {actionTrigger}, {action}, static_cast<int>({eventName}){args});"
+            func = f"registerStateAction({state}, {actionTrigger}, {action}, static_cast<hsmcpp::TimerID_t>({eventName}){args});"
     return func
 
 

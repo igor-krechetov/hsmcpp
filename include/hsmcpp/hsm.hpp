@@ -371,6 +371,32 @@ public:
     template <typename... Args>
     bool isTransitionPossible(const HsmEventEnum event, Args... args);
 
+    /**
+     * Start a new timer. If timer with this ID is already running it will be restarted with new settings.
+     *
+     * @param timerID       unique timer id
+     * @param intervalMs    timer interval in milliseconds
+     * @param isSingleShot  true - timer will run only once and then will stop
+     *                      false - timer will keep running until stopTimer() is called or dispatcher is destroyed
+     */
+    void startTimer(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot);
+
+    /**
+     * Restarts running timer with the same arguments which were provided to startTimer().
+     * Does nothing if timer is not running.
+     *
+     * @param timerID       id of running timer
+     */
+    void restartTimer(const TimerID_t timerID);
+
+    /**
+     * Restarts running timer with the same arguments which were provided to startTimer()
+     * Does nothing if timer is not running.
+     *
+     * @param timerID       id of running timer
+     */
+    void stopTimer(const TimerID_t timerID);
+
     // By default log will be written to ./dump.hsmlog file.
     // This location can be overwritten by setting ENV_DUMPPATH environment variable with desired path.
     bool enableHsmDebugging();
@@ -1058,6 +1084,35 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::isTransitionPossible(
 
     __HSM_TRACE_CALL_RESULT__("%d", BOOL2INT(possible));
     return possible;
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::startTimer(const TimerID_t timerID,
+                                                                      const unsigned int intervalMs,
+                                                                      const bool isSingleShot)
+{
+    if (mDispatcher)
+    {
+        mDispatcher->startTimer(mTimerHandlerId, timerID, intervalMs, isSingleShot);
+    }
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::restartTimer(const TimerID_t timerID)
+{
+    if (mDispatcher)
+    {
+        mDispatcher->restartTimer(timerID);
+    }
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::stopTimer(const TimerID_t timerID)
+{
+    if (mDispatcher)
+    {
+        mDispatcher->stopTimer(timerID);
+    }
 }
 
 // ============================================================================

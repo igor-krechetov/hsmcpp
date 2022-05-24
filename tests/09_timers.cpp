@@ -296,3 +296,97 @@ TEST_F(ABCHsm, timers_delete_running)
     // VALIDATION
     // NOTE: in case of an error test will crash. using "death tests" is impossible due to multiple threads
 }
+
+TEST_F(ABCHsm, timers_start_from_code)
+{
+    TEST_DESCRIPTION("Validate support for starting timers from code");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    const TimerID_t timer1 = 1;
+    const int timer1Duration = 100;
+
+    registerState<ABCHsm>(AbcState::A);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+
+    registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
+
+    registerTimer(timer1, AbcEvent::E1);
+    initializeHsm();
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
+
+    //-------------------------------------------
+    // ACTIONS
+    startTimer(timer1, timer1Duration, true);
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration + 50));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_EQ(getLastActiveState(), AbcState::B);
+    EXPECT_EQ(mStateCounterB, 1);
+}
+
+TEST_F(ABCHsm, timers_stop_from_code)
+{
+    TEST_DESCRIPTION("Validate support for stopping timers from code");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    const TimerID_t timer1 = 1;
+    const int timer1Duration = 100;
+
+    registerState<ABCHsm>(AbcState::A);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+
+    registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
+
+    registerTimer(timer1, AbcEvent::E1);
+    initializeHsm();
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
+
+    //-------------------------------------------
+    // ACTIONS
+    startTimer(timer1, timer1Duration, true);
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2));
+    stopTimer(timer1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_EQ(getLastActiveState(), AbcState::A);
+    EXPECT_EQ(mStateCounterB, 0);
+}
+
+
+TEST_F(ABCHsm, timers_restart_from_code)
+{
+    TEST_DESCRIPTION("Validate support for stopping timers from code");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    const TimerID_t timer1 = 1;
+    const int timer1Duration = 100;
+
+    registerState<ABCHsm>(AbcState::A);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+
+    registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
+
+    registerTimer(timer1, AbcEvent::E1);
+    initializeHsm();
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
+
+    //-------------------------------------------
+    // ACTIONS
+    startTimer(timer1, timer1Duration, true);
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2));
+    restartTimer(timer1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2 + 10));
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_EQ(getLastActiveState(), AbcState::B);
+    EXPECT_EQ(mStateCounterB, 1);
+}

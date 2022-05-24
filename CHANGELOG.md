@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.23.0] - 2022-05-24
+### Added
+- new API to interact with timers (start, stop, restart)
+
 [0.22.0] - 2022-02-25
 ### Added
 - support for final states & exit points (library only)

@@ -9,7 +9,7 @@ export Qt5_DIR=/home/ikrechetov/Qt/5.15.2/gcc_64/lib/cmake/Qt5
 if [ ${PWD##*/} = "build" ]
 then
     rm -Rvf ./*
-    cmake -DHSMBUILD_VERBOSE=OFF \
+    cmake -DHSMBUILD_VERBOSE=ON \
         -DHSMBUILD_DISPATCHER_GLIB=ON \
         -DHSMBUILD_DISPATCHER_GLIBMM=ON \
         -DHSMBUILD_DISPATCHER_STD=ON \
@@ -17,8 +17,9 @@ then
         -DHSMBUILD_TESTS=ON \
         -DHSMBUILD_EXAMPLES=ON \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-        -DCMAKE_TOOLCHAIN_FILE=/home/ikrechetov/Qt/6.3.0/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake \
         ..
+        # -DCMAKE_TOOLCHAIN_FILE=/home/ikrechetov/Qt/6.3.0/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake \
+        ##..
     make -j5
 
     ./tests/hsmUnitTestsSTD

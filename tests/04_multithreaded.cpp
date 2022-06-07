@@ -118,7 +118,7 @@ TEST_F(AsyncHsm, multithreaded_transition_from_interrupt)
     //-------------------------------------------
     // ACTIONS
     raise(SIGUSR1);
-    waitAsyncOperation(200);
+    ASSERT_TRUE(waitAsyncOperation(200));
 
     //-------------------------------------------
     // VALIDATION

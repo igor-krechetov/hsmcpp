@@ -100,10 +100,10 @@ public:
     };
 
     enum class StateAction {
-        START_TIMER, // ARGS: int timerID, int intervalMs, bool singleshot
-        STOP_TIMER, // ARGS: int timerID
-        RESTART_TIMER, // ARGS: int timerID
-        TRANSITION, // ARGS: int eventID
+        START_TIMER, // ARGS: TimerID_t timerID, int32_t intervalMs, bool singleshot
+        STOP_TIMER, // ARGS: TimerID_t timerID
+        RESTART_TIMER, // ARGS: TimerID_t timerID
+        TRANSITION, // ARGS: EventID_t eventID
     };
 
 private:

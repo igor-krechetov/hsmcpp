@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.24.1] - 2022-06-07
+### Fixed
+- build fix for hsm timers in FreeRTOS
+
+[0.24.0] - 2022-06-07
+### Added
+- FreeRTOS support
+- abstraction layer for platform specific features (threading)
+- support for transitions from signals/interrupts (FreeRTOS)
+- unit tests bringup for FreeRTOS
+### Fixed
+- hsm initialization
+- fixed dispatcher test for Qt platform
+
 [0.23.0] - 2022-05-24
 ### Added
 - new API to interact with timers (start, stop, restart)

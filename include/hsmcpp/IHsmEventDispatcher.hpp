@@ -12,9 +12,9 @@ namespace hsmcpp
 #define INVALID_HSM_TIMER_ID                        (-1000)
 
 
-using HandlerID_t = int;
-using TimerID_t = int;
-using EventID_t = int;
+using HandlerID_t = int32_t;
+using TimerID_t = int32_t;
+using EventID_t = int32_t;
 
 using EventHandlerFunc_t = std::function<void(void)>;
 using TimerHandlerFunc_t = std::function<void(const TimerID_t)>;

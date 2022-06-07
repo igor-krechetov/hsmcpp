@@ -1,4 +1,4 @@
-[![Generic badge](https://img.shields.io/badge/changelog-v0.23.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Generic badge](https://img.shields.io/badge/changelog-v0.24.1-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Generic badge](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
 [![Generic badge](https://img.shields.io/badge/documentation-green.svg)](https://github.com/igor-krechetov/hsmcpp/wiki)
 
@@ -18,6 +18,10 @@ If you are not familiar with HSM/FSM and which problems they can solve in your c
 - PlantUML diagrams generation (from SCXML files)
 - asynchronous / synchronous execution
 - thread safety
+- supported platforms:
+  - POSIX compliant
+  - Windows
+  - FreeRTOS
 - configurable event dispatchers:
   - std::thread based
   - glib based
@@ -35,6 +39,7 @@ If you are not familiar with HSM/FSM and which problems they can solve in your c
 - state and transition callbacks (enter, exit, state changed, on transition)
 - passing data to state and transition callbacks
 - parallel states
+- final states
 - conditional transitions
 - conditional entry points
 - state actions

@@ -426,7 +426,7 @@ bool Variant::isUnsignedNumeric() const
 
 bool Variant::isBool() const
 {
-    return type == Type::BOOL;
+    return (type == Type::BOOL) || (true == isNumeric());
 }
 
 std::string Variant::toString() const
@@ -758,6 +758,8 @@ bool Variant::toBool() const
     if (Type::BOOL == type)
     {
         result = *value<bool>();
+    } else {
+        result = (0 != toInt64());
     }
 
     return result;

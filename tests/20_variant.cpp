@@ -3,6 +3,36 @@
 #include "TestsCommon.hpp"
 #include "hsmcpp/variant.hpp"
 
+// NOTE: copied from hsm.hpp
+template <typename... Args>
+void makeVariantList(VariantVector_t& vList, Args&&... args)
+{
+    volatile int make_variant[] = {0, (vList.push_back(Variant::make(std::forward<Args>(args))), 0)...};
+    (void)make_variant;
+}
+
+// global consts used by multiple tests
+const int8_t i8 = -8;
+const int16_t i16 = -16;
+const int32_t i32 = -32;
+const int64_t i64 = -64;
+const uint8_t ui8 = 8;
+const uint16_t ui16 = 16;
+const uint32_t ui32 = 32;
+const uint64_t ui64 = 64;
+const double d = 123.45;
+const bool b = false;
+const std::string s1 = "abc";
+const char* s2 = "dfg";
+const char binary1[] = {1, 2, 0, 3};
+const std::vector<char> binary2 = {4, 5, 0, 6};
+const VariantList_t listInt = {Variant(1), Variant(2), Variant(3)};
+const VariantList_t listStr = {Variant("aa"), Variant("bb"), Variant("cc")};
+const VariantVector_t vectorBool = {Variant(false), Variant(true), Variant(false)};
+const VariantDict_t dictIntStr = {{Variant(1), Variant("aa")},
+                            {Variant(2), Variant("bb")},
+                            {Variant(3), Variant("cc")}};
+
 TEST(variant, vector)
 {
     TEST_DESCRIPTION("");
@@ -83,26 +113,6 @@ TEST(variant, constructors)
 
     //-------------------------------------------
     // PRECONDITIONS
-    int8_t i8 = -8;
-    int16_t i16 = -16;
-    int32_t i32 = -32;
-    int64_t i64 = -64;
-    uint8_t ui8 = 8;
-    uint16_t ui16 = 16;
-    uint32_t ui32 = 32;
-    uint64_t ui64 = 64;
-    double d = 123.45;
-    bool b = false;
-    std::string s1 = "abc";
-    const char* s2 = "dfg";
-    const char binary1[] = {1, 2, 0, 3};
-    std::vector<char> binary2 = {4, 5, 0, 6};
-    VariantList_t listInt = {Variant(1), Variant(2), Variant(3)};
-    VariantList_t listStr = {Variant("aa"), Variant("bb"), Variant("cc")};
-    VariantVector_t vectorBool = {Variant(false), Variant(true), Variant(false)};
-    VariantDict_t dictIntStr = {{Variant(1), Variant("aa")},
-                                {Variant(2), Variant("bb")},
-                                {Variant(3), Variant("cc")}};
 
     //-------------------------------------------
     // ACTIONS
@@ -175,26 +185,6 @@ TEST(variant, make)
 
     //-------------------------------------------
     // PRECONDITIONS
-    int8_t i8 = -8;
-    int16_t i16 = -16;
-    int32_t i32 = -32;
-    int64_t i64 = -64;
-    uint8_t ui8 = 8;
-    uint16_t ui16 = 16;
-    uint32_t ui32 = 32;
-    uint64_t ui64 = 64;
-    double d = 123.45;
-    bool b = false;
-    std::string s1 = "abc";
-    const char* s2 = "dfg";
-    const char binary1[] = {1, 2, 0, 3};
-    std::vector<char> binary2 = {4, 5, 0, 6};
-    VariantList_t listInt = {Variant(1), Variant(2), Variant(3)};
-    VariantList_t listStr = {Variant("aa"), Variant("bb"), Variant("cc")};
-    VariantVector_t vectorBool = {Variant(false), Variant(true), Variant(false)};
-    VariantDict_t dictIntStr = {{Variant(1), Variant("aa")},
-                                {Variant(2), Variant("bb")},
-                                {Variant(3), Variant("cc")}};
 
     //-------------------------------------------
     // ACTIONS
@@ -259,6 +249,115 @@ TEST(variant, make)
     {
         EXPECT_EQ(validateBA1[i], binary1[i]);
     }
+}
+
+TEST(variant, type_boolean)
+{
+    TEST_DESCRIPTION("test boolean type storage and implicit conversion");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+
+    //-------------------------------------------
+    // ACTIONS
+    VariantVector_t resultByVariable;
+    VariantVector_t resultByValue;
+
+    makeVariantList(resultByVariable, i8, i16, i32, i64, ui8, ui16, ui32, ui64, d, b, s1, s2, listInt, vectorBool, dictIntStr);
+    makeVariantList(resultByValue, 1, 0, 2.3, "aaa", false, true);
+
+    //-------------------------------------------
+    // VALIDATION
+    int i = 0;
+    
+    EXPECT_TRUE(resultByVariable[i++].isBool());// SignedNumeric
+    EXPECT_TRUE(resultByVariable[i++].isBool());// SignedNumeric
+    EXPECT_TRUE(resultByVariable[i++].isBool());// SignedNumeric
+    EXPECT_TRUE(resultByVariable[i++].isBool());// SignedNumeric
+    EXPECT_TRUE(resultByVariable[i++].isBool());// UnsignedNumeric
+    EXPECT_TRUE(resultByVariable[i++].isBool());// UnsignedNumeric
+    EXPECT_TRUE(resultByVariable[i++].isBool());// UnsignedNumeric
+    EXPECT_TRUE(resultByVariable[i++].isBool());// UnsignedNumeric
+    EXPECT_TRUE(resultByVariable[i++].isBool());// Numeric
+    EXPECT_TRUE(resultByVariable[i++].isBool());// Bool
+    EXPECT_FALSE(resultByVariable[i++].isBool());// String
+    EXPECT_FALSE(resultByVariable[i++].isBool());// String
+    EXPECT_FALSE(resultByVariable[i++].isBool());// List
+    EXPECT_FALSE(resultByVariable[i++].isBool());// Vector
+    EXPECT_FALSE(resultByVariable[i++].isBool());// Dictionary
+    
+    i = 0;
+    EXPECT_TRUE(resultByValue[i++].isBool());// Numeric
+    EXPECT_TRUE(resultByValue[i++].isBool());// Numeric
+    EXPECT_TRUE(resultByValue[i++].isBool());// Numeric
+    EXPECT_FALSE(resultByValue[i++].isBool());// String
+    EXPECT_TRUE(resultByValue[i++].isBool());// Bool
+    EXPECT_TRUE(resultByValue[i++].isBool());// Bool
+
+    i = 0;
+    EXPECT_EQ(resultByValue[i++].toBool(), true);// Numeric
+    EXPECT_EQ(resultByValue[i++].toBool(), false);// Numeric
+    EXPECT_EQ(resultByValue[i++].toBool(), true);// Numeric
+    EXPECT_EQ(resultByValue[i++].toBool(), false);// String
+    EXPECT_EQ(resultByValue[i++].toBool(), false);// Bool
+    EXPECT_EQ(resultByValue[i++].toBool(), true);// Bool
+}
+
+TEST(variant, variadic_arguments)
+{
+    TEST_DESCRIPTION("validate that initializing variant arguments through variadic arguments works fine");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+
+    //-------------------------------------------
+    // ACTIONS
+    VariantVector_t result;
+    VariantVector_t resultByValue;
+
+    makeVariantList(result, i8, i16, i32, i64, ui8, ui16, ui32, ui64, d, b, s1, s2, listInt, vectorBool, dictIntStr);
+    makeVariantList(resultByValue, 1, 2.3, "aaa", false, true);
+
+    //-------------------------------------------
+    // VALIDATION
+    int i = 0;
+    
+    EXPECT_TRUE(result[i++].isSignedNumeric());
+    EXPECT_TRUE(result[i++].isSignedNumeric());
+    EXPECT_TRUE(result[i++].isSignedNumeric());
+    EXPECT_TRUE(result[i++].isSignedNumeric());
+    EXPECT_TRUE(result[i++].isUnsignedNumeric());
+    EXPECT_TRUE(result[i++].isUnsignedNumeric());
+    EXPECT_TRUE(result[i++].isUnsignedNumeric());
+    EXPECT_TRUE(result[i++].isUnsignedNumeric());
+    EXPECT_TRUE(result[i++].isNumeric());
+    EXPECT_TRUE(result[i++].isBool());
+    EXPECT_TRUE(result[i++].isString());
+    EXPECT_TRUE(result[i++].isString());
+    EXPECT_TRUE(result[i++].isList());
+    EXPECT_TRUE(result[i++].isVector());
+    EXPECT_TRUE(result[i++].isDictionary());
+    
+    i = 0;
+    EXPECT_EQ(result[i++].toInt64(), i8);
+    EXPECT_EQ(result[i++].toInt64(), i16);
+    EXPECT_EQ(result[i++].toInt64(), i32);
+    EXPECT_EQ(result[i++].toInt64(), i64);
+    EXPECT_EQ(result[i++].toUInt64(), ui8);
+    EXPECT_EQ(result[i++].toUInt64(), ui16);
+    EXPECT_EQ(result[i++].toUInt64(), ui32);
+    EXPECT_EQ(result[i++].toUInt64(), ui64);
+    EXPECT_EQ(result[i++].toDouble(), d);
+    EXPECT_EQ(result[i++].toBool(), b);
+    EXPECT_EQ(result[i++].toString(), s1);
+    EXPECT_STREQ(result[i++].toString().c_str(), s2);
+
+    i = 0;
+    EXPECT_TRUE(resultByValue[i++].isNumeric());
+    EXPECT_TRUE(resultByValue[i++].isNumeric());
+    EXPECT_TRUE(resultByValue[i++].isString());
+    EXPECT_TRUE(resultByValue[i++].isBool());
+    EXPECT_TRUE(resultByValue[i++].isBool());
 }
 
 // TODO: add more tests

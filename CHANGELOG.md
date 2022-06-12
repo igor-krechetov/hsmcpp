@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.24.2] - 2022-06-12
+### Fixed
+- bool type support in hsmcpp::variant (for compilers where bool is treated as int)
+
 [0.24.1] - 2022-06-07
 ### Fixed
 - build fix for hsm timers in FreeRTOS

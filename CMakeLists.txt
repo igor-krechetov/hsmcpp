@@ -3,10 +3,27 @@
 cmake_minimum_required(VERSION 2.6)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.23.0")
-set(PROJECT_DESCRIPTION "C++ library that implements simple hierarchical state machines / finite state machines")
-set(CMAKE_CXX_STANDARD 11)
+set(PROJECT_VERSION "0.24.3")
+set(PROJECT_DESCRIPTION "C++ library that provides hierarchical state machines / finite state machines functionality")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
+
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG(-std=c++17 COMPILER_SUPPORTS_CXX17)
+CHECK_CXX_COMPILER_FLAG(-std=c++14 COMPILER_SUPPORTS_CXX14)
+CHECK_CXX_COMPILER_FLAG(-std=c++11 COMPILER_SUPPORTS_CXX11)
+
+if(COMPILER_SUPPORTS_CXX17)
+    set(CMAKE_CXX_STANDARD 17)
+    message("Using C++17")
+elseif(COMPILER_SUPPORTS_CXX14)
+    set(CMAKE_CXX_STANDARD 14)
+    message("Using C++14")
+elseif(COMPILER_SUPPORTS_CXX11)
+    set(CMAKE_CXX_STANDARD 11)
+    message("Using C++11")
+else()
+    message(FATAL_ERROR "HSMCPP requires at least C++11 support. Please use a different C++ compiler.")
+endif()
 
 option(HSMBUILD_VERBOSE "Enable/disable HSM verbosity [feature for DEBUG]" OFF)
 option(HSMBUILD_STRUCTURE_VALIDATION "Enable/disable HSM structure validation" ON)
@@ -14,8 +31,8 @@ option(HSMBUILD_THREAD_SAFETY "Enable/disable HSM thread safety" ON)
 option(HSMBUILD_DEBUGGING "Enable/disable HSM debugging" ON)
 option(HSMBUILD_DISPATCHER_GLIB "Enable GLib dispatcher" OFF)
 option(HSMBUILD_DISPATCHER_GLIBMM "Enable GLibmm dispatcher" OFF)
-option(HSMBUILD_DISPATCHER_STD "Enable std::thread based dispatcher" ON)
-option(HSMBUILD_DISPATCHER_QT "Enable Qt based dispatcher" OFF)
+option(HSMBUILD_DISPATCHER_STD "Enable std::thread based dispatcher" OFF)
+option(HSMBUILD_DISPATCHER_QT "Enable Qt based dispatcher" ON)
 option(HSMBUILD_TESTS "Build unittests" ON)
 option(HSMBUILD_EXAMPLES "Build examples" ON)
 
@@ -197,9 +214,10 @@ endif()
 # ================================================================================================
 # DISPATCHER: Qt
 if (HSMBUILD_DISPATCHER_QT)
-    # For Qt build to work make sure Qt5_DIR environment variable is set. For example:
+    # For Qt5 build make sure Qt5_DIR environment variable is set. For example:
     # export Qt5_DIR=/home/user/qt/5.13.2/gcc_64/lib/cmake/Qt5/
 
+    # For Qt6 build use qt-cmake
 
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
@@ -219,7 +237,6 @@ if (HSMBUILD_DISPATCHER_QT)
         qt5_wrap_cpp(SRC_DISPATCHER_QT ${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/HsmEventDispatcherQt.hpp)
         SET(QtCore_INCLUDE_DIRS ${Qt5Core_INCLUDE_DIRS})
     else()
-        # TODO: add support for Qt6 build
         find_package(Qt6 COMPONENTS Core REQUIRED)
         qt_standard_project_setup()
 

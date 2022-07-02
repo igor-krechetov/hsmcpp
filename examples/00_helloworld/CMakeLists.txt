@@ -26,7 +26,7 @@ if (HSMBUILD_DISPATCHER_QT)
 
     add_executable(${BINARY_NAME_00_3} 00_helloworld_qt.cpp)
     target_include_directories(${BINARY_NAME_00_3} PRIVATE ${HSMCPP_QT_INCLUDE})
-    target_link_libraries(${BINARY_NAME_00_3} PRIVATE ${HSMCPP_QT_LIB} Qt5::Core)
+    target_link_libraries(${BINARY_NAME_00_3} PRIVATE ${HSMCPP_QT_LIB} Qt${QT_VERSION_MAJOR}::Core)
     target_compile_options(${BINARY_NAME_00_3} PRIVATE ${HSMCPP_QT_CXX_FLAGS})
     deployQtApp(${BINARY_NAME_00_3})
 endif()

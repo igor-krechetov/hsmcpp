@@ -19,6 +19,7 @@
 #include "os/LockGuard.hpp"
 #include "IHsmEventDispatcher.hpp"
 #include "variant.hpp"
+// TODO: use logging.hpp from external repo
 #include "logging.hpp"
 
 #if !defined(HSM_DISABLE_THREADSAFETY) && defined(FREERTOS_AVAILABLE)

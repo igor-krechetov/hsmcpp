@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.24.3] - 2022-07-02
+### Added
+- support for Qt6
+
 [0.24.2] - 2022-06-12
 ### Fixed
 - bool type support in hsmcpp::variant (for compilers where bool is treated as int)

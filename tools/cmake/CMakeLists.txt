@@ -13,8 +13,8 @@ function(registerQtWindeploy)
         message("imported_location=${imported_location}")
 
         if(EXISTS ${imported_location})
-            add_executable(Qt5::windeployqt IMPORTED)
-            set_target_properties(Qt5::windeployqt PROPERTIES
+            add_executable(Qt${QT_VERSION_MAJOR}::windeployqt IMPORTED)
+            set_target_properties(Qt${QT_VERSION_MAJOR}::windeployqt PROPERTIES
                                   IMPORTED_LOCATION ${imported_location})
         endif()
     endif()
@@ -24,8 +24,8 @@ function(deployQtApp _target)
     if(Qt5_FOUND AND WIN32)
         add_custom_command(TARGET ${_target}
             POST_BUILD
-            # COMMAND Qt5::windeployqt --dir "${CMAKE_CURRENT_BINARY_DIR}/windeployqt" "$<TARGET_FILE_DIR:foo>/$<TARGET_FILE_NAME:foo>"
-            COMMAND Qt5::windeployqt $<TARGET_FILE:${_target}>
+            # COMMAND Qt${QT_VERSION_MAJOR}::windeployqt --dir "${CMAKE_CURRENT_BINARY_DIR}/windeployqt" "$<TARGET_FILE_DIR:foo>/$<TARGET_FILE_NAME:foo>"
+            COMMAND Qt${QT_VERSION_MAJOR}::windeployqt $<TARGET_FILE:${_target}>
         )
     endif()
 endfunction()

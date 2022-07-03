@@ -7,6 +7,9 @@
   #include <glib.h>
 #elif defined(TEST_HSM_GLIBMM)
   #include <glibmm.h>
+#elif defined(TEST_HSM_QT)
+  #include <QCoreApplication>
+  #include <QTimer>
 #endif
 
 std::mutex gSyncCall;
@@ -39,42 +42,60 @@ void configureGTest()
 #endif // LOGGING_MODE_OFF
 }
 
-#if defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM)
-gboolean mainThreadCallback(void* data)
-{
-    std::lock_guard<std::mutex> lck(gSyncCall);
+#if defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM) || defined(TEST_HSM_QT)
+  #if defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM)
+    gboolean mainThreadCallback(void* data)
+  #elif defined(TEST_HSM_QT)
+    void mainThreadCallback()
+  #endif
+    {
+        std::lock_guard<std::mutex> lck(gSyncCall);
 
-    gCallResult = gFunc();
-    gCallDone = true;
-    gMainThreadCallDoneEvent.notify_one();
+        gCallResult = gFunc();
+        gCallDone = true;
+        gMainThreadCallDoneEvent.notify_one();
 
-    return FALSE;
-}
+  #if defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM)
+        return FALSE;
+  #endif
+    }
 #endif // defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM)
 
 bool executeOnMainThread(std::function<bool()> func)
 {
     // in case of some dispatchers we can just call func()
-#if defined(TEST_HSM_STD) || defined(TEST_HSM_QT) || defined(TEST_HSM_FREERTOS)
+#if defined(TEST_HSM_STD) || defined(TEST_HSM_FREERTOS)
     return func();
-#endif
-
+#else
     std::unique_lock<std::mutex> lck(gSyncCall);
 
     gFunc = func;
     gCallDone = false;
     gCallResult = false;
 
-#if defined(TEST_HSM_GLIB)
+  #if defined(TEST_HSM_QT)
+    QTimer* timer = new QTimer();
+
+    timer->moveToThread(qApp->thread());
+    timer->setSingleShot(true);
+
+    QObject::connect(timer, &QTimer::timeout, [=]()
+    {
+        mainThreadCallback();
+        timer->deleteLater();
+    });
+    QMetaObject::invokeMethod(timer, "start", Qt::QueuedConnection, Q_ARG(int, 0));
+  #elif defined(TEST_HSM_GLIB)
     g_idle_add(&mainThreadCallback, nullptr);
-#elif defined(TEST_HSM_GLIBMM)
+  #elif defined(TEST_HSM_GLIBMM)
     const auto idle_source = Glib::IdleSource::create();
 
     idle_source->connect([](){ return static_cast<bool>(mainThreadCallback(nullptr)); } );
     idle_source->attach(Glib::MainContext::get_default());
-#endif // TEST_HSM_GLIBMM
+  #endif // TEST_HSM_GLIBMM
 
     gMainThreadCallDoneEvent.wait(lck, [&](){ return gCallDone; });
 
     return gCallResult;
+#endif // TEST_HSM_STD || TEST_HSM_FREERTOS
 }

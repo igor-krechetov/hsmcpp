@@ -1,9 +1,9 @@
 # HSM - Hierarchical State Machines
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.24.3")
+set(PROJECT_VERSION "0.24.4")
 set(PROJECT_DESCRIPTION "C++ library that provides hierarchical state machines / finite state machines functionality")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -31,8 +31,8 @@ option(HSMBUILD_THREAD_SAFETY "Enable/disable HSM thread safety" ON)
 option(HSMBUILD_DEBUGGING "Enable/disable HSM debugging" ON)
 option(HSMBUILD_DISPATCHER_GLIB "Enable GLib dispatcher" OFF)
 option(HSMBUILD_DISPATCHER_GLIBMM "Enable GLibmm dispatcher" OFF)
-option(HSMBUILD_DISPATCHER_STD "Enable std::thread based dispatcher" OFF)
-option(HSMBUILD_DISPATCHER_QT "Enable Qt based dispatcher" ON)
+option(HSMBUILD_DISPATCHER_STD "Enable std::thread based dispatcher" ON)
+option(HSMBUILD_DISPATCHER_QT "Enable Qt based dispatcher" OFF)
 option(HSMBUILD_TESTS "Build unittests" ON)
 option(HSMBUILD_EXAMPLES "Build examples" ON)
 

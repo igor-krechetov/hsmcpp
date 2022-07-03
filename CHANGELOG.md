@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+
+[0.24.4] - 2022-07-03
+### Added
+- timers support for Qt dispatcher
+
 [0.24.3] - 2022-07-02
 ### Added
 - support for Qt6

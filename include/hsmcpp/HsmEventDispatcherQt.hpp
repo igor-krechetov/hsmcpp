@@ -7,6 +7,7 @@
 #include "HsmEventDispatcherBase.hpp"
 #include <QObject>
 #include <QEvent>
+#include <QTimer>
 
 namespace hsmcpp
 {
@@ -24,11 +25,22 @@ public:
 
     void emitEvent(const HandlerID_t handlerID) override;
 
+// Timers
+protected:
+    void unregisterAllTimerHandlers();
+
+    void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
+    void stopTimerImpl(const TimerID_t timerID) override;
+
+private slots:
+    void onTimerEvent();
+
 protected:
     bool event(QEvent* ev) override;
 
 private:
     static QEvent::Type mQtEventType;
+    std::map<TimerID_t, QTimer*> mNativeTimerHandlers;// <timerID, QTimer>
 };
 
 } // namespace hsmcpp

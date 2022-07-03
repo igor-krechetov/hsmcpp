@@ -5,6 +5,8 @@
 #include "hsmcpp/logging.hpp"
 #include <QCoreApplication>
 #include <QAbstractEventDispatcher>
+#include <QVariant>
+#include <QThread>
 
 namespace hsmcpp
 {
@@ -24,6 +26,7 @@ HsmEventDispatcherQt::~HsmEventDispatcherQt()
 {
     __HSM_TRACE_CALL_DEBUG__();
 
+    unregisterAllTimerHandlers();
     unregisterAllEventHandlers();
 }
 
@@ -66,6 +69,102 @@ void HsmEventDispatcherQt::emitEvent(const HandlerID_t handlerID)
     {
         HsmEventDispatcherBase::emitEvent(handlerID);
         QCoreApplication::postEvent(this, new QEvent(mQtEventType));
+    }
+}
+
+void HsmEventDispatcherQt::unregisterAllTimerHandlers()
+{
+    for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it)
+    {
+        it->second->deleteLater();
+    }
+    mNativeTimerHandlers.clear();
+}
+
+void HsmEventDispatcherQt::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d, intervalMs=%d, isSingleShot=%d",
+                                  SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
+    auto it = mNativeTimerHandlers.find(timerID);
+
+    if (mNativeTimerHandlers.end() == it)
+    {
+        auto funcCreateTimer = [&]() {
+            QTimer* newTimer = new QTimer(this);
+
+            newTimer->setProperty("hsmid", QVariant(timerID));
+            connect(newTimer, SIGNAL(timeout()), this, SLOT(onTimerEvent()));
+            newTimer->setSingleShot(isSingleShot);
+            newTimer->start(intervalMs);
+            mNativeTimerHandlers.emplace(timerID, newTimer);
+        };
+
+        // NOTE: need to make sure that QTimer is started only from Qt main thread
+        QThread* callerThread = QThread::currentThread();
+
+        if (qApp->thread() != callerThread)
+        {
+            QTimer* mainthreadTimer = new QTimer();
+
+            mainthreadTimer->moveToThread(qApp->thread());
+            mainthreadTimer->setSingleShot(true);
+
+            QObject::connect(mainthreadTimer, &QTimer::timeout, [=]()
+            {
+                funcCreateTimer();
+                mainthreadTimer->deleteLater();
+            });
+            QMetaObject::invokeMethod(mainthreadTimer, "start", Qt::QueuedConnection, Q_ARG(int, 0));
+        }
+        else
+        {
+            funcCreateTimer();
+        }
+    }
+    else
+    {
+        __HSM_TRACE_ERROR__("timer with id=%d already exists", timerID);
+    }
+}
+
+void HsmEventDispatcherQt::stopTimerImpl(const TimerID_t timerID)
+{
+    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+    auto it = mNativeTimerHandlers.find(timerID);
+
+    if (mNativeTimerHandlers.end() != it)
+    {
+        it->second->deleteLater();
+        mNativeTimerHandlers.erase(it);
+    }
+}
+
+void HsmEventDispatcherQt::onTimerEvent()
+{
+    QObject* ptrTimer = qobject_cast<QTimer*>(QObject::sender());
+
+    if (nullptr != ptrTimer)
+    {
+        const TimerID_t timerID = ptrTimer->property("hsmid").toInt();
+
+        __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+        const bool restartTimer = handleTimerEvent(timerID);
+
+        if (false == restartTimer)
+        {
+            // TODO:  mNativeTimerHandlers is not thread-safe
+            auto itTimer = mNativeTimerHandlers.find(timerID);
+
+            if (mNativeTimerHandlers.end() != itTimer)
+            {
+                itTimer->second->deleteLater();
+                mNativeTimerHandlers.erase(itTimer);
+            }
+            else
+            {
+                __HSM_TRACE_ERROR__("unexpected error. timer not found");
+            }
+        }
     }
 }
 

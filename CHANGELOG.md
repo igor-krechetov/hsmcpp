@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.24.5] - 2022-08-16
+### Fixed
+- install missing os headers after build
 
 [0.24.4] - 2022-07-03
 ### Added

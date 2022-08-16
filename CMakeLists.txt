@@ -299,6 +299,8 @@ install(FILES ${HSM_INCLUDES_ROOT}/hsm.hpp
               ${HSM_INCLUDES_ROOT}/logging.hpp
               ${HSM_INCLUDES_ROOT}/variant.hpp
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY ${HSM_INCLUDES_ROOT}/os
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if (HSMBUILD_DISPATCHER_STD)
     configure_file(./pkgconfig/hsmcpp_std.pc.in hsmcpp_std.pc @ONLY)

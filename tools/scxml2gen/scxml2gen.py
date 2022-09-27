@@ -4,6 +4,12 @@ import xml.etree.ElementTree as ET
 import argparse
 
 # ==========================================================================================================
+STATETYPE_INITIAL = "initial"
+STATETYPE_FINAL = "final"
+STATETYPE_HISTORY = "history"
+STATETYPE_REGULAR = "regular"
+
+# ==========================================================================================================
 # FUNCTIONS
 def isStateActionDefinition(identifier):
     isAction = False
@@ -193,19 +199,21 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
                         exit(5)
                 else:
                     newState = {"id": namePrefix + curState.attrib["id"],
-                                "is_history": False,
+                                "type": STATETYPE_REGULAR,
                                 "transitions": []}
                     validateIdentifier(newState["id"])
 
                     if getTag(curState.tag) == "final":
-                        newState["is_final"] = True
+                        newState["type"] = STATETYPE_FINAL
+                        if "event" in curState.attrib:
+                            newState["final_event"] = curState.attrib["event"]
 
                     if getTag(curState.tag) == "history":
-                        newState["is_history"] = True
+                        newState["type"] = STATETYPE_HISTORY
                         newState["history_type"] = curState.attrib["type"]
 
                     if (getTag(parentElement.tag) == "parallel") or (newState['id'] in initialStates):
-                        newState["initial_state"] = True
+                        newState["type"] = STATETYPE_INITIAL
                         if newState['id'] in initialStatesTransitions:
                             newState["initial_state_transitions"] = initialStatesTransitions[newState['id']]
 
@@ -257,7 +265,9 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
 # hsm = [
 #            {
 #                "id": "Red",
+#                "type": "initial|history|final|regular"
 #                "initial_state": true|false,
+#                "final_event": "event_1", # optional
 #                "initial_state_transitions": [
 #                   {
 #                        "event": "event_1",
@@ -306,6 +316,7 @@ def parseScxml(path, namePrefix = ""):
 
             for curState in states:
                 if curState['id'] == initialState:
+                    curState["type"] = STATETYPE_INITIAL
                     curState['initial_state'] = True
                     isCorrectInitialState = True
                     break
@@ -508,7 +519,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                "ENUM_EVENTS_GETNAME_CASES": []}
 
     for curState in hsm:
-        if ('initial_state' in curState) and (curState['initial_state'] == True):
+        if curState["type"] == STATETYPE_INITIAL:
             genVars['INITIAL_STATE'] = curState['id']
             break
 
@@ -522,7 +533,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                 # initial state must be registered first
                 for genEntryPoint in [True, False]:
                     for curSubstate in curState["states"]:
-                        if (genEntryPoint is False) and (curSubstate["is_history"] is True):
+                        if (genEntryPoint is False) and (curSubstate["type"] == STATETYPE_HISTORY):
                             print(f"FOUND HISTORY: {curSubstate}")
                             historyType = ""
                             defaultTarget = ""
@@ -550,7 +561,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                                                                  f"{historyCallback});")
                         else:
                             registerSubstateFunc = "registerSubstate"
-                            isInitialState = ("initial_state" in curSubstate) and (curSubstate["initial_state"] is True)
+                            isInitialState = (curSubstate["type"] == STATETYPE_INITIAL)
                             initialStateConditions = []
 
                             if genEntryPoint is True:
@@ -628,8 +639,15 @@ def generateCppCode(hsm, pathHpp, pathCpp):
             else:
                 registerCallbacks = ""
 
-            if curState['is_history'] is False:
-                genVars["REGISTER_STATES"].append(f"registerState<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}{registerCallbacks});")
+            if (curState["type"] != STATETYPE_HISTORY):
+                if curState["type"] == STATETYPE_FINAL:
+                    if "final_event" in curState:
+                        finalEventID = f"{genVars['ENUM_EVENTS']}::{curState['final_event']}"
+                    else:
+                        finalEventID = "INVALID_HSM_EVENT_ID"
+                    genVars["REGISTER_STATES"].append(f"registerFinalState<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}, {finalEventID}{registerCallbacks});")
+                else:
+                    genVars["REGISTER_STATES"].append(f"registerState<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}{registerCallbacks});")
 
                 for curTransition in curState["transitions"]:
                     registerCallbacks = ""
@@ -677,7 +695,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
 # Plantuml generation
 def getHistoryStateName(state):
     stateName = ""
-    if state['is_history'] is True:
+    if state["type"] == STATETYPE_HISTORY:
         if ('history_type' in state) and (state['history_type'] == 'deep'):
             stateName = "[H*]"
         else:
@@ -718,7 +736,7 @@ def findTranstitions(topLevelState, targetStateId):
 def isHistoryState(topLevelState, stateId):
     state = findState(topLevelState, stateId)
     if state is not None:
-        is_history = state['is_history']
+        is_history = (state["type"] == STATETYPE_HISTORY)
     else:
         is_history = False
 
@@ -730,7 +748,7 @@ def generateStatesList(states, level):
     offset = generateOffset(level * 4)
 
     for curState in states:
-        if curState['is_history'] is False:
+        if curState["type"] != STATETYPE_HISTORY:
             statesList += f"{offset}state {curState['id']}\n"
     statesList += "\n"
     return statesList
@@ -744,7 +762,7 @@ def prepareTransitionHighlight(highlight, highlightColorActive, stateData, curTr
     if highlight and curTransition['target'] in highlight['transitions']:
         highlightInfo = highlight['transitions'][curTransition['target']]
         if highlightInfo["from"] == stateData['id']:
-            if (stateData['is_history'] is True) or (highlightInfo["event"] == curTransition['event']):
+            if (stateData["type"] == STATETYPE_HISTORY) or (highlightInfo["event"] == curTransition['event']):
                 highlightTransition = f"[#{highlightColorActive},bold]"
                 highlightTransitionEvent = "**"
                 if 'args' in highlightInfo:
@@ -793,7 +811,7 @@ def generatePlantumlState(hsm, stateData, level, highlight=None):
 
     # -----------------------------------
     # handle initial states
-    if 'initial_state' in stateData:
+    if stateData["type"] == STATETYPE_INITIAL:
         condition = ""
         highlightEntryTransition = ""
         entryTransitionArgs = ""
@@ -833,7 +851,7 @@ def generatePlantumlState(hsm, stateData, level, highlight=None):
             plantumlState += substatePlantuml
             finalStates += substateFinalStates
         plantumlState += f"{offset}}}\n\n"
-    elif ("is_final" in stateData) and (stateData["is_final"] == True):
+    elif stateData["type"] == STATETYPE_FINAL:
         finalStates = [stateData['id']]
     else:
         highlightOnEntryGroup = ""
@@ -920,7 +938,7 @@ def generatePlantumlState(hsm, stateData, level, highlight=None):
             plantumlState += f"{offset}{stateData['id']} : \n"
         plantumlState += plantumlOnExit
 
-        if highlightState and (stateData['is_history'] is False):
+        if highlightState and (stateData["type"] != STATETYPE_HISTORY):
             if len(callbackFailedMsg) > 0:
                 plantumlState += f"{offset}state \"**{stateData['id']}**\" as {stateData['id']} #{highlightColorBlocked}\n"
                 plantumlState += f"note left of {stateData['id']} : " \
@@ -936,14 +954,14 @@ def generatePlantumlState(hsm, stateData, level, highlight=None):
     # highlighting transition targets must be done AFTER state is fully defined (since transitions can appear earlier)
     # but skip self transitions since in this case state will be active
     if highlight \
-            and (stateData['is_history'] is False) \
+            and (stateData["type"] != STATETYPE_HISTORY) \
             and (stateData['id'] in highlight['transitions']) \
             and (stateData['id'] != highlight['transitions'][stateData['id']]["from"]):
         plantumlState += f"{offset}state {stateData['id']} ##[dotted]{highlightColorActive}\n"
 
     # -----------------------------------
     # handle transitions
-    if stateData['is_history'] is True:
+    if stateData["type"] == STATETYPE_HISTORY:
         historyTransitions = findTranstitions(hsm, stateData['id'])
 
         # render incomming history transitions
@@ -962,7 +980,7 @@ def generatePlantumlState(hsm, stateData, level, highlight=None):
                                                                                                      stateData,
                                                                                                      curTransition)
         # render transition
-        if stateData['is_history'] is True:
+        if stateData["type"] == STATETYPE_HISTORY:
             plantumlState += preparePlantumlTransition(offset, getHistoryStateName(stateData), curTransition['target'],
                                                        curTransition, highlightTransition, highlightTransitionEvent)
         elif isHistoryState(hsm, curTransition['target']) is False:

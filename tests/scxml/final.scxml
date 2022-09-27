@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="final.scxml" qt:editorversion="5.0.2" initial="ParentState">
+    <qt:editorinfo initialGeometry="358.99;74.45;-20;-20;40;40"/>
+    <state id="ParentState">
+        <qt:editorinfo geometry="226.29;184.59;-105.52;-51.67;437.91;329.97" scenegeometry="226.29;184.59;120.77;132.92;437.91;329.97"/>
+        <final id="Final_1">
+            <qt:editorinfo geometry="237.74;230.49;-20;-20;40;40" scenegeometry="464.03;415.08;444.03;395.08;40;40"/>
+            <onentry>
+                <script>onFinalEntry</script>
+            </onentry>
+            <invoke srcexpr="onFinalState"/>
+            <onexit>
+                <script>onFinalExit</script>
+            </onexit>
+        </final>
+        <state id="State_2">
+            <qt:editorinfo geometry="42.36;74.45;-127.88;-50;187.88;100" scenegeometry="268.65;259.04;140.77;209.04;187.88;100"/>
+            <transition type="external" event="EVENT_1" target="Final_1">
+                <qt:editorinfo movePoint="-41.82;24.48"/>
+            </transition>
+            <transition type="external" event="EVENT_3"/>
+            <transition type="external" event="EVENT_3" target="Final_3"/>
+        </state>
+        <state id="State_3">
+            <qt:editorinfo geometry="236.13;74.45;-60;-50;120;100" scenegeometry="462.42;259.04;402.42;209.04;120;100"/>
+            <transition type="external" event="EVENT_2" target="Final_1">
+                <qt:editorinfo movePoint="42.83;4.08"/>
+            </transition>
+        </state>
+        <transition type="external" event="EVENT_2" target="State_4">
+            <qt:editorinfo movePoint="43.85;6.12"/>
+        </transition>
+        <transition type="external" event="EVENT_1" target="State_5">
+            <qt:editorinfo movePoint="46.91;11.22"/>
+        </transition>
+        <transition type="external" event="EXIT_3" target="State_6">
+            <qt:editorinfo movePoint="12.24;15.30"/>
+        </transition>
+        <final id="Final_3" event="EXIT_3">
+            <qt:editorinfo geometry="-1.93;225.39;-20;-20;40;40" scenegeometry="224.36;409.98;204.36;389.98;40;40"/>
+        </final>
+    </state>
+    <state id="State_4">
+        <qt:editorinfo geometry="224.36;597.63;-60;-50;120;100" scenegeometry="224.36;597.63;164.36;547.63;120;100"/>
+        <transition type="external" event="DONE" target="Final_2">
+            <qt:editorinfo movePoint="-42.83;26.52"/>
+        </transition>
+    </state>
+    <state id="State_5">
+        <qt:editorinfo geometry="372.24;597.63;-60;-50;120;100" scenegeometry="372.24;597.63;312.24;547.63;120;100"/>
+        <transition type="external" event="DONE" target="Final_2"/>
+    </state>
+    <state id="State_6">
+        <qt:editorinfo geometry="504.82;597.63;-60;-50;120;100" scenegeometry="504.82;597.63;444.82;547.63;120;100"/>
+        <transition type="external" event="DONE" target="Final_2"/>
+    </state>
+    <final id="Final_2">
+        <qt:editorinfo geometry="372.24;734.29;-20;-20;40;40" scenegeometry="372.24;734.29;352.24;714.29;40;40"/>
+    </final>
+</scxml>

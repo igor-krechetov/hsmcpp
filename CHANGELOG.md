@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+
+[0.24.6] - 2022-09-27
+### Added
+- support for final states in scxml2gen
+
 [0.24.5] - 2022-08-16
 ### Fixed
 - install missing os headers after build

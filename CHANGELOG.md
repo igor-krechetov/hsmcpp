@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.25.0] - 2022-12-28
+### Fixed
+- improved handling of parent states:
+-- parent states are now kept active when activating substates
+-- parent state's enter/exit callbacks are called correctly during transitions
+- hsmdebugger was not generating diagrams after update to scxml2gen api
 
 [0.24.6] - 2022-09-27
 ### Added

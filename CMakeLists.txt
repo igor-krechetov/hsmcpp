@@ -226,22 +226,32 @@ if (HSMBUILD_DISPATCHER_QT)
         cmake_policy(SET CMP0071 NEW)
         cmake_policy(SET CMP0020 NEW)
     endif()
-    
+
     if (CMAKE_VERSION VERSION_LESS "3.7.0")
         set(CMAKE_INCLUDE_CURRENT_DIR ON)
     endif()
 
-    if (NOT $ENV{Qt5_DIR} STREQUAL "")
-        find_package(Qt5 COMPONENTS Core REQUIRED)
+    # first check for Qt6
+    find_package(Qt6 COMPONENTS Core)
 
-        qt5_wrap_cpp(SRC_DISPATCHER_QT ${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/HsmEventDispatcherQt.hpp)
-        SET(QtCore_INCLUDE_DIRS ${Qt5Core_INCLUDE_DIRS})
+    if (NOT Qt6_FOUND)
+        if (NOT $ENV{Qt5_DIR} STREQUAL "")
+            message("Using Qt5")
+            find_package(Qt5 COMPONENTS Core REQUIRED)
+
+            qt5_wrap_cpp(SRC_DISPATCHER_QT ${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/HsmEventDispatcherQt.hpp)
+            SET(QtCore_INCLUDE_DIRS ${Qt5Core_INCLUDE_DIRS})
+            SET(QtCore_LIBRARIES ${Qt5Core_LIBRARIES})
+        else()
+            message( FATAL_ERROR "Qt not found")
+        endif()
     else()
-        find_package(Qt6 COMPONENTS Core REQUIRED)
-        qt_standard_project_setup()
+        message("Using Qt6")
+        qt_standard_project_setup()# since Qt 6.3
 
         qt6_wrap_cpp(SRC_DISPATCHER_QT ${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/HsmEventDispatcherQt.hpp)
         SET(QtCore_INCLUDE_DIRS ${Qt6Core_INCLUDE_DIRS})
+        SET(QtCore_LIBRARIES ${Qt6Core_LIBRARIES})
     endif()
 
     set(HSM_DEFINITIONS_QT ${HSM_DEFINITIONS_BASE} -DDHSM_BUILD_HSMBUILD_DISPATCHER_QT CACHE STRING "" FORCE)
@@ -258,7 +268,7 @@ if (HSMBUILD_DISPATCHER_QT)
     # Export variables
     set(HSMCPP_QT_CXX_FLAGS ${HSMCPP_CXX_FLAGS} CACHE STRING "" FORCE)
     set(HSMCPP_QT_INCLUDE ${HSMCPP_INCLUDE} ${QtCore_INCLUDE_DIRS} CACHE STRING "" FORCE)
-    set(HSMCPP_QT_LIB ${HSM_LIBRARY_NAME}_qt ${HSMCPP_LIB} CACHE STRING "" FORCE)
+    set(HSMCPP_QT_LIB ${HSM_LIBRARY_NAME}_qt ${HSMCPP_LIB} ${QtCore_LIBRARIES} CACHE STRING "" FORCE)
 
     registerQtWindeploy()
 endif()

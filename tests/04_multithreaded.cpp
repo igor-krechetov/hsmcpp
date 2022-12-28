@@ -8,7 +8,7 @@
 
 TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
 {
-    TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be cancled");
+    TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be canceled");
 
     //-------------------------------------------
     // PRECONDITIONS

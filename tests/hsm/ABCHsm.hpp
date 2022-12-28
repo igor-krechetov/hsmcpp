@@ -37,6 +37,10 @@ public:
     DEF_STATE_ACTION_IMPL(E)
     DEF_STATE_ACTION_IMPL(F)
 
+    DEF_STATE_ACTION_IMPL(P1)
+    DEF_STATE_ACTION_IMPL(P2)
+    DEF_STATE_ACTION_IMPL(P3)
+
     DEF_STATE_ACTION_IMPL(H)
     DEF_TRANSITION_IMPL(RestoreHistory)
 
@@ -51,6 +55,9 @@ public:
     {
         INITIALIZE_HSM();
     }
+
+    std::string getStateName(const AbcState state) override;
+    std::string getEventName(const AbcEvent event) override;
 
 protected:
     void SetUp() override;

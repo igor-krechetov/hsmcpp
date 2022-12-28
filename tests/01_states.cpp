@@ -36,7 +36,7 @@ TEST_F(TrafficLightHsm, register_states)
     //-------------------------------------------
     // VALIDATION
     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 1);
 }
@@ -58,7 +58,7 @@ TEST_F(TrafficLightHsm, register_state_without_action)
     //-------------------------------------------
     // VALIDATION
     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mStateCounterStarting, 0);
 }
 
@@ -120,7 +120,7 @@ TEST_F(TrafficLightHsm, state_args_test)
     //-------------------------------------------
     // VALIDATION
     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, 12, "string", 12.75, false));
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mStateCounterStarting, 1);
 
     EXPECT_EQ(mArgsStarting.size(), 4);

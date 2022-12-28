@@ -13,6 +13,8 @@ TrafficLightHsm::~TrafficLightHsm()
 
 void TrafficLightHsm::setupDefault()
 {
+    setInitialState(TrafficLightState::OFF);
+    
     registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, nullptr, nullptr);
     registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, nullptr, nullptr);
     registerState<TrafficLightHsm>(TrafficLightState::RED, this, &TrafficLightHsm::onRed, nullptr, nullptr);

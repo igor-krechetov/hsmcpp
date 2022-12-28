@@ -3,13 +3,13 @@
 mkdir ./build
 cd ./build
 
-# export Qt6_DIR=/home/ikrechetov/Qt/6.3.0/gcc_64/lib/cmake/Qt6
-export Qt5_DIR=/home/ikrechetov/Qt/5.15.2/gcc_64/lib/cmake/Qt5
+# export Qt6_DIR=~/Qt/6.3.0/gcc_64/lib/cmake/Qt6
+export Qt5_DIR=~/qt/5.13.2/gcc_64/lib/cmake/Qt5
 
 if [ ${PWD##*/} = "build" ]
 then
     rm -Rvf ./*
-    cmake -DHSMBUILD_VERBOSE=ON \
+    cmake -DHSMBUILD_VERBOSE=OFF \
         -DHSMBUILD_DISPATCHER_GLIB=ON \
         -DHSMBUILD_DISPATCHER_GLIBMM=ON \
         -DHSMBUILD_DISPATCHER_STD=ON \
@@ -18,7 +18,7 @@ then
         -DHSMBUILD_EXAMPLES=ON \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         ..
-        # -DCMAKE_TOOLCHAIN_FILE=/home/ikrechetov/Qt/6.3.0/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake \
+        # -DCMAKE_TOOLCHAIN_FILE=~/Qt/6.3.0/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake \
         ##..
     make -j5
 

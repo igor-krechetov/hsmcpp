@@ -456,7 +456,7 @@ class hsmdebugger(QObject):
         if os.path.exists(dirHsmCache) is False:
             os.mkdir(dirHsmCache)
 
-        plantumlContent = self.scxml2gen.generatePlantumlInMemory(self.hsm, highlight)
+        plantumlContent = self.scxml2gen.generatePlantumlInMemory(self.hsm, False, highlight)
         plantumlChecksumNew = self.getDataChecksum(plantumlContent)
         pathPlantumlFile = str(dirHsmCache / f"{plantumlChecksumNew}.plantuml")
         pathFrameImage = str(dirHsmCache / f"{plantumlChecksumNew}.png")

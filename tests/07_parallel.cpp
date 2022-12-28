@@ -1,6 +1,17 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/ABCHsm.hpp"
+#include "hsm/AsyncHsm.hpp"
+
+// Notation
+// B        : regular state
+// ->       : transition
+// B + C    : transition to 2 states at the same time
+// *A       : initial active state
+// [...]    : parent state
+// #C       : entry point
+// !#C      : entry point with a false condition
+// {Cx}     : transition from state C was blocked
 
 TEST_F(ABCHsm, parallel_transition_01)
 {
@@ -16,8 +27,7 @@ TEST_F(ABCHsm, parallel_transition_01)
     registerTransition(AbcState::A, AbcState::C, AbcEvent::E1);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -44,8 +54,7 @@ TEST_F(ABCHsm, parallel_transition_02)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -53,7 +62,7 @@ TEST_F(ABCHsm, parallel_transition_02)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::P1, AbcState::C}));
 }
 
 TEST_F(ABCHsm, parallel_transition_05)
@@ -72,8 +81,7 @@ TEST_F(ABCHsm, parallel_transition_05)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -102,8 +110,7 @@ TEST_F(ABCHsm, parallel_transition_03)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -111,12 +118,46 @@ TEST_F(ABCHsm, parallel_transition_03)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::D}));
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::P1, AbcState::D}));
 }
 
-TEST_F(ABCHsm, parallel_transition_04)
+TEST_F(AsyncHsm, parallel_transition_04)
 {
     TEST_DESCRIPTION("[*A, B] -> C + D");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState(AsyncHsmState::A);
+    registerState(AsyncHsmState::B);
+    registerState(AsyncHsmState::C);
+    registerState(AsyncHsmState::D);
+
+    ASSERT_TRUE( registerSubstateEntryPoint(AsyncHsmState::P1, AsyncHsmState::A) );
+    ASSERT_TRUE( registerSubstate(AsyncHsmState::P1, AsyncHsmState::B) );
+
+    registerTransition(AsyncHsmState::A, AsyncHsmState::B, AsyncHsmEvent::EXIT_SUBSTATE);
+    registerTransition(AsyncHsmState::P1, AsyncHsmState::C, AsyncHsmEvent::NEXT_STATE);
+    registerTransition(AsyncHsmState::P1, AsyncHsmState::D, AsyncHsmEvent::NEXT_STATE);
+
+    setInitialState(AsyncHsmState::P1);
+    initializeHsm();
+    waitAsyncOperation(300);// wait for A state to activate
+
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AsyncHsmState::P1, AsyncHsmState::A}));
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AsyncHsmEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
+
+    //-------------------------------------------
+    // VALIDATION
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AsyncHsmState::C, AsyncHsmState::D}));
+}
+
+
+TEST_F(ABCHsm, parallel_transition_11)
+{
+    TEST_DESCRIPTION("A -> [#B, #C] -> D");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -125,24 +166,24 @@ TEST_F(ABCHsm, parallel_transition_04)
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
     registerState<ABCHsm>(AbcState::D, this, &ABCHsm::onD);
 
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::A) );
-    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::B) );
+    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B) );
+    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::C) );
 
-    registerTransition(AbcState::A, AbcState::B, AbcEvent::E2);
-    registerTransition(AbcState::P1, AbcState::C, AbcEvent::E1);
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::P1, AbcState::D, AbcEvent::E1);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B, AbcState::C}));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::C, AbcState::D}));
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::D}));
 }
 
 TEST_F(ABCHsm, parallel_transition_06)
@@ -161,8 +202,7 @@ TEST_F(ABCHsm, parallel_transition_06)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -190,8 +230,7 @@ TEST_F(ABCHsm, parallel_transition_07)
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -220,8 +259,7 @@ TEST_F(ABCHsm, parallel_transition_08)
     registerTransition(AbcState::C, AbcState::A, AbcEvent::E1);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -252,9 +290,9 @@ TEST_F(ABCHsm, parallel_transition_09)
 
     initializeHsm();
 
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B, AbcState::C}));
 
     //-------------------------------------------
     // ACTIONS
@@ -277,36 +315,37 @@ TEST_F(ABCHsm, parallel_transition_09)
     ASSERT_EQ(mTransitionCounterSelf, 1);
 }
 
-TEST_F(ABCHsm, parallel_transition_10_internal_priority)
+TEST_F(AsyncHsm, parallel_transition_10_internal_priority)
 {
     TEST_DESCRIPTION("[*A -e1-> B + C] -e1-> D: internal transitions have priority over external ones");
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
-    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
-    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
-    registerState<ABCHsm>(AbcState::D, this, &ABCHsm::onC);
+    setInitialState(AsyncHsmState::P1);
+    registerState<AsyncHsm>(AsyncHsmState::A);
+    registerState<AsyncHsm>(AsyncHsmState::B);
+    registerState<AsyncHsm>(AsyncHsmState::C);
+    registerState<AsyncHsm>(AsyncHsmState::D);
 
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::A) );
-    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::B) );
-    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::C) );
+    EXPECT_TRUE( registerSubstateEntryPoint(AsyncHsmState::P1, AsyncHsmState::A) );
+    EXPECT_TRUE( registerSubstate(AsyncHsmState::P1, AsyncHsmState::B) );
+    EXPECT_TRUE( registerSubstate(AsyncHsmState::P1, AsyncHsmState::C) );
 
-    registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
-    registerTransition(AbcState::A, AbcState::C, AbcEvent::E1);
-    registerTransition(AbcState::P1, AbcState::D, AbcEvent::E1);
+    registerTransition(AsyncHsmState::A, AsyncHsmState::B, AsyncHsmEvent::NEXT_STATE);
+    registerTransition(AsyncHsmState::A, AsyncHsmState::C, AsyncHsmEvent::NEXT_STATE);
+    registerTransition(AsyncHsmState::P1, AsyncHsmState::D, AsyncHsmEvent::NEXT_STATE);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    waitAsyncOperation(300);// wait for A state to activate
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AsyncHsmState::P1, AsyncHsmState::A}));
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AsyncHsmEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
 
     //-------------------------------------------
     // VALIDATION
-    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AsyncHsmState::P1, AsyncHsmState::B, AsyncHsmState::C}));
 }
 
 TEST_F(ABCHsm, parallel_transition_canceled_01)
@@ -316,21 +355,22 @@ TEST_F(ABCHsm, parallel_transition_canceled_01)
     //-------------------------------------------
     // PRECONDITIONS
     registerState<ABCHsm>(AbcState::A);
-    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, &ABCHsm::onBExit);
-    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC, &ABCHsm::onCEnter, &ABCHsm::onCExitCancel);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, &ABCHsm::onBExitCancel);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC, &ABCHsm::onCEnter, &ABCHsm::onCExit);
     registerState<ABCHsm>(AbcState::D);
 
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B) );
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::C) );
+    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B) );
+    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::C) );
+
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition<ABCHsm>(AbcState::P1, AbcState::D, AbcEvent::E2, this, &ABCHsm::onE2Transition);
 
     initializeHsm();
 
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B, AbcState::C}));
 
     //-------------------------------------------
     // ACTIONS
@@ -338,14 +378,13 @@ TEST_F(ABCHsm, parallel_transition_canceled_01)
 
     //-------------------------------------------
     // VALIDATION
-    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
-    EXPECT_EQ(mStateCounterB, 2);
-    EXPECT_EQ(mStateCounterBEnter, 2);
-    EXPECT_EQ(mStateCounterBExit, 1);
-    EXPECT_EQ(mStateCounterC, 1);
-    EXPECT_EQ(mStateCounterCEnter, 1);
-    EXPECT_EQ(mStateCounterCExitCancel, 2);// NOTE: ideally should be 1.
-    // currently E2 transition will be applied twice because we have 2 active states inside P1.
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B, AbcState::C}));
+    EXPECT_EQ(mStateCounterB, 1);
+    EXPECT_EQ(mStateCounterBEnter, 1);
+    EXPECT_EQ(mStateCounterBExitCancel, 1);
+    EXPECT_EQ(mStateCounterC, 2);
+    EXPECT_EQ(mStateCounterCEnter, 2);
+    EXPECT_EQ(mStateCounterCExit, 1);
 
     EXPECT_EQ(mTransitionCounterE2, 0);
 }
@@ -372,7 +411,7 @@ TEST_F(ABCHsm, parallel_transition_canceled_02)
 
     initializeHsm();
 
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
 
@@ -421,7 +460,7 @@ TEST_F(ABCHsm, parallel_transition_mult2one_01)
 
     initializeHsm();
 
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
 
@@ -454,9 +493,9 @@ TEST_F(ABCHsm, parallel_transition_mult2one_02)
 
     initializeHsm();
 
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::P1, AbcState::C}));
 
     //-------------------------------------------
     // ACTIONS
@@ -483,8 +522,7 @@ TEST_F(ABCHsm, parallel_callbacks)
     registerTransition<ABCHsm>(AbcState::C, AbcState::A, AbcEvent::E2, this, &ABCHsm::onE2Transition);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -529,8 +567,7 @@ TEST_F(ABCHsm, parallel_selftransition)
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1, this, &ABCHsm::onE1Transition);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -559,8 +596,7 @@ TEST_F(ABCHsm, parallel_selftransition_multiple)
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E3, this, &ABCHsm::onE3Transition);
 
     initializeHsm();
-
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS

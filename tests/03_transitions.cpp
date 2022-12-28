@@ -21,6 +21,29 @@ TEST_F(TrafficLightHsm, simple_transition)
     EXPECT_EQ(mStateCounterStarting, 1);
 }
 
+TEST_F(TrafficLightHsm, transition_check)
+{
+    TEST_DESCRIPTION("Checking that transition is possible before executing it");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    setupDefault();
+
+    //-------------------------------------------
+    // ACTIONS
+    EXPECT_TRUE(isTransitionPossible(TrafficLightEvent::TURN_ON));
+    EXPECT_FALSE(isTransitionPossible(TrafficLightEvent::TURN_OFF));
+    EXPECT_FALSE(isTransitionPossible(TrafficLightEvent::NEXT_STATE));
+
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_FALSE(isTransitionPossible(TrafficLightEvent::TURN_ON));
+    EXPECT_FALSE(isTransitionPossible(TrafficLightEvent::TURN_OFF));
+    EXPECT_TRUE(isTransitionPossible(TrafficLightEvent::NEXT_STATE));
+}
+
 TEST_F(TrafficLightHsm, transition_with_args)
 {
     TEST_DESCRIPTION("Test if args are correctly passed to transition action handler");

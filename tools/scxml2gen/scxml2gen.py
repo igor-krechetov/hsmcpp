@@ -249,6 +249,12 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
                                 newTransition["callback"] = transitionCallback
                             # TODO: add support for script actions to transitions
 
+                            # use external transitions by default
+                            if "type" in curTransition.attrib:
+                                newTransition["type"] = curTransition.attrib["type"]
+                            else:
+                                newTransition["type"] = "external"
+
                             newState["transitions"].append(newTransition)
                         else:
                             print(f"WARNING: transition without event was skipped because it's not supported by hsmcpp\n{dumpXmlElement(curTransition)}")
@@ -670,9 +676,24 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                     else:
                         registerCallbacks = ""
 
-                    genVars["REGISTER_TRANSITIONS"].append(f"registerTransition<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}, " +
-                                                           f"{genVars['ENUM_STATES']}::{curTransition['target']}, " +
+                    # check if it's a self-transition
+                    if curState["id"] == curTransition["target"]:
+                        registerFunction = "registerSelfTransition"
+                        transitionStates = f"{genVars['ENUM_STATES']}::{curState['id']}"
+                        transitionType = f", TransitionType::{curTransition['type'].upper()}"
+                    else:
+                        registerFunction = "registerTransition"
+                        transitionStates = f"{genVars['ENUM_STATES']}::{curState['id']}, {genVars['ENUM_STATES']}::{curTransition['target']}"
+                        transitionType = ""
+
+                    if len(registerCallbacks) > 0:
+                        registerTemplate = f"<{genVars['CLASS_NAME']}>"
+                    else:
+                        registerTemplate = ""
+
+                    genVars["REGISTER_TRANSITIONS"].append(f"{registerFunction}{registerTemplate}({transitionStates}, " +
                                                            f"{genVars['ENUM_EVENTS']}::{curTransition['event']}" +
+                                                           transitionType +
                                                            registerCallbacks + ");")
         pendingStates = substates
 

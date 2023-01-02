@@ -94,6 +94,12 @@ public:
         DEEP
     };
 
+    enum class TransitionType
+    {
+        INTERNAL,
+        EXTERNAL
+    };
+
     enum class StateActionTrigger {
         ON_STATE_ENTRY,
         ON_STATE_EXIT
@@ -127,7 +133,7 @@ private:
         CANCELED
     };
 
-    enum class TransitionType
+    enum class TransitionBehavior
     {
         REGULAR,
         ENTRYPOINT,
@@ -160,24 +166,21 @@ private:
     {
         HsmStateEnum fromState = INVALID_HSM_STATE_ID;
         HsmStateEnum destinationState = INVALID_HSM_STATE_ID;
+        TransitionType transitionType = TransitionType::EXTERNAL;
         HsmTransitionCallback_t onTransition = nullptr;
         HsmTransitionConditionCallback_t checkCondition = nullptr;
         bool expectedConditionValue = true;
 
-        TransitionInfo()
-           : fromState(INVALID_HSM_STATE_ID)
-           , destinationState(INVALID_HSM_STATE_ID)
-           , onTransition(nullptr)
-           , checkCondition(nullptr)
-           , expectedConditionValue(true)
-        {}
+        TransitionInfo() = default;
 
         TransitionInfo(const HsmStateEnum from,
                        const HsmStateEnum to,
+                       const TransitionType type,
                        const HsmTransitionCallback_t& cbTransition,
                        const HsmTransitionConditionCallback_t& cbCondition)
            : fromState(from)
            , destinationState(to)
+           , transitionType(type)
            , onTransition(cbTransition)
            , checkCondition(cbCondition)
            , expectedConditionValue(true)
@@ -185,11 +188,13 @@ private:
 
         TransitionInfo(const HsmStateEnum from,
                        const HsmStateEnum to,
+                       const TransitionType type,
                        const HsmTransitionCallback_t& cbTransition,
                        const HsmTransitionConditionCallback_t& cbCondition,
                        const bool conditionValue)
            : fromState(from)
            , destinationState(to)
+           , transitionType(type)
            , onTransition(cbTransition)
            , checkCondition(cbCondition)
            , expectedConditionValue(conditionValue)
@@ -198,7 +203,7 @@ private:
 
     struct PendingEventInfo
     {
-        TransitionType transitionType = TransitionType::REGULAR;
+        TransitionBehavior transitionType = TransitionBehavior::REGULAR;
         HsmEventEnum type = INVALID_HSM_EVENT_ID;
         VariantVector_t args;
         std::shared_ptr<Mutex> cvLock;
@@ -347,6 +352,22 @@ public:
                             HsmTransitionCallback_t transitionCallback = nullptr,
                             HsmTransitionConditionCallback_t conditionCallback = nullptr,
                             const bool expectedConditionValue = true);
+
+    template <class HsmHandlerClass>
+    void registerSelfTransition(const HsmStateEnum state,
+                                const HsmEventEnum onEvent,
+                                const TransitionType type = TransitionType::EXTERNAL,
+                                HsmHandlerClass* handler = nullptr,
+                                HsmTransitionCallbackPtr_t(HsmHandlerClass, transitionCallback) = nullptr,
+                                HsmTransitionConditionCallbackPtr_t(HsmHandlerClass, conditionCallback) = nullptr,
+                                const bool expectedConditionValue = true);
+
+    void registerSelfTransition(const HsmStateEnum state,
+                                const HsmEventEnum onEvent,
+                                const TransitionType type = TransitionType::EXTERNAL,
+                                HsmTransitionCallback_t transitionCallback = nullptr,
+                                HsmTransitionConditionCallback_t conditionCallback = nullptr,
+                                const bool expectedConditionValue = true);
 
     // If HSM doesnt contain any parallel states returns current active state.
     // Otherwise returns most recently activated state
@@ -995,9 +1016,53 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerTransition(co
 {
     mTransitionsByEvent.emplace(std::make_pair(from, onEvent), TransitionInfo(from,
                                                                               to,
+                                                                              TransitionType::EXTERNAL,
                                                                               transitionCallback,
                                                                               conditionCallback,
                                                                               expectedConditionValue));
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+template <class HsmHandlerClass>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSelfTransition(const HsmStateEnum state,
+                                                                                  const HsmEventEnum onEvent,
+                                                                                  const TransitionType type,
+                                                                                  HsmHandlerClass* handler,
+                                                                                  HsmTransitionCallbackPtr_t(HsmHandlerClass, transitionCallback),
+                                                                                  HsmTransitionConditionCallbackPtr_t(HsmHandlerClass, conditionCallback),
+                                                                                  const bool expectedConditionValue) {
+    HsmTransitionCallback_t funcTransitionCallback;
+    HsmTransitionConditionCallback_t funcConditionCallback;
+
+    if (nullptr != handler)
+    {
+        if (nullptr != transitionCallback)
+        {
+            funcTransitionCallback = std::bind(transitionCallback, handler, std::placeholders::_1);
+        }
+
+        if (nullptr != conditionCallback)
+        {
+            funcConditionCallback = std::bind(conditionCallback, handler, std::placeholders::_1);
+        }
+    }
+
+    registerSelfTransition(state, onEvent, type, funcTransitionCallback, funcConditionCallback, expectedConditionValue);
+}
+
+template <typename HsmStateEnum, typename HsmEventEnum>
+void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerSelfTransition(const HsmStateEnum state,
+                                                                                  const HsmEventEnum onEvent,
+                                                                                  const TransitionType type,
+                                                                                  HsmTransitionCallback_t transitionCallback,
+                                                                                  HsmTransitionConditionCallback_t conditionCallback,
+                                                                                  const bool expectedConditionValue) {
+    mTransitionsByEvent.emplace(std::make_pair(state, onEvent), TransitionInfo(state,
+                                                                               state,
+                                                                               type,
+                                                                               transitionCallback,
+                                                                               conditionCallback,
+                                                                               expectedConditionValue));
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -1211,7 +1276,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::handleStartup()
                 {
                     PendingEventInfo entryPointTransitionEvent;
 
-                    entryPointTransitionEvent.transitionType = TransitionType::ENTRYPOINT;
+                    entryPointTransitionEvent.transitionType = TransitionBehavior::ENTRYPOINT;
                     entryPointTransitionEvent.type = INVALID_HSM_EVENT_ID;
 
                     {
@@ -1760,7 +1825,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
 
     // ========================================================
     // determine target state based on current transition
-    if (TransitionType::REGULAR == event.transitionType)
+    if (TransitionBehavior::REGULAR == event.transitionType)
     {
         isCorrectTransition = findTransitionTarget(fromState, event.type, event.args, false, matchingTransitions);
 
@@ -1770,7 +1835,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                                   getStateName(fromState).c_str(), getEventName(event.type).c_str());
         }
     }
-    else if (TransitionType::ENTRYPOINT == event.transitionType)
+    else if (TransitionBehavior::ENTRYPOINT == event.transitionType)
     {
         isCorrectTransition = true;
 
@@ -1803,7 +1868,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
             {
                 for (auto it = entryStates.begin(); it != entryStates.end(); ++it)
                 {
-                    matchingTransitions.emplace_back(TransitionInfo{fromState, *it, nullptr, nullptr});
+                    matchingTransitions.emplace_back(TransitionInfo{fromState, *it, TransitionType::EXTERNAL, nullptr, nullptr});
                 }
             }
             else
@@ -1813,7 +1878,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
             }
         }
     }
-    else if (TransitionType::FORCED == event.transitionType)
+    else if (TransitionBehavior::FORCED == event.transitionType)
     {
         __HSM_TRACE_DEBUG__("forced history transitions: %d", SC2INT(event.forcedTransitionsInfo->size()));
         matchingTransitions = *event.forcedTransitionsInfo;
@@ -1830,7 +1895,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
         // execute self transitions first
         for (auto it = matchingTransitions.begin(); it != matchingTransitions.end(); ++it)
         {
-            if (it->fromState == it->destinationState)
+            if ((it->fromState == it->destinationState) && (TransitionType::INTERNAL == it->transitionType))
             {
                 // TODO: separate type for self transition?
                 logHsmAction(HsmLogAction::TRANSITION, it->fromState, it->destinationState, event.type, false, event.args);
@@ -1847,10 +1912,11 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
         // execute exit transition (only once in case of parallel transitions)
         for (auto it = matchingTransitions.begin(); it != matchingTransitions.end(); ++it)
         {
-            if (it->fromState != it->destinationState)
+            // everything except internal self-transitions
+            if ((it->fromState != it->destinationState) || (TransitionType::EXTERNAL == it->transitionType))
             {
                 // exit active states only during regular transitions
-                if (TransitionType::REGULAR == event.transitionType)
+                if (TransitionBehavior::REGULAR == event.transitionType)
                 {
                     // it's an outer transition from parent state. we need to find and exit all active substates
                     for (auto itActiveState = mActiveStates.rbegin(); itActiveState != mActiveStates.rend(); ++itActiveState)
@@ -1903,10 +1969,11 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
         {
             for (auto it = matchingTransitions.begin(); it != matchingTransitions.end(); ++it)
             {
-                if (it->fromState != it->destinationState)
+                // everything except internal self-transitions
+                if ((it->fromState != it->destinationState) || (TransitionType::EXTERNAL == it->transitionType))
                 {
                     // NOTE: Decide if we need functionality to cancel ongoing transition
-                    logHsmAction((TransitionType::ENTRYPOINT != event.transitionType ? HsmLogAction::TRANSITION : HsmLogAction::TRANSITION_ENTRYPOINT),
+                    logHsmAction((TransitionBehavior::ENTRYPOINT != event.transitionType ? HsmLogAction::TRANSITION : HsmLogAction::TRANSITION_ENTRYPOINT),
                                  it->fromState, it->destinationState, event.type, false, event.args);
 
                     if (it->onTransition)
@@ -1935,7 +2002,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                             {
                                 PendingEventInfo finalStateEvent;
 
-                                finalStateEvent.transitionType = TransitionType::REGULAR;
+                                finalStateEvent.transitionType = TransitionBehavior::REGULAR;
                                 finalStateEvent.args = event.args;
 
                                 if (INVALID_HSM_EVENT_ID != itFinalStateEvent->second)
@@ -1971,7 +2038,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                                 {
                                     PendingEventInfo historyTransitionEvent = event;
 
-                                    historyTransitionEvent.transitionType = TransitionType::FORCED;
+                                    historyTransitionEvent.transitionType = TransitionBehavior::FORCED;
                                     historyTransitionEvent.forcedTransitionsInfo = std::make_shared<std::list<TransitionInfo>>();
 
                                     auto itPrevChildState = itHistoryData->second.previousActiveStates.end();
@@ -1996,9 +2063,10 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
 
                                             itPrevChildState = itPrevState;
                                             historyTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
-                                                                                                    *itPrevState,
-                                                                                                    nullptr,
-                                                                                                    nullptr);
+                                                                                                       *itPrevState,
+                                                                                                       TransitionType::EXTERNAL,
+                                                                                                       nullptr,
+                                                                                                       nullptr);
                                         }
 
                                         mPendingEvents.push_front(historyTransitionEvent);
@@ -2012,9 +2080,10 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                                     {
                                         historyTransitionEvent.forcedTransitionsInfo = std::make_shared<std::list<TransitionInfo>>();
                                         historyTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
-                                                                                                  historyParent,
-                                                                                                  nullptr,
-                                                                                                  nullptr);
+                                                                                                   historyParent,
+                                                                                                   TransitionType::EXTERNAL,
+                                                                                                   nullptr,
+                                                                                                   nullptr);
                                         historyTransitionEvent.ignoreEntryPoints = true;
 
                                         _HSM_SYNC_EVENTS_QUEUE();
@@ -2052,7 +2121,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
 
                                     PendingEventInfo defHistoryTransitionEvent = event;
 
-                                    defHistoryTransitionEvent.transitionType = TransitionType::FORCED;
+                                    defHistoryTransitionEvent.transitionType = TransitionBehavior::FORCED;
 
                                     for (const HsmStateEnum historyTargetState: historyTargets)
                                     {
@@ -2069,6 +2138,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
 
                                         defHistoryTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
                                                                                                       historyTargetState,
+                                                                                                      TransitionType::EXTERNAL,
                                                                                                       cbTransition,
                                                                                                       nullptr);
 
@@ -2088,7 +2158,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                                                     getStateName(entryPoints.front()).c_str());
                                 PendingEventInfo entryPointTransitionEvent = event;
 
-                                entryPointTransitionEvent.transitionType = TransitionType::ENTRYPOINT;
+                                entryPointTransitionEvent.transitionType = TransitionBehavior::ENTRYPOINT;
 
                                 {
                                     _HSM_SYNC_EVENTS_QUEUE();
@@ -2148,7 +2218,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::clearPendingEvents()
     for (auto it = mPendingEvents.begin(); (it != mPendingEvents.end()) ; ++it)
     {
         // since ongoing transitions can't be canceled we need to treat entry point transitions as atomic
-        if (TransitionType::REGULAR == it->transitionType)
+        if (TransitionBehavior::REGULAR == it->transitionType)
         {
             it->releaseLock();
         }

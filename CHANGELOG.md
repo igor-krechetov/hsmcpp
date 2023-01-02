@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+[0.26.0] - 2023-01-02
+### Added
+- support for internal/external self-transitions
+
 [0.25.0] - 2022-12-28
 ### Fixed
 - improved handling of parent states:

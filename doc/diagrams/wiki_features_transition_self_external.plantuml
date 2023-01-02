@@ -1,0 +1,15 @@
+@startuml
+title EVENT_EXTERNAL
+
+(*) -right-> "**StateC**: Exit Callback"
+-right-> "**ParentState_2**: Exit Callback"
+-right-> "**ParentState_1**: Exit Callback"
+-right-> "**EVENT_EXTERNAL** callback"
+--> "**ParentState_1**: Enter Callback"
+-left-> "**ParentState_1**: StateChanged Callback"
+-left-> "**ParentState_2**: Enter Callback"
+--> "**ParentState_2**: StateChanged Callback"
+-right-> "**StateB**: Enter Callback"
+-right-> "**StateB**: StateChanged Callback"
+
+@enduml

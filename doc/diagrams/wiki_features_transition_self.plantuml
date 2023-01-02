@@ -1,0 +1,18 @@
+@startuml
+
+[*] -right-> StateA
+StateA -right-> ParentState_1: EVENT_1
+ParentState_1 -> ParentState_1: EVENT_INTERNAL
+ParentState_1 -> ParentState_1: EVENT_EXTERNAL
+
+state ParentState_1 {
+    [*] --> ParentState_2
+    state ParentState_2 {
+        [*] --> StateB
+        StateB -> StateC: EVENT_2
+
+        state StateC #00FF00
+    }
+}
+
+@enduml

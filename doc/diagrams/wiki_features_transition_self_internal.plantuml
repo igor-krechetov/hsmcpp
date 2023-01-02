@@ -1,0 +1,7 @@
+@startuml
+title EVENT_INTERNAL
+
+(*) -right-> "EVENT_INTERNAL callback"
+-right-> (*)
+
+@enduml

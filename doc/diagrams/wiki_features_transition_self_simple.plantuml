@@ -1,0 +1,6 @@
+@startuml
+
+[*] --> StateA
+StateA --> StateA: EVENT
+
+@enduml

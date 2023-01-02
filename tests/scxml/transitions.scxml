@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="transitions" qt:editorversion="5.0.2" initial="State_1">
+    <qt:editorinfo initialGeometry="409.98;135.64;-20;-20;40;40"/>
+    <state id="State_1">
+        <qt:editorinfo geometry="409.98;269.24;-60;-50;120;100" scenegeometry="409.98;269.24;349.98;219.24;120;100"/>
+        <transition type="external" event="E1" target="State_2" cond="isAllowed is true">
+            <qt:editorinfo endTargetFactors="82.42;53.47"/>
+        </transition>
+    </state>
+    <state id="State_2">
+        <qt:editorinfo geometry="768.97;228;-181.44;-61.88;246.68;187.88" scenegeometry="768.97;228;587.53;166.12;246.68;187.88"/>
+        <transition type="external" event="E2_EXTERNAL"/>
+        <transition type="internal" event="E3_INTERNAL"/>
+        <transition type="external" event="E4_EXTERNAL_CB">
+            <script>onE4Transition</script>
+        </transition>
+        <transition type="internal" event="E5_INTERNAL_CB">
+            <script>onE5Transition</script>
+        </transition>
+        <transition type="external" event="E6_CB" target="State_3">
+            <qt:editorinfo movePoint="8.16;7.14"/>
+            <script>onE6Transition</script>
+        </transition>
+    </state>
+    <state id="State_3">
+        <qt:editorinfo geometry="710.87;494.63;-60;-50;120;100" scenegeometry="710.87;494.63;650.87;444.63;120;100"/>
+    </state>
+</scxml>

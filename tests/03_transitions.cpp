@@ -1,6 +1,7 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/TrafficLightHsm.hpp"
+#include "hsm/ABCHsm.hpp"
 
 TEST_F(TrafficLightHsm, simple_transition)
 {
@@ -184,17 +185,20 @@ TEST_F(TrafficLightHsm, transition_cancel_on_enter)
     EXPECT_TRUE(mLastFailedTransitionArgs.empty());
 }
 
-TEST_F(TrafficLightHsm, transition_self)
+TEST_F(TrafficLightHsm, transition_self_internal)
 {
-    TEST_DESCRIPTION("Self transition should not trigger any state handlers. Only transition handler must be excecuted");
+    TEST_DESCRIPTION("Internal self transition should not trigger any state handlers. Only transition handler must be excecuted");
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+    registerState<TrafficLightHsm>(TrafficLightState::OFF);
     registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
 
-    registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::NEXT_STATE, this, &TrafficLightHsm::onNextStateTransition);
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON);
+    registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING, TrafficLightEvent::NEXT_STATE, TrafficLightHsm::TransitionType::INTERNAL, this, &TrafficLightHsm::onNextStateTransition);
+
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
 
     //-------------------------------------------
     // ACTIONS
@@ -202,12 +206,113 @@ TEST_F(TrafficLightHsm, transition_self)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
     EXPECT_EQ(mStateCounterExit, 0);
-    EXPECT_EQ(mStateCounterEnter, 0);
-    EXPECT_EQ(mStateCounterOff, 0);
-    EXPECT_EQ(mStateCounterStarting, 0);
+    EXPECT_EQ(mStateCounterEnter, 1);
+    EXPECT_EQ(mStateCounterStarting, 1);
     EXPECT_EQ(mTransitionCounterNextState, 1);
+}
+
+TEST_F(TrafficLightHsm, transition_self_external)
+{
+    TEST_DESCRIPTION("External self transition should result in exiting an reentering current state with all state callbacks correctly executed");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<TrafficLightHsm>(TrafficLightState::OFF);
+    registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+
+    registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON);
+    registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING, TrafficLightEvent::NEXT_STATE, TrafficLightHsm::TransitionType::EXTERNAL, this, &TrafficLightHsm::onNextStateTransition);
+
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
+    EXPECT_EQ(mStateCounterExit, 1);
+    EXPECT_EQ(mStateCounterEnter, 2);
+    EXPECT_EQ(mStateCounterStarting, 2);
+    EXPECT_EQ(mTransitionCounterNextState, 1);
+}
+
+
+TEST_F(ABCHsm, transition_self_external_deep)
+{
+    TEST_DESCRIPTION("Correctly exit child subscates when doing external self transition on parent state");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::P1, this, &ABCHsm::onP1, &ABCHsm::onP1Enter, &ABCHsm::onP1Exit);
+    registerState<ABCHsm>(AbcState::P2, this, &ABCHsm::onP2, &ABCHsm::onP2Enter, &ABCHsm::onP2Exit);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, &ABCHsm::onBExit);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC, &ABCHsm::onCEnter, &ABCHsm::onCExit);
+
+    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::P2) );
+    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P2, AbcState::B) );
+    ASSERT_TRUE( registerSubstate(AbcState::P2, AbcState::C) );
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::B, AbcState::C, AbcEvent::E1);
+    registerSelfTransition<ABCHsm>(AbcState::P1, AbcEvent::E2, ABCHsm::TransitionType::EXTERNAL, this, &ABCHsm::onE2Transition);
+
+    initializeHsm();
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::B}));
+
+    ASSERT_EQ(mStateCounterB, 1);
+    ASSERT_EQ(mStateCounterBEnter, 1);
+    ASSERT_EQ(mStateCounterBExit, 0);
+
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::C}));
+
+    ASSERT_EQ(mStateCounterC, 1);
+    ASSERT_EQ(mStateCounterCEnter, 1);
+    ASSERT_EQ(mStateCounterCExit, 0);
+
+    ASSERT_EQ(mStateCounterP1, 1);
+    ASSERT_EQ(mStateCounterP1Enter, 1);
+    ASSERT_EQ(mStateCounterP1Exit, 0);
+
+    ASSERT_EQ(mStateCounterP2, 1);
+    ASSERT_EQ(mStateCounterP2Enter, 1);
+    ASSERT_EQ(mStateCounterP2Exit, 0);
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+
+    //-------------------------------------------
+    // VALIDATION
+    // after external self-transition HSM should exit C->P2->P1 and then enter P1->P2->B
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::B}));
+
+    EXPECT_EQ(mTransitionCounterE2, 1);
+
+    EXPECT_EQ(mStateCounterB, 2);
+    EXPECT_EQ(mStateCounterBEnter, 2);
+    EXPECT_EQ(mStateCounterBExit, 1);
+
+    EXPECT_EQ(mStateCounterC, 1);
+    EXPECT_EQ(mStateCounterCEnter, 1);
+    EXPECT_EQ(mStateCounterCExit, 1);
+
+    EXPECT_EQ(mStateCounterP1, 2);
+    EXPECT_EQ(mStateCounterP1Enter, 2);
+    EXPECT_EQ(mStateCounterP1Exit, 1);
+
+    EXPECT_EQ(mStateCounterP2, 2);
+    EXPECT_EQ(mStateCounterP2Enter, 2);
+    EXPECT_EQ(mStateCounterP2Exit, 1);
 }
 
 TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition)

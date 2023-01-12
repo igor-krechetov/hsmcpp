@@ -1,42 +1,42 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
-[0.26.0] - 2023-01-02
+## [0.26.0] - 2023-01-02
 ### Added
 - support for internal/external self-transitions
 
-[0.25.0] - 2022-12-28
+## [0.25.0] - 2022-12-28
 ### Fixed
 - improved handling of parent states:
 -- parent states are now kept active when activating substates
 -- parent state's enter/exit callbacks are called correctly during transitions
 - hsmdebugger was not generating diagrams after update to scxml2gen api
 
-[0.24.6] - 2022-09-27
+## [0.24.6] - 2022-09-27
 ### Added
 - support for final states in scxml2gen
 
-[0.24.5] - 2022-08-16
+## [0.24.5] - 2022-08-16
 ### Fixed
 - install missing os headers after build
 
-[0.24.4] - 2022-07-03
+## [0.24.4] - 2022-07-03
 ### Added
 - timers support for Qt dispatcher
 
-[0.24.3] - 2022-07-02
+## [0.24.3] - 2022-07-02
 ### Added
 - support for Qt6
 
-[0.24.2] - 2022-06-12
+## [0.24.2] - 2022-06-12
 ### Fixed
 - bool type support in hsmcpp::variant (for compilers where bool is treated as int)
 
-[0.24.1] - 2022-06-07
+## [0.24.1] - 2022-06-07
 ### Fixed
 - build fix for hsm timers in FreeRTOS
 
-[0.24.0] - 2022-06-07
+## [0.24.0] - 2022-06-07
 ### Added
 - FreeRTOS support
 - abstraction layer for platform specific features (threading)
@@ -46,15 +46,15 @@ All notable changes to project will be documented in this file.
 - hsm initialization
 - fixed dispatcher test for Qt platform
 
-[0.23.0] - 2022-05-24
+## [0.23.0] - 2022-05-24
 ### Added
 - new API to interact with timers (start, stop, restart)
 
-[0.22.0] - 2022-02-25
+## [0.22.0] - 2022-02-25
 ### Added
 - support for final states & exit points (library only)
 
-[0.21.2] - 2022-01-24
+## [0.21.2] - 2022-01-24
 ### Added
 - scxml2gen is now correctly installed after build
 - improved cmake and pkg-config usability
@@ -62,30 +62,30 @@ All notable changes to project will be documented in this file.
 ### Fixed
 - fixed support for C++11
 
-[0.21.1] - 2021-11-10
+## [0.21.1] - 2021-11-10
 ### Fixed
 - incorrect code generation from scxml
 
-[0.21.0] - 2021-11-04
+## [0.21.0] - 2021-11-04
 ### Added
 - support for condition callbacks in entry transitions
 ### Fixed
 - scxml2gen: multiple conditional entry transitions were not handled correctly
 
-[0.20.0] - 2021-09-30
+## [0.20.0] - 2021-09-30
 ### Added
 - new state action: transition. It makes possible go initiate HSM transitions from within HSM.
 
-[0.19.2] - 2021-09-09
+## [0.19.2] - 2021-09-09
 ### Added
 - new Variant constructors
 - Variant unit-tests (basic)
 
-[0.19.1] - 2021-09-01
+## [0.19.1] - 2021-09-01
 ### Fixed
 - recursive lock in GLib base dispatcher
 
-[0.19.0] - 2021-08-30
+## [0.19.0] - 2021-08-30
 ### Added
 - support for vector and list types to Variant (VariantVector_t, VariantList_t)
 ### Fixed

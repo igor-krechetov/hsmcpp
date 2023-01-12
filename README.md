@@ -1,6 +1,6 @@
 [![Generic badge](https://img.shields.io/badge/changelog-v0.26.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Generic badge](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Generic badge](https://img.shields.io/badge/documentation-green.svg)](https://github.com/igor-krechetov/hsmcpp/wiki)
+[![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 
 # Overview
 HSMCPP is a C++ library providing an easy way (hopefully) to add hierarchical (HSM) or finite state machine (FSM) to your project. Main motivation behind making it was lack of suitable alternatives which do not involve large frameworks (often commercial). And even they couldn't satisfy projects needs that I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multithreading or event driven applications.
@@ -13,8 +13,8 @@ If you are not familiar with HSM/FSM and which problems they can solve in your c
 
 # Key Features
 ## Generic
-- visual state machine editors (through [thirdparty editors](https://github.com/igor-krechetov/hsmcpp/wiki/Code-Generation#scxml-editors))
-- code generation (using state machine described in SCXML format as an input)
+- visual state machine editors (through [thirdparty editors](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html))
+- [code generation](https://hsmcpp.readthedocs.io/en/latest/code-generation/code-generation.html) (using state machine described in SCXML format as an input)
 - PlantUML diagrams generation (from SCXML files)
 - asynchronous / synchronous execution
 - thread safety
@@ -22,48 +22,47 @@ If you are not familiar with HSM/FSM and which problems they can solve in your c
   - POSIX compliant
   - Windows
   - FreeRTOS
-- configurable event dispatchers:
+- [configurable event dispatchers](https://hsmcpp.readthedocs.io/en/latest/platforms/platforms.html#built-in-dispatchers):
   - std::thread based
   - glib based
   - glibmm based
   - Qt based
   - FreeRTOS based
-  - possibility to implement your own dispatcher
-- visual debugger to help analyze state machine behavior
+  - possibility to [implement your own dispatcher](https://hsmcpp.readthedocs.io/en/latest/platforms/platforms.html#implementing-custom-dispatchers)
+- [visual debugger](https://hsmcpp.readthedocs.io/en/latest/tools/hsmdebugger/hsmdebugger.html) to help analyze state machine behavior
 
 ## State machine related
-- states
-- substates (possible to define hierarchy)
-- transitions
-- history
-- timers
-- state and transition callbacks (enter, exit, state changed, on transition)
+- [states](https://hsmcpp.readthedocs.io/en/latest/features/states/states.html)
+- [substates](https://hsmcpp.readthedocs.io/en/latest/features/substates/substates.html) (possible to define hierarchy)
+- [transitions](https://hsmcpp.readthedocs.io/en/latest/features/transitions/transitions.html)
+- [history](https://hsmcpp.readthedocs.io/en/latest/features/history/history.html)
+- [timers](https://hsmcpp.readthedocs.io/en/latest/features/timers/timers.html)
+- state and transition [callbacks](https://hsmcpp.readthedocs.io/en/latest/code-generation/scxml/scxml.html#callbacks-definition) (enter, exit, state changed, on transition)
 - passing data to state and transition callbacks
-- parallel states
+- [parallel states](https://hsmcpp.readthedocs.io/en/latest/features/parallel/parallel.html)
 - final states
-- conditional transitions
-- conditional entry points
-- state actions
-- self transitions
+- [conditional transitions](https://hsmcpp.readthedocs.io/en/latest/features/transitions/transitions.html#conditional-transitions)
+- [conditional entry points](https://hsmcpp.readthedocs.io/en/latest/features/substates/substates.html#conditional-entry-points)
+- [state actions](https://hsmcpp.readthedocs.io/en/latest/features/states/states.html#state-actions)
+- [self transitions](https://hsmcpp.readthedocs.io/en/latest/features/transitions/transitions.html#self-transitions)
 - transition cancelation
 - support for std::function and lambdas as callbacks
 
 # Documentation
-Documentation is available in [Wiki](https://github.com/igor-krechetov/hsmcpp/wiki).
-
+Documentation is available [online](https://hsmcpp.readthedocs.io).
 
 # HSM GUI Editors
-Check out [documentation](https://github.com/igor-krechetov/hsmcpp/wiki/Code-Generation#scxml-editors) to learn more about available editors.
+Check out [documentation](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html) to learn more about available editors.
 
-![Editing HSM in Qt Creator](https://github.com/igor-krechetov/hsmcpp/blob/main/doc/wiki/editors/editor_qt.png)
+![Editing HSM in Qt Creator](https://hsmcpp.readthedocs.io/en/latest/_images/editor_qt.png)
 
-![Editing HSM in scxmlgui](https://github.com/igor-krechetov/hsmcpp/blob/main/doc/wiki/editors/editor_scxmlgui.png)
+![Editing HSM in scxmlgui](https://hsmcpp.readthedocs.io/en/latest/_images/editor_scxmlgui.png)
 
 
 # hsmdebugger
-Read [documentation](https://github.com/igor-krechetov/hsmcpp/wiki/hsmdebugger) for details on how to use debugger.
+[Read documentation](https://hsmcpp.readthedocs.io/en/latest/tools/hsmdebugger/hsmdebugger.html) for details on how to use debugger.
 
-![hsmdebugger demo](https://github.com/igor-krechetov/hsmcpp/blob/main/doc/readme/hsmdebugger_demo.gif)
+![hsmdebugger demo](https://hsmcpp.readthedocs.io/en/latest/_images/hsmdebugger_demo.gif)
 
 
 # Installation
@@ -76,7 +75,7 @@ make install
 ```
 By default it will build all included components, tests and examples. You can disable any of them using cmake build flags. For example you probably will not have glib or glibmm libraries available on Windows so you might want to exclude them.
 
-See detailed instructions in [documentation](https://github.com/igor-krechetov/hsmcpp/wiki/Getting-Started#building).
+See [detailed instructions in documentation](https://hsmcpp.readthedocs.io/en/latest/getting-started/getting-started.html#building-the-library).
 
 # Dependencies
 - For library:
@@ -98,7 +97,7 @@ See detailed instructions in [documentation](https://github.com/igor-krechetov/h
 # Creating a simple State Machine
 HSM structure:
 
-![Hello Wolrd HSM](https://github.com/igor-krechetov/hsmcpp/wiki/doc/wiki/00_helloworld.png)
+![Hello Wolrd HSM](https://hsmcpp.readthedocs.io/en/latest/_static/images/00_helloworld.png)
 
 Implementation using HsmEventDispatcherSTD:
 ```C++
@@ -151,7 +150,7 @@ int main(const int argc, const char**argv)
 
 See [/examples/07_build](https://github.com/igor-krechetov/hsmcpp/tree/main/examples/07_build) for CMake configuration examples.
 
-For other examples see [Wiki](https://github.com/igor-krechetov/hsmcpp/wiki/Getting-Started) or [/examples](https://github.com/igor-krechetov/hsmcpp/tree/main/examples).
+For other examples see [Getting Started guide](https://hsmcpp.readthedocs.io/en/latest/getting-started/getting-started.html#) or [/examples](https://github.com/igor-krechetov/hsmcpp/tree/main/examples).
 
 
 ## Notable FSM/HSM libraries

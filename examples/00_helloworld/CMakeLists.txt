@@ -22,8 +22,6 @@ endif()
 if (HSMBUILD_DISPATCHER_QT)
     set(BINARY_NAME_00_3 "00_helloworld_qt")
 
-    message("HSMCPP_QT_LIB=${HSMCPP_QT_LIB}")
-
     add_executable(${BINARY_NAME_00_3} 00_helloworld_qt.cpp)
     target_include_directories(${BINARY_NAME_00_3} PRIVATE ${HSMCPP_QT_INCLUDE})
     target_link_libraries(${BINARY_NAME_00_3} PRIVATE ${HSMCPP_QT_LIB})

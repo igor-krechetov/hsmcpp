@@ -650,7 +650,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                     if "final_event" in curState:
                         finalEventID = f"{genVars['ENUM_EVENTS']}::{curState['final_event']}"
                     else:
-                        finalEventID = "INVALID_HSM_EVENT_ID"
+                        finalEventID = f"{genVars['ENUM_EVENTS']}::INVALID"
                     genVars["REGISTER_STATES"].append(f"registerFinalState<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}, {finalEventID}{registerCallbacks});")
                 else:
                     genVars["REGISTER_STATES"].append(f"registerState<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}{registerCallbacks});")
@@ -680,7 +680,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                     if curState["id"] == curTransition["target"]:
                         registerFunction = "registerSelfTransition"
                         transitionStates = f"{genVars['ENUM_STATES']}::{curState['id']}"
-                        transitionType = f", TransitionType::{curTransition['type'].upper()}"
+                        transitionType = f", TransitionType::{curTransition['type'].upper()}_TRANSITION"
                     else:
                         registerFunction = "registerTransition"
                         transitionStates = f"{genVars['ENUM_STATES']}::{curState['id']}, {genVars['ENUM_STATES']}::{curTransition['target']}"

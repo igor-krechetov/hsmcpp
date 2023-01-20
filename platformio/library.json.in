@@ -1,0 +1,21 @@
+{
+    "name": "hsmcpp",
+    "version": "@PROJECT_VERSION@",
+    "description": "@PROJECT_DESCRIPTION@",
+    "keywords": "hsm, fsm, state-machine, hierarchical-state-machine, uml-state-machine, fsm-library, finite-state-machine, rtos, freertos, arduino",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/igor-krechetov/hsmcpp.git",
+        "branch": "platformio-arduino"
+    },
+    "authors": [{
+        "name": "Ihor Krechetov",
+        "email": "ihor.krechetov.public@gmail.com",
+        "url": ""
+    }],
+    "license": "MIT",
+    "homepage": "https://github.com/igor-krechetov/hsmcpp",
+    "dependencies": {},
+    "frameworks": ["arduino"],
+    "platforms": "*"
+}

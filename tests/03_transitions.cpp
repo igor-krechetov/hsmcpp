@@ -195,7 +195,7 @@ TEST_F(TrafficLightHsm, transition_self_internal)
     registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
 
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON);
-    registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING, TrafficLightEvent::NEXT_STATE, TrafficLightHsm::TransitionType::INTERNAL, this, &TrafficLightHsm::onNextStateTransition);
+    registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING, TrafficLightEvent::NEXT_STATE, TrafficLightHsm::TransitionType::INTERNAL_TRANSITION, this, &TrafficLightHsm::onNextStateTransition);
 
     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
@@ -223,7 +223,7 @@ TEST_F(TrafficLightHsm, transition_self_external)
     registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
 
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON);
-    registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING, TrafficLightEvent::NEXT_STATE, TrafficLightHsm::TransitionType::EXTERNAL, this, &TrafficLightHsm::onNextStateTransition);
+    registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING, TrafficLightEvent::NEXT_STATE, TrafficLightHsm::TransitionType::EXTERNAL_TRANSITION, this, &TrafficLightHsm::onNextStateTransition);
 
     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
@@ -240,7 +240,6 @@ TEST_F(TrafficLightHsm, transition_self_external)
     EXPECT_EQ(mStateCounterStarting, 2);
     EXPECT_EQ(mTransitionCounterNextState, 1);
 }
-
 
 TEST_F(ABCHsm, transition_self_external_deep)
 {
@@ -260,7 +259,7 @@ TEST_F(ABCHsm, transition_self_external_deep)
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::B, AbcState::C, AbcEvent::E1);
-    registerSelfTransition<ABCHsm>(AbcState::P1, AbcEvent::E2, ABCHsm::TransitionType::EXTERNAL, this, &ABCHsm::onE2Transition);
+    registerSelfTransition<ABCHsm>(AbcState::P1, AbcEvent::E2, ABCHsm::TransitionType::EXTERNAL_TRANSITION, this, &ABCHsm::onE2Transition);
 
     initializeHsm();
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="04_history" qt:editorversion="4.14.2" initial="Idle">
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="04_history" qt:editorversion="9.0.1" initial="Idle">
+    <qt:editorinfo initialGeometry="302.02;41.79;-20;-20;40;40"/>
     <state id="Idle">
         <qt:editorinfo geometry="302.02;150.94;-60;-50;120;100" scenegeometry="302.02;150.94;242.02;100.94;120;100"/>
         <transition type="external" event="START" target="Player">
@@ -7,14 +8,14 @@
         </transition>
     </state>
     <state id="Player" initial="NoMedia">
-        <qt:editorinfo geometry="106.19;326.35;-73.22;-84.77;536.06;497.81" scenegeometry="106.19;326.35;32.97;241.58;536.06;497.81"/>
+        <qt:editorinfo geometry="107.21;327.39;-73.22;-84.77;536.06;497.81" scenegeometry="107.21;327.39;33.99;242.62;536.06;497.81"/>
         <transition type="external" event="ON_CALL" target="Call">
-            <qt:editorinfo endTargetFactors="8.03;45.09" startTargetFactors="96.51;30.63"/>
+            <qt:editorinfo startTargetFactors="96.51;30.63" endTargetFactors="8.03;45.09"/>
         </transition>
         <state id="NoMedia">
             <qt:editorinfo geometry="6.78;115.68;-60;-50;120;100" scenegeometry="112.97;442.03;52.97;392.03;120;100"/>
             <transition type="external" event="LOADING_DONE" target="MediaLoaded">
-                <qt:editorinfo endTargetFactors="6.23;31.41" movePoint="7.14;6.12"/>
+                <qt:editorinfo movePoint="7.14;6.12" endTargetFactors="6.23;31.41"/>
             </transition>
             <invoke srcexpr="onNoMedia"/>
         </state>
@@ -23,26 +24,35 @@
             <state id="Playing">
                 <qt:editorinfo geometry="-29.58;2.04;-60;-50;120;100" scenegeometry="357.71;445.67;297.71;395.67;120;100"/>
                 <transition type="external" event="PAUSE" target="Paused">
-                    <qt:editorinfo endTargetFactors="25.31;12.16" movePoint="17.34;0" startTargetFactors="26.21;89.57"/>
+                    <qt:editorinfo startTargetFactors="26.21;89.57" movePoint="17.34;0" endTargetFactors="25.31;12.16"/>
                 </transition>
                 <invoke srcexpr="onPlaying"/>
             </state>
             <state id="Paused">
                 <qt:editorinfo geometry="-28.30;162.16;-60;-50;120;100" scenegeometry="358.99;605.79;298.99;555.79;120;100"/>
                 <transition type="external" event="PLAY" target="Playing">
-                    <qt:editorinfo endTargetFactors="74.18;84.24" movePoint="43.85;2.04" startTargetFactors="76.22;13.07"/>
+                    <qt:editorinfo startTargetFactors="76.22;13.07" movePoint="43.85;2.04" endTargetFactors="74.18;84.24"/>
                 </transition>
                 <invoke srcexpr="onPaused"/>
             </state>
+            <transition type="external" event="STOP" target="Final_1">
+                <qt:editorinfo startTargetFactors="13.70;88.46"/>
+            </transition>
         </state>
         <history type="deep" id="PlayerHistory">
             <qt:editorinfo geometry="415.98;110.14;-20;-20;40;40" scenegeometry="522.17;436.49;502.17;416.49;40;40"/>
         </history>
+        <final id="Final_1">
+            <qt:editorinfo geometry="32.76;317.22;-20;-20;40;40" scenegeometry="138.95;643.57;118.95;623.57;40;40"/>
+        </final>
+        <transition type="external" event="STOP" target="Idle">
+            <qt:editorinfo startTargetFactors="15.75;2.71" localGeometry="-3.50;-102.26"/>
+        </transition>
     </state>
     <state id="Call">
         <qt:editorinfo geometry="751.63;388.56;-60;-50;120;128.50" scenegeometry="751.63;388.56;691.63;338.56;120;128.50"/>
         <transition type="external" event="CALL_ENDED" target="PlayerHistory">
-            <qt:editorinfo movePoint="13.26;-18.36" startTargetFactors="8.75;77.53"/>
+            <qt:editorinfo startTargetFactors="8.75;77.53" movePoint="13.26;-18.36"/>
             <script>onCallEndedTransition</script>
         </transition>
         <invoke srcexpr="onCall"/>

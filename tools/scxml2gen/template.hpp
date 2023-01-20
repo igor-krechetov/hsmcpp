@@ -17,6 +17,8 @@ enum class @ENUM_EVENTS@
 ~~~BLOCK:ENUM_EVENTS_ITEM~~~
     @ENUM_EVENTS_ITEM@,
 ~~~BLOCK_END~~~
+
+    INVALID = INVALID_ID
 };
 
 enum class @ENUM_TIMERS@

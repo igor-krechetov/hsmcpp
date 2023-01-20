@@ -265,8 +265,6 @@ void HsmEventDispatcherBase::dispatchPendingEvents()
 
 void HsmEventDispatcherBase::dispatchPendingEvents(const std::list<HandlerID_t>& events)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("events.size=%zu", events.size());
-
     if (events.size() > 0)
     {
         std::map<HandlerID_t, EventHandlerFunc_t> eventHandlersCopy;

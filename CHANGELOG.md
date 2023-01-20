@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.27.0] - 2023-01-20
+### Added
+- Arduino support
+- upgraded gtest to 1.13.0
+- unit tests description (states)
+### Fixed
+- scxml2gen: generation of self-transitions
+
 ## [0.26.0] - 2023-01-02
 ### Added
 - support for internal/external self-transitions

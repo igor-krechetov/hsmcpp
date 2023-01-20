@@ -4,10 +4,22 @@
 #include "hsm/ABCHsm.hpp"
 #include "hsm/AsyncHsm.hpp"
 
+
 TEST_F(ABCHsm, substate_entrypoint)
 {
     TEST_DESCRIPTION("");
-    // A -e1-> P1 { *B, C }
+    /*
+    @startuml
+    left to right direction
+    title substate_entrypoint
+
+    A #orange -[#green,bold]-> P1: E1
+    state P1 {
+        [*] --> B #LightGreen
+        B --> C : E1
+    }
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -19,6 +31,7 @@ TEST_F(ABCHsm, substate_entrypoint)
     EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::C) );
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::B, AbcState::C, AbcEvent::E1);
 
     initializeHsm();
 
@@ -31,9 +44,24 @@ TEST_F(ABCHsm, substate_entrypoint)
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
 }
 
-TEST_F(ABCHsm, substate_multiple_entrypoints_conditional)
+
+TEST_F(ABCHsm, substate_entrypoints_multiple_behavioral)
 {
     TEST_DESCRIPTION("hsm must support multiple exclusive conditional entry points");
+    /*
+    @startuml
+    left to right direction
+    title substate_entrypoints_multiple_behavioral
+
+    A #orange -[#green,bold]-> P1: E1
+    A --> P1: E2
+    state P1 {
+        [*] --> B #LightGreen: E1
+        [*] --> C: E2
+    }
+    P1 --> A: E3
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -67,10 +95,40 @@ TEST_F(ABCHsm, substate_multiple_entrypoints_conditional)
     // VALIDATION
 }
 
-TEST_F(ABCHsm, substate_multiple_entrypoints_default)
+TEST_F(ABCHsm, substate_entrypoints_multiple_various)
 {
-    TEST_DESCRIPTION("if state contains multiple entry points that are both conditional and non-conditional then "
-                     "conditional ones will have priority");
+    TEST_DESCRIPTION("if state contains both conditional and non-conditional entry points then all of them will be processed");
+    /*
+    @startuml
+    left to right direction
+
+    state substate_entrypoints_multiple_various {
+        state "A" as 1_A #orange
+
+        1_A --> 1_P1: E1
+        1_A -[#green,bold]-> 1_P1: **E2**
+        state "P1" as 1_P1 {
+            state "B" as 1_B
+            state "C" as 1_C
+            [*] --> 1_B #LightGreen
+            [*] --> 1_C #LightGreen: E2
+        }
+        1_P1 --> 1_A: E3
+        --
+        state "A" as 2_A #orange
+
+        2_A -[#green,bold]-> 2_P1: **E1**
+        2_A --> 2_P1: E2
+        state "P1" as 2_P1 {
+            state "B" as 2_B
+            state "C" as 2_C
+            [*] --> 2_B #LightGreen
+            [*] --> 2_C: E2
+        }
+        2_P1 --> 2_A: E3
+    }
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -91,7 +149,7 @@ TEST_F(ABCHsm, substate_multiple_entrypoints_default)
     //-------------------------------------------
     // ACTIONS
     ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
-    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::C}));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B, AbcState::C}));
 
     ASSERT_TRUE(transitionSync(AbcEvent::E3, HSM_WAIT_INDEFINITELY));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
@@ -103,9 +161,21 @@ TEST_F(ABCHsm, substate_multiple_entrypoints_default)
     // VALIDATION
 }
 
-TEST_F(ABCHsm, substate_multiple_entrypoints_conditions)
+TEST_F(ABCHsm, substate_entrypoints_behavioral_with_conditions)
 {
-    TEST_DESCRIPTION("entry point transitions can have condition callbacks defined");
+    TEST_DESCRIPTION("entry point transitions can have both event filter and condition defined");
+    /*
+    @startuml
+    left to right direction
+    title substate_entrypoints_behavioral_with_conditions
+
+    A #orange -[#green,bold]-> P1: **E1**
+    state P1 {
+        [*] --> B : <<cond==FALSE>>\nE1
+        [*] --> C #LightGreen : <<cond==TRUE>>\nE1
+    }
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -130,10 +200,86 @@ TEST_F(ABCHsm, substate_multiple_entrypoints_conditions)
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::C}));
 }
 
-TEST_F(ABCHsm, substate_block_conditional_entry_transition)
+TEST_F(ABCHsm, substate_entrypoints_conditional)
+{
+    TEST_DESCRIPTION("entry point transitions can have conditions callbacks defined without event filters");
+    /*
+    @startuml
+    left to right direction
+    title substate_entrypoints_conditional
+
+    A #orange -[#green,bold]-> P1: **E1**
+    state P1 {
+        [*] --> B : <<cond==FALSE>>
+        [*] --> C #LightGreen : <<cond==TRUE>>
+    }
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
+
+    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B, AbcEvent::INVALID, [](const hsmcpp::VariantVector_t&){ return true; }, false) );
+    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::C, AbcEvent::INVALID, [](const hsmcpp::VariantVector_t&){ return false; }, false) );
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+
+    initializeHsm();
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::C}));
+}
+
+TEST_F(ABCHsm, substate_entrypoints_block_conditional_transition)
 {
     TEST_DESCRIPTION("if state doesnt have matching entry points for ongoing transition, then transition will be canceled");
-    // *A -e1/e2-> P1{e2->*P2{e1->*B}, e1->*P3{e1->*C}}
+    /*
+    @startuml
+    left to right direction
+
+    state substate_entrypoints_block_conditional_transition {
+        state A #orange
+        A --> P1: E1
+        A -[#green,bold]-> P1: **E2**
+        state P1 {
+            [*] -[#green,bold]-> P2: E2
+            [*] --> P3: E1
+            state P2 {
+                [*] -[#red,bold]-> B : E1
+            }
+            state P3 {
+                [*] --> C : E1
+            }
+        }
+        --
+        state "A" as 2_A #orange
+        2_A -[#green,bold]-> 2_P1: **E1**
+        2_A --> 2_P1: E2
+        state "P1" as 2_P1 {
+            [*] --> 2_P2: E2
+            [*] -[#green,bold]-> 2_P3: E1
+            state "P2" as 2_P2 {
+                state "B" as 2_B
+                [*] --> 2_B : E1
+            }
+            state "P3" as 2_P3 {
+                state "C" as 2_C #LightGreen
+                [*] -[#green,bold]-> 2_C : E1
+            }
+        }
+    }
+    @enduml
+    */
+
     //-------------------------------------------
     // PRECONDITIONS
     registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
@@ -166,9 +312,27 @@ TEST_F(ABCHsm, substate_block_conditional_entry_transition)
     // VALIDATION
 }
 
-TEST_F(ABCHsm, substate_entrypoint_substate)
+TEST_F(ABCHsm, substate_entrypoints_substate)
 {
     TEST_DESCRIPTION("entry point of a substate could be another state with substates");
+    /*
+    @startuml
+    left to right direction
+    title substate_entrypoints_substate
+
+    A #Orange -[#green,bold]-> P1: **E1**
+    state P1 {
+        [*] --> P2
+        state P2 {
+            [*] --> P3
+            state P3 {
+                [*] --> B #LightGreen
+                B --> C : E1
+            }
+        }
+    }
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -184,6 +348,7 @@ TEST_F(ABCHsm, substate_entrypoint_substate)
     initializeHsm();
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::B, AbcState::C, AbcEvent::E1);
 
     //-------------------------------------------
     // ACTIONS
@@ -197,36 +362,98 @@ TEST_F(ABCHsm, substate_entrypoint_substate)
     EXPECT_EQ(mStateCounterC, 0);
 }
 
-TEST_F(TrafficLightHsm, substate_exit_single)
+TEST_F(ABCHsm, substate_exit_single)
 {
-    TEST_DESCRIPTION("");
+    TEST_DESCRIPTION("exit state throug external parent transition");
+    /*
+    @startuml
+    left to right direction
+    title substate_exit_single
+
+    A  --> P1: E1
+    state P1 {
+        [*] --> B
+        B --> C #orange : E2
+    }
+    P1 -[#green,bold]-> A #LightGreen : E3
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
-    setupDefault();
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA, &ABCHsm::onAEnter);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC, nullptr, &ABCHsm::onCExit);
 
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
-    ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
-    ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::OPERABLE, TrafficLightState::RED}));
+    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B) );
+    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::C) );
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::B, AbcState::C, AbcEvent::E2);
+    registerTransition<ABCHsm>(AbcState::P1, AbcState::A, AbcEvent::E3, this, &ABCHsm::onE3Transition);
+
+    initializeHsm();
+
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::C}));
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_OFF, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E3, HSM_WAIT_INDEFINITELY));
 
     //-------------------------------------------
     // VALIDATION
-    ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::OFF}));
-    EXPECT_EQ(mStateCounterStarting, 1);
-    EXPECT_EQ(mStateCounterRed, 1);
-    EXPECT_EQ(mStateCounterOff, 1);
-    EXPECT_EQ(mTransitionCounterTurnOff, 1);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+    EXPECT_EQ(mStateCounterA, 2);
+    EXPECT_EQ(mStateCounterAEnter, 1);
+    EXPECT_EQ(mStateCounterC, 1);
+    EXPECT_EQ(mStateCounterCExit, 1);
+    EXPECT_EQ(mTransitionCounterE3, 1);
 }
 
 TEST_F(ABCHsm, substate_exit_multiple_layers)
 {
     TEST_DESCRIPTION("Validate that exiting from multiple depth states on a top level transition is correctly handled");
-    // *A -e1-> P1{ *B, P2{*C, P3{*D}} }
+    /*
+    @startuml
+    left to right direction
+
+    state substate_exit_multiple_layers {
+        A #Orange -[#blue,bold]-> P1: **E1**
+        P1 --> A : E1
+        state P1 {
+            [*] -[#blue,bold]-> B #LightBlue
+            B -[#magenta,bold]-> P2 : E1
+            state P2 {
+                [*] -[#magenta,bold]-> C #Magenta
+                C -[#green,bold]-> P3 : E1
+                state P3 {
+                    [*] -[#green,bold]-> D #LightGreen
+                }
+            }
+        }
+        --
+        state "A" as 2_A
+        2_A --> 2_P1: E1
+        2_P1 -[#green,bold]-> 2_A #LightGreen : E1
+        state "P1" as 2_P1 {
+            state "B" as 2_B
+            [*] --> 2_B
+            2_B --> 2_P2 : E1
+            state "P2" as 2_P2 {
+                state "C" as 2_C
+                [*] --> 2_C
+                2_C --> 2_P3 : E1
+                state "P3" as 2_P3 {
+                    state "D" as 2_D
+                    [*] --> 2_D #Orange
+                }
+            }
+        }
+    }
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -310,6 +537,17 @@ TEST_F(ABCHsm, substate_safe_registration)
 TEST_F(ABCHsm, substate_error_no_entrypoint)
 {
     TEST_DESCRIPTION("transition to a state should fail if no entry point was defined");
+    /*
+    @startuml
+    left to right direction
+    title substate_parent_as_initial
+
+    A -[#red,bold]-> P1: E1
+    state P1 {
+        state B
+    }
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -336,6 +574,20 @@ TEST_F(ABCHsm, substate_error_no_entrypoint)
 TEST_F(AsyncHsm, substate_parent_as_initial)
 {
     TEST_DESCRIPTION("when parent state is set as initial it should automatically transition into substate on startup");
+    /*
+    @startuml
+    left to right direction
+    title substate_parent_as_initial
+
+    [*] --> P1
+    state P1 {
+        [*] --> P2
+        state P2 {
+            [*] --> B #LightGreen
+        }
+    }
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS

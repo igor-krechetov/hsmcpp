@@ -6,16 +6,17 @@
 
 #if defined(HSM_LOGGING_MODE_NICE)
 #define HSM_USE_CONSOLE_ERRORS
-#elif defined(HSM_LOGGING_MODE_OFF)
-#define HSM_DISABLE_TRACES
 #elif defined(HSM_LOGGING_MODE_DEBUG_OFF)
 #define HSM_DISABLE_DEBUG_TRACES
+#define HSM_USE_CONSOLE_TRACES
 #elif defined(HSM_LOGGING_MODE_STRICT_VERBOSE)
 #define HSM_USE_CONSOLE_TRACES
 #define HSM_EXIT_ON_FATAL
-#else
+#elif defined(HSM_LOGGING_MODE_STRICT)
 #define HSM_USE_CONSOLE_ERRORS
 #define HSM_EXIT_ON_FATAL
+#else // HSM_LOGGING_MODE_OFF
+#define HSM_DISABLE_TRACES
 #endif
 
 // ---------------------------------------------------------------------------------
@@ -24,7 +25,9 @@
 // #define __HSM_TRACE_CLASS__                         "default"
 
 #ifndef HSM_DISABLE_TRACES
- #ifndef PLATFORM_FREERTOS
+ #ifdef PLATFORM_ARDUINO
+  #include <Arduino.h>
+ #elif !defined(PLATFORM_FREERTOS)
   #include <sys/syscall.h>
   #include <unistd.h>
  #else
@@ -36,7 +39,10 @@
   // Don't use this in the code. It's for internal usage only
   extern int g_hsm_traces_pid;
 
- #ifndef PLATFORM_FREERTOS
+ #ifdef PLATFORM_ARDUINO
+  #define __HSM_TRACE_CALL_COMMON__()
+  #define __HSM_TRACE_INIT__()
+ #elif !defined(PLATFORM_FREERTOS)
   #define __HSM_TRACE_CALL_COMMON__()             const int _tid = syscall(__NR_gettid); (void)_tid
   #define __HSM_TRACE_INIT__()                    if (0 == g_hsm_traces_pid){ g_hsm_traces_pid = getpid(); }
  #else
@@ -44,9 +50,16 @@
   #define __HSM_TRACE_INIT__()
  #endif
 
+  #ifdef PLATFORM_ARDUINO
+    void serialPrintf(const char* fmt, ...);
+
+    #define __HSM_TRACE_CONSOLE_FORCE__(msg, ...) \
+        serialPrintf((const char*)F("[HSM] " __HSM_TRACE_CLASS__ "::%s: " msg), __func__,## __VA_ARGS__)
+  #else
   #define __HSM_TRACE_CONSOLE_FORCE__(msg, ...) \
       printf("[PID:%d, TID:%d] " __HSM_TRACE_CLASS__ "::%s: " msg "\n", g_hsm_traces_pid, _tid, __func__,## __VA_ARGS__)
-  
+  #endif
+
   #ifdef HSM_USE_CONSOLE_TRACES
     #define __HSM_TRACE_CONSOLE__(msg, ...)         __HSM_TRACE_CONSOLE_FORCE__(msg,## __VA_ARGS__)
     #define __HSM_TRACE_ERROR_CONSOLE__(msg, ...)
@@ -80,7 +93,7 @@
   #define __HSM_TRACE_CALL_ARGS__(msg, ...)       __HSM_TRACE_CALL_COMMON__(); \
                                               __HSM_TRACE__(msg,## __VA_ARGS__)
   #define __HSM_TRACE_DEF__()                     __HSM_TRACE_CALL_COMMON__()
-#else
+#else // PLATFROM_FREERTOS
   #define __HSM_TRACE_PREINIT__()             int g_hsm_traces_pid = (0);
   #define __HSM_TRACE_INIT__()
   #define __HSM_TRACE__(msg, ...)

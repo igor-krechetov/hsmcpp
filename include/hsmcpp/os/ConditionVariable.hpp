@@ -9,6 +9,8 @@
  #include "freertos/ConditionVariable.hpp"
 #elif STL_AVAILABLE
  #include "stl/ConditionVariable.hpp"
+#elif PLATFORM_ARDUINO
+  #include "arduino/ConditionVariable.hpp"
 #else
  #error PLATFORM not supported
 #endif

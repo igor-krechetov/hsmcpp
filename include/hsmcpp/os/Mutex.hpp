@@ -9,6 +9,8 @@
  #include "freertos/Mutex.hpp"
 #elif STL_AVAILABLE
  #include "stl/Mutex.hpp"
+#elif PLATFORM_ARDUINO
+  #include "arduino/Mutex.hpp"
 #else
  #error PLATFORM not supported
 #endif

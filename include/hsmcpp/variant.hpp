@@ -60,14 +60,6 @@ public:
         PAIR,           // VariantPair_t
     };
 
-    enum class SwitchState
-    {
-        DEFAULT,
-        OFF,
-        ON,
-        INVALID
-    };
-
 public:
     static Variant make(const int8_t v);
     static Variant make(const int16_t v);

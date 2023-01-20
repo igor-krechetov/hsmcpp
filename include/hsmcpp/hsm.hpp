@@ -63,8 +63,9 @@ namespace hsmcpp
 #define __HSM_TRACE_CLASS__                         "HierarchicalStateMachine"
 
 #define HSM_WAIT_INDEFINITELY                   (0)
-#define INVALID_HSM_EVENT_ID                    static_cast<HsmEventEnum>(-1000)
-#define INVALID_HSM_STATE_ID                    static_cast<HsmStateEnum>(-1000)
+#define INVALID_ID                              (-1000)
+#define INVALID_HSM_EVENT_ID                    static_cast<HsmEventEnum>(INVALID_ID)
+#define INVALID_HSM_STATE_ID                    static_cast<HsmStateEnum>(INVALID_ID)
 
 #define ENV_DUMPPATH                            "HSMCPP_DUMP_PATH"
 #define DEFAULT_DUMP_PATH                       "./dump.hsmlog"
@@ -96,8 +97,8 @@ public:
 
     enum class TransitionType
     {
-        INTERNAL,
-        EXTERNAL
+        INTERNAL_TRANSITION,
+        EXTERNAL_TRANSITION
     };
 
     enum class StateActionTrigger {
@@ -166,7 +167,7 @@ private:
     {
         HsmStateEnum fromState = INVALID_HSM_STATE_ID;
         HsmStateEnum destinationState = INVALID_HSM_STATE_ID;
-        TransitionType transitionType = TransitionType::EXTERNAL;
+        TransitionType transitionType = TransitionType::EXTERNAL_TRANSITION;
         HsmTransitionCallback_t onTransition = nullptr;
         HsmTransitionConditionCallback_t checkCondition = nullptr;
         bool expectedConditionValue = true;
@@ -331,6 +332,7 @@ public:
 
     void registerTimer(const TimerID_t timerID, const HsmEventEnum event);
 
+    // TODO: add support for transition actions
     template <typename... Args>
     bool registerStateAction(const HsmStateEnum state,
                              const StateActionTrigger actionTrigger,
@@ -356,7 +358,7 @@ public:
     template <class HsmHandlerClass>
     void registerSelfTransition(const HsmStateEnum state,
                                 const HsmEventEnum onEvent,
-                                const TransitionType type = TransitionType::EXTERNAL,
+                                const TransitionType type = TransitionType::EXTERNAL_TRANSITION,
                                 HsmHandlerClass* handler = nullptr,
                                 HsmTransitionCallbackPtr_t(HsmHandlerClass, transitionCallback) = nullptr,
                                 HsmTransitionConditionCallbackPtr_t(HsmHandlerClass, conditionCallback) = nullptr,
@@ -364,7 +366,7 @@ public:
 
     void registerSelfTransition(const HsmStateEnum state,
                                 const HsmEventEnum onEvent,
-                                const TransitionType type = TransitionType::EXTERNAL,
+                                const TransitionType type = TransitionType::EXTERNAL_TRANSITION,
                                 HsmTransitionCallback_t transitionCallback = nullptr,
                                 HsmTransitionConditionCallback_t conditionCallback = nullptr,
                                 const bool expectedConditionValue = true);
@@ -641,6 +643,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::initialize(const std:
                 }
                 else
                 {
+                    __HSM_TRACE_ERROR__("failed to register event handlers");
                     mDispatcher->unregisterEventHandler(mEventsHandlerId);
                     mDispatcher->unregisterEnqueuedEventHandler(mEnqueuedEventsHandlerId);
                     mDispatcher->unregisterTimerHandler(mTimerHandlerId);
@@ -1016,7 +1019,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::registerTransition(co
 {
     mTransitionsByEvent.emplace(std::make_pair(from, onEvent), TransitionInfo(from,
                                                                               to,
-                                                                              TransitionType::EXTERNAL,
+                                                                              TransitionType::EXTERNAL_TRANSITION,
                                                                               transitionCallback,
                                                                               conditionCallback,
                                                                               expectedConditionValue));
@@ -1868,7 +1871,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
             {
                 for (auto it = entryStates.begin(); it != entryStates.end(); ++it)
                 {
-                    matchingTransitions.emplace_back(TransitionInfo{fromState, *it, TransitionType::EXTERNAL, nullptr, nullptr});
+                    matchingTransitions.emplace_back(TransitionInfo{fromState, *it, TransitionType::EXTERNAL_TRANSITION, nullptr, nullptr});
                 }
             }
             else
@@ -1895,7 +1898,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
         // execute self transitions first
         for (auto it = matchingTransitions.begin(); it != matchingTransitions.end(); ++it)
         {
-            if ((it->fromState == it->destinationState) && (TransitionType::INTERNAL == it->transitionType))
+            if ((it->fromState == it->destinationState) && (TransitionType::INTERNAL_TRANSITION == it->transitionType))
             {
                 // TODO: separate type for self transition?
                 logHsmAction(HsmLogAction::TRANSITION, it->fromState, it->destinationState, event.type, false, event.args);
@@ -1913,7 +1916,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
         for (auto it = matchingTransitions.begin(); it != matchingTransitions.end(); ++it)
         {
             // everything except internal self-transitions
-            if ((it->fromState != it->destinationState) || (TransitionType::EXTERNAL == it->transitionType))
+            if ((it->fromState != it->destinationState) || (TransitionType::EXTERNAL_TRANSITION == it->transitionType))
             {
                 // exit active states only during regular transitions
                 if (TransitionBehavior::REGULAR == event.transitionType)
@@ -1970,7 +1973,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
             for (auto it = matchingTransitions.begin(); it != matchingTransitions.end(); ++it)
             {
                 // everything except internal self-transitions
-                if ((it->fromState != it->destinationState) || (TransitionType::EXTERNAL == it->transitionType))
+                if ((it->fromState != it->destinationState) || (TransitionType::EXTERNAL_TRANSITION == it->transitionType))
                 {
                     // NOTE: Decide if we need functionality to cancel ongoing transition
                     logHsmAction((TransitionBehavior::ENTRYPOINT != event.transitionType ? HsmLogAction::TRANSITION : HsmLogAction::TRANSITION_ENTRYPOINT),
@@ -2064,7 +2067,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                                             itPrevChildState = itPrevState;
                                             historyTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
                                                                                                        *itPrevState,
-                                                                                                       TransitionType::EXTERNAL,
+                                                                                                       TransitionType::EXTERNAL_TRANSITION,
                                                                                                        nullptr,
                                                                                                        nullptr);
                                         }
@@ -2081,7 +2084,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
                                         historyTransitionEvent.forcedTransitionsInfo = std::make_shared<std::list<TransitionInfo>>();
                                         historyTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
                                                                                                    historyParent,
-                                                                                                   TransitionType::EXTERNAL,
+                                                                                                   TransitionType::EXTERNAL_TRANSITION,
                                                                                                    nullptr,
                                                                                                    nullptr);
                                         historyTransitionEvent.ignoreEntryPoints = true;
@@ -2138,7 +2141,7 @@ typename HsmEventStatus_t HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::
 
                                         defHistoryTransitionEvent.forcedTransitionsInfo->emplace_back(it->destinationState,
                                                                                                       historyTargetState,
-                                                                                                      TransitionType::EXTERNAL,
+                                                                                                      TransitionType::EXTERNAL_TRANSITION,
                                                                                                       cbTransition,
                                                                                                       nullptr);
 
@@ -2334,46 +2337,21 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getEntryPoints(const 
                                                                           const VariantVector_t& transitionArgs,
                                                                           std::list<HsmStateEnum>& outEntryPoints) const
 {
-    bool hasEntryPoint = false;
     auto itRange = mSubstateEntryPoints.equal_range(state);
-    std::list<HsmStateEnum> nonconditionalEntryPoints;
 
     outEntryPoints.clear();
 
     for (auto it = itRange.first; it != itRange.second; ++it)
     {
-        bool conditionResult = true;
-
-        // check transition condition if it was defined
-        if (nullptr != it->second.checkCondition)
-        {
-            conditionResult = it->second.checkCondition(transitionArgs) == it->second.expectedConditionValue;
-        }
-
-        if ((INVALID_HSM_EVENT_ID == it->second.onEvent) && (nullptr == it->second.checkCondition))
-        {
-            nonconditionalEntryPoints.push_back(it->second.state);
-        }
-        else if ((onEvent == it->second.onEvent) && (true == conditionResult))
+        if (((INVALID_HSM_EVENT_ID == it->second.onEvent) || (onEvent == it->second.onEvent)) &&
+            // check transition condition if it was defined
+            ((nullptr == it->second.checkCondition) || (it->second.checkCondition(transitionArgs) == it->second.expectedConditionValue)))
         {
             outEntryPoints.push_back(it->second.state);
         }
     }
 
-    if (outEntryPoints.empty() == true)
-    {
-        if (nonconditionalEntryPoints.empty() == false)
-        {
-            outEntryPoints = nonconditionalEntryPoints;
-            hasEntryPoint = true;
-        }
-    }
-    else
-    {
-        hasEntryPoint = true;
-    }
-
-    return hasEntryPoint;
+    return (false == outEntryPoints.empty());
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>

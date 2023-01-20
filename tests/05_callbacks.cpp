@@ -173,4 +173,36 @@ TEST_F(ABCHsm, callbacks_exiting_substates)
     EXPECT_EQ(mStateCounterP1Exit, 1);
 }
 
-// TODO: calling callbacks of initial state
+TEST_F(ABCHsm, callbacks_initial_state)
+{
+    TEST_DESCRIPTION("all callbacks of the initial HSM state should be called correctly");
+    /*
+    @startuml
+    left to right direction
+    title callbacks_initial_state
+
+    state A
+    state A: onEnter
+    state A: onState
+
+    A #orange --> B : E1
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA, &ABCHsm::onAEnter);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+
+    registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
+
+    //-------------------------------------------
+    // ACTIONS
+    initializeHsm();
+
+    //-------------------------------------------
+    // VALIDATION
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+    EXPECT_EQ(mStateCounterA, 1);
+    EXPECT_EQ(mStateCounterAEnter, 1);
+}

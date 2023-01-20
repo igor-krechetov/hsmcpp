@@ -286,7 +286,7 @@ TEST_F(ABCHsm, parallel_transition_09)
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition<ABCHsm>(AbcState::P1, AbcState::D, AbcEvent::E2, this, &ABCHsm::onE2Transition);
-    registerSelfTransition<ABCHsm>(AbcState::P1, AbcEvent::E2, ABCHsm::TransitionType::INTERNAL, this, &ABCHsm::onSelfTransition);
+    registerSelfTransition<ABCHsm>(AbcState::P1, AbcEvent::E2, ABCHsm::TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onSelfTransition);
 
     initializeHsm();
 
@@ -563,7 +563,7 @@ TEST_F(ABCHsm, parallel_selftransition)
     registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA, &ABCHsm::onAEnter, &ABCHsm::onAExit);
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, &ABCHsm::onBExit);
 
-    registerSelfTransition<ABCHsm>(AbcState::A, AbcEvent::E1, ABCHsm::TransitionType::INTERNAL, this, &ABCHsm::onE1Transition);
+    registerSelfTransition<ABCHsm>(AbcState::A, AbcEvent::E1, ABCHsm::TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE1Transition);
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1, this, &ABCHsm::onE1Transition);
 
     initializeHsm();
@@ -591,8 +591,8 @@ TEST_F(ABCHsm, parallel_selftransition_multiple)
     registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA, &ABCHsm::onAEnter, &ABCHsm::onAExit);
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, &ABCHsm::onBExit);
 
-    registerSelfTransition<ABCHsm>(AbcState::A, AbcEvent::E1, ABCHsm::TransitionType::INTERNAL, this, &ABCHsm::onE1Transition);
-    registerSelfTransition<ABCHsm>(AbcState::A, AbcEvent::E1, ABCHsm::TransitionType::INTERNAL, this, &ABCHsm::onE2Transition);
+    registerSelfTransition<ABCHsm>(AbcState::A, AbcEvent::E1, ABCHsm::TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE1Transition);
+    registerSelfTransition<ABCHsm>(AbcState::A, AbcEvent::E1, ABCHsm::TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE2Transition);
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E3, this, &ABCHsm::onE3Transition);
 
     initializeHsm();

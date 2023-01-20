@@ -2,7 +2,7 @@ if (HSMBUILD_DISPATCHER_FREERTOS)
     set(HSM_DEFINITIONS_FREERTOS ${HSM_DEFINITIONS_BASE} -DHSM_BUILD_HSMBUILD_DISPATCHER_FREERTOS CACHE STRING "" FORCE)
     add_definitions(-DHSM_BUILD_HSMBUILD_DISPATCHER_FREERTOS)
     add_library(${HSM_LIBRARY_NAME}_freertos STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherFreeRTOS.cpp)
-    target_compile_options(${HSM_LIBRARY_NAME}_freertos PRIVATE -fPIC)
+    target_compile_options(${HSM_LIBRARY_NAME}_freertos PUBLIC -fPIC)
     target_include_directories(${HSM_LIBRARY_NAME}_freertos PRIVATE ${FREERTOS_INCLUDE}
                                                                     ${HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY})
 

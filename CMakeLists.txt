@@ -4,26 +4,13 @@ cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
 set(PROJECT_VERSION "0.27.0")
-set(PROJECT_DESCRIPTION "C++ library that provides hierarchical state machines / finite state machines functionality")
+set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic by using GUI editors with automatic code and diagrams generation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG(-std=c++17 COMPILER_SUPPORTS_CXX17)
-CHECK_CXX_COMPILER_FLAG(-std=c++14 COMPILER_SUPPORTS_CXX14)
-CHECK_CXX_COMPILER_FLAG(-std=c++11 COMPILER_SUPPORTS_CXX11)
-
-if(COMPILER_SUPPORTS_CXX17)
-    set(CMAKE_CXX_STANDARD 17)
-    message("Using C++17")
-elseif(COMPILER_SUPPORTS_CXX14)
-    set(CMAKE_CXX_STANDARD 14)
-    message("Using C++14")
-elseif(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_STANDARD 11)
-    message("Using C++11")
-else()
-    message(FATAL_ERROR "HSMCPP requires at least C++11 support. Please use a different C++ compiler.")
-endif()
+# HSMCPP requires at least C++11 support
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(HSMBUILD_TARGET "library" CACHE STRING "Desired build output")# Possible values: library, package
 
@@ -199,7 +186,7 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
     target_include_directories(${HSM_LIBRARY_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
     if (NOT WIN32)
-        target_compile_options(${HSM_LIBRARY_NAME} PRIVATE "-fPIC")
+        target_compile_options(${HSM_LIBRARY_NAME} PUBLIC "-fPIC")
     endif()
 
     # =============================================

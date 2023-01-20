@@ -42,9 +42,21 @@ if (HSMBUILD_DISPATCHER_QT)
     set(HSM_DEFINITIONS_QT ${HSM_DEFINITIONS_BASE} -DDHSM_BUILD_HSMBUILD_DISPATCHER_QT CACHE STRING "" FORCE)
     add_definitions(-DHSM_BUILD_HSMBUILD_DISPATCHER_QT)
     add_library(${HSM_LIBRARY_NAME}_qt STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherQt.cpp ${SRC_DISPATCHER_QT})
+
+    if (Qt6_FOUND)
+        # Qt6 requires a C++17 compiler
+        target_compile_features(${HSM_LIBRARY_NAME}_qt PUBLIC cxx_std_17)
+        if (MSVC)
+            # Required by Qt
+            target_compile_options(${HSM_LIBRARY_NAME}_qt PUBLIC /Zc:__cplusplus /permissive-)
+        endif()
+    endif()
+
     target_include_directories(${HSM_LIBRARY_NAME}_qt PUBLIC ${QtCore_INCLUDE_DIRS})
 
-    target_compile_options(${HSM_LIBRARY_NAME}_qt PRIVATE "-fPIC")
+    if (NOT WIN32)
+        target_compile_options(${HSM_LIBRARY_NAME}_qt PUBLIC "-fPIC")
+    endif()
 
     set(CMAKE_AUTOMOC OFF)
     set(CMAKE_AUTORCC OFF)

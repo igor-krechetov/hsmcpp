@@ -2,7 +2,7 @@
     "name": "hsmcpp",
     "version": "@PROJECT_VERSION@",
     "description": "@PROJECT_DESCRIPTION@",
-    "keywords": "hsm, fsm, state-machine, hierarchical-state-machine, uml-state-machine, fsm-library, finite-state-machine, rtos, freertos, arduino",
+    "keywords": "hsm, fsm, state-machine, hierarchical-state-machine, finite-state-machine, uml-state-machine, hsm-library, fsm-library, iot, rtos, arduino",
     "repository": {
         "type": "git",
         "url": "https://github.com/igor-krechetov/hsmcpp.git",
@@ -11,7 +11,7 @@
     "authors": [{
         "name": "Ihor Krechetov",
         "email": "ihor.krechetov.public@gmail.com",
-        "url": ""
+        "url": "https://github.com/igor-krechetov/hsmcpp"
     }],
     "license": "MIT",
     "homepage": "https://github.com/igor-krechetov/hsmcpp",

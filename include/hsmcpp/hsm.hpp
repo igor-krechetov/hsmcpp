@@ -141,8 +141,9 @@ private:
         FORCED
     };
 
-    // NOTE: just an alias to make code more readable
-#ifdef WIN32
+// NOTE: just an alias to make code more readable
+#if defined(WIN32) && (__cplusplus == 201103L)
+    // only for Win32 with C++11
     #define HsmEventStatus_t   typename HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::HsmEventStatus
 #else
     #define HsmEventStatus_t   HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::HsmEventStatus

@@ -1,0 +1,88 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  debug1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: aaa
+        run: echo "OK"
+
+  build-ubuntu:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: awalsh128/cache-apt-pkgs-action@v1.2.2
+      with:
+        packages: libglibmm-2.4-dev
+        version: 1.0
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.4.*'
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        modules: ''
+        cache: 'true'
+        cache-key-prefix: 'install-qt-action-linux'
+        set-env: 'true'
+
+    - name: Configure CMake
+      run: |
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DHSMBUILD_VERBOSE=OFF \
+          -DHSMBUILD_DISPATCHER_GLIB=ON \
+          -DHSMBUILD_DISPATCHER_GLIBMM=ON \
+          -DHSMBUILD_DISPATCHER_STD=ON \
+          -DHSMBUILD_DISPATCHER_QT=ON \
+          -DHSMBUILD_TESTS=ON \
+          -DHSMBUILD_EXAMPLES=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --parallel 2 --config ${{env.BUILD_TYPE}}
+
+  build-win32:
+    if: ${{ false }}
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.4.*'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        modules: ''
+        cache: 'true'
+        cache-key-prefix: 'install-qt-action-win32'
+        set-env: 'true'
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}\build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ^
+            -DHSMBUILD_VERBOSE=OFF ^
+            -DHSMBUILD_DISPATCHER_GLIB=OFF ^
+            -DHSMBUILD_DISPATCHER_GLIBMM=OFF ^
+            -DHSMBUILD_DISPATCHER_STD=ON ^
+            -DHSMBUILD_DISPATCHER_QT=ON ^
+            -DHSMBUILD_TESTS=ON ^
+            -DHSMBUILD_EXAMPLES=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}\build --parallel 2 --config ${{env.BUILD_TYPE}}

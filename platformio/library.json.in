@@ -6,7 +6,7 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/igor-krechetov/hsmcpp.git",
-        "branch": "platformio-arduino"
+        "branch": "platformio_library"
     },
     "authors": [{
         "name": "Ihor Krechetov",
@@ -17,5 +17,9 @@
     "homepage": "https://github.com/igor-krechetov/hsmcpp",
     "dependencies": {},
     "frameworks": ["arduino"],
-    "platforms": "*"
+    "platforms": "*",
+    "build": {
+        "extraScript": "hsmcpp_pio_integration.py",
+        "flags": ["-D PLATFORM_ARDUINO=1", "-D HSM_BUILD_HSMBUILD_DISPATCHER_ARDUINO=1"]
+    }
 }

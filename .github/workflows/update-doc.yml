@@ -41,9 +41,7 @@ jobs:
       with:
         repository: 'igor-krechetov/hsmcpp-doc'
         token: ${{ secrets.HSMCPPDOC_BOT_TOKEN }}
-        # ref: main
-        # DEBUG: fixme
-        ref: experiments
+        ref: main
         submodules: 'recursive'
         path: ${{ env.target_dir }}
     - name: Import GPG key
@@ -55,6 +53,7 @@ jobs:
         git_user_signingkey: true
         git_commit_gpgsign: true
         workdir: ${{ env.target_dir }}
+
     - name: Update to latest hsmcpp
       run: |
         cd ${{ env.target_dir }}
@@ -68,4 +67,4 @@ jobs:
         cd ${{ env.target_dir }}
         echo "Found new hsmcpp version '${{ needs.check-hsmcpp-version.outputs.commit_version }}'"
         git commit -S -am "[auto] hsmcpp library updated to ${{ needs.check-hsmcpp-version.outputs.commit_version }}"
-        git push    
+        git push

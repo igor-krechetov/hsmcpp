@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Igor Krechetov
+# Distributed under MIT license. See file LICENSE for details
+
 import os
 import re
 import xml.etree.ElementTree as ET
@@ -151,12 +154,17 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
                 if "target" in initialTransition.attrib:
                     initialStateName = namePrefix + initialTransition.attrib["target"]
                     initialStates.append(initialStateName)
-                    if "event" in initialTransition.attrib:
-                        if initialStateName not in initialStatesTransitions:
-                            initialStatesTransitions[initialStateName] = []
-                        transitionInfo = {"event": initialTransition.attrib["event"]}
+
+                    if any(value in initialTransition.attrib for value in ["event", "cond"]):
+                        transitionInfo = {}
+
+                        if "event" in initialTransition.attrib:
+                            transitionInfo["event"] = initialTransition.attrib["event"]
                         if "cond" in initialTransition.attrib:
                             transitionInfo["condition"] = getCallbackName(initialTransition)
+
+                        if initialStateName not in initialStatesTransitions:
+                            initialStatesTransitions[initialStateName] = []
                         initialStatesTransitions[initialStateName].append(transitionInfo)
 
             if len(initialStates) == 0:
@@ -498,17 +506,17 @@ def prepareStateExitCallbackPtr(name):
     return f"static_cast<{genVars['CLASS_NAME']}StateExitCallbackPtr_t>(&{genVars['CLASS_NAME']}::{name})"
 
 
-def generateCppCode(hsm, pathHpp, pathCpp):
+def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hpp, template_cpp):
     global genVars
     pendingStates = hsm
 
     genVars = {"ENUM_STATES_ITEM": [],
                "ENUM_EVENTS_ITEM": set(),
                "ENUM_TIMERS_ITEM": set(),
-               "CLASS_NAME": args.class_name + args.class_suffix,
-               "ENUM_STATES": f"{args.class_name}States",
-               "ENUM_EVENTS": f"{args.class_name}Events",
-               "ENUM_TIMERS": f"{args.class_name}Timers",
+               "CLASS_NAME": class_name + class_suffix,
+               "ENUM_STATES": f"{class_name}States",
+               "ENUM_EVENTS": f"{class_name}Events",
+               "ENUM_TIMERS": f"{class_name}Timers",
                "INITIAL_STATE": "",
                "HSM_STATE_ACTIONS": set(),
                "HSM_STATE_ENTERING_ACTIONS": set(),
@@ -582,7 +590,7 @@ def generateCppCode(hsm, pathHpp, pathCpp):
                                                 genVars["ENUM_EVENTS_ITEM"].add(curTransition['event'])
                                                 currentCondition = f", {genVars['ENUM_EVENTS']}::{curTransition['event']}"
                                             elif transitionHasCallback is True:
-                                                currentCondition = ", INVALID_HSM_EVENT_ID"
+                                                currentCondition = f", {genVars['ENUM_EVENTS']}::INVALID"
 
                                             if transitionHasCallback is True:
                                                 genVars["HSM_TRANSITION_CONDITIONS"].add(prepareHsmcppConditionCallbackDeclaration(curTransition['condition'][0]))
@@ -708,8 +716,8 @@ def generateCppCode(hsm, pathHpp, pathCpp):
     genVars["ENUM_STATES_ITEM"] = sorted(genVars["ENUM_STATES_ITEM"])
     genVars["ENUM_EVENTS_ITEM"] = set(sorted(genVars["ENUM_EVENTS_ITEM"]))
 
-    generateFile(genVars, args.template_hpp, pathHpp)
-    generateFile(genVars, args.template_cpp, pathCpp)
+    generateFile(genVars, template_hpp, pathHpp)
+    generateFile(genVars, template_cpp, pathCpp)
 
 
 # ==========================================================================================================
@@ -1039,6 +1047,46 @@ def generatePlantuml(hsm, dest, left2right=False, highlight=None):
     with open(dest, "w") as destFile:
         destFile.write(plantuml)
 
+# ==========================================================================================================
+# Public API
+def generate_code(scxmlPath, dest_dir, class_name, class_suffix, template_hpp=None, template_cpp=None, dest_hpp=None, dest_cpp=None):
+    print(f"[scxml2gen] Loading [{scxmlPath}] ...")
+    hsm = parseScxml(scxmlPath)
+
+    if hsm is not None:
+        print("[scxml2gen] Generating code...")
+
+        if dest_hpp is None:
+            destHpp = f"{dest_dir}/{class_name}{class_suffix}.hpp"
+        else:
+            destHpp = dest_hpp
+
+        if dest_cpp is None:
+            destCpp = f"{dest_dir}/{class_name}{class_suffix}.cpp"
+        else:
+            destCpp = dest_cpp
+
+        if template_hpp is None:
+            template_hpp = "./template.hpp"
+        if template_cpp is None:
+            template_cpp = "./template.cpp"
+
+        generateCppCode(hsm, destHpp, destCpp, class_name, class_suffix, template_hpp, template_cpp)
+    else:
+        print(f"[scxml2gen] ERROR: failed to parse SCXML: [{scxmlPath}]")
+        exit(2)
+
+
+def generate_diagram(scxmlPath, out, left2right):
+    print(f"[scxml2gen] Loading [{scxmlPath}] ...")
+    hsm = parseScxml(scxmlPath)
+
+    if hsm is not None:
+        print(f"[scxml2gen] Generating PlantUML...")
+        generatePlantuml(hsm, out, left2right)
+    else:
+        print(f"[scxml2gen] ERROR: failed to parse SCXML: [{scxmlPath}]")
+        exit(2)
 
 # ==========================================================================================================
 # MAIN
@@ -1088,26 +1136,10 @@ if __name__ == "__main__":
             exit(1)
 
     # ==========================================================================================================
-    print(f"Loading [{args.scxml}] ...")
-    hsm = parseScxml(args.scxml)
-
-    if hsm is not None:
-        if args.code:
-            print("Generating code...")
-
-            if args.dest_hpp is None:
-                destHpp = f"{args.dest_dir}/{args.class_name}{args.class_suffix}.hpp"
-            else:
-                destHpp = args.dest_hpp
-            if args.dest_cpp is None:
-                destCpp = f"{args.dest_dir}/{args.class_name}{args.class_suffix}.cpp"
-            else:
-                destCpp = args.dest_cpp
-
-            generateCppCode(hsm, destHpp, destCpp)
-        elif args.plantuml:
-            print(f"Generating PlantUML...")
-            generatePlantuml(hsm, args.out, args.left2right)
+    if args.code:
+        generate_code(args.scxml, args.dest_dir, args.class_name, args.class_suffix, args.template_hpp, args.template_cpp, args.dest_hpp, args.dest_cpp)
+    elif args.plantuml:
+        generate_diagram(args.scxml, args.out, args.left2right)
     else:
-        print(f"ERROR: failed to parse SCXML: [{args.scxml}]")
-        exit(2)
+        print("ERROR: must specify -code or -plantuml")
+        exit(1)

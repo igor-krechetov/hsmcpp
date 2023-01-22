@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Igor Krechetov
+# Distributed under MIT license. See file LICENSE for details
+
 import os
 import sys
 from pathlib import Path

@@ -3,8 +3,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.27.0")
-set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic by using GUI editors with automatic code and diagrams generation.")
+set(PROJECT_VERSION "0.27.1")
+set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 # HSMCPP requires at least C++11 support
@@ -85,7 +85,9 @@ set (LIBRARY_HEADERS ${HSM_INCLUDES_ROOT}/hsm.hpp
 
 set(FILES_SCXML2GEN ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/scxml2gen.py
                     ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/template.cpp
-                    ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/template.hpp)
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/template.hpp
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/__init__.py
+                    ${CMAKE_CURRENT_SOURCE_DIR}/tools/__init__.py)
 
 # add platform specific files
 if (HSMBUILD_PLATFORM STREQUAL "freertos")

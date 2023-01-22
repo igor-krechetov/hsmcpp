@@ -3,7 +3,7 @@
 
 #ifdef PLATFORM_ARDUINO
 
-#include "logging.hpp"
+#include "hsmcpp/logging.hpp"
 #include <stdarg.h>
 #include <Arduino.h>
 #include <ArduinoLog.h>

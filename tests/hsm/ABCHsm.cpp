@@ -17,7 +17,7 @@ bool ABCHsm::conditionTrue(const VariantVector_t& args)
     return true;
 }
 
-std::string ABCHsm::getStateName(const AbcState state)
+std::string ABCHsm::getStateName(const AbcState state) const
 {
     std::string res;
 
@@ -76,7 +76,7 @@ std::string ABCHsm::getStateName(const AbcState state)
     return res;
 }
 
-std::string ABCHsm::getEventName(const AbcEvent event)
+std::string ABCHsm::getEventName(const AbcEvent event) const
 {
     std::string res;
 

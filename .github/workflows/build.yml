@@ -11,14 +11,33 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  debug1:
+  check-hsmcpp-version:
     runs-on: ubuntu-latest
+    outputs:
+      commit_version: ${{ steps.get_version.outputs.commit_version }}
+
     steps:
-      - name: aaa
-        run: echo "OK"
+    - uses: actions/checkout@v3
+    - uses: ./.github/workflows/get-commit-version
+      id: get_version
+      with:
+        repo_dir: ${{ env.GITHUB_WORKSPACE }}
+        commit_sha: ${{ github.event.workflow_run.head_sha }}
+    - run: |
+        echo "VERSION: '${{ steps.get_version.outputs.commit_version }}'"
+
+  # validate that all metadata was updated correctly
+  validate-metadata:
+    needs: check-hsmcpp-version
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - if: ${{ (github.repository == 'igor-krechetov/hsmcpp') && (needs.check-hsmcpp-version.outputs.commit_version != '') }}
+      run: ./scripts/validate_metadata.py ${{ needs.check-hsmcpp-version.outputs.commit_version }} ./
 
   build-ubuntu:
-    if: ${{ false }}
+    needs: validate-metadata
     runs-on: ubuntu-latest
 
     steps:
@@ -56,7 +75,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --parallel 2 --config ${{env.BUILD_TYPE}}
 
   build-win32:
-    if: ${{ false }}
+    needs: validate-metadata
     runs-on: windows-latest
 
     steps:

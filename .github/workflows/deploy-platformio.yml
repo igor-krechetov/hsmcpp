@@ -1,8 +1,8 @@
 name: Deploy to PlatformIO
 
-# Start only after Build was finished
 on:
   workflow_dispatch:
+  # Start only after Build was finished
   workflow_run:
     workflows: [Build]
     branches: [main]
@@ -70,9 +70,7 @@ jobs:
         path: './main'
     - uses: actions/checkout@v3
       with:
-        # DEBUG: fixme
-        # ref: platformio_library
-        ref: test_actions
+        ref: platformio_library
         path: ${{ env.target_dir }}
     # prepare gpg for sommit signing
     - name: Import GPG key
@@ -96,8 +94,7 @@ jobs:
       env:
         PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_TOKEN }}
       run: |
-        pio pkg pack ./main/build/deploy -o "$target_dir"
-        # pio pkg publish ./build/deploy --type library --no-interactive
+        pio pkg publish ./main/build/deploy --type library --no-interactive
     - name: Prepare commit message
       run: |
         cd ./main

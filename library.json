@@ -1,0 +1,25 @@
+{
+    "name": "hsmcpp",
+    "version": "0.27.1",
+    "description": "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.",
+    "keywords": "hsm, fsm, state-machine, hierarchical-state-machine, finite-state-machine, uml-state-machine, hsm-library, fsm-library, iot, rtos, arduino",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/igor-krechetov/hsmcpp.git",
+        "branch": "platformio_library"
+    },
+    "authors": [{
+        "name": "Ihor Krechetov",
+        "email": "ihor.krechetov.public@gmail.com",
+        "url": "https://github.com/igor-krechetov/hsmcpp"
+    }],
+    "license": "MIT",
+    "homepage": "https://github.com/igor-krechetov/hsmcpp",
+    "dependencies": {},
+    "frameworks": ["arduino"],
+    "platforms": "*",
+    "build": {
+        "extraScript": "hsmcpp_pio_integration.py",
+        "flags": ["-D PLATFORM_ARDUINO=1", "-D HSM_BUILD_HSMBUILD_DISPATCHER_ARDUINO=1"]
+    }
+}

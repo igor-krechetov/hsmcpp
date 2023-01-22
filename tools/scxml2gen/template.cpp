@@ -31,7 +31,7 @@ void @CLASS_NAME@::onTransitionFailed(const @ENUM_EVENTS@ event, const hsmcpp::V
     // do nothing
 }
 
-std::string @CLASS_NAME@::getStateName(const @ENUM_STATES@ state)
+std::string @CLASS_NAME@::getStateName(const @ENUM_STATES@ state) const
 {
     std::string stateName;
 
@@ -50,7 +50,7 @@ std::string @CLASS_NAME@::getStateName(const @ENUM_STATES@ state)
     return stateName;
 }
 
-std::string @CLASS_NAME@::getEventName(const @ENUM_EVENTS@ event)
+std::string @CLASS_NAME@::getEventName(const @ENUM_EVENTS@ event) const
 {
     std::string eventName;
 

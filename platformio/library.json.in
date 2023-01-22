@@ -2,20 +2,24 @@
     "name": "hsmcpp",
     "version": "@PROJECT_VERSION@",
     "description": "@PROJECT_DESCRIPTION@",
-    "keywords": "hsm, fsm, state-machine, hierarchical-state-machine, uml-state-machine, fsm-library, finite-state-machine, rtos, freertos, arduino",
+    "keywords": "hsm, fsm, state-machine, hierarchical-state-machine, finite-state-machine, uml-state-machine, hsm-library, fsm-library, iot, rtos, arduino",
     "repository": {
         "type": "git",
         "url": "https://github.com/igor-krechetov/hsmcpp.git",
-        "branch": "platformio-arduino"
+        "branch": "platformio_library"
     },
     "authors": [{
         "name": "Ihor Krechetov",
         "email": "ihor.krechetov.public@gmail.com",
-        "url": ""
+        "url": "https://github.com/igor-krechetov/hsmcpp"
     }],
     "license": "MIT",
     "homepage": "https://github.com/igor-krechetov/hsmcpp",
     "dependencies": {},
     "frameworks": ["arduino"],
-    "platforms": "*"
+    "platforms": "*",
+    "build": {
+        "extraScript": "hsmcpp_pio_integration.py",
+        "flags": ["-D PLATFORM_ARDUINO=1", "-D HSM_BUILD_HSMBUILD_DISPATCHER_ARDUINO=1"]
+    }
 }

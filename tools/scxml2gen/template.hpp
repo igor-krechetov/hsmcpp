@@ -68,8 +68,8 @@ protected:
     @HSM_TRANSITION_CONDITIONS@
 
 protected:
-    std::string getStateName(const @ENUM_STATES@ state) override;
-    std::string getEventName(const @ENUM_EVENTS@ event) override;
+    std::string getStateName(const @ENUM_STATES@ state) const override;
+    std::string getEventName(const @ENUM_EVENTS@ event) const override;
 };
 
 #endif // __GEN_HSM_%CLASS_NAME%__

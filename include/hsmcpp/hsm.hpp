@@ -141,8 +141,9 @@ private:
         FORCED
     };
 
-    // NOTE: just an alias to make code more readable
-#ifdef WIN32
+// NOTE: just an alias to make code more readable
+#if defined(WIN32) && (__cplusplus == 201103L)
+    // only for Win32 with C++11
     #define HsmEventStatus_t   typename HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::HsmEventStatus
 #else
     #define HsmEventStatus_t   HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::HsmEventStatus
@@ -543,8 +544,8 @@ private:
 
 protected:
     // NOTE: clients must implement this method for debugging to work. names should match with the names in scxml file
-    virtual std::string getStateName(const HsmStateEnum state);
-    virtual std::string getEventName(const HsmEventEnum event);
+    virtual std::string getStateName(const HsmStateEnum state) const;
+    virtual std::string getEventName(const HsmEventEnum event) const;
 
 private:
     std::shared_ptr<IHsmEventDispatcher> mDispatcher;
@@ -2434,7 +2435,7 @@ bool HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::hasParentState(const 
 #endif // HSM_ENABLE_SAFE_STRUCTURE
 
 template <typename HsmStateEnum, typename HsmEventEnum>
-std::string HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getStateName(const HsmStateEnum state)
+std::string HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getStateName(const HsmStateEnum state) const
 {
     std::string name;
 
@@ -2447,7 +2448,7 @@ std::string HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getStateName(c
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
-std::string HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getEventName(const HsmEventEnum event)
+std::string HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::getEventName(const HsmEventEnum event) const
 {
     std::string name;
 

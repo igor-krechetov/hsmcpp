@@ -1,0 +1,35 @@
+name: Get commit version
+
+inputs:
+  repo_dir:
+    required: true
+    type: string
+  commit_sha:
+    required: false
+    type: string
+outputs:
+  commit_version:
+    description: "Version extracted from commit (head if commit_sha was not provided or is empty)"
+    value: ${{ format('{0}{1}', steps.read_head_version.outputs.head_version, steps.read_commit_version.outputs.commit_version) }}
+
+runs:
+  using: "composite"
+  # version_check:
+    # name: Generate output
+    # runs-on: ubuntu-latest
+  # outputs:
+  #   head_version: ${{ steps.read_head_version.outputs.head_version }}
+  #   commit_version: ${{ steps.read_commit_version.outputs.commit_version }}
+  steps:
+    - id: read_head_version
+      shell: bash
+      if: ${{ inputs.commit_sha == '' }}
+      run: |
+        cd "${{ inputs.repo_dir }}"
+        echo "head_version=$(git log -1 --pretty=format:"%s" | grep -Po '\[([\d.]+)\]')" >> $GITHUB_OUTPUT
+    - id: read_commit_version
+      shell: bash
+      if: ${{ inputs.commit_sha != '' }}
+      run: |
+        cd "${{ inputs.repo_dir }}"
+        echo "commit_version=$(git log -1 ${{ inputs.commit_sha }} --pretty=format:"%s" | grep -Po '\[([\d.]+)\]')" >> $GITHUB_OUTPUT

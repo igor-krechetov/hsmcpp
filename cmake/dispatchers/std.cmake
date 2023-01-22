@@ -2,7 +2,10 @@ if (HSMBUILD_DISPATCHER_STD)
     set(HSM_DEFINITIONS_STD ${HSM_DEFINITIONS_BASE} -DHSM_BUILD_HSMBUILD_DISPATCHER_STD CACHE STRING "" FORCE)
     add_definitions(-DHSM_BUILD_HSMBUILD_DISPATCHER_STD)
     add_library(${HSM_LIBRARY_NAME}_std STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherSTD.cpp)
-    target_compile_options(${HSM_LIBRARY_NAME}_std PRIVATE -fPIC)
+
+    if (NOT WIN32)
+        target_compile_options(${HSM_LIBRARY_NAME}_std PUBLIC "-fPIC")
+    endif()
 
     # Export variables
     if (NOT WIN32)

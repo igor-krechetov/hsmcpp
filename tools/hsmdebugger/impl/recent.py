@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Igor Krechetov
+# Distributed under MIT license. See file LICENSE for details
+
 from PySide6.QtCore import QSettings
 from PySide6.QtGui import QAction
 

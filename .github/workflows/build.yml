@@ -1,0 +1,107 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  check-hsmcpp-version:
+    runs-on: ubuntu-latest
+    outputs:
+      commit_version: ${{ steps.get_version.outputs.commit_version }}
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/workflows/get-commit-version
+      id: get_version
+      with:
+        repo_dir: ${{ env.GITHUB_WORKSPACE }}
+        commit_sha: ${{ github.event.workflow_run.head_sha }}
+    - run: |
+        echo "VERSION: '${{ steps.get_version.outputs.commit_version }}'"
+
+  # validate that all metadata was updated correctly
+  validate-metadata:
+    needs: check-hsmcpp-version
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - if: ${{ (github.repository == 'igor-krechetov/hsmcpp') && (needs.check-hsmcpp-version.outputs.commit_version != '') }}
+      run: ./scripts/validate_metadata.py ${{ needs.check-hsmcpp-version.outputs.commit_version }} ./
+
+  build-ubuntu:
+    needs: validate-metadata
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: awalsh128/cache-apt-pkgs-action@v1.2.2
+      with:
+        packages: libglibmm-2.4-dev
+        version: 1.0
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.4.*'
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        modules: ''
+        cache: 'true'
+        cache-key-prefix: 'install-qt-action-linux'
+        set-env: 'true'
+
+    - name: Configure CMake
+      run: |
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DHSMBUILD_VERBOSE=OFF \
+          -DHSMBUILD_DISPATCHER_GLIB=ON \
+          -DHSMBUILD_DISPATCHER_GLIBMM=ON \
+          -DHSMBUILD_DISPATCHER_STD=ON \
+          -DHSMBUILD_DISPATCHER_QT=ON \
+          -DHSMBUILD_TESTS=ON \
+          -DHSMBUILD_EXAMPLES=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --parallel 2 --config ${{env.BUILD_TYPE}}
+
+  build-win32:
+    needs: validate-metadata
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.4.*'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        modules: ''
+        cache: 'true'
+        cache-key-prefix: 'install-qt-action-win32'
+        set-env: 'true'
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}\build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ^
+            -DHSMBUILD_VERBOSE=OFF ^
+            -DHSMBUILD_DISPATCHER_GLIB=OFF ^
+            -DHSMBUILD_DISPATCHER_GLIBMM=OFF ^
+            -DHSMBUILD_DISPATCHER_STD=ON ^
+            -DHSMBUILD_DISPATCHER_QT=ON ^
+            -DHSMBUILD_TESTS=ON ^
+            -DHSMBUILD_EXAMPLES=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}\build --parallel 2 --config ${{env.BUILD_TYPE}}

@@ -6,7 +6,7 @@ if (HSMBUILD_DISPATCHER_GLIBMM)
     add_definitions(-DHSM_BUILD_HSMBUILD_DISPATCHER_GLIBMM)
     add_library(${HSM_LIBRARY_NAME}_glibmm STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmEventDispatcherGLibmm.cpp)
     target_include_directories(${HSM_LIBRARY_NAME}_glibmm PUBLIC ${GLIB_INCLUDE_DIRS} ${GLIBMM_INCLUDE_DIRS})
-    target_compile_options(${HSM_LIBRARY_NAME}_glibmm PRIVATE "-fPIC")
+    target_compile_options(${HSM_LIBRARY_NAME}_glibmm PUBLIC "-fPIC")
 
     # Export variables
     set(HSMCPP_GLIBMM_CXX_FLAGS ${HSMCPP_CXX_FLAGS} CACHE STRING "" FORCE)

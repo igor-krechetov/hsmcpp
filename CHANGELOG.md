@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.27.1] - 2023-01-22
+### Added
+- scxml2gen: new generate_code and generate_diagram API for usage from Python scripts
+### Updated
+- change getStateName, getEventName to be const
+### Fixed
+- scxml2gen: generation of entry transitions with condition but without an event
+### Build
+- CI scripts and github actions
+- PlatformIO build integration
+
 ## [0.27.0] - 2023-01-20
 ### Added
 - Arduino support

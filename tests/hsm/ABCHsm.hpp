@@ -59,8 +59,8 @@ public:
         INITIALIZE_HSM();
     }
 
-    std::string getStateName(const AbcState state) override;
-    std::string getEventName(const AbcEvent event) override;
+    std::string getStateName(const AbcState state) const override;
+    std::string getEventName(const AbcEvent event) const override;
 
 protected:
     void SetUp() override;

@@ -1,6 +1,11 @@
 message("Deploy Target: PlatformIO-Arduino")
 
-set (DEPLOY_FILES ${LIBRARY_SRC} ${LIBRARY_HEADERS} ${FILES_SCXML2GEN})
+set (DEPLOY_FILES ${LIBRARY_SRC}
+                  ${LIBRARY_HEADERS}
+                  ${FILES_SCXML2GEN}
+                  ${CMAKE_CURRENT_SOURCE_DIR}/README.md
+                  ${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG.md
+                  ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
 
 foreach(ITEM ${DEPLOY_FILES})
     get_filename_component(ITEM_PATH ${ITEM} DIRECTORY)

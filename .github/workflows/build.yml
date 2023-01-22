@@ -2,16 +2,23 @@ name: Build
 
 on:
   workflow_dispatch:
-#   push:
-#     branches: [ "main" ]
-#   pull_request:
-#     branches: [ "main" ]
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 env:
   BUILD_TYPE: Release
 
 jobs:
+  debug1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: aaa
+        run: echo "OK"
+
   build-ubuntu:
+    if: ${{ false }}
     runs-on: ubuntu-latest
 
     steps:
@@ -49,6 +56,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --parallel 2 --config ${{env.BUILD_TYPE}}
 
   build-win32:
+    if: ${{ false }}
     runs-on: windows-latest
 
     steps:

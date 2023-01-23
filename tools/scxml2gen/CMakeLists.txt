@@ -13,7 +13,7 @@ function(generateHsm genTarget scxml className destDirectory outSrcVariableName)
     set(templateHpp ${TOOLS_DIR}/template.hpp)
     set(templateCpp ${TOOLS_DIR}/template.cpp)
 
-    include(FindPython3)
+    find_package(Python3 COMPONENTS Interpreter Development)
 
     message("Generating HSM from: ${scxml}")
     message(" -- class: ${className}")
@@ -41,7 +41,7 @@ endfunction()
 #  - templateHpp, templateCpp: path to HPP and CPP templates
 #  - destHpp, destCpp: destination path for generated HPP and CPP files
 function(generateHsmEx genTarget scxml className classSuffix templateHpp templateCpp destHpp destCpp)
-    include(FindPython3)
+    find_package(Python3 COMPONENTS Interpreter Development)
 
     message("Generating HSM from: ${scxml}")
     message(" -- class: ${className}")
@@ -64,7 +64,7 @@ endfunction()
 #  - scxml: path to scxml file
 #  - destFile: path where to save generated diagram
 function(generateHsmDiagram genTarget scxml destFile)
-    include(FindPython3)
+    find_package(Python3 COMPONENTS Interpreter Development)
 
     message("Generating HSM Diagram from: ${scxml}")
     message(" -- output: ${destFile}")

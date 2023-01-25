@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.27.1")
+set(PROJECT_VERSION "0.27.2")
 set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -131,22 +131,11 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
     # =============================================
     # Common modules
     if (NOT WIN32)
-    include(FindPkgConfig)
+        find_package(PkgConfig REQUIRED)
     endif()
 
     set(THREADS_PREFER_PTHREAD_FLAG TRUE)
     find_package (Threads REQUIRED)
-
-    if (HSMBUILD_DISPATCHER_GLIB)
-        pkg_check_modules(GLIB REQUIRED glib-2.0)
-        pkg_check_modules(GLIBMM REQUIRED glibmm-2.4)
-
-        set(GLIB_PKG_INCLUDE_DIRS ${GLIB_INCLUDE_DIRS}
-                                  ${GLIBMM_INCLUDE_DIRS})
-
-        set(GLIB_PKG_LDFLAGS ${GLIB_LDFLAGS}
-                             ${GLIBMM_LDFLAGS})
-    endif()
 
     add_subdirectory(tools/cmake)
     add_subdirectory(tools/scxml2gen)

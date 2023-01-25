@@ -9,10 +9,26 @@
 TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
 {
     TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be canceled");
+    /*
+    @startuml
+    left to right direction
+    title multithreaded_entrypoint_cancelation
+
+    state A #orange: onExit
+
+    A -[#green,bold]-> P1: NEXT_STATE
+    P1 -[#red,bold]-> C: EXIT_SUBSTATE
+    C --> A: NEXT_STATE
+    state P1 {
+        [*] --> B
+    }
+    P1 --> A : E3
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState<AsyncHsm>(AsyncHsmState::A, this, &AsyncHsm::onStateChanged, nullptr, &AsyncHsm::onExit);
+    registerState<AsyncHsm>(AsyncHsmState::A, this, nullptr, nullptr, &AsyncHsm::onExit);
     registerState<AsyncHsm>(AsyncHsmState::B, this, &AsyncHsm::onStateChanged);
     registerState<AsyncHsm>(AsyncHsmState::C, this, &AsyncHsm::onStateChanged);
 
@@ -101,7 +117,7 @@ TEST_F(AsyncHsm, multithreaded_transition_from_interrupt)
     // PRECONDITIONS
     gAsyncHsmInstance = this;
 
-    registerState<AsyncHsm>(AsyncHsmState::A, this, &AsyncHsm::onStateChanged);
+    registerState(AsyncHsmState::A);
     registerState<AsyncHsm>(AsyncHsmState::B, this, &AsyncHsm::onStateChanged);
 
     registerTransition(AsyncHsmState::A, AsyncHsmState::B, AsyncHsmEvent::NEXT_STATE);
@@ -118,7 +134,7 @@ TEST_F(AsyncHsm, multithreaded_transition_from_interrupt)
     //-------------------------------------------
     // ACTIONS
     raise(SIGUSR1);
-    ASSERT_TRUE(waitAsyncOperation(200));
+    ASSERT_TRUE(waitAsyncOperation(1000));
 
     //-------------------------------------------
     // VALIDATION

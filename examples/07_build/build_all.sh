@@ -17,6 +17,7 @@ cp -R ../../../include ./hsmcpp/
 cp -R ../../../src ./hsmcpp/
 cp -R ../../../pkgconfig ./hsmcpp/
 cp -R ../../../tools ./hsmcpp/
+cp -R ../../../cmake ./hsmcpp/
 cp ../../../CMakeLists.txt ./hsmcpp/
 cd ./build
 cmake ..

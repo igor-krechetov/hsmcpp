@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.27.2] - 2023-01-25
+### Fixed
+- onEntry and onState callbacks of initial HSM state are not called
+
 ## [0.27.1] - 2023-01-22
 ### Added
 - scxml2gen: new generate_code and generate_diagram API for usage from Python scripts

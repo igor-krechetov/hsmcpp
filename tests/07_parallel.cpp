@@ -509,6 +509,31 @@ TEST_F(ABCHsm, parallel_transition_mult2one_02)
 TEST_F(ABCHsm, parallel_callbacks)
 {
     TEST_DESCRIPTION("*A -> B + C -> A: check that all callbacks are correctly executed");
+    /*
+    @startuml
+    left to right direction
+
+    state parallel_callbacks {
+        state A #orange : **onAEnter**\n**onA**\n**onAExit**
+        state B #LightGreen : **onBEnter**\n**onB**\nonBExit
+        state C #LightGreen : **onCEnter**\n**onC**\nonCExit
+
+        A -[#green,bold]-> B: E1
+        A -[#green,bold]-> C: E1
+        B --> A: E2
+        C --> A: E2
+        --
+        state "A" as 2_A #LightGreen : **onAEnter**\n**onA**\nonAExit
+        state "B" as 2_B #orange : onBEnter\nonB\n**onBExit**
+        state "C" as 2_C #orange : onCEnter\nonC\n**onCExit**
+
+        2_A --> 2_B: E1
+        2_A --> 2_C: E1
+        2_B -[#green,bold]-> 2_A: E2
+        2_C -[#green,bold]-> 2_A: E2
+    }
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -529,8 +554,8 @@ TEST_F(ABCHsm, parallel_callbacks)
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
 
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::C}));
-    ASSERT_EQ(mStateCounterA, 0);
-    ASSERT_EQ(mStateCounterAEnter, 0);
+    ASSERT_EQ(mStateCounterA, 1);
+    ASSERT_EQ(mStateCounterAEnter, 1);
     ASSERT_EQ(mStateCounterAExit, 1);
     ASSERT_EQ(mTransitionCounterE1, 2);
 
@@ -539,8 +564,8 @@ TEST_F(ABCHsm, parallel_callbacks)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(mStateCounterA, 1);
-    EXPECT_EQ(mStateCounterAEnter, 1);
+    EXPECT_EQ(mStateCounterA, 2);
+    EXPECT_EQ(mStateCounterAEnter, 2);
     EXPECT_EQ(mStateCounterAExit, 1);
     EXPECT_EQ(mStateCounterB, 1);
     EXPECT_EQ(mStateCounterBEnter, 1);
@@ -557,7 +582,18 @@ TEST_F(ABCHsm, parallel_selftransition)
 {
     TEST_DESCRIPTION("*A -> A + B: when we have both a regular and self-transition self-transition will"
                      " be excecuted first before exiting state");
+    /*
+    @startuml
+    left to right direction
+    title parallel_callbacks
 
+    state A #orange : **onAEnter**\n**onA**\n**onAExit**
+    state B #LightGreen : **onBEnter**\n**onB**\nonBExit
+
+    A -[#green,bold]-> A: **E1**
+    A -[#green,bold]-> B: **E1**
+    @enduml
+    */
     //-------------------------------------------
     // PRECONDITIONS
     registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA, &ABCHsm::onAEnter, &ABCHsm::onAExit);
@@ -576,8 +612,8 @@ TEST_F(ABCHsm, parallel_selftransition)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(mStateCounterA, 0);
-    EXPECT_EQ(mStateCounterAEnter, 0);
+    EXPECT_EQ(mStateCounterA, 1);
+    EXPECT_EQ(mStateCounterAEnter, 1);
     EXPECT_EQ(mStateCounterAExit, 1);
     EXPECT_EQ(mTransitionCounterE1, 2);
 }
@@ -585,6 +621,19 @@ TEST_F(ABCHsm, parallel_selftransition)
 TEST_F(ABCHsm, parallel_selftransition_multiple)
 {
     TEST_DESCRIPTION("*A -> A + A: check that multiple self transitions are correctly handled");
+    /*
+    @startuml
+    left to right direction
+    title parallel_selftransition_multiple
+
+    state A #orange : **onAEnter**\n**onA**\nonAExit
+    state B : onBEnter\nonB\nonBExit
+
+    A -[#green,bold]-> A: E1 <<onE1Transition>>
+    A -[#green,bold]-> A: E1 <<onE2Transition>>
+    A --> B: E3
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -605,8 +654,8 @@ TEST_F(ABCHsm, parallel_selftransition_multiple)
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(mStateCounterA, 0);
-    EXPECT_EQ(mStateCounterAEnter, 0);
+    EXPECT_EQ(mStateCounterA, 1);
+    EXPECT_EQ(mStateCounterAEnter, 1);
     EXPECT_EQ(mStateCounterAExit, 0);
     EXPECT_EQ(mTransitionCounterE1, 1);
     EXPECT_EQ(mTransitionCounterE2, 1);

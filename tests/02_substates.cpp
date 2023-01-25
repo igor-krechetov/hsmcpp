@@ -357,7 +357,7 @@ TEST_F(ABCHsm, substate_entrypoints_substate)
     //-------------------------------------------
     // VALIDATION
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::P3, AbcState::B}));
-    EXPECT_EQ(mStateCounterA, 0);
+    EXPECT_EQ(mStateCounterA, 1);
     EXPECT_EQ(mStateCounterB, 1);
     EXPECT_EQ(mStateCounterC, 0);
 }
@@ -406,7 +406,7 @@ TEST_F(ABCHsm, substate_exit_single)
     // VALIDATION
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
     EXPECT_EQ(mStateCounterA, 2);
-    EXPECT_EQ(mStateCounterAEnter, 1);
+    EXPECT_EQ(mStateCounterAEnter, 2);
     EXPECT_EQ(mStateCounterC, 1);
     EXPECT_EQ(mStateCounterCExit, 1);
     EXPECT_EQ(mTransitionCounterE3, 1);
@@ -491,7 +491,7 @@ TEST_F(ABCHsm, substate_exit_multiple_layers)
     //-------------------------------------------
     // VALIDATION
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
-    EXPECT_EQ(mStateCounterA, 1);
+    EXPECT_EQ(mStateCounterA, 2);
     EXPECT_EQ(mStateCounterB, 1);
     EXPECT_EQ(mStateCounterC, 1);
     EXPECT_EQ(mStateCounterD, 1);

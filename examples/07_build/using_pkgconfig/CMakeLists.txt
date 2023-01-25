@@ -3,7 +3,7 @@ project(07_build_pkgconfig)
 set(BINARY_NAME "07_build_pkgconfig")
 set(CMAKE_CXX_STANDARD 11)
 
-include(FindPkgConfig)
+find_package(PkgConfig REQUIRED)
 
 # Configure HSMCPP library. Settings must be set before calling find_package
 set(HSMCPP_CONFIG_VERBOSE ON CACHE BOOL "Enable internal HSM traces")

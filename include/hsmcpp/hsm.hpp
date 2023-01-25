@@ -595,7 +595,6 @@ HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::HierarchicalStateMachine(c
     : mInitialState(initialState)
 {
     __HSM_TRACE_INIT__();
-    mActiveStates.push_back(mInitialState);
 }
 
 template <typename HsmStateEnum, typename HsmEventEnum>
@@ -609,9 +608,7 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::setInitialState(const
 {
     if (!mDispatcher)
     {
-        mActiveStates.clear();
         mInitialState = initialState;
-        mActiveStates.push_back(initialState);
     }
 }
 
@@ -1270,23 +1267,23 @@ void HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::handleStartup()
     if (mDispatcher)
     {
         {
+            __HSM_TRACE_DEBUG__("state=<%s>", getStateName(mInitialState).c_str());
             std::list<HsmStateEnum> entryPoints;
 
-            for (auto it = mActiveStates.begin(); it != mActiveStates.end(); ++it)
+            onStateEntering(mInitialState, VariantVector_t());
+            mActiveStates.push_back(mInitialState);
+            onStateChanged(mInitialState, VariantVector_t());
+
+            if (true == getEntryPoints(mInitialState, INVALID_HSM_EVENT_ID, VariantVector_t(), entryPoints))
             {
-                __HSM_TRACE_DEBUG__("state=<%s>", getStateName(*it).c_str());
+                PendingEventInfo entryPointTransitionEvent;
 
-                if (true == getEntryPoints(*it, INVALID_HSM_EVENT_ID, VariantVector_t(), entryPoints))
+                entryPointTransitionEvent.transitionType = TransitionBehavior::ENTRYPOINT;
+                entryPointTransitionEvent.type = INVALID_HSM_EVENT_ID;
+
                 {
-                    PendingEventInfo entryPointTransitionEvent;
-
-                    entryPointTransitionEvent.transitionType = TransitionBehavior::ENTRYPOINT;
-                    entryPointTransitionEvent.type = INVALID_HSM_EVENT_ID;
-
-                    {
-                        _HSM_SYNC_EVENTS_QUEUE();
-                        mPendingEvents.push_front(entryPointTransitionEvent);
-                    }
+                    _HSM_SYNC_EVENTS_QUEUE();
+                    mPendingEvents.push_front(entryPointTransitionEvent);
                 }
             }
         }

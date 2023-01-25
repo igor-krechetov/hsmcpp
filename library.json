@@ -1,6 +1,6 @@
 {
     "name": "hsmcpp",
-    "version": "0.27.1",
+    "version": "0.27.2",
     "description": "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.",
     "keywords": "hsm, fsm, state-machine, hierarchical-state-machine, finite-state-machine, uml-state-machine, hsm-library, fsm-library, iot, rtos, arduino",
     "repository": {

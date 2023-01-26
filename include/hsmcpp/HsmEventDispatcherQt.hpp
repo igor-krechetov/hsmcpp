@@ -1,8 +1,8 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
-#ifndef __HSMCPP_HSMEVENTDISPATCHERQT_HPP__
-#define __HSMCPP_HSMEVENTDISPATCHERQT_HPP__
+#ifndef HSMCPP_HSMEVENTDISPATCHERQT_HPP
+#define HSMCPP_HSMEVENTDISPATCHERQT_HPP
 
 #include "HsmEventDispatcherBase.hpp"
 #include <QObject>
@@ -45,4 +45,4 @@ private:
 
 } // namespace hsmcpp
 
-#endif // __HSMCPP_HSMEVENTDISPATCHERQT_HPP__
+#endif // HSMCPP_HSMEVENTDISPATCHERQT_HPP

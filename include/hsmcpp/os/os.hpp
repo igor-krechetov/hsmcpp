@@ -1,7 +1,7 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#ifndef __HSMCPP_OS_OS_HPP__
-#define __HSMCPP_OS_OS_HPP__
+#ifndef HSMCPP_OS_OS_HPP
+#define HSMCPP_OS_OS_HPP
 
 // TODO: check if there are better ways to detect FreeRTOS
 #if defined(PLATFORM_FREERTOS) || defined(INC_FREERTOS_H)
@@ -13,4 +13,4 @@
  #define STL_AVAILABLE      1
 #endif
 
-#endif // __HSMCPP_OS_OS_HPP__
+#endif // HSMCPP_OS_OS_HPP

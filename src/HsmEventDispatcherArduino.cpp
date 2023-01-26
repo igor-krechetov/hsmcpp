@@ -8,28 +8,28 @@
 namespace hsmcpp
 {
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherArduino"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "HsmEventDispatcherArduino"
 
 // TODO: this dispatcher needs testing with interrupts (events, timers)
 // TODO: implement critical section for Arduino
 
 HsmEventDispatcherArduino::HsmEventDispatcherArduino(const size_t eventsCacheSize)
 {
-    __HSM_TRACE_CALL__();
+    HSM_TRACE_CALL();
     mEnqueuedEvents.reserve(eventsCacheSize);
 }
 
 HsmEventDispatcherArduino::~HsmEventDispatcherArduino()
 {
-    __HSM_TRACE_CALL__();
+    HSM_TRACE_CALL();
 
     unregisterAllEventHandlers();
 }
 
 bool HsmEventDispatcherArduino::start()
 {
-    __HSM_TRACE_CALL__();
+    HSM_TRACE_CALL();
 
     mStopDispatcher = false;
 
@@ -38,7 +38,7 @@ bool HsmEventDispatcherArduino::start()
 
 void HsmEventDispatcherArduino::stop()
 {
-    __HSM_TRACE_CALL__();
+    HSM_TRACE_CALL();
 
     mStopDispatcher = true;
 }
@@ -53,7 +53,7 @@ void HsmEventDispatcherArduino::emitEvent(const HandlerID_t handlerID)
 
 bool HsmEventDispatcherArduino::enqueueEvent(const HandlerID_t handlerID, const EventID_t event)
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     bool wasAdded = false;
 
     noInterrupts();// disable interrupts
@@ -85,7 +85,7 @@ void HsmEventDispatcherArduino::dispatchEvents()
 
 void HsmEventDispatcherArduino::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot)
 {
-    __HSM_TRACE_CALL_ARGS__("timerID=%d, intervalMs=%d, isSingleShot=%d",
+    HSM_TRACE_CALL_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d",
                             SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
     auto it = mRunningTimers.end();
 
@@ -116,7 +116,7 @@ void HsmEventDispatcherArduino::startTimerImpl(const TimerID_t timerID, const un
 
 void HsmEventDispatcherArduino::stopTimerImpl(const TimerID_t timerID)
 {
-    __HSM_TRACE_CALL_ARGS__("timerID=%d", SC2INT(timerID));
+    HSM_TRACE_CALL_ARGS("timerID=%d", SC2INT(timerID));
 
     {
         // CriticalSection lck;

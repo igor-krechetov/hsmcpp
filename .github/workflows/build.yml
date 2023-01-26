@@ -1,4 +1,4 @@
-name: Build
+name: "Build"
 
 on:
   workflow_dispatch:
@@ -74,7 +74,7 @@ jobs:
     - name: Build
       run: cmake --build ${{github.workspace}}/build --parallel 2 --config ${{env.BUILD_TYPE}}
 
-  build-win32:
+  build-windows:
     needs: validate-metadata
     runs-on: windows-latest
 

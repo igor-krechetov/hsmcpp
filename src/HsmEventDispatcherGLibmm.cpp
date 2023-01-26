@@ -8,14 +8,14 @@
 namespace hsmcpp
 {
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherGLibmm"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "HsmEventDispatcherGLibmm"
 
 HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm()
     : mMainContext(Glib::MainContext::get_default())
     , mDispatcher(new Glib::Dispatcher())
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
 }
 
@@ -23,12 +23,12 @@ HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::Main
     : mMainContext(context)
     , mDispatcher(new Glib::Dispatcher(context))
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 }
 
 HsmEventDispatcherGLibmm::~HsmEventDispatcherGLibmm()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     if (true == mDispatcherConnection.connected())
     {
@@ -41,7 +41,7 @@ HsmEventDispatcherGLibmm::~HsmEventDispatcherGLibmm()
 
 void HsmEventDispatcherGLibmm::emitEvent(const HandlerID_t handlerID)
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     if (mDispatcher)
     {
         HsmEventDispatcherBase::emitEvent(handlerID);
@@ -74,7 +74,7 @@ void HsmEventDispatcherGLibmm::unregisterAllTimerHandlers()
 
 void HsmEventDispatcherGLibmm::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d, intervalMs=%d, isSingleShot=%d",
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d",
                                   SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
     auto it = mNativeTimerHandlers.find(timerID);
 
@@ -87,13 +87,13 @@ void HsmEventDispatcherGLibmm::startTimerImpl(const TimerID_t timerID, const uns
     }
     else
     {
-        __HSM_TRACE_ERROR__("timer with id=%d already exists", timerID);
+        HSM_TRACE_ERROR("timer with id=%d already exists", timerID);
     }
 }
 
 void HsmEventDispatcherGLibmm::stopTimerImpl(const TimerID_t timerID)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
     auto it = mNativeTimerHandlers.find(timerID);
 
     if (mNativeTimerHandlers.end() != it)
@@ -105,14 +105,14 @@ void HsmEventDispatcherGLibmm::stopTimerImpl(const TimerID_t timerID)
 
 void HsmEventDispatcherGLibmm::onDispatchEvents()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     HsmEventDispatcherBase::dispatchPendingEvents();
 }
 
 bool HsmEventDispatcherGLibmm::onTimerEvent(const TimerID_t timerID)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
     const bool restartTimer = handleTimerEvent(timerID);
 
     if (false == restartTimer)
@@ -126,7 +126,7 @@ bool HsmEventDispatcherGLibmm::onTimerEvent(const TimerID_t timerID)
         }
         else
         {
-            __HSM_TRACE_ERROR__("unexpected error. timer not found");
+            HSM_TRACE_ERROR("unexpected error. timer not found");
         }
     }
 

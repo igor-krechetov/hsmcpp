@@ -23,13 +23,13 @@ int main(const int argc, const char**argv)
 
     hsm.registerState(States::OFF, [&hsm](const VariantVector_t& args)
     {
-        printf("Off\n");
+        (void)printf("Off\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
     });
     hsm.registerState(States::ON, [&hsm](const VariantVector_t& args)
     {
-        printf("On\n");
+        (void)printf("On\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
     });
@@ -37,10 +37,10 @@ int main(const int argc, const char**argv)
     hsm.registerTransition(States::OFF, States::ON, Events::SWITCH);
     hsm.registerTransition(States::ON, States::OFF, Events::SWITCH);
 
-    hsm.initialize(dispatcher);
-    hsm.transition(Events::SWITCH);
-
-    dispatcher->join();
+    if (true == hsm.initialize(dispatcher)) {
+        hsm.transition(Events::SWITCH);
+        dispatcher->join();
+    }
 
     return 0;
 }

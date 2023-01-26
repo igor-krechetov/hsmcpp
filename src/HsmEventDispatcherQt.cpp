@@ -11,8 +11,8 @@
 namespace hsmcpp
 {
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherQt"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "HsmEventDispatcherQt"
 
 #define QT_EVENT_OFFSET                         (777)
 
@@ -24,7 +24,7 @@ HsmEventDispatcherQt::HsmEventDispatcherQt() : QObject(nullptr)
 
 HsmEventDispatcherQt::~HsmEventDispatcherQt()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     unregisterAllTimerHandlers();
     unregisterAllEventHandlers();
@@ -32,7 +32,7 @@ HsmEventDispatcherQt::~HsmEventDispatcherQt()
 
 bool HsmEventDispatcherQt::start()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     bool result = true;
 
     if (QEvent::None == mQtEventType)
@@ -63,7 +63,7 @@ bool HsmEventDispatcherQt::start()
 
 void HsmEventDispatcherQt::emitEvent(const HandlerID_t handlerID)
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     if (QEvent::None != mQtEventType)
     {
@@ -83,7 +83,7 @@ void HsmEventDispatcherQt::unregisterAllTimerHandlers()
 
 void HsmEventDispatcherQt::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d, intervalMs=%d, isSingleShot=%d",
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d",
                                   SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
     auto it = mNativeTimerHandlers.find(timerID);
 
@@ -123,13 +123,13 @@ void HsmEventDispatcherQt::startTimerImpl(const TimerID_t timerID, const unsigne
     }
     else
     {
-        __HSM_TRACE_ERROR__("timer with id=%d already exists", timerID);
+        HSM_TRACE_ERROR("timer with id=%d already exists", timerID);
     }
 }
 
 void HsmEventDispatcherQt::stopTimerImpl(const TimerID_t timerID)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
     auto it = mNativeTimerHandlers.find(timerID);
 
     if (mNativeTimerHandlers.end() != it)
@@ -147,7 +147,7 @@ void HsmEventDispatcherQt::onTimerEvent()
     {
         const TimerID_t timerID = ptrTimer->property("hsmid").toInt();
 
-        __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+        HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
         const bool restartTimer = handleTimerEvent(timerID);
 
         if (false == restartTimer)
@@ -162,7 +162,7 @@ void HsmEventDispatcherQt::onTimerEvent()
             }
             else
             {
-                __HSM_TRACE_ERROR__("unexpected error. timer not found");
+                HSM_TRACE_ERROR("unexpected error. timer not found");
             }
         }
     }
@@ -170,7 +170,7 @@ void HsmEventDispatcherQt::onTimerEvent()
 
 bool HsmEventDispatcherQt::event(QEvent* ev)
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     bool processed = false;
 
     if (ev->type() == mQtEventType)

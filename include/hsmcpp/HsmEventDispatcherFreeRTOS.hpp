@@ -1,8 +1,8 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
-#ifndef __HSMCPP_HSMEVENTDISPATCHERFREERTOS_HPP__
-#define __HSMCPP_HSMEVENTDISPATCHERFREERTOS_HPP__
+#ifndef HSMCPP_HSMEVENTDISPATCHERFREERTOS_HPP
+#define HSMCPP_HSMEVENTDISPATCHERFREERTOS_HPP
 
 #include <vector>
 #include <FreeRTOS.h>
@@ -82,4 +82,4 @@ private:
 
 } // namespace hsmcpp
 
-#endif // __HSMCPP_HSMEVENTDISPATCHERFREERTOS_HPP__
+#endif // HSMCPP_HSMEVENTDISPATCHERFREERTOS_HPP

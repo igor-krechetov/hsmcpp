@@ -1,18 +1,18 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#ifndef __HSMCPP_OS_MUTEX_HPP__
-#define __HSMCPP_OS_MUTEX_HPP__
+#ifndef HSMCPP_OS_MUTEX_HPP
+#define HSMCPP_OS_MUTEX_HPP
 
 #include "os.hpp"
 
-#ifdef FREERTOS_AVAILABLE
+#if defined(FREERTOS_AVAILABLE)
  #include "freertos/Mutex.hpp"
-#elif STL_AVAILABLE
+#elif defined(STL_AVAILABLE)
  #include "stl/Mutex.hpp"
-#elif PLATFORM_ARDUINO
+#elif defined(PLATFORM_ARDUINO)
   #include "arduino/Mutex.hpp"
 #else
  #error PLATFORM not supported
 #endif
 
-#endif // __HSMCPP_OS_MUTEX_HPP__
+#endif // HSMCPP_OS_MUTEX_HPP

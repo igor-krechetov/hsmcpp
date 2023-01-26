@@ -1,8 +1,8 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
-#ifndef __HSMCPP_HSMEVENTDISPATCHERGLIB_HPP__
-#define __HSMCPP_HSMEVENTDISPATCHERGLIB_HPP__
+#ifndef HSMCPP_HSMEVENTDISPATCHERGLIB_HPP
+#define HSMCPP_HSMEVENTDISPATCHERGLIB_HPP
 
 #include "HsmEventDispatcherBase.hpp"
 #include <glib.h>
@@ -39,4 +39,4 @@ private:
 
 } // namespace hsmcpp
 
-#endif // __HSMCPP_HSMEVENTDISPATCHERGLIB_HPP__
+#endif // HSMCPP_HSMEVENTDISPATCHERGLIB_HPP

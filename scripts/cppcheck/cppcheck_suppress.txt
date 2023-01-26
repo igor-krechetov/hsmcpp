@@ -1,0 +1,6 @@
+*:/usr/include/*
+*:gen/
+*:*/glib-2.0/include/*
+misra-c2012-17.8:*/include/hsmcpp/hsm.hpp
+preprocessorErrorDirective:*
+missingIncludeSystem:*

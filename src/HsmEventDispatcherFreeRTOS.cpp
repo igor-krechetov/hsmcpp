@@ -22,21 +22,21 @@
 namespace hsmcpp
 {
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherFreeRTOS"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "HsmEventDispatcherFreeRTOS"
 
 HsmEventDispatcherFreeRTOS::HsmEventDispatcherFreeRTOS(const configSTACK_DEPTH_TYPE stackDepth, const UBaseType_t priority, const size_t eventsCacheSize)
     : mStackDepth(stackDepth)
     , mPriority(priority)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("stackDepth=%d, priority=%d", static_cast<int>(stackDepth), static_cast<int>(priority));
+    HSM_TRACE_CALL_DEBUG_ARGS("stackDepth=%d, priority=%d", static_cast<int>(stackDepth), static_cast<int>(priority));
 
     mEnqueuedEvents.reserve(eventsCacheSize);
 }
 
 HsmEventDispatcherFreeRTOS::~HsmEventDispatcherFreeRTOS()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     // delete timers
     for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it)
@@ -52,7 +52,7 @@ HsmEventDispatcherFreeRTOS::~HsmEventDispatcherFreeRTOS()
 
 void HsmEventDispatcherFreeRTOS::emitEvent(const HandlerID_t handlerID)
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     if (nullptr != mDispatcherTask)
     {
@@ -89,7 +89,7 @@ bool HsmEventDispatcherFreeRTOS::enqueueEvent(const HandlerID_t handlerID, const
 
 bool HsmEventDispatcherFreeRTOS::start()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     bool result = false;
 
     if (nullptr == mDispatcherTask)
@@ -98,7 +98,7 @@ bool HsmEventDispatcherFreeRTOS::start()
 
         if (nullptr != mMainTask)
         {
-            __HSM_TRACE_DEBUG__("starting task...");
+            HSM_TRACE_DEBUG("starting task...");
             BaseType_t taskStatus = xTaskCreate(HsmEventDispatcherFreeRTOS::doDispatching,
                                                 "HsmEventDispatcherFreeRTOS", 
                                                 mStackDepth, 
@@ -113,12 +113,12 @@ bool HsmEventDispatcherFreeRTOS::start()
             }
             else
             {
-                __HSM_TRACE_ERROR__("failed to start task");
+                HSM_TRACE_ERROR("failed to start task");
             }
         }
         else
         {
-            __HSM_TRACE_ERROR__("dispatcher must be started from a Task");
+            HSM_TRACE_ERROR("dispatcher must be started from a Task");
         }
     }
     else
@@ -132,7 +132,7 @@ bool HsmEventDispatcherFreeRTOS::start()
 
 void HsmEventDispatcherFreeRTOS::stop()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     if (nullptr != mDispatcherTask)
     {
@@ -143,7 +143,7 @@ void HsmEventDispatcherFreeRTOS::stop()
 
 void HsmEventDispatcherFreeRTOS::join()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     if (nullptr != mDispatcherTask)
     {
@@ -153,7 +153,7 @@ void HsmEventDispatcherFreeRTOS::join()
 
 void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d, intervalMs=%d, isSingleShot=%d",
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d",
                                   SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
     auto it = mNativeTimerHandlers.end();
     TimerHandle_t timer = nullptr;
@@ -192,7 +192,7 @@ void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID, const u
                     mNativeTimerHandlers.erase(timerID);
                 }
 
-                __HSM_TRACE_ERROR__("xTimerChangePeriod failed");
+                HSM_TRACE_ERROR("xTimerChangePeriod failed");
             }
         }
 
@@ -215,18 +215,18 @@ void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID, const u
                 mNativeTimerHandlers.erase(timerID);
             }
 
-            __HSM_TRACE_ERROR__("xTimerStart failed");
+            HSM_TRACE_ERROR("xTimerStart failed");
         }
     }
     else
     {
-        __HSM_TRACE_ERROR__("xTimerCreate failed");
+        HSM_TRACE_ERROR("xTimerCreate failed");
     }
 }
 
 void HsmEventDispatcherFreeRTOS::stopTimerImpl(const TimerID_t timerID)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
     auto it = mNativeTimerHandlers.end();
 
     {
@@ -289,7 +289,7 @@ void HsmEventDispatcherFreeRTOS::notifyDispatcherTask()
 
 void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters)
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     HsmEventDispatcherFreeRTOS* pThis = static_cast<HsmEventDispatcherFreeRTOS*>(pvParameters);
 
     if (nullptr != pThis)
@@ -313,15 +313,15 @@ void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters)
             {
                 if (true == pThis->mPendingEvents.empty())
                 {
-                    __HSM_TRACE_DEBUG__("wait for emit...");
+                    HSM_TRACE_DEBUG("wait for emit...");
                     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-                    __HSM_TRACE_DEBUG__("woke up. pending events=%lu", pThis->mPendingEvents.size());
+                    HSM_TRACE_DEBUG("woke up. pending events=%lu", pThis->mPendingEvents.size());
                 }
             }
         }
     }
 
-    __HSM_TRACE_DEBUG__("EXIT");
+    HSM_TRACE_DEBUG("EXIT");
 
     if (nullptr != pThis->mMainTask)
     {
@@ -337,7 +337,7 @@ void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters)
 
 void HsmEventDispatcherFreeRTOS::onTimerEvent(TimerHandle_t timerHandle)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerHandle=%p", timerHandle);
+    HSM_TRACE_CALL_DEBUG_ARGS("timerHandle=%p", timerHandle);
 
     if (nullptr != timerHandle)
     {
@@ -362,7 +362,7 @@ void HsmEventDispatcherFreeRTOS::onTimerEvent(TimerHandle_t timerHandle)
 
             const bool restartTimer = pThis->handleTimerEvent(timerID);
 
-            __HSM_TRACE_DEBUG__("restartTimer=%d", (int)restartTimer);
+            HSM_TRACE_DEBUG("restartTimer=%d", (int)restartTimer);
 
             if (false == restartTimer)
             {
@@ -375,7 +375,7 @@ void HsmEventDispatcherFreeRTOS::onTimerEvent(TimerHandle_t timerHandle)
                 }
                 else
                 {
-                    __HSM_TRACE_ERROR__("unexpected error. timer not found");
+                    HSM_TRACE_ERROR("unexpected error. timer not found");
                 }
             }
         }

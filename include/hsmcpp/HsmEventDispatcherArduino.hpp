@@ -1,8 +1,8 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
-#ifndef __HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP__
-#define __HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP__
+#ifndef HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP
+#define HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP
 
 #include "HsmEventDispatcherBase.hpp"
 #include <vector>
@@ -52,4 +52,4 @@ private:
 
 } // namespace hsmcpp
 
-#endif // __HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP__
+#endif // HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP

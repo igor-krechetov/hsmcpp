@@ -1,7 +1,7 @@
 // Content of this file was generated
 
-#ifndef __GEN_HSM_%CLASS_NAME%__
-#define __GEN_HSM_%CLASS_NAME%__
+#ifndef GEN_HSM_%CLASS_NAME%
+#define GEN_HSM_%CLASS_NAME%
 
 #include <hsmcpp/hsm.hpp>
 
@@ -41,6 +41,8 @@ public:
     @CLASS_NAME@();
     virtual ~@CLASS_NAME@();
 
+    bool initialize(const std::shared_ptr<hsmcpp::IHsmEventDispatcher>& dispatcher) override;
+
 protected:
     void configureHsm();
 
@@ -72,4 +74,4 @@ protected:
     std::string getEventName(const @ENUM_EVENTS@ event) const override;
 };
 
-#endif // __GEN_HSM_%CLASS_NAME%__
+#endif // GEN_HSM_%CLASS_NAME%

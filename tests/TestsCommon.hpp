@@ -1,5 +1,5 @@
-#ifndef __HSMCPP_TESTS_TESTSCOMMON_HPP__
-#define __HSMCPP_TESTS_TESTSCOMMON_HPP__
+#ifndef HSMCPP_TESTS_TESTSCOMMON_HPP
+#define HSMCPP_TESTS_TESTSCOMMON_HPP
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -7,8 +7,8 @@
 #include "hsmcpp/logging.hpp"
 #include <list>
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "TestsCommon"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "TestsCommon"
 
 // ======================================================
 // GTest namespace
@@ -55,18 +55,18 @@ bool compareStateLists(const std::list<HsmStateEnum> l1, const std::list<HsmStat
 
     if (false == equalLists)
     {
-        __HSM_TRACE_CALL_DEBUG_ARGS__("states are different");
+        HSM_TRACE_CALL_DEBUG_ARGS("states are different");
 
-        __HSM_TRACE_DEBUG__("Expected:");
+        HSM_TRACE_DEBUG("Expected:");
         for(auto it  = l2.begin(); it != l2.end(); ++it)
         {
-            __HSM_TRACE_DEBUG__("%d", SC2INT(*it));
+            HSM_TRACE_DEBUG("%d", SC2INT(*it));
         }
 
-        __HSM_TRACE_DEBUG__("Was:");
+        HSM_TRACE_DEBUG("Was:");
         for(auto it  = l1.begin(); it != l1.end(); ++it)
         {
-            __HSM_TRACE_DEBUG__("%d", SC2INT(*it));
+            HSM_TRACE_DEBUG("%d", SC2INT(*it));
         }
     }
 
@@ -126,7 +126,7 @@ bool executeOnMainThread(std::function<bool()> func);
     bool on##_state()                                                   \
     {                                                                   \
         ++mStateCounter##_state;                                        \
-        __HSM_TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
+        HSM_TRACE_CALL_ARGS("----> on" #_state "\n");                   \
         return (_ret);                                                  \
     }
 
@@ -136,7 +136,7 @@ bool executeOnMainThread(std::function<bool()> func);
     bool on##_state(const VariantVector_t& args)                          \
     {                                                                   \
         ++mStateCounter##_state;                                        \
-        __HSM_TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
+        HSM_TRACE_CALL_ARGS("----> on" #_state "\n");                   \
         mArgs##_state = args;                                           \
         return (_ret);                                                  \
     }
@@ -147,7 +147,7 @@ bool executeOnMainThread(std::function<bool()> func);
     void on##_name##Transition(const VariantVector_t& args)              \
     {                                                                  \
         ++mTransitionCounter##_name;                                   \
-        __HSM_TRACE_CALL_ARGS__("----> on" #_name "Transition\n");         \
+        HSM_TRACE_CALL_ARGS("----> on" #_name "Transition\n");         \
         mTransitionArgs##_name = args;                                 \
     }
 
@@ -157,7 +157,7 @@ bool executeOnMainThread(std::function<bool()> func);
     void on##_state(const VariantVector_t& args)                          \
     {                                                                   \
         ++mStateCounter##_state;                                        \
-        __HSM_TRACE_CALL_ARGS__("----> on" #_state "\n");                   \
+        HSM_TRACE_CALL_ARGS("----> on" #_state "\n");                   \
         mArgs##_state = args;                                           \
     }                                                                   \
     DEF_EXIT_ACTION_IMPL(_state##Exit, true)                            \
@@ -165,4 +165,4 @@ bool executeOnMainThread(std::function<bool()> func);
     DEF_ENTER_ACTION_IMPL(_state##Enter, true)                          \
     DEF_ENTER_ACTION_IMPL(_state##EnterCancel, false)
 
-#endif // __HSMCPP_TESTS_TESTSCOMMON_HPP__
+#endif // HSMCPP_TESTS_TESTSCOMMON_HPP

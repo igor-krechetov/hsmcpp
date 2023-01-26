@@ -3,4 +3,6 @@
 
 #include "hsmcpp/logging.hpp"
 
-__HSM_TRACE_PREINIT__()
+// NOTE: used only for logging during development. in release mode macros is empty
+// cppcheck-suppress misra-c2012-8.4
+HSM_TRACE_PREINIT()

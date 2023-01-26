@@ -20,7 +20,7 @@ Variant Variant::make(const bool v) { return Variant(new bool(v), Type::BOOL); }
 Variant Variant::make(const std::string& v) { return Variant(new std::string(v), Type::STRING); }
 Variant Variant::make(const char* v) { return make(std::string(v)); }
 Variant Variant::make(const std::vector<char>& v) { return Variant(new std::vector<char>(v), Type::BYTEARRAY); }
-Variant Variant::make(const char* binaryData, const size_t bytesCount){ return Variant(new std::vector<char>(binaryData, binaryData + bytesCount), Type::BYTEARRAY); }
+Variant Variant::make(const char* binaryData, const size_t bytesCount){ return Variant(new std::vector<char>(binaryData, &binaryData[bytesCount]), Type::BYTEARRAY); }
 Variant Variant::make(const VariantVector_t& v) { return Variant(new std::vector<Variant>(v), Type::VECTOR); }
 Variant Variant::make(const VariantList_t& v)  { return Variant(new std::list<Variant>(v), Type::LIST); }
 Variant Variant::make(const VariantDict_t& v) { return Variant(new VariantDict_t(v), Type::DICTIONARY); }
@@ -35,7 +35,7 @@ Variant::Variant(void* d, const Type t)
 
 Variant::~Variant()
 {
-    free();
+    freeMemory();
 }
 
 Variant::Variant(const Variant& v)
@@ -52,12 +52,15 @@ Variant::Variant(Variant&& v)
     v.type = Type::UNKNOWN;
 }
 
+// NOTE: false-positive. thinks that ':' is arithmetic operation
+// cppcheck-suppress misra-c2012-10.4
 Variant::Variant(const char* v) : Variant(std::string(v))
 {
 }
 
-Variant::Variant(const char* binaryData, const size_t bytesCount)
-    : Variant(std::vector<char>(binaryData, binaryData + bytesCount))
+// NOTE: false-positive. thinks that ':' is arithmetic operation
+// cppcheck-suppress misra-c2012-10.4
+Variant::Variant(const char* binaryData, const size_t bytesCount) : Variant(std::vector<char>(binaryData, &binaryData[bytesCount]))
 {
 }
 
@@ -125,7 +128,7 @@ Variant& Variant::operator=(const Variant& v)
                 break;
 
             default:
-                free();
+                freeMemory();
                 break;
         }
     }
@@ -201,6 +204,10 @@ bool Variant::operator>(const Variant& val) const
     else if ((Type::BOOL == type) || (Type::BOOL == val.type))
     {
         isGreater = (*value<bool>() > *(val.value<bool>()));
+    }
+    else
+    {
+        // NOTE: ignore
     }
 
     return isGreater;
@@ -483,7 +490,7 @@ std::string Variant::toString() const
             {
                 if (false == result.empty())
                 {
-                    result += ", ";
+                    result.append(", ");
                 }
 
                 result += it->toString();
@@ -498,7 +505,7 @@ std::string Variant::toString() const
             {
                 if (false == result.empty())
                 {
-                    result += ", ";
+                    result.append(", ");
                 }
 
                 result += it->toString();
@@ -511,12 +518,12 @@ std::string Variant::toString() const
 
             for (auto it = dict->begin() ; it != dict->end(); ++it)
             {
-                result += it->first.toString() + "=[" + it->second.toString() + "], ";
+                result += it->first.toString().append("=[").append(it->second.toString()).append("], ");
             }
             break;
         }
         case Type::PAIR:
-            result = "(" + value<VariantPair_t>()->first.toString() + ", " + value<VariantPair_t>()->second.toString() + ")";
+            result = std::string("(") + value<VariantPair_t>()->first.toString() + std::string(", ") + value<VariantPair_t>()->second.toString() + std::string(")");
             break;
         default:
             break;
@@ -534,29 +541,29 @@ std::vector<char> Variant::toByteArray() const
         case Type::BYTE_1:
         case Type::UBYTE_1:
             result.resize(sizeof(int8_t));
-            std::memcpy(result.data(), data, sizeof(int8_t));
+            static_cast<void>(std::memcpy(result.data(), data, sizeof(int8_t)));
             break;
         case Type::BYTE_2:
         case Type::UBYTE_2:
             result.resize(sizeof(int16_t));
-            memcpy(result.data(), data, sizeof(int16_t));
+            static_cast<void>(memcpy(result.data(), data, sizeof(int16_t)));
             break;
         case Type::BYTE_4:
         case Type::UBYTE_4:
             result.resize(sizeof(int32_t));
-            memcpy(result.data(), data, sizeof(int32_t));
+            static_cast<void>(memcpy(result.data(), data, sizeof(int32_t)));
             break;
         case Type::BYTE_8:
         case Type::UBYTE_8:
             result.resize(sizeof(int64_t));
-            memcpy(result.data(), data, sizeof(int64_t));
+            static_cast<void>(memcpy(result.data(), data, sizeof(int64_t)));
             break;
         case Type::DOUBLE:
             result.resize(sizeof(double));
-            memcpy(result.data(), data, sizeof(double));
+            static_cast<void>(memcpy(result.data(), data, sizeof(double)));
             break;
         case Type::BOOL:
-            result.push_back(*(value<bool>()) == true ? 1 : 0);
+            result.push_back( (*(value<bool>()) == true) ? 1 : 0);
             break;
         case Type::STRING:
         {
@@ -582,7 +589,7 @@ std::vector<char> Variant::toByteArray() const
             {
                 std::vector<char> curValue = it->second.toByteArray();
 
-                result.insert(result.end(), curValue.begin(), curValue.end());
+                (void)result.insert(result.end(), curValue.begin(), curValue.end());
             }
             break;
         }
@@ -591,7 +598,7 @@ std::vector<char> Variant::toByteArray() const
             std::vector<char> secondValue = value<VariantPair_t>()->second.toByteArray();
 
             result = value<VariantPair_t>()->first.toByteArray();
-            result.insert(result.end(), secondValue.begin(), secondValue.end());
+            (void)result.insert(result.end(), secondValue.begin(), secondValue.end());
             break;
         }
         default:
@@ -770,7 +777,7 @@ bool Variant::isSameObject(const Variant& val) const
     return (val.data == data) && (nullptr != data);
 }
 
-void Variant::free()
+void Variant::freeMemory()
 {
     switch (type)
     {

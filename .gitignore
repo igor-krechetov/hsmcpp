@@ -13,3 +13,5 @@ out.hpp
 cache
 *.autosave
 test.plantuml
+*.ctu-info
+*.cpp.dump

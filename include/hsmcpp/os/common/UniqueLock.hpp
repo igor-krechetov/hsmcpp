@@ -1,7 +1,7 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#ifndef __HSMCPP_OS_COMMON_UNIQUELOCK_HPP__
-#define __HSMCPP_OS_COMMON_UNIQUELOCK_HPP__
+#ifndef HSMCPP_OS_COMMON_UNIQUELOCK_HPP
+#define HSMCPP_OS_COMMON_UNIQUELOCK_HPP
 
 namespace hsmcpp
 {
@@ -11,7 +11,7 @@ class Mutex;
 class UniqueLock
 {
 public:
-    UniqueLock() = default;
+    UniqueLock(void) = default;
     explicit UniqueLock(Mutex& sync);
     ~UniqueLock();
 
@@ -19,28 +19,28 @@ public:
 
     UniqueLock& operator=(UniqueLock&& src) noexcept;
 
-    void lock();
-    void unlock();
+    void lock(void);
+    void unlock(void);
 
-    inline bool owns_lock() const noexcept
+    inline bool owns_lock(void) const noexcept
     {
         return mOwnsLock;
     }
 
-    inline explicit operator bool() const noexcept
+    inline explicit operator bool(void) const noexcept
     {
         return owns_lock();
     }
 
-    Mutex* release() noexcept;
-    inline Mutex* mutex() const noexcept
+    Mutex* release(void) noexcept;
+    inline Mutex* mutex(void) const noexcept
     {
         return mSync;
     }
 
 private:
-    UniqueLock(const UniqueLock&) = delete;
-    UniqueLock& operator=(const UniqueLock&) = delete;
+    UniqueLock(const UniqueLock& src) = delete;
+    UniqueLock& operator=(const UniqueLock& src) = delete;
 
 private:
     Mutex* mSync = nullptr;
@@ -49,4 +49,4 @@ private:
 
 } // namespace hsmcpp
 
-#endif // __HSMCPP_OS_COMMON_UNIQUELOCK_HPP__
+#endif // HSMCPP_OS_COMMON_UNIQUELOCK_HPP

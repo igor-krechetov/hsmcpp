@@ -1,7 +1,7 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#ifndef __HSMCPP_OS_FREERTOS_CONDITIONVARIABLE_HPP__
-#define __HSMCPP_OS_FREERTOS_CONDITIONVARIABLE_HPP__
+#ifndef HSMCPP_OS_FREERTOS_CONDITIONVARIABLE_HPP
+#define HSMCPP_OS_FREERTOS_CONDITIONVARIABLE_HPP
 
 #include <FreeRTOS.h>
 #include <semphr.h>
@@ -37,4 +37,4 @@ private:
 
 } // namespace hsmcpp
 
-#endif // __HSMCPP_OS_FREERTOS_CONDITIONVARIABLE_HPP__
+#endif // HSMCPP_OS_FREERTOS_CONDITIONVARIABLE_HPP

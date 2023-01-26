@@ -1,0 +1,66 @@
+name: "SCA: MISRA-C-2012"
+
+# TODO: run only on successfull builds
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  sca-misra:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: awalsh128/cache-apt-pkgs-action@v1.2.2
+      with:
+        packages: libglibmm-2.4-dev cppcheck
+        version: 1.0
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.4.*'
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        modules: ''
+        cache: 'true'
+        cache-key-prefix: 'install-qt-action-linux'
+        set-env: 'true'
+
+    - name: Configure CMake
+      run: |
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+          -DHSMBUILD_VERBOSE=OFF \
+          -DHSMBUILD_DISPATCHER_GLIB=ON \
+          -DHSMBUILD_DISPATCHER_GLIBMM=ON \
+          -DHSMBUILD_DISPATCHER_STD=ON \
+          -DHSMBUILD_DISPATCHER_QT=ON \
+          -DHSMBUILD_TESTS=OFF \
+          -DHSMBUILD_EXAMPLES=ON \
+          -DHSMBUILD_DEBUGGING=ON \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --parallel 2 --config ${{env.BUILD_TYPE}}
+
+    - name: Run MISRA check
+      run: |
+        cppcheck --addon=${{github.workspace}}/scripts/cppcheck/misra.json \
+          --enable=warning,performance,portability,information \
+          --inline-suppr \
+          --xml \
+          --suppressions-list=${{github.workspace}}/scripts/cppcheck/cppcheck_suppress.txt \
+          --project=${{github.workspace}}/build/compile_commands.json \
+          -DSTL_AVAILABLE -D__GNU__=1 -D__LITTLE_ENDIAN__ -D__GNUC__ 2> ${{github.workspace}}/sca_misra.txt
+
+    - name: Validate cppcheck report
+      run: |
+        ${{github.workspace}}/scripts/cppcheck/cppcheck_review.py ${{github.workspace}}/sca_misra.txt

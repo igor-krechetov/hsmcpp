@@ -35,18 +35,20 @@ int main(const int argc, const char**argv)
     DebugTestHsm hsm;
     Variant argPair = Variant::make(Variant::make(1), Variant::make(2));
 
-    hsm.enableHsmDebugging();
-    hsm.initialize(dispatcher);
-    hsm.transition(DebugTestHsmEvents::event_next, false, "initializing value", 123.89, argPair);
-    hsm.transition(DebugTestHsmEvents::event_next);
-    hsm.transition(DebugTestHsmEvents::event_self);
-    hsm.transition(DebugTestHsmEvents::event_next_parent);
-    hsm.transition(DebugTestHsmEvents::event_next);
-    hsm.transition(DebugTestHsmEvents::event_exit_parent);
-    hsm.transition(DebugTestHsmEvents::event_next, true, "finishing", 765.54, argPair);
+    (void)hsm.enableHsmDebugging();
 
-    printf("DONE. Kill the process and check dump.hsmlog file in debugger.\n");
-    dispatcher->join();
+    if (true == hsm.initialize(dispatcher)) {
+        hsm.transition(DebugTestHsmEvents::event_next, false, "initializing value", 123.89, argPair);
+        hsm.transition(DebugTestHsmEvents::event_next);
+        hsm.transition(DebugTestHsmEvents::event_self);
+        hsm.transition(DebugTestHsmEvents::event_next_parent);
+        hsm.transition(DebugTestHsmEvents::event_next);
+        hsm.transition(DebugTestHsmEvents::event_exit_parent);
+        hsm.transition(DebugTestHsmEvents::event_next, true, "finishing", 765.54, argPair);
+
+        (void)printf("DONE. Kill the process and check dump.hsmlog file in debugger.\n");
+        dispatcher->join();
+    }
 
     return 0;
 }

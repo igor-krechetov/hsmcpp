@@ -1,4 +1,4 @@
-name: Deploy to PlatformIO
+name: "Deploy to PlatformIO"
 
 on:
   workflow_dispatch:

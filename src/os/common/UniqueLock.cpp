@@ -6,6 +6,8 @@
 namespace hsmcpp
 {
 
+// NOTE: false-positive. thinks that ':' is arithmetic operation
+// cppcheck-suppress misra-c2012-10.4
 UniqueLock::UniqueLock(Mutex& sync) : mSync(&sync), mOwnsLock(false)
 {
     lock();
@@ -18,7 +20,7 @@ UniqueLock::~UniqueLock()
 
 UniqueLock::UniqueLock(UniqueLock&& src) noexcept : mSync(src.mSync), mOwnsLock(src.mOwnsLock)
 {
-    src.mSync = 0;
+    src.mSync = nullptr;
     src.mOwnsLock = false;
 }
 
@@ -32,13 +34,13 @@ UniqueLock& UniqueLock::operator=(UniqueLock&& src) noexcept
     mSync = src.mSync;
     mOwnsLock = src.mOwnsLock;
 
-    src.mSync = 0;
+    src.mSync = nullptr;
     src.mOwnsLock = false;
 
     return *this;
 }
 
-void UniqueLock::lock()
+void UniqueLock::lock(void)
 {
     if ((nullptr != mSync) && (false == mOwnsLock))
     {
@@ -47,7 +49,7 @@ void UniqueLock::lock()
     }
 }
 
-void UniqueLock::unlock()
+void UniqueLock::unlock(void)
 {
     if ((nullptr != mSync) && (true == mOwnsLock))
     {
@@ -56,7 +58,7 @@ void UniqueLock::unlock()
     }
 }
 
-Mutex* UniqueLock::release() noexcept
+Mutex* UniqueLock::release(void) noexcept
 {
     Mutex* res = mSync;
 

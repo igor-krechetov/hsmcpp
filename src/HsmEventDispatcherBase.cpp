@@ -8,8 +8,8 @@
 namespace hsmcpp
 {
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherBase"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "HsmEventDispatcherBase"
 
 HsmEventDispatcherBase::~HsmEventDispatcherBase()
 {
@@ -17,7 +17,7 @@ HsmEventDispatcherBase::~HsmEventDispatcherBase()
 
 HandlerID_t HsmEventDispatcherBase::registerEventHandler(const EventHandlerFunc_t& handler)
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     HandlerID_t id = getNextHandlerID();
     LockGuard lck(mHandlersSync);
 
@@ -28,7 +28,7 @@ HandlerID_t HsmEventDispatcherBase::registerEventHandler(const EventHandlerFunc_
 
 void HsmEventDispatcherBase::unregisterEventHandler(const HandlerID_t handlerID)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("handlerID=%d", handlerID);
+    HSM_TRACE_CALL_DEBUG_ARGS("handlerID=%d", handlerID);
     LockGuard lck(mHandlersSync);
 
     mEventHandlers.erase(handlerID);
@@ -36,7 +36,7 @@ void HsmEventDispatcherBase::unregisterEventHandler(const HandlerID_t handlerID)
 
 void HsmEventDispatcherBase::emitEvent(const HandlerID_t handlerID)
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     LockGuard lck(mEmitSync);
 
     mPendingEvents.push_back(handlerID);
@@ -46,7 +46,7 @@ void HsmEventDispatcherBase::emitEvent(const HandlerID_t handlerID)
 
 HandlerID_t HsmEventDispatcherBase::registerEnqueuedEventHandler(const EnqueuedEventHandlerFunc_t& handler)
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     HandlerID_t id = getNextHandlerID();
     LockGuard lck(mHandlersSync);
 
@@ -57,7 +57,7 @@ HandlerID_t HsmEventDispatcherBase::registerEnqueuedEventHandler(const EnqueuedE
 
 void HsmEventDispatcherBase::unregisterEnqueuedEventHandler(const HandlerID_t handlerID)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("handlerID=%d", handlerID);
+    HSM_TRACE_CALL_DEBUG_ARGS("handlerID=%d", handlerID);
     LockGuard lck(mHandlersSync);
 
     mEnqueuedEventHandlers.erase(handlerID);
@@ -106,7 +106,7 @@ void HsmEventDispatcherBase::startTimer(const HandlerID_t handlerID,
                                         const unsigned int intervalMs,
                                         const bool isSingleShot)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("handlerID=%d, timerID=%d, intervalMs=%d, isSingleShot=%d",
+    HSM_TRACE_CALL_DEBUG_ARGS("handlerID=%d, timerID=%d, intervalMs=%d, isSingleShot=%d",
                                   handlerID, timerID, intervalMs, BOOL2INT(isSingleShot));
     if (mTimerHandlers.find(handlerID) != mTimerHandlers.end())
     {
@@ -138,7 +138,7 @@ void HsmEventDispatcherBase::startTimer(const HandlerID_t handlerID,
 
 void HsmEventDispatcherBase::restartTimer(const TimerID_t timerID)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
     auto it = mActiveTimers.find(timerID);
 
     if (mActiveTimers.end() != it)
@@ -150,10 +150,10 @@ void HsmEventDispatcherBase::restartTimer(const TimerID_t timerID)
 
 void HsmEventDispatcherBase::stopTimer(const TimerID_t timerID)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
     auto it = mActiveTimers.find(timerID);
 
-    __HSM_TRACE_DEBUG__("mActiveTimers=%lu", mActiveTimers.size());
+    HSM_TRACE_DEBUG("mActiveTimers=%lu", mActiveTimers.size());
 
     if (mActiveTimers.end() != it)
     {
@@ -229,14 +229,14 @@ void HsmEventDispatcherBase::stopTimerImpl(const TimerID_t timerID)
 
 bool HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID)
 {
-    __HSM_TRACE_CALL_DEBUG_ARGS__("timerID=%d", SC2INT(timerID));
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
     bool restartTimer = false;
 
     if (INVALID_HSM_TIMER_ID != timerID)
     {
         TimerInfo curTimer = getTimerInfo(timerID);
 
-        __HSM_TRACE_DEBUG__("curTimer.handlerID=%d", curTimer.handlerID);
+        HSM_TRACE_DEBUG("curTimer.handlerID=%d", curTimer.handlerID);
 
         if (INVALID_HSM_DISPATCHER_HANDLER_ID != curTimer.handlerID)
         {
@@ -244,7 +244,7 @@ bool HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID)
 
             timerHandler(timerID);
 
-            restartTimer = (true == curTimer.isSingleShot ? false : true);
+            restartTimer = ((true == curTimer.isSingleShot) ? false : true);
         }
     }
 
@@ -265,7 +265,7 @@ void HsmEventDispatcherBase::dispatchPendingEvents()
 
 void HsmEventDispatcherBase::dispatchPendingEvents(const std::list<HandlerID_t>& events)
 {
-    if (events.size() > 0)
+    if (events.size() > 0u)
     {
         std::map<HandlerID_t, EventHandlerFunc_t> eventHandlersCopy;
 

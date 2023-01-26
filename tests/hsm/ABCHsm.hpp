@@ -1,13 +1,13 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#ifndef __HSMCPP_TESTS_HSM_ABCHSM_HPP__
-#define __HSMCPP_TESTS_HSM_ABCHSM_HPP__
+#ifndef HSMCPP_TESTS_HSM_ABCHSM_HPP
+#define HSMCPP_TESTS_HSM_ABCHSM_HPP
 
 #include "TestsCommon.hpp"
 #include "hsmcpp/hsm.hpp"
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "ABCHsm"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "ABCHsm"
 
 enum class AbcState
 {
@@ -71,4 +71,4 @@ protected:
     VariantVector_t mArgsConditionTrue;
 };
 
-#endif // __HSMCPP_TESTS_HSM_ABCHSM_HPP__
+#endif // HSMCPP_TESTS_HSM_ABCHSM_HPP

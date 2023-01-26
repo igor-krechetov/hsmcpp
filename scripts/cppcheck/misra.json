@@ -1,0 +1,9 @@
+{
+    "script": "misra.py",
+    "args": [
+        "--severity=information",
+        "--suppress-rules=12.3,8.2,8.10,2.7,20.5,13.4",
+        "--no-summary"
+    ],
+    "args_disable": "--rule-texts=../scripts/cppcheck/MISRA-C_2012_Rules.txt"
+}

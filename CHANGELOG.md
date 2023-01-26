@@ -1,17 +1,26 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.27.3] - 2023-01-26
+
+### Fixed
+- MISRA warnings
+
 ## [0.27.2] - 2023-01-25
+
 ### Fixed
 - onEntry and onState callbacks of initial HSM state are not called
 
 ## [0.27.1] - 2023-01-22
 ### Added
 - scxml2gen: new generate_code and generate_diagram API for usage from Python scripts
+
 ### Updated
 - change getStateName, getEventName to be const
+
 ### Fixed
 - scxml2gen: generation of entry transitions with condition but without an event
+
 ### Build
 - CI scripts and github actions
 - PlatformIO build integration
@@ -21,6 +30,7 @@ All notable changes to project will be documented in this file.
 - Arduino support
 - upgraded gtest to 1.13.0
 - unit tests description (states)
+
 ### Fixed
 - scxml2gen: generation of self-transitions
 
@@ -29,6 +39,7 @@ All notable changes to project will be documented in this file.
 - support for internal/external self-transitions
 
 ## [0.25.0] - 2022-12-28
+
 ### Fixed
 - improved handling of parent states:
 -- parent states are now kept active when activating substates
@@ -40,6 +51,7 @@ All notable changes to project will be documented in this file.
 - support for final states in scxml2gen
 
 ## [0.24.5] - 2022-08-16
+
 ### Fixed
 - install missing os headers after build
 
@@ -52,10 +64,12 @@ All notable changes to project will be documented in this file.
 - support for Qt6
 
 ## [0.24.2] - 2022-06-12
+
 ### Fixed
 - bool type support in hsmcpp::variant (for compilers where bool is treated as int)
 
 ## [0.24.1] - 2022-06-07
+
 ### Fixed
 - build fix for hsm timers in FreeRTOS
 
@@ -65,6 +79,7 @@ All notable changes to project will be documented in this file.
 - abstraction layer for platform specific features (threading)
 - support for transitions from signals/interrupts (FreeRTOS)
 - unit tests bringup for FreeRTOS
+
 ### Fixed
 - hsm initialization
 - fixed dispatcher test for Qt platform
@@ -82,16 +97,19 @@ All notable changes to project will be documented in this file.
 - scxml2gen is now correctly installed after build
 - improved cmake and pkg-config usability
 - added better CMake script examples
+
 ### Fixed
 - fixed support for C++11
 
 ## [0.21.1] - 2021-11-10
+
 ### Fixed
 - incorrect code generation from scxml
 
 ## [0.21.0] - 2021-11-04
 ### Added
 - support for condition callbacks in entry transitions
+
 ### Fixed
 - scxml2gen: multiple conditional entry transitions were not handled correctly
 
@@ -105,12 +123,14 @@ All notable changes to project will be documented in this file.
 - Variant unit-tests (basic)
 
 ## [0.19.1] - 2021-09-01
+
 ### Fixed
 - recursive lock in GLib base dispatcher
 
 ## [0.19.0] - 2021-08-30
 ### Added
 - support for vector and list types to Variant (VariantVector_t, VariantList_t)
+
 ### Fixed
 - deadlock in GLib dispatcher
 - fixed build with enabled traces
@@ -119,20 +139,24 @@ All notable changes to project will be documented in this file.
 ### Added
 - Variant::toMap()
 - Variant::isDictionary()
+
 ### Updated
 - improved dispatcher emit logic when used with multiple HSM instances
+
 ### Fixed
 - fixed 05_timers_generated example
 
 ## [0.18.0] - 2021-08-19
 ### Added
 - added posibility to set expected condition value for transitions
+
 ### Updated
 - improved internal HSM traces
 
 ## [0.17.1] - 2021-08-19
 ### Added
 - Variant::make to convert std::map to VariantDict_t
+
 ### Updated
 - improve VariantDict_t to accept Variant as a key
 
@@ -149,25 +173,30 @@ All notable changes to project will be documented in this file.
 - hsmdebugger: support of timers
 
 ## [0.15.0] 2021-08-06
+
 ### Fixed
 - added namespace for hsmcpp
 
 ## [0.14.4] 2021-08-04
 ### Added
 - BYTEARRAY type to Variant
+
 ### Fixed
 - fix build issue related with no default constructor for TransitionInfo
 
 ## [0.14.3] 2021-08-03
+
 ### Fixed
 - fix build warnings
 - renamed trace macroses to avoid potential name conflicts
 
 ## [0.14.1] 2021-06-13
+
 ### Updated
 - memory footprint test
 - add new template to use hsmcpp directly from GitHub
 - diagrams for wiki (history)
+
 ### Fixed
 - fix build script to explicitly use python 3
 - fix variables export
@@ -177,12 +206,14 @@ All notable changes to project will be documented in this file.
 - support for history states in scxml2gen
 - example for history usage
 - generateHsmDiagram() CMake function
+
 ### Fixed
 - hsmdebugger: selecting jar file for plantuml wasn't working on Ubuntu
 
 ## [0.14.0] - 2021-05-31
 ### Added
 - support for history states (not supported in generator yet)
+
 ### Fixed
 - handle scenario when initial state of HSM has substates (from now on initialize() API must be called after defining HSM structure)
 
@@ -192,6 +223,7 @@ All notable changes to project will be documented in this file.
 - diagrams for wiki
 
 ## [0.13.3] - 2021-05-17
+
 ### Fixed
 - crash in hsmdebugger while quickly switching frames
 
@@ -199,6 +231,7 @@ All notable changes to project will be documented in this file.
 ### Added
 - support for Windows build
 - simple build scripts
+
 ### Fixed
 - scxml2gen: added support of Python 3 versions before 3.8 (due to a bug in XML parser)
 
@@ -207,6 +240,7 @@ All notable changes to project will be documented in this file.
 - hsmdebugger: app icon
 - hsmdebugger: setting to set plantuml path
 - hsmdebugger: startup scripts for Windows and Linux
+
 ### Fixed
 - hsmdebugger: Windows support
 
@@ -215,6 +249,7 @@ All notable changes to project will be documented in this file.
 - hsmdebugger: search frames feature
 - hsmdebugger: settings
 - hsmdebugger: caching of generated images
+
 ### Fixed
 - crash caused by mistake in enableHsmDebugging()
 
@@ -258,6 +293,7 @@ All notable changes to project will be documented in this file.
 ### Added
 - Qt based event dispatcher
 - Qt based example
+
 ### Updated
 - improve log macroses
 - rename emit() -> emitEvent() in IHsmEventDispatcher (due to name collision with Qt)
@@ -268,6 +304,7 @@ All notable changes to project will be documented in this file.
 - new examples
 - HsmEventDispatcherSTD::join()
 - HsmEventDispatcherSTD::stop()
+
 ### Updated
 - improved build configuration
 - rename build options: HSMBUILD_VERBOSE, HSMBUILD_STRUCTURE_VALIDATION, HSMBUILD_THREAD_SAFETY, HSMBUILD_DISPATCHER_GLIB, HSMBUILD_DISPATCHER_GLIBMM, HSMBUILD_DISPATCHER_STD, HSMBUILD_TESTS, HSMBUILD_EXAMPLES
@@ -278,36 +315,45 @@ All notable changes to project will be documented in this file.
 ## [0.5.0] - 2021-03-17
 ### Added
 - glib based event dispatcher
+
 ### Updated
 - reduce output from gtests
 - improve gtest CMakeLists
+
 ### Fixed
 - improve thread safety in all available dispatchers
 - assigning same Variant object to itself
 - move dispatchers creation to main thread in gtests
+
 ### Build
 - new CMake build option: DISPATCHER_GLIBMM
 ## [0.4.2] - 2021-03-10
 ### Added
 - add timeout to sync transitions
 - add transitionSync() API for convenience
+
 ### Updated
 - remove HsmHandlerClass from HierarchicalStateMachine class template parameters
 - rename HsmEventDispatcherGLib -> HsmEventDispatcherGLibmm
 
 ## [0.4.1] - 2021-03-08
+
 ### Updated
 - thread safety for HSM
+
 ### Build
 - New CMake build options: THREAD_SAFETY
 
 ## [0.4.0] - 2021-03-05
 ### Added
 - std::thread based event dispatcher
+
 ### Updated
 - Dispatchers should now be set using initialize() methond of HSM. If dispatcher is not running yet it will be automatically started.
+
 ### Fixed
 - Fix a race-condition bug in AsyncHsm (unittests).
+
 ### Build
 - New CMake build options: DISPATCHER_STD, BUILD_TESTS, BUILD_EXAMPLES
 - Unittests are now compiled into two separate binaries: GLib and STD based.
@@ -316,8 +362,10 @@ All notable changes to project will be documented in this file.
 ### Added
 - Support for custom event dispatchers. Allows integration of HSM with any event dispatching mechanism used on the project.
 - GLibmm event dispatcher
+
 ### Fixed
 - Remov unnecessary event emit during transition
+
 ### Build
 - CMake build options: VERBOSE, STRUCTURE_VALIDATION, DISPATCHER_GLIB
 

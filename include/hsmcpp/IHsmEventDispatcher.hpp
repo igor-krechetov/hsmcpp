@@ -1,8 +1,8 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
-#ifndef __HSMCPP_IHSMEVENTDISPATCHER_HPP__
-#define __HSMCPP_IHSMEVENTDISPATCHER_HPP__
+#ifndef HSMCPP_IHSMEVENTDISPATCHER_HPP
+#define HSMCPP_IHSMEVENTDISPATCHER_HPP
 
 #include <functional>
 
@@ -116,4 +116,4 @@ public:
 
 }// namespace hsmcpp
 
-#endif // __HSMCPP_IHSMEVENTDISPATCHER_HPP__
+#endif // HSMCPP_IHSMEVENTDISPATCHER_HPP

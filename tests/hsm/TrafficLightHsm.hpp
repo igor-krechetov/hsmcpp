@@ -1,13 +1,13 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#ifndef __HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP__
-#define __HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP__
+#ifndef HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP
+#define HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP
 
 #include "TestsCommon.hpp"
 #include "hsmcpp/hsm.hpp"
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "TrafficLightHsm"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "TrafficLightHsm"
 
 enum class TrafficLightState
 {
@@ -69,4 +69,4 @@ public:
     VariantVector_t mLastFailedTransitionArgs;
 };
 
-#endif // __HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP__
+#endif // HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP

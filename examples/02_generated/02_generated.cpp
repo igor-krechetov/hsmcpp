@@ -14,14 +14,14 @@ public:
 protected:
     void onOff(const VariantVector_t& args) override
     {
-        printf("Off\n");
+        (void)printf("Off\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         transition(SwitchHsmEvents::SWITCH);
     }
 
     void onOn(const VariantVector_t& args) override
     {
-        printf("On\n");
+        (void)printf("On\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         transition(SwitchHsmEvents::SWITCH);
     }
@@ -32,10 +32,11 @@ int main(const int argc, const char**argv)
     std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
     SwitchHsm hsm;
 
-    hsm.initialize(dispatcher);
-    hsm.transition(SwitchHsmEvents::SWITCH);
+    if (true == hsm.initialize(dispatcher)) {
+        hsm.transition(SwitchHsmEvents::SWITCH);
 
-    dispatcher->join();
+        dispatcher->join();
+    }
 
     return 0;
 }

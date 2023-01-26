@@ -5,10 +5,10 @@
 #include "hsmcpp/logging.hpp"
 #include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "01_trafficlight"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "01_trafficlight"
 
-__HSM_TRACE_PREINIT__();
+HSM_TRACE_PREINIT();
 
 using namespace hsmcpp;
 
@@ -139,8 +139,8 @@ void simulateSync2()
 
 int main(const int argc, const char**argv)
 {
-    __HSM_TRACE_INIT__();
-    __HSM_TRACE_CALL_ARGS__("01_trafficlight");
+    HSM_TRACE_INIT();
+    HSM_TRACE_CALL_ARGS("01_trafficlight");
 
     Glib::init();
     mMainLoop = Glib::MainLoop::create();

@@ -7,12 +7,12 @@
 namespace hsmcpp
 {
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherSTD"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "HsmEventDispatcherSTD"
 
 HsmEventDispatcherSTD::~HsmEventDispatcherSTD()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     unregisterAllEventHandlers();
     stop();
@@ -21,7 +21,7 @@ HsmEventDispatcherSTD::~HsmEventDispatcherSTD()
 
 void HsmEventDispatcherSTD::emitEvent(const HandlerID_t handlerID)
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     if (true == mDispatcherThread.joinable())
     {
@@ -32,12 +32,12 @@ void HsmEventDispatcherSTD::emitEvent(const HandlerID_t handlerID)
 
 bool HsmEventDispatcherSTD::start()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     bool result = false;
 
     if (false == mDispatcherThread.joinable())
     {
-        __HSM_TRACE_DEBUG__("starting thread...");
+        HSM_TRACE_DEBUG("starting thread...");
         mStopDispatcher = false;
         mDispatcherThread = std::thread(&HsmEventDispatcherSTD::doDispatching, this);
         result = mDispatcherThread.joinable();
@@ -52,7 +52,7 @@ bool HsmEventDispatcherSTD::start()
 
 void HsmEventDispatcherSTD::stop()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     if (true == mDispatcherThread.joinable())
     {
@@ -63,7 +63,7 @@ void HsmEventDispatcherSTD::stop()
 
 void HsmEventDispatcherSTD::join()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     if (true == mDispatcherThread.joinable())
     {
@@ -73,7 +73,7 @@ void HsmEventDispatcherSTD::join()
 
 void HsmEventDispatcherSTD::doDispatching()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
 
     while (false == mStopDispatcher)
     {
@@ -85,14 +85,17 @@ void HsmEventDispatcherSTD::doDispatching()
 
             if (true == mPendingEvents.empty())
             {
-                __HSM_TRACE_DEBUG__("wait for emit...");
+                HSM_TRACE_DEBUG("wait for emit...");
+                // NOTE: false-positive. "A function should have a single point of exit at the end" is not vialated because
+                //       "return" statement belogs to a lamda function, not doDispatching.
+                // cppcheck-suppress misra-c2012-15.5
                 mEmitEvent.wait(lck, [=](){ return (false == mPendingEvents.empty()) || (true == mStopDispatcher); });
-                __HSM_TRACE_DEBUG__("woke up. pending events=%lu", mPendingEvents.size());
+                HSM_TRACE_DEBUG("woke up. pending events=%lu", mPendingEvents.size());
             }
         }
     }
 
-    __HSM_TRACE_DEBUG__("EXIT");
+    HSM_TRACE_DEBUG("EXIT");
 }
 
 }

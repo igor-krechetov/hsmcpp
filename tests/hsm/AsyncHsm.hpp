@@ -1,7 +1,7 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#ifndef __HSMCPP_TESTS_HSM_ASYNCHSM_HPP__
-#define __HSMCPP_TESTS_HSM_ASYNCHSM_HPP__
+#ifndef HSMCPP_TESTS_HSM_ASYNCHSM_HPP
+#define HSMCPP_TESTS_HSM_ASYNCHSM_HPP
 
 #include "TestsCommon.hpp"
 #include <atomic>
@@ -10,8 +10,8 @@
 #include "hsmcpp/os/Mutex.hpp"
 #include "hsmcpp/os/ConditionVariable.hpp"
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "AsyncHsm"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "AsyncHsm"
 
 enum class AsyncHsmState
 {
@@ -58,4 +58,4 @@ protected:
     hsmcpp::ConditionVariable mBlockNextStep;
 };
 
-#endif // __HSMCPP_TESTS_HSM_ASYNCHSM_HPP__
+#endif // HSMCPP_TESTS_HSM_ASYNCHSM_HPP

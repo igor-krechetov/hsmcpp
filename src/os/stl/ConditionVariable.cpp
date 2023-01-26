@@ -23,6 +23,8 @@ void ConditionVariable::wait(UniqueLock& sync, std::function<bool()> stopWaiting
         lck = std::unique_lock<std::mutex>(sync.mutex()->nativeHandle(), std::adopt_lock);
     }
 
+    // NOTE: false-positive. std::function has bool() operator
+    // cppcheck-suppress misra-c2012-14.4
     if (stopWaiting)
     {
         mVariable.wait(lck, stopWaiting);

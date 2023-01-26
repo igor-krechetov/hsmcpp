@@ -7,8 +7,8 @@
 namespace hsmcpp
 {
 
-#undef __HSM_TRACE_CLASS__
-#define __HSM_TRACE_CLASS__                         "HsmEventDispatcherGLib"
+#undef HSM_TRACE_CLASS
+#define HSM_TRACE_CLASS                         "HsmEventDispatcherGLib"
 
 HsmEventDispatcherGLib::HsmEventDispatcherGLib()
 {
@@ -21,7 +21,7 @@ HsmEventDispatcherGLib::HsmEventDispatcherGLib(GMainContext* context)
 
 HsmEventDispatcherGLib::~HsmEventDispatcherGLib()
 {
-    __HSM_TRACE_CALL__();
+    HSM_TRACE_CALL();
 
     mStopDispatcher = true;
 
@@ -46,7 +46,7 @@ HsmEventDispatcherGLib::~HsmEventDispatcherGLib()
 
 void HsmEventDispatcherGLib::emitEvent(const HandlerID_t handlerID)
 {
-    __HSM_TRACE_CALL__();
+    HSM_TRACE_CALL();
     if (mPipeFD[1] > 0)
     {
         HsmEventDispatcherBase::emitEvent(handlerID);
@@ -62,7 +62,7 @@ void HsmEventDispatcherGLib::emitEvent(const HandlerID_t handlerID)
 
 bool HsmEventDispatcherGLib::start()
 {
-    __HSM_TRACE_CALL_DEBUG__();
+    HSM_TRACE_CALL_DEBUG();
     bool result = false;
 
     // check if dispatcher was already started
@@ -86,17 +86,17 @@ bool HsmEventDispatcherGLib::start()
                 }
                 else
                 {
-                    __HSM_TRACE_ERROR__("failed to create io source");
+                    HSM_TRACE_ERROR("failed to create io source");
                 }
             }
             else
             {
-                __HSM_TRACE_ERROR__("failed to create io channel");
+                HSM_TRACE_ERROR("failed to create io channel");
             }
         }
         else
         {
-            __HSM_TRACE_ERROR__("failed to create pipe (errno=%d)", errno);
+            HSM_TRACE_ERROR("failed to create pipe (errno=%d)", errno);
         }
 
         if (false == result)
@@ -126,7 +126,7 @@ bool HsmEventDispatcherGLib::start()
 
 gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOCondition condition, gpointer data)
 {
-    __HSM_TRACE_CALL__();
+    HSM_TRACE_CALL();
     gboolean continueDispatching = TRUE;
     HsmEventDispatcherGLib* pThis = static_cast<HsmEventDispatcherGLib*>(data);
 
@@ -134,7 +134,7 @@ gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOConditi
     {
         pThis->mDispatchingIterationRunning = true;
 
-        __HSM_TRACE_DEBUG__("condition=%d, G_IO_HUP=%s, G_IO_IN=%s", static_cast<int>(condition), BOOL2STR(condition & G_IO_HUP), BOOL2STR(condition & G_IO_IN));
+        HSM_TRACE_DEBUG("condition=%d, G_IO_HUP=%s, G_IO_IN=%s", static_cast<int>(condition), BOOL2STR(condition & G_IO_HUP), BOOL2STR(condition & G_IO_IN));
 
         if (!(condition & G_IO_HUP))
         {

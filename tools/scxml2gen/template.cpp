@@ -5,14 +5,17 @@
 @CLASS_NAME@::@CLASS_NAME@()
     : hsmcpp::HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>(@ENUM_STATES@::@INITIAL_STATE@)
 {
-    configureHsm();
 }
 
 @CLASS_NAME@::~@CLASS_NAME@()
 {}
 
-void @CLASS_NAME@::configureHsm()
-{
+bool @CLASS_NAME@::initialize(const std::shared_ptr<hsmcpp::IHsmEventDispatcher>& dispatcher) {
+    configureHsm();
+    return hsmcpp::HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@>::initialize(dispatcher);
+}
+
+void @CLASS_NAME@::configureHsm() {
     registerFailedTransitionCallback<@CLASS_NAME@>(this, &@CLASS_NAME@::onTransitionFailed);
 
     @REGISTER_STATES@
@@ -39,7 +42,7 @@ std::string @CLASS_NAME@::getStateName(const @ENUM_STATES@ state) const
     {
 ~~~BLOCK:ENUM_STATES_ITEM~~~
         case @ENUM_STATES@::@ENUM_STATES_ITEM@:
-            stateName = "@ENUM_STATES_ITEM@";
+            (void)stateName.assign("@ENUM_STATES_ITEM@");
             break;
 ~~~BLOCK_END~~~
         default:
@@ -58,7 +61,7 @@ std::string @CLASS_NAME@::getEventName(const @ENUM_EVENTS@ event) const
     {
 ~~~BLOCK:ENUM_EVENTS_ITEM~~~
         case @ENUM_EVENTS@::@ENUM_EVENTS_ITEM@:
-            eventName = "@ENUM_EVENTS_ITEM@";
+            (void)eventName.assign("@ENUM_EVENTS_ITEM@");
             break;
 ~~~BLOCK_END~~~
         default:

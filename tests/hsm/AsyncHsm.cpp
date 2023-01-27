@@ -84,7 +84,7 @@ void AsyncHsm::onNextStateTransition(const VariantVector_t& args)
     mBlockNextStep.wait(lck);
 }
 
-bool AsyncHsm::waitAsyncOperation(const int timeoutMs)
+bool AsyncHsm::waitAsyncOperation(const int timeoutMs, const bool unblockNext)
 {
     UniqueLock lck(mSyncLock);
 
@@ -93,7 +93,11 @@ bool AsyncHsm::waitAsyncOperation(const int timeoutMs)
     mSyncVariableCheck = false;
     HSM_TRACE_DEBUG("----> AsyncHsm::waitAsyncOperation: DONE (res=%s)", BOOL2STR(res));
 
-    return true;
+    if (true == unblockNext) {
+        unblockNextStep();
+    }
+
+    return res;
 }
 
 void AsyncHsm::unblockNextStep()

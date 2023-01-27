@@ -141,7 +141,7 @@ TEST_F(AsyncHsm, parallel_transition_04)
 
     setInitialState(AsyncHsmState::P1);
     initializeHsm();
-    waitAsyncOperation(300);// wait for A state to activate
+    waitAsyncOperation(300, true);// wait for A state to activate
 
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AsyncHsmState::P1, AsyncHsmState::A}));
 
@@ -336,7 +336,7 @@ TEST_F(AsyncHsm, parallel_transition_10_internal_priority)
     registerTransition(AsyncHsmState::P1, AsyncHsmState::D, AsyncHsmEvent::NEXT_STATE);
 
     initializeHsm();
-    waitAsyncOperation(300);// wait for A state to activate
+    waitAsyncOperation(300, true);// wait for A state to activate
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AsyncHsmState::P1, AsyncHsmState::A}));
 
     //-------------------------------------------

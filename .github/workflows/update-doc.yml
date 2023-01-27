@@ -15,15 +15,13 @@ jobs:
       commit_version: ${{ steps.get_version.outputs.commit_version }}
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: ./.github/workflows/get-commit-version
-      id: get_version
-      with:
-        repo_dir: ${{ env.GITHUB_WORKSPACE }}
-        commit_sha: ${{ github.event.workflow_run.head_sha }}
-    - run: |
-        echo "VERSION: '${{ steps.get_version.outputs.commit_version }}'"
-   
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/get-commit-version
+        id: get_version
+        with:
+          repo_dir: ${{ env.GITHUB_WORKSPACE }}
+          commit_sha: ${{ github.event.workflow_run.head_sha }}
+
   update-doc-src:
     runs-on: ubuntu-latest
     needs: check-hsmcpp-version

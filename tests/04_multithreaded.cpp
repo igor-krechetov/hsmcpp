@@ -46,19 +46,19 @@ TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
     // ACTIONS
     // this should trigger A -> [P1 -> B]
     transition(AsyncHsmEvent::NEXT_STATE);
-    waitAsyncOperation(200);// wait for A::onExit
+    waitAsyncOperation(200, false);// wait for A::onExit
 
     // send new event with clearQueue=TRUE
     transitionWithQueueClear(AsyncHsmEvent::EXIT_SUBSTATE);
 
     unblockNextStep();// allow A::onExit to continue
-    waitAsyncOperation(200);// wait for B::onStateChanged
+    waitAsyncOperation(200, false);// wait for B::onStateChanged
 
     // NOTE: this is the main validation point. In case of an error state would be C since we would never go into B
     ASSERT_EQ(getLastActiveState(), AsyncHsmState::B);
     unblockNextStep();// allow B::onStateChanged to continue
 
-    waitAsyncOperation(200);// wait for C::onStateChanged
+    waitAsyncOperation(200, false);// wait for C::onStateChanged
     ASSERT_EQ(getLastActiveState(), AsyncHsmState::C);
     unblockNextStep();// allow C::onStateChanged to continue
 
@@ -134,7 +134,7 @@ TEST_F(AsyncHsm, multithreaded_transition_from_interrupt)
     //-------------------------------------------
     // ACTIONS
     raise(SIGUSR1);
-    ASSERT_TRUE(waitAsyncOperation(1000));
+    ASSERT_TRUE(waitAsyncOperation(1000, true));
 
     //-------------------------------------------
     // VALIDATION

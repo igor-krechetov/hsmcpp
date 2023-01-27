@@ -24,6 +24,7 @@ option(HSMBUILD_DISPATCHER_STD "Enable std::thread based dispatcher" ON)
 option(HSMBUILD_DISPATCHER_QT "Enable Qt based dispatcher" OFF)
 option(HSMBUILD_TESTS "Build unittests" ON)
 option(HSMBUILD_EXAMPLES "Build examples" ON)
+option(HSMBUILD_CODECOVERAGE "Build with code coverage" OFF)
 
 set(HSMBUILD_PLATFORM "default" CACHE STRING "Specifies platform")# Possible values: empty, freertos, arduino
 set(HSMBUILD_FREERTOS_ROOT "" CACHE STRING "FreeRTOS sources root folder")
@@ -56,6 +57,13 @@ if (HSMBUILD_PLATFORM STREQUAL "freertos")
     message("HSMBUILD_FREERTOS_DEFAULT_ISR_DETECT = ${HSMBUILD_FREERTOS_DEFAULT_ISR_DETECT}")
 endif()
 message("--------------------------------------")
+
+# ================================================================================================
+# Code Coverage support
+if (HSMBUILD_CODECOVERAGE)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/CodeCoverage.cmake)
+    append_coverage_compiler_flags()
+endif()
 
 # ================================================================================================
 # Common source code

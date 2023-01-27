@@ -1,0 +1,126 @@
+name: "Build Helper"
+
+inputs:
+  # values: ubuntu, windows
+  platform:
+    required: true
+    type: string
+    default: 'ubuntu'
+  src_dir:
+    required: true
+    type: string
+  build_dir:
+    required: true
+    type: string
+  # values: Release, Debug
+  build_type:
+    required: false
+    type: string
+    default: 'Release'
+  build_glib:
+    required: false
+    type: string
+    default: 'ON'
+  build_glibmm:
+    required: false
+    type: string
+    default: 'ON'
+  build_qt:
+    required: false
+    type: string
+    default: 'ON'
+  build_std:
+    required: false
+    type: string
+    default: 'ON'
+  build_tests:
+    required: false
+    type: string
+    default: 'ON'
+  build_examples:
+    required: false
+    type: string
+    default: 'ON'
+  codecoverage:
+    required: false
+    type: string
+    default: 'OFF'
+
+runs:
+  using: "composite"
+
+  steps:
+    # --------------------------------- Ubuntu build ---------------------------------
+    - uses: awalsh128/cache-apt-pkgs-action@v1.2.2
+      if: ${{ (inputs.platform == 'ubuntu') && ((inputs.build_glib == 'ON') || (inputs.build_glibmm == 'ON')) }}
+      with:
+        packages: libglibmm-2.4-dev
+        version: 1.0
+
+    - name: Install Qt (Ubuntu)
+      if: ${{ (inputs.platform == 'ubuntu') && (inputs.build_qt == 'ON') }}
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.4.*'
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        modules: ''
+        cache: 'true'
+        cache-key-prefix: 'install-qt-action-linux'
+        set-env: 'true'
+
+    - name: Configure CMake (Ubuntu)
+      if: ${{ inputs.platform == 'ubuntu' }}
+      shell: bash
+      run: |
+        cmake -B ${{ inputs.build_dir }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+          -DHSMBUILD_VERBOSE=OFF \
+          -DHSMBUILD_DISPATCHER_GLIB=${{ inputs.build_glib }} \
+          -DHSMBUILD_DISPATCHER_GLIBMM=${{ inputs.build_glibmm }} \
+          -DHSMBUILD_DISPATCHER_STD=${{ inputs.build_std }} \
+          -DHSMBUILD_DISPATCHER_QT=${{ inputs.build_qt }} \
+          -DHSMBUILD_TESTS=${{ inputs.build_tests }} \
+          -DHSMBUILD_EXAMPLES=${{ inputs.build_examples }} \
+          -DHSMBUILD_CODECOVERAGE=${{ inputs.codecoverage }} \
+          -DHSMBUILD_DEBUGGING=ON \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+          ${{ inputs.src_dir }}
+
+    - name: Build (Ubuntu)
+      if: ${{ inputs.platform == 'ubuntu' }}
+      shell: bash
+      run: cmake --build ${{ inputs.build_dir }} --parallel 2 --config ${{ inputs.build_type }}
+
+    # --------------------------------- Windows build ---------------------------------
+    - name: Install Qt (Windows)
+      if: ${{ (inputs.platform == 'windows') && (inputs.build_qt == 'ON') }}
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.4.*'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        modules: ''
+        cache: 'true'
+        cache-key-prefix: 'install-qt-action-win32'
+        set-env: 'true'
+
+    - name: Configure CMake (Windows)
+      if: ${{ inputs.platform == 'windows' }}
+      shell: cmd
+      run: cmake -B ${{github.workspace}}\build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ^
+            -DHSMBUILD_VERBOSE=OFF ^
+            -DHSMBUILD_DISPATCHER_GLIB=OFF ^
+            -DHSMBUILD_DISPATCHER_GLIBMM=OFF ^
+            -DHSMBUILD_DISPATCHER_STD=ON ^
+            -DHSMBUILD_DISPATCHER_QT=ON ^
+            -DHSMBUILD_TESTS=ON ^
+            -DHSMBUILD_EXAMPLES=ON ^
+            -DHSMBUILD_DEBUGGING=ON ^
+            ${{ inputs.src_dir }}
+
+    - name: Build (Windows)
+      if: ${{ inputs.platform == 'windows' }}
+      shell: cmd
+      run: cmake --build ${{github.workspace}}\build --parallel 2 --config ${{env.BUILD_TYPE}}

@@ -58,7 +58,6 @@ bool ConditionVariable::wait_for(UniqueLock& sync, const int timeoutMs, std::fun
 
     const bool res = mVariable.wait_for(lck, std::chrono::milliseconds(timeoutMs), stopWaiting);
 
-
     // no need to unlock on exit if lock already belonged to UniqueLock object
     if (true == sync.owns_lock())
     {

@@ -6,6 +6,7 @@
 #include "hsmcpp/IHsmEventDispatcher.hpp"
 #include "hsmcpp/logging.hpp"
 #include <list>
+#include <string>
 
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS                         "TestsCommon"
@@ -32,7 +33,7 @@ using namespace hsmcpp;
 
 // ======================================================
 // Utility functions
-void configureGTest();
+void configureGTest(const std::string& name);
 
 template <typename HsmStateEnum>
 bool compareStateLists(const std::list<HsmStateEnum> l1, const std::list<HsmStateEnum> l2)

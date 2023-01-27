@@ -2,6 +2,7 @@
 #include <mutex>
 #include <condition_variable>
 #include "ConfigurableEventListener.hpp"
+#include "utils/gtestbadge/BadgeEventListener.h"
 
 #if defined(TEST_HSM_GLIB)
   #include <glib.h>
@@ -18,10 +19,11 @@ std::function<bool()> gFunc;
 bool gCallDone;
 bool gCallResult;
 
-void configureGTest()
+void configureGTest(const std::string& name)
 {
-#ifdef LOGGING_MODE_OFF
     testing::TestEventListeners& listeners = testing::UnitTest::GetInstance()->listeners();
+
+#ifdef LOGGING_MODE_OFF
     auto default_printer = listeners.Release(listeners.default_result_printer());
 
     // add our listener, by default everything is on (the same as using the default listener)
@@ -33,6 +35,7 @@ void configureGTest()
     // [  PASSED  ] 149 tests.
 
     ConfigurableEventListener *listener = new ConfigurableEventListener(default_printer);
+
     listener->showEnvironment = false;
     listener->showTestCases = false;
     listener->showTestNames = false;
@@ -40,6 +43,14 @@ void configureGTest()
     listener->showInlineFailures = false;
     listeners.Append(listener);
 #endif // LOGGING_MODE_OFF
+
+    // Create and register a new BadgeEventListener
+    BadgeEventListener * bel = new BadgeEventListener();
+
+    bel->setOutputFilename("tests_result_" + name + ".svg"); //set badge filename
+    bel->setSilent(true); //disable all console output
+    bel->setWarningRatio(0.3); //if less than 30% of test fails, show the `warning` badge type. Else, show the `failed` badge type.
+    listeners.Append(bel); //Google Test assumes the ownership of the listener (i.e. it will delete the listener when the test program finishes).
 }
 
 #if defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM) || defined(TEST_HSM_QT)

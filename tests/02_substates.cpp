@@ -599,7 +599,7 @@ TEST_F(AsyncHsm, substate_parent_as_initial)
     //-------------------------------------------
     // ACTIONS
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation(200));
+    ASSERT_TRUE(waitAsyncOperation(200, true));
 
     //-------------------------------------------
     // VALIDATION

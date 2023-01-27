@@ -46,7 +46,7 @@ public:
     void onStateChanged(const VariantVector_t& args);
     void onNextStateTransition(const VariantVector_t& args);
 
-    bool waitAsyncOperation(const int timeoutMs);
+    bool waitAsyncOperation(const int timeoutMs, const bool unblockNext);
     void unblockNextStep();
 
 protected:

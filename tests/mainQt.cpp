@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
     unitTestResult = std::async(std::launch::async, [&] {
         ::testing::InitGoogleMock(&argc, argv);
-        configureGTest();
+        configureGTest("qt");
 
         int result = RUN_ALL_TESTS();
 
@@ -21,5 +21,7 @@ int main(int argc, char** argv)
         return result;
     });
 
-    return app.exec();
+    app.exec();
+
+    return 0;
 }

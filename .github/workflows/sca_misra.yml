@@ -18,38 +18,21 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - uses: awalsh128/cache-apt-pkgs-action@v1.2.2
+    - name: Install cppcheck
+      uses: awalsh128/cache-apt-pkgs-action@v1.2.2
       with:
-        packages: libglibmm-2.4-dev cppcheck
+        packages: cppcheck
         version: 1.0
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
+    - name: Build project
+      uses: ./.github/workflows/build_helper
       with:
-        version: '6.4.*'
-        host: 'linux'
-        target: 'desktop'
-        arch: 'gcc_64'
-        modules: ''
-        cache: 'true'
-        cache-key-prefix: 'install-qt-action-linux'
-        set-env: 'true'
-
-    - name: Configure CMake
-      run: |
-        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-          -DHSMBUILD_VERBOSE=OFF \
-          -DHSMBUILD_DISPATCHER_GLIB=ON \
-          -DHSMBUILD_DISPATCHER_GLIBMM=ON \
-          -DHSMBUILD_DISPATCHER_STD=ON \
-          -DHSMBUILD_DISPATCHER_QT=ON \
-          -DHSMBUILD_TESTS=OFF \
-          -DHSMBUILD_EXAMPLES=ON \
-          -DHSMBUILD_DEBUGGING=ON \
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --parallel 2 --config ${{env.BUILD_TYPE}}
+        build_type: ${{env.BUILD_TYPE}}
+        src_dir: ${{github.workspace}}
+        build_dir: ${{github.workspace}}/build
+        platform: 'ubuntu'
+        build_tests: 'OFF'
+        build_examples: 'ON'
 
     - name: Run MISRA check
       run: |

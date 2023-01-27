@@ -5,6 +5,7 @@ All notable changes to project will be documented in this file.
 
 ### Fixed
 - MISRA warnings
+- lock issue in async tests (01-30)
 
 ## [0.27.2] - 2023-01-25
 

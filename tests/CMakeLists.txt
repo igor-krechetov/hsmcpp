@@ -11,22 +11,27 @@ PRIVATE
 
 # ================================================
 # COMMON SOURCE CODE
-set(SRC_UNITTESTS_COMMON 01_states.cpp
-                         02_substates.cpp
-                         03_transitions.cpp
-                         04_multithreaded.cpp
-                         05_callbacks.cpp
-                         06_dispatchers.cpp
-                         07_parallel.cpp
-                         08_history.cpp
-                         09_timers.cpp
-                         10_state_actions.cpp
-                         11_finalstate.cpp
-                         20_variant.cpp
-                         TestsCommon.cpp
+set(SRC_UNITTESTS_COMMON ${CMAKE_CURRENT_SOURCE_DIR}/01_states.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/02_substates.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/03_transitions.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/04_multithreaded.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/05_callbacks.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/06_dispatchers.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/07_parallel.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/08_history.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/09_timers.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/10_state_actions.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/11_finalstate.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/20_variant.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/TestsCommon.cpp
+
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/ABCHsm.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/AsyncHsm.cpp
+
+                         ${CMAKE_CURRENT_SOURCE_DIR}/utils/gtestbadge/Badge.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/utils/gtestbadge/BadgeEventListener.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/utils/gtestbadge/BadgeTemplate.cpp
 )
 
 # ================================================

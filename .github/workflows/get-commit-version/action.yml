@@ -14,12 +14,7 @@ outputs:
 
 runs:
   using: "composite"
-  # version_check:
-    # name: Generate output
-    # runs-on: ubuntu-latest
-  # outputs:
-  #   head_version: ${{ steps.read_head_version.outputs.head_version }}
-  #   commit_version: ${{ steps.read_commit_version.outputs.commit_version }}
+
   steps:
     - id: read_head_version
       shell: bash
@@ -27,9 +22,18 @@ runs:
       run: |
         cd "${{ inputs.repo_dir }}"
         echo "head_version=$(git log -1 --pretty=format:"%s" | grep -Po '\[([\d.]+)\]')" >> $GITHUB_OUTPUT
+    - if: ${{ inputs.commit_sha == '' }}
+      shell: bash
+      run: |
+        echo "VERSION: '${{ steps.read_head_version.outputs.head_version }}'"
+
     - id: read_commit_version
       shell: bash
       if: ${{ inputs.commit_sha != '' }}
       run: |
         cd "${{ inputs.repo_dir }}"
         echo "commit_version=$(git log -1 ${{ inputs.commit_sha }} --pretty=format:"%s" | grep -Po '\[([\d.]+)\]')" >> $GITHUB_OUTPUT
+    - if: ${{ inputs.commit_sha != '' }}
+      shell: bash
+      run: |
+        echo "VERSION: '${{ steps.read_commit_version.outputs.head_version }}'"

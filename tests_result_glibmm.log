@@ -1,0 +1,282 @@
+[==========] Running 105 tests from 8 test suites.
+[----------] Global test environment set-up.
+[----------] 19 tests from TrafficLightHsm
+[ RUN      ] TrafficLightHsm.initial_state
+[       OK ] TrafficLightHsm.initial_state (0 ms)
+[ RUN      ] TrafficLightHsm.register_states
+[       OK ] TrafficLightHsm.register_states (0 ms)
+[ RUN      ] TrafficLightHsm.register_state_without_action
+[       OK ] TrafficLightHsm.register_state_without_action (0 ms)
+[ RUN      ] TrafficLightHsm.register_same_state_twice
+[       OK ] TrafficLightHsm.register_same_state_twice (0 ms)
+[ RUN      ] TrafficLightHsm.err_register_without_handler
+[       OK ] TrafficLightHsm.err_register_without_handler (0 ms)
+[ RUN      ] TrafficLightHsm.state_args_test
+[       OK ] TrafficLightHsm.state_args_test (0 ms)
+[ RUN      ] TrafficLightHsm.simple_transition
+[       OK ] TrafficLightHsm.simple_transition (0 ms)
+[ RUN      ] TrafficLightHsm.transition_check
+[       OK ] TrafficLightHsm.transition_check (0 ms)
+[ RUN      ] TrafficLightHsm.transition_with_args
+[       OK ] TrafficLightHsm.transition_with_args (0 ms)
+[ RUN      ] TrafficLightHsm.transition_failed_notification
+[       OK ] TrafficLightHsm.transition_failed_notification (0 ms)
+[ RUN      ] TrafficLightHsm.transition_non_existent
+[       OK ] TrafficLightHsm.transition_non_existent (0 ms)
+[ RUN      ] TrafficLightHsm.transition_cancel_on_exit
+[       OK ] TrafficLightHsm.transition_cancel_on_exit (0 ms)
+[ RUN      ] TrafficLightHsm.transition_cancel_on_enter
+[       OK ] TrafficLightHsm.transition_cancel_on_enter (0 ms)
+[ RUN      ] TrafficLightHsm.transition_self_internal
+[       OK ] TrafficLightHsm.transition_self_internal (0 ms)
+[ RUN      ] TrafficLightHsm.transition_self_external
+[       OK ] TrafficLightHsm.transition_self_external (0 ms)
+[ RUN      ] TrafficLightHsm.transition_entrypoint_raicecondition
+[       OK ] TrafficLightHsm.transition_entrypoint_raicecondition (0 ms)
+[ RUN      ] TrafficLightHsm.transition_conditional_simple_true
+[       OK ] TrafficLightHsm.transition_conditional_simple_true (0 ms)
+[ RUN      ] TrafficLightHsm.transition_conditional_simple_false
+[       OK ] TrafficLightHsm.transition_conditional_simple_false (0 ms)
+[ RUN      ] TrafficLightHsm.transition_conditional_multiple
+[       OK ] TrafficLightHsm.transition_conditional_multiple (0 ms)
+[----------] 19 tests from TrafficLightHsm (2 ms total)
+
+[----------] 64 tests from ABCHsm
+[ RUN      ] ABCHsm.substate_entrypoint
+[       OK ] ABCHsm.substate_entrypoint (0 ms)
+[ RUN      ] ABCHsm.substate_entrypoints_multiple_behavioral
+[       OK ] ABCHsm.substate_entrypoints_multiple_behavioral (0 ms)
+[ RUN      ] ABCHsm.substate_entrypoints_multiple_various
+[       OK ] ABCHsm.substate_entrypoints_multiple_various (0 ms)
+[ RUN      ] ABCHsm.substate_entrypoints_behavioral_with_conditions
+[       OK ] ABCHsm.substate_entrypoints_behavioral_with_conditions (0 ms)
+[ RUN      ] ABCHsm.substate_entrypoints_conditional
+[       OK ] ABCHsm.substate_entrypoints_conditional (0 ms)
+[ RUN      ] ABCHsm.substate_entrypoints_block_conditional_transition
+[       OK ] ABCHsm.substate_entrypoints_block_conditional_transition (0 ms)
+[ RUN      ] ABCHsm.substate_entrypoints_substate
+[       OK ] ABCHsm.substate_entrypoints_substate (0 ms)
+[ RUN      ] ABCHsm.substate_exit_single
+[       OK ] ABCHsm.substate_exit_single (0 ms)
+[ RUN      ] ABCHsm.substate_exit_multiple_layers
+[       OK ] ABCHsm.substate_exit_multiple_layers (0 ms)
+[ RUN      ] ABCHsm.substate_safe_registration
+[       OK ] ABCHsm.substate_safe_registration (0 ms)
+[ RUN      ] ABCHsm.substate_error_no_entrypoint
+[       OK ] ABCHsm.substate_error_no_entrypoint (0 ms)
+[ RUN      ] ABCHsm.transition_self_external_deep
+[       OK ] ABCHsm.transition_self_external_deep (0 ms)
+[ RUN      ] ABCHsm.multithreaded_deleting_running_dispatcher
+[       OK ] ABCHsm.multithreaded_deleting_running_dispatcher (0 ms)
+[ RUN      ] ABCHsm.callbacks_class_pointers
+[       OK ] ABCHsm.callbacks_class_pointers (0 ms)
+[ RUN      ] ABCHsm.callbacks_lambdas
+[       OK ] ABCHsm.callbacks_lambdas (0 ms)
+[ RUN      ] ABCHsm.callbacks_entering_substates
+[       OK ] ABCHsm.callbacks_entering_substates (0 ms)
+[ RUN      ] ABCHsm.callbacks_exiting_substates
+[       OK ] ABCHsm.callbacks_exiting_substates (0 ms)
+[ RUN      ] ABCHsm.callbacks_initial_state
+[       OK ] ABCHsm.callbacks_initial_state (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_01
+[       OK ] ABCHsm.parallel_transition_01 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_02
+[       OK ] ABCHsm.parallel_transition_02 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_05
+[       OK ] ABCHsm.parallel_transition_05 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_03
+[       OK ] ABCHsm.parallel_transition_03 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_11
+[       OK ] ABCHsm.parallel_transition_11 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_06
+[       OK ] ABCHsm.parallel_transition_06 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_07
+[       OK ] ABCHsm.parallel_transition_07 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_08
+[       OK ] ABCHsm.parallel_transition_08 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_09
+[       OK ] ABCHsm.parallel_transition_09 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_canceled_01
+[       OK ] ABCHsm.parallel_transition_canceled_01 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_canceled_02
+[       OK ] ABCHsm.parallel_transition_canceled_02 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_mult2one_01
+[       OK ] ABCHsm.parallel_transition_mult2one_01 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_mult2one_02
+[       OK ] ABCHsm.parallel_transition_mult2one_02 (0 ms)
+[ RUN      ] ABCHsm.parallel_callbacks
+[       OK ] ABCHsm.parallel_callbacks (0 ms)
+[ RUN      ] ABCHsm.parallel_selftransition
+[       OK ] ABCHsm.parallel_selftransition (0 ms)
+[ RUN      ] ABCHsm.parallel_selftransition_multiple
+[       OK ] ABCHsm.parallel_selftransition_multiple (0 ms)
+[ RUN      ] ABCHsm.history_simple
+[       OK ] ABCHsm.history_simple (0 ms)
+[ RUN      ] ABCHsm.history_default_shallow
+[       OK ] ABCHsm.history_default_shallow (0 ms)
+[ RUN      ] ABCHsm.history_default_deep
+[       OK ] ABCHsm.history_default_deep (0 ms)
+[ RUN      ] ABCHsm.history_no_default
+[       OK ] ABCHsm.history_no_default (0 ms)
+[ RUN      ] ABCHsm.history_deep
+[       OK ] ABCHsm.history_deep (0 ms)
+[ RUN      ] ABCHsm.history_shallow
+[       OK ] ABCHsm.history_shallow (0 ms)
+[ RUN      ] ABCHsm.history_multiple
+[       OK ] ABCHsm.history_multiple (0 ms)
+[ RUN      ] ABCHsm.history_callbacks
+[       OK ] ABCHsm.history_callbacks (0 ms)
+[ RUN      ] ABCHsm.history_parallel
+[       OK ] ABCHsm.history_parallel (0 ms)
+[ RUN      ] ABCHsm.timers_onentry
+[       OK ] ABCHsm.timers_onentry (150 ms)
+[ RUN      ] ABCHsm.timers_onexit
+[       OK ] ABCHsm.timers_onexit (150 ms)
+[ RUN      ] ABCHsm.timers_multiple_actions
+[       OK ] ABCHsm.timers_multiple_actions (250 ms)
+[ RUN      ] ABCHsm.timers_singleshot
+[       OK ] ABCHsm.timers_singleshot (150 ms)
+[ RUN      ] ABCHsm.timers_repeating
+[       OK ] ABCHsm.timers_repeating (250 ms)
+[ RUN      ] ABCHsm.timers_stop
+[       OK ] ABCHsm.timers_stop (300 ms)
+[ RUN      ] ABCHsm.timers_restart
+[       OK ] ABCHsm.timers_restart (900 ms)
+[ RUN      ] ABCHsm.timers_delete_running
+[       OK ] ABCHsm.timers_delete_running (150 ms)
+[ RUN      ] ABCHsm.timers_start_from_code
+[       OK ] ABCHsm.timers_start_from_code (150 ms)
+[ RUN      ] ABCHsm.timers_stop_from_code
+[       OK ] ABCHsm.timers_stop_from_code (150 ms)
+[ RUN      ] ABCHsm.timers_restart_from_code
+[       OK ] ABCHsm.timers_restart_from_code (160 ms)
+[ RUN      ] ABCHsm.state_actions_simple
+[       OK ] ABCHsm.state_actions_simple (100 ms)
+[ RUN      ] ABCHsm.state_actions_multiple
+[       OK ] ABCHsm.state_actions_multiple (100 ms)
+[ RUN      ] ABCHsm.state_actions_args
+[       OK ] ABCHsm.state_actions_args (100 ms)
+[ RUN      ] ABCHsm.finalstate_simple_exitpoint
+[       OK ] ABCHsm.finalstate_simple_exitpoint (50 ms)
+[ RUN      ] ABCHsm.finalstate_forward_event
+[       OK ] ABCHsm.finalstate_forward_event (50 ms)
+[ RUN      ] ABCHsm.finalstate_blocked_final
+[       OK ] ABCHsm.finalstate_blocked_final (100 ms)
+[ RUN      ] ABCHsm.finalstate_blocked_exitpoint
+[       OK ] ABCHsm.finalstate_blocked_exitpoint (100 ms)
+[ RUN      ] ABCHsm.finalstate_transition_args
+[       OK ] ABCHsm.finalstate_transition_args (50 ms)
+[ RUN      ] ABCHsm.finalstate_no_transition
+[       OK ] ABCHsm.finalstate_no_transition (51 ms)
+[ RUN      ] ABCHsm.finalstate_toplevel
+[       OK ] ABCHsm.finalstate_toplevel (50 ms)
+[----------] 64 tests from ABCHsm (3527 ms total)
+
+[----------] 5 tests from AsyncHsm
+[ RUN      ] AsyncHsm.substate_parent_as_initial
+----- waitAsyncOperation: unblock=1 (BEGIN)
+----> AsyncHsm::onStateChanged: wait
+----- unblockNextStep
+----- unblockNextStep (DONE)
+----- waitAsyncOperation: res=1 (END)
+---- TEST DONE
+----> AsyncHsm::onStateChanged: done
+[       OK ] AsyncHsm.substate_parent_as_initial (0 ms)
+[ RUN      ] AsyncHsm.multithreaded_entrypoint_cancelation
+----- waitAsyncOperation: unblock=0 (BEGIN)
+----- waitAsyncOperation: res=1 (END)
+----- unblockNextStep
+----- unblockNextStep (DONE)
+----- waitAsyncOperation: unblock=0 (BEGIN)
+----> AsyncHsm::onStateChanged: wait
+----- waitAsyncOperation: res=1 (END)
+----- unblockNextStep
+----- unblockNextStep (DONE)
+----- waitAsyncOperation: unblock=0 (BEGIN)
+----> AsyncHsm::onStateChanged: done
+----> AsyncHsm::onStateChanged: wait
+----- waitAsyncOperation: res=1 (END)
+----- unblockNextStep
+----- unblockNextStep (DONE)
+----> AsyncHsm::onStateChanged: done
+[       OK ] AsyncHsm.multithreaded_entrypoint_cancelation (0 ms)
+[ RUN      ] AsyncHsm.multithreaded_transition_from_interrupt
+----- waitAsyncOperation: unblock=1 (BEGIN)
+----- unblockNextStep
+----- unblockNextStep (DONE)
+----- waitAsyncOperation: res=0 (END)
+/home/runner/work/hsmcpp/hsmcpp/source/tests/04_multithreaded.cpp:137: Failure
+Value of: waitAsyncOperation(1000, true)
+  Actual: false
+Expected: true
+[  FAILED  ] AsyncHsm.multithreaded_transition_from_interrupt (1000 ms)
+[ RUN      ] AsyncHsm.parallel_transition_04
+----- waitAsyncOperation: unblock=1 (BEGIN)
+----- unblockNextStep
+----- unblockNextStep (DONE)
+----- waitAsyncOperation: res=0 (END)
+[       OK ] AsyncHsm.parallel_transition_04 (300 ms)
+[ RUN      ] AsyncHsm.parallel_transition_10_internal_priority
+----- waitAsyncOperation: unblock=1 (BEGIN)
+----- unblockNextStep
+----- unblockNextStep (DONE)
+----- waitAsyncOperation: res=0 (END)
+[       OK ] AsyncHsm.parallel_transition_10_internal_priority (300 ms)
+[----------] 5 tests from AsyncHsm (1601 ms total)
+
+[----------] 2 tests from dispatchers
+[ RUN      ] dispatchers.stresstest_create_destroy
+[       OK ] dispatchers.stresstest_create_destroy (7 ms)
+[ RUN      ] dispatchers.create_hsm_from_callback
+[       OK ] dispatchers.create_hsm_from_callback (2 ms)
+[----------] 2 tests from dispatchers (9 ms total)
+
+[----------] 7 tests from variant
+[ RUN      ] variant.vector
+[       OK ] variant.vector (0 ms)
+[ RUN      ] variant.list
+[       OK ] variant.list (0 ms)
+[ RUN      ] variant.map
+[       OK ] variant.map (0 ms)
+[ RUN      ] variant.constructors
+[       OK ] variant.constructors (0 ms)
+[ RUN      ] variant.make
+[       OK ] variant.make (0 ms)
+[ RUN      ] variant.type_boolean
+[       OK ] variant.type_boolean (0 ms)
+[ RUN      ] variant.variadic_arguments
+[       OK ] variant.variadic_arguments (0 ms)
+[----------] 7 tests from variant (0 ms total)
+
+[----------] 4 tests from finalstate/ParamFixtureFinalState1
+[ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0 (100 ms)
+[ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (150 ms)
+[ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (100 ms)
+[ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (150 ms)
+[----------] 4 tests from finalstate/ParamFixtureFinalState1 (502 ms total)
+
+[----------] 2 tests from finalstate/ParamFixtureFinalState2
+[ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0
+[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0 (100 ms)
+[ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1
+[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1 (150 ms)
+[----------] 2 tests from finalstate/ParamFixtureFinalState2 (251 ms total)
+
+[----------] 2 tests from finalstate/ParamFixtureFinalState3
+[ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0
+[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0 (100 ms)
+[ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1
+[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (150 ms)
+[----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
+
+[----------] Global test environment tear-down
+[==========] 105 tests from 8 test suites ran. (6145 ms total)
+[  PASSED  ] 104 tests.
+[  FAILED  ] 1 test, listed below:
+[  FAILED  ] AsyncHsm.multithreaded_transition_from_interrupt
+
+ 1 FAILED TEST

@@ -1,4 +1,4 @@
-[==========] Running 105 tests from 8 test suites.
+[==========] Running 103 tests from 8 test suites.
 [----------] Global test environment set-up.
 [----------] 19 tests from TrafficLightHsm
 [ RUN      ] TrafficLightHsm.initial_state
@@ -41,7 +41,7 @@
 [       OK ] TrafficLightHsm.transition_conditional_multiple (0 ms)
 [----------] 19 tests from TrafficLightHsm (3 ms total)
 
-[----------] 64 tests from ABCHsm
+[----------] 63 tests from ABCHsm
 [ RUN      ] ABCHsm.substate_entrypoint
 [       OK ] ABCHsm.substate_entrypoint (0 ms)
 [ RUN      ] ABCHsm.substate_entrypoints_multiple_behavioral
@@ -66,8 +66,6 @@
 [       OK ] ABCHsm.substate_error_no_entrypoint (0 ms)
 [ RUN      ] ABCHsm.transition_self_external_deep
 [       OK ] ABCHsm.transition_self_external_deep (0 ms)
-[ RUN      ] ABCHsm.multithreaded_deleting_running_dispatcher
-[       OK ] ABCHsm.multithreaded_deleting_running_dispatcher (0 ms)
 [ RUN      ] ABCHsm.callbacks_class_pointers
 [       OK ] ABCHsm.callbacks_class_pointers (0 ms)
 [ RUN      ] ABCHsm.callbacks_lambdas
@@ -170,7 +168,7 @@
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 64 tests from ABCHsm (3532 ms total)
+[----------] 63 tests from ABCHsm (3529 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
@@ -224,12 +222,10 @@ Expected: true
 [       OK ] AsyncHsm.parallel_transition_10_internal_priority (300 ms)
 [----------] 5 tests from AsyncHsm (1602 ms total)
 
-[----------] 2 tests from dispatchers
-[ RUN      ] dispatchers.stresstest_create_destroy
-[       OK ] dispatchers.stresstest_create_destroy (9 ms)
+[----------] 1 test from dispatchers
 [ RUN      ] dispatchers.create_hsm_from_callback
 [       OK ] dispatchers.create_hsm_from_callback (0 ms)
-[----------] 2 tests from dispatchers (9 ms total)
+[----------] 1 test from dispatchers (0 ms total)
 
 [----------] 7 tests from variant
 [ RUN      ] variant.vector
@@ -252,7 +248,7 @@ Expected: true
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (150 ms)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (151 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1
@@ -263,19 +259,19 @@ Expected: true
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0
 [       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1
-[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1 (151 ms)
+[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1 (150 ms)
 [----------] 2 tests from finalstate/ParamFixtureFinalState2 (251 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState3
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0
 [       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1
-[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (151 ms)
+[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (150 ms)
 [----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
 
 [----------] Global test environment tear-down
-[==========] 105 tests from 8 test suites ran. (6155 ms total)
-[  PASSED  ] 104 tests.
+[==========] 103 tests from 8 test suites ran. (6142 ms total)
+[  PASSED  ] 102 tests.
 [  FAILED  ] 1 test, listed below:
 [  FAILED  ] AsyncHsm.multithreaded_transition_from_interrupt
 

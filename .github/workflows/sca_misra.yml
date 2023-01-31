@@ -30,7 +30,7 @@ jobs:
         build_type: ${{env.BUILD_TYPE}}
         src_dir: ${{github.workspace}}
         build_dir: ${{github.workspace}}/build
-        platform: 'ubuntu'
+        platform: 'posix'
         build_tests: 'OFF'
         build_examples: 'ON'
 

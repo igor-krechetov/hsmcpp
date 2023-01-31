@@ -25,13 +25,11 @@ namespace hsmcpp
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS                         "HsmEventDispatcherFreeRTOS"
 
-HsmEventDispatcherFreeRTOS::HsmEventDispatcherFreeRTOS(const configSTACK_DEPTH_TYPE stackDepth, const UBaseType_t priority, const size_t eventsCacheSize)
+HsmEventDispatcherFreeRTOS::HsmEventDispatcherFreeRTOS(const configSTACK_DEPTH_TYPE stackDepth, const UBaseType_t priority)
     : mStackDepth(stackDepth)
     , mPriority(priority)
 {
     HSM_TRACE_CALL_DEBUG_ARGS("stackDepth=%d, priority=%d", static_cast<int>(stackDepth), static_cast<int>(priority));
-
-    mEnqueuedEvents.reserve(eventsCacheSize);
 }
 
 HsmEventDispatcherFreeRTOS::~HsmEventDispatcherFreeRTOS()
@@ -56,7 +54,7 @@ void HsmEventDispatcherFreeRTOS::emitEvent(const HandlerID_t handlerID)
 
     if (nullptr != mDispatcherTask)
     {
-        handleEnqueuedEvents();
+        dispatchEnqueuedEvents();
 
         {
             // TODO: this will work only for single-core FreeRTOS
@@ -64,27 +62,8 @@ void HsmEventDispatcherFreeRTOS::emitEvent(const HandlerID_t handlerID)
             mPendingEvents.push_back(handlerID);
         }
 
-        notifyDispatcherTask();
+        notifyDispatcherAboutEvent();
     }
-}
-
-bool HsmEventDispatcherFreeRTOS::enqueueEvent(const HandlerID_t handlerID, const EventID_t event)
-{
-    bool wasAdded = false;
-
-    if (mEnqueuedEvents.size() < mEnqueuedEvents.capacity())
-    {
-        EnqueuedEventInfo newEvent;
-
-        newEvent.handlerID = handlerID;
-        newEvent.eventID = event;
-        mEnqueuedEvents.push_back(newEvent);
-        wasAdded = true;
-
-        notifyDispatcherTask();
-    }
-
-    return wasAdded;
 }
 
 bool HsmEventDispatcherFreeRTOS::start()
@@ -137,7 +116,7 @@ void HsmEventDispatcherFreeRTOS::stop()
     if (nullptr != mDispatcherTask)
     {
         mStopDispatcher = true;
-        notifyDispatcherTask();
+        notifyDispatcherAboutEvent();
     }
 }
 
@@ -241,36 +220,7 @@ void HsmEventDispatcherFreeRTOS::stopTimerImpl(const TimerID_t timerID)
     }
 }
 
-void HsmEventDispatcherFreeRTOS::handleEnqueuedEvents()
-{
-    if (mEnqueuedEvents.size() > 0)
-    {
-        HandlerID_t prevHandlerID = INVALID_HSM_DISPATCHER_HANDLER_ID;
-        EnqueuedEventHandlerFunc_t callback;
-        std::vector<EnqueuedEventInfo> currentEvents;
-
-        {
-            CriticalSection lck;
-        
-            currentEvents = mEnqueuedEvents;
-            mEnqueuedEvents.clear();
-        }
-
-        // need to traverse events in reverce order 
-        for (auto it = currentEvents.rbegin(); it != currentEvents.rend(); ++it)
-        {
-            if (prevHandlerID != it->handlerID)
-            {
-                callback = getEnqueuedEventHandlerFunc(it->handlerID);
-                prevHandlerID = it->handlerID;
-            }
-
-            callback(it->eventID);
-        }
-    }
-}
-
-void HsmEventDispatcherFreeRTOS::notifyDispatcherTask()
+void HsmEventDispatcherFreeRTOS::notifyDispatcherAboutEvent()
 {
     if (nullptr != mDispatcherTask)
     {
@@ -298,8 +248,6 @@ void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters)
         {
             std::list<HandlerID_t> events;
 
-            pThis->handleEnqueuedEvents();
-
             {
                 // NOTE: this will work only on a single core implementation of FreeRTOS
                 //       for multi-core system mutex lock will be required
@@ -307,7 +255,7 @@ void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters)
                 events = std::move(pThis->mPendingEvents);
             }
 
-            pThis->dispatchPendingEvents(events);
+            pThis->dispatchPendingEventsImpl(events);
 
             if (false == pThis->mStopDispatcher)
             {

@@ -26,7 +26,6 @@ void HsmEventDispatcherSTD::emitEvent(const HandlerID_t handlerID)
     if (true == mDispatcherThread.joinable())
     {
         HsmEventDispatcherBase::emitEvent(handlerID);
-        mEmitEvent.notify();
     }
 }
 
@@ -57,7 +56,7 @@ void HsmEventDispatcherSTD::stop()
     if (true == mDispatcherThread.joinable())
     {
         mStopDispatcher = true;
-        mEmitEvent.notify();
+        notifyDispatcherAboutEvent();
     }
 }
 
@@ -69,6 +68,10 @@ void HsmEventDispatcherSTD::join()
     {
         mDispatcherThread.join();
     }
+}
+
+void HsmEventDispatcherSTD::notifyDispatcherAboutEvent() {
+    mEmitEvent.notify();
 }
 
 void HsmEventDispatcherSTD::doDispatching()

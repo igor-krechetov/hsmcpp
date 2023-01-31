@@ -1,11 +1,11 @@
 name: "Build Helper"
 
 inputs:
-  # values: ubuntu, windows
+  # values: posix, windows
   platform:
     required: true
     type: string
-    default: 'ubuntu'
+    default: 'posix'
   src_dir:
     required: true
     type: string
@@ -52,13 +52,13 @@ runs:
   steps:
     # --------------------------------- Ubuntu build ---------------------------------
     - uses: awalsh128/cache-apt-pkgs-action@v1.2.2
-      if: ${{ (inputs.platform == 'ubuntu') && ((inputs.build_glib == 'ON') || (inputs.build_glibmm == 'ON')) }}
+      if: ${{ (inputs.platform == 'posix') && ((inputs.build_glib == 'ON') || (inputs.build_glibmm == 'ON')) }}
       with:
         packages: libglibmm-2.4-dev
         version: 1.0
 
     - name: Install Qt (Ubuntu)
-      if: ${{ (inputs.platform == 'ubuntu') && (inputs.build_qt == 'ON') }}
+      if: ${{ (inputs.platform == 'posix') && (inputs.build_qt == 'ON') }}
       uses: jurplel/install-qt-action@v3
       with:
         version: '6.4.*'
@@ -71,11 +71,12 @@ runs:
         set-env: 'true'
 
     - name: Configure CMake (Ubuntu)
-      if: ${{ inputs.platform == 'ubuntu' }}
+      if: ${{ inputs.platform == 'posix' }}
       shell: bash
       run: |
         cmake -B ${{ inputs.build_dir }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
           -DHSMBUILD_VERBOSE=OFF \
+          -DHSMBUILD_PLATFORM=${{ inputs.platform }} \
           -DHSMBUILD_DISPATCHER_GLIB=${{ inputs.build_glib }} \
           -DHSMBUILD_DISPATCHER_GLIBMM=${{ inputs.build_glibmm }} \
           -DHSMBUILD_DISPATCHER_STD=${{ inputs.build_std }} \
@@ -88,7 +89,7 @@ runs:
           ${{ inputs.src_dir }}
 
     - name: Build (Ubuntu)
-      if: ${{ inputs.platform == 'ubuntu' }}
+      if: ${{ inputs.platform == 'posix' }}
       shell: bash
       run: cmake --build ${{ inputs.build_dir }} --parallel 2 --config ${{ inputs.build_type }}
 
@@ -111,6 +112,7 @@ runs:
       shell: cmd
       run: cmake -B ${{github.workspace}}\build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ^
             -DHSMBUILD_VERBOSE=OFF ^
+            -DHSMBUILD_PLATFORM=${{ inputs.platform }} ^
             -DHSMBUILD_DISPATCHER_GLIB=OFF ^
             -DHSMBUILD_DISPATCHER_GLIBMM=OFF ^
             -DHSMBUILD_DISPATCHER_STD=ON ^

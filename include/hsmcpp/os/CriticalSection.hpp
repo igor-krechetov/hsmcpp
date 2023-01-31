@@ -5,8 +5,14 @@
 
 #include "os.hpp"
 
-#ifdef FREERTOS_AVAILABLE
+#if defined(FREERTOS_AVAILABLE)
  #include "freertos/CriticalSection.hpp"
+#elif defined(PLATFORM_ARDUINO)
+ #include "common/CriticalSection.hpp"
+#elif defined(POSIX_AVAILABLE)
+ #include "posix/CriticalSection.hpp"
+#elif defined(PLATFORM_WINDOWS)
+ #include "common/CriticalSection.hpp"
 #else
  #error PLATFORM not supported
 #endif

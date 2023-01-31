@@ -45,7 +45,6 @@ void HsmEventDispatcherGLibmm::emitEvent(const HandlerID_t handlerID)
     if (mDispatcher)
     {
         HsmEventDispatcherBase::emitEvent(handlerID);
-        mDispatcher->emit();
     }
 }
 
@@ -55,7 +54,7 @@ bool HsmEventDispatcherGLibmm::start()
 
     if (mDispatcher)
     {
-        mDispatcherConnection = mDispatcher->connect(sigc::mem_fun(this, &HsmEventDispatcherGLibmm::onDispatchEvents));
+        mDispatcherConnection = mDispatcher->connect(sigc::mem_fun(this, &HsmEventDispatcherGLibmm::dispatchPendingEvents));
         result = true;
     }
 
@@ -103,11 +102,8 @@ void HsmEventDispatcherGLibmm::stopTimerImpl(const TimerID_t timerID)
     }
 }
 
-void HsmEventDispatcherGLibmm::onDispatchEvents()
-{
-    HSM_TRACE_CALL_DEBUG();
-
-    HsmEventDispatcherBase::dispatchPendingEvents();
+void HsmEventDispatcherGLibmm::notifyDispatcherAboutEvent() {
+    mDispatcher->emit();
 }
 
 bool HsmEventDispatcherGLibmm::onTimerEvent(const TimerID_t timerID)

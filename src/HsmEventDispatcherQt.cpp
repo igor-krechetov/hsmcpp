@@ -68,7 +68,6 @@ void HsmEventDispatcherQt::emitEvent(const HandlerID_t handlerID)
     if (QEvent::None != mQtEventType)
     {
         HsmEventDispatcherBase::emitEvent(handlerID);
-        QCoreApplication::postEvent(this, new QEvent(mQtEventType));
     }
 }
 
@@ -166,6 +165,10 @@ void HsmEventDispatcherQt::onTimerEvent()
             }
         }
     }
+}
+
+void HsmEventDispatcherQt::notifyDispatcherAboutEvent() {
+    QCoreApplication::postEvent(this, new QEvent(mQtEventType));
 }
 
 bool HsmEventDispatcherQt::event(QEvent* ev)

@@ -23,6 +23,7 @@ public:
     virtual bool start() override;
 
 private:
+    void notifyDispatcherAboutEvent() override;
     static gboolean onPipeDataAvailable(GIOChannel* gio, GIOCondition condition, gpointer data);
 
 private:

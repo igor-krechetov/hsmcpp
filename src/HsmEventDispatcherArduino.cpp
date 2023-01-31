@@ -51,33 +51,14 @@ void HsmEventDispatcherArduino::emitEvent(const HandlerID_t handlerID)
     }
 }
 
-bool HsmEventDispatcherArduino::enqueueEvent(const HandlerID_t handlerID, const EventID_t event)
-{
-    HSM_TRACE_CALL_DEBUG();
-    bool wasAdded = false;
-
-    noInterrupts();// disable interrupts
-
-    if (mEnqueuedEvents.size() < mEnqueuedEvents.capacity())
-    {
-        EnqueuedEventInfo newEvent;
-
-        newEvent.handlerID = handlerID;
-        newEvent.eventID = event;
-        mEnqueuedEvents.push_back(newEvent);
-        wasAdded = true;
-    }
-
-    interrupts();// enable interrupts
-
-    return wasAdded;
+void HsmEventDispatcherSTD::notifyDispatcherAboutEvent() {
+    // NOTE: do nothing since it's a single thread implementation
 }
 
 void HsmEventDispatcherArduino::dispatchEvents()
 {
     if (false == mStopDispatcher)
     {
-        handleEnqueuedEvents();
         handleTimers();
         HsmEventDispatcherBase::dispatchPendingEvents();
     }
@@ -121,33 +102,6 @@ void HsmEventDispatcherArduino::stopTimerImpl(const TimerID_t timerID)
     {
         // CriticalSection lck;
         mRunningTimers.erase(timerID);
-    }
-}
-
-void HsmEventDispatcherArduino::handleEnqueuedEvents()
-{
-    if (mEnqueuedEvents.size() > 0)
-    {
-        HandlerID_t prevHandlerID = INVALID_HSM_DISPATCHER_HANDLER_ID;
-        EnqueuedEventHandlerFunc_t callback;
-        std::vector<EnqueuedEventInfo> currentEvents;
-
-        noInterrupts();// disable interrupts
-        currentEvents = mEnqueuedEvents;
-        mEnqueuedEvents.clear();
-        interrupts();// enable interrupts
-
-        // need to traverse events in reverce order 
-        for (auto it = currentEvents.rbegin(); it != currentEvents.rend(); ++it)
-        {
-            if (prevHandlerID != it->handlerID)
-            {
-                callback = getEnqueuedEventHandlerFunc(it->handlerID);
-                prevHandlerID = it->handlerID;
-            }
-
-            callback(it->eventID);
-        }
     }
 }
 

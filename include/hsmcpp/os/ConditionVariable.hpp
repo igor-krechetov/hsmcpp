@@ -7,10 +7,10 @@
 
 #if defined(FREERTOS_AVAILABLE)
  #include "freertos/ConditionVariable.hpp"
-#elif defined(STL_AVAILABLE)
- #include "stl/ConditionVariable.hpp"
 #elif defined(PLATFORM_ARDUINO)
   #include "arduino/ConditionVariable.hpp"
+#elif defined(STL_AVAILABLE)
+  #include "stl/ConditionVariable.hpp"
 #else
  #error PLATFORM not supported
 #endif

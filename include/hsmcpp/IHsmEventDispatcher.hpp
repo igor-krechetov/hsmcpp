@@ -52,14 +52,21 @@ public:
     virtual void unregisterEnqueuedEventHandler(const HandlerID_t handlerID) = 0;
 
     /**
-     * dispatcher must guarantee that emit call is thread-safe
+     * Adds new event to the queue. Dispatcher must guarantee that emit call is thread-safe.
      *
      * @param handlerID     id of the handler that should be called
      */
     virtual void emitEvent(const HandlerID_t handlerID) = 0;
 
     /**
-     * TODO
+     * Same as emitEvent(), but is intended to be used only from inside interrupts.
+     * Unlike emitEvent(), there is a limit of how many events can be added to the queue
+     * at the same time.
+     *
+     * @param handlerID     id of the handler that should be called
+     * @param event         id of the hsm event
+     *
+     * @return              returns true if event was successfully added, or false if events queue is full
      */
     virtual bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) = 0;
 

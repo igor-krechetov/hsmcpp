@@ -36,6 +36,7 @@ private slots:
     void onTimerEvent();
 
 protected:
+    void notifyDispatcherAboutEvent() override;
     bool event(QEvent* ev) override;
 
 private:

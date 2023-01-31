@@ -40,7 +40,7 @@ protected:
     void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
     void stopTimerImpl(const TimerID_t timerID) override;
 
-    void onDispatchEvents();
+    void notifyDispatcherAboutEvent() override;
     bool onTimerEvent(const TimerID_t timerID);
 
 private:

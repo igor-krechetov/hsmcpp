@@ -47,16 +47,10 @@ HsmEventDispatcherGLib::~HsmEventDispatcherGLib()
 void HsmEventDispatcherGLib::emitEvent(const HandlerID_t handlerID)
 {
     HSM_TRACE_CALL();
+
     if (mPipeFD[1] > 0)
     {
         HsmEventDispatcherBase::emitEvent(handlerID);
-
-        std::lock_guard<std::mutex> lck(mPipeSync);
-        char dummy = 1;
-
-        // we just need to trigger the callback. there is no need to pass any real data there
-        // TODO: should we check for result?
-        write(mPipeFD[1], &dummy, sizeof(dummy));
     }
 }
 
@@ -122,6 +116,15 @@ bool HsmEventDispatcherGLib::start()
     }
 
     return result;
+}
+
+void HsmEventDispatcherGLib::notifyDispatcherAboutEvent() {
+    std::lock_guard<std::mutex> lck(mPipeSync);
+    char dummy = 1;
+
+    // we just need to trigger the callback. there is no need to pass any real data there
+    // TODO: should we check for result?
+    write(mPipeFD[1], &dummy, sizeof(dummy));
 }
 
 gboolean HsmEventDispatcherGLib::onPipeDataAvailable(GIOChannel* gio, GIOCondition condition, gpointer data)

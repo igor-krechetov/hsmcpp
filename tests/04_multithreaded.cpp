@@ -96,9 +96,8 @@ TEST_F(ABCHsm, multithreaded_deleting_running_dispatcher)
 }
 #endif // !TEST_HSM_QT
 
+// NOTE: Disable tests because we don't have signals on Windows platfroms
 #ifndef WIN32
-// Disable test because we don't have signals on Windows platfroms
-
 AsyncHsm *gAsyncHsmInstance = nullptr;
 
 void sigHandler(int signo, siginfo_t *info, void *context)

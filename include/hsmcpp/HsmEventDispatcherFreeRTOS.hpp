@@ -19,12 +19,6 @@ namespace hsmcpp
 class HsmEventDispatcherFreeRTOS: public HsmEventDispatcherBase
 {
 public:
-    struct EnqueuedEventInfo
-    {
-        HandlerID_t handlerID;
-        EventID_t eventID;
-    };
-
     /**
      * Constructor for FreeRTOS based event dispatcher.
      *
@@ -37,19 +31,17 @@ public:
      *                   value that can be contained in a variable of type size_t.
      * @param priority   The priority at which the created task will execute.
      *                   Systems that include MPU support can optionally create a task in a 
-     *                   privileged (system) mode by setting the bit portPRIVILEGE_BIT in uxPriority. 
+     *                   privileged (system) mode by setting the bit portPRIVILEGE_BIT in uxPriority.
      *                   For example, to create a privileged task at priority 2 set uxPriority to ( 2 | portPRIVILEGE_BIT ).
      *                   Priorities are asserted to be less than configMAX_PRIORITIES. If configASSERT is 
      *                   undefined, priorities are silently capped at (configMAX_PRIORITIES - 1).
      * @param eventsCacheSize size of the queue preallocated for delayed events
      */
     HsmEventDispatcherFreeRTOS(const configSTACK_DEPTH_TYPE stackDepth = configMINIMAL_STACK_SIZE,
-                               const UBaseType_t priority = tskIDLE_PRIORITY,
-                               const size_t eventsCacheSize = 10);
+                               const UBaseType_t priority = tskIDLE_PRIORITY);
     virtual ~HsmEventDispatcherFreeRTOS();
 
     virtual void emitEvent(const HandlerID_t handlerID) override;
-    virtual bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) override;
 
     virtual bool start() override;
     void stop();
@@ -63,8 +55,7 @@ protected:
     virtual void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
     virtual void stopTimerImpl(const TimerID_t timerID) override;
 
-    void handleEnqueuedEvents();
-    void notifyDispatcherTask();
+    void notifyDispatcherAboutEvent() override;
     static void doDispatching(void* pvParameters);
 
     static void onTimerEvent(TimerHandle_t timerHandle);
@@ -77,7 +68,6 @@ private:
     configSTACK_DEPTH_TYPE mStackDepth = configMINIMAL_STACK_SIZE;
     UBaseType_t mPriority = tskIDLE_PRIORITY;
     std::map<TimerID_t, TimerHandle_t> mNativeTimerHandlers;
-    std::vector<EnqueuedEventInfo> mEnqueuedEvents;
 };
 
 } // namespace hsmcpp

@@ -1,9 +1,11 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#ifndef HSMCPP_OS_FREERTOS_CRITICALSECTION_HPP
-#define HSMCPP_OS_FREERTOS_CRITICALSECTION_HPP
+#ifndef HSMCPP_OS_POSIX_CRITICALSECTION_HPP
+#define HSMCPP_OS_POSIX_CRITICALSECTION_HPP
 
-#include <FreeRTOS.h>
+// NOTE: the purpose of this class is adding safe signals support, so this header is needed
+// cppcheck-suppress misra-c2012-21.5
+#include <signal.h>
 
 namespace hsmcpp
 {
@@ -21,9 +23,9 @@ private:
     CriticalSection& operator=(CriticalSection&&) = delete;
 
 private:
-    UBaseType_t mSavedInterruptStatus;
+    sigset_t mOriginalSigMask;
 };
 
 } // namespace hsmcpp
 
-#endif // HSMCPP_OS_FREERTOS_CRITICALSECTION_HPP
+#endif // HSMCPP_OS_POSIX_CRITICALSECTION_HPP

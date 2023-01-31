@@ -6,8 +6,11 @@
 
 #include <map>
 #include <list>
+#include <vector>
 #include "os/Mutex.hpp"
 #include "IHsmEventDispatcher.hpp"
+
+#define DISPATCHER_DEFAULT_EVENTS_CACHESIZE             (10)
 
 namespace hsmcpp
 {
@@ -22,16 +25,25 @@ protected:
         bool isSingleShot = false;
     };
 
+    struct EnqueuedEventInfo
+    {
+        HandlerID_t handlerID;
+        EventID_t eventID;
+    };
+
 public:
+    // NOTE: false positive. setting default parameter value is not parameter modification
+    // cppcheck-suppress misra-c2012-17.8
+    HsmEventDispatcherBase(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
     virtual ~HsmEventDispatcherBase();
 
     virtual HandlerID_t registerEventHandler(const EventHandlerFunc_t& handler) override;
     virtual void unregisterEventHandler(const HandlerID_t handlerID) override;
-    virtual void emitEvent(const HandlerID_t handlerID) = 0;
+    virtual void emitEvent(const HandlerID_t handlerID) override = 0;
+    virtual bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) override;
 
     virtual HandlerID_t registerEnqueuedEventHandler(const EnqueuedEventHandlerFunc_t& handler) override;
     virtual void unregisterEnqueuedEventHandler(const HandlerID_t handlerID) override;
-    virtual bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) override;
 
     virtual HandlerID_t registerTimerHandler(const TimerHandlerFunc_t& handler) override;
     virtual void unregisterTimerHandler(const HandlerID_t handlerID) override;
@@ -59,15 +71,21 @@ protected:
 
     /**
      * Handles common logic for handling timer events
-     * 
+     *
      * @param timerID     id of the expired timer
      *
      * @return TRUE if timer should be restarted, FALSE if timer can be deleted
      */
     bool handleTimerEvent(const TimerID_t timerID);
 
+    /**
+     * Wakeup dispatching thread to process pending events.
+     */
+    virtual void notifyDispatcherAboutEvent() = 0;
+
+    void dispatchEnqueuedEvents();
     void dispatchPendingEvents();
-    void dispatchPendingEvents(const std::list<HandlerID_t>& events);
+    void dispatchPendingEventsImpl(const std::list<HandlerID_t>& events);
 
 protected:
     HandlerID_t mNextHandlerId = 1;
@@ -76,6 +94,7 @@ protected:
     std::map<HandlerID_t, EnqueuedEventHandlerFunc_t> mEnqueuedEventHandlers;
     std::map<HandlerID_t, TimerHandlerFunc_t> mTimerHandlers;
     std::list<HandlerID_t> mPendingEvents;
+    std::vector<EnqueuedEventInfo> mEnqueuedEvents;
     Mutex mEmitSync;
     Mutex mHandlersSync;
 };

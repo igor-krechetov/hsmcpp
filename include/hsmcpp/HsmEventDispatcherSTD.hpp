@@ -28,6 +28,7 @@ public:
     void join();
 
 protected:
+    void notifyDispatcherAboutEvent() override;
     void doDispatching();
 
 private:

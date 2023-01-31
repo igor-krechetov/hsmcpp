@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.27.3")
+set(PROJECT_VERSION "0.28.0")
 set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -26,7 +26,7 @@ option(HSMBUILD_TESTS "Build unittests" ON)
 option(HSMBUILD_EXAMPLES "Build examples" ON)
 option(HSMBUILD_CODECOVERAGE "Build with code coverage" OFF)
 
-set(HSMBUILD_PLATFORM "default" CACHE STRING "Specifies platform")# Possible values: empty, freertos, arduino
+set(HSMBUILD_PLATFORM "posix" CACHE STRING "Specifies platform")# Possible values: posix, windows, freertos, arduino
 set(HSMBUILD_FREERTOS_ROOT "" CACHE STRING "FreeRTOS sources root folder")
 set(HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/os/freertos" CACHE STRING "Path to folder with FreeRTOSConfig.h")
 option(HSMBUILD_DISPATCHER_FREERTOS "Enable FreeRTOS based dispatcher" OFF)
@@ -49,6 +49,7 @@ message("HSMBUILD_DISPATCHER_QT = ${HSMBUILD_DISPATCHER_QT}")
 message("HSMBUILD_DISPATCHER_FREERTOS = ${HSMBUILD_DISPATCHER_FREERTOS}")
 message("HSMBUILD_TESTS = ${HSMBUILD_TESTS}")
 message("HSMBUILD_EXAMPLES = ${HSMBUILD_EXAMPLES}")
+message("HSMBUILD_CODECOVERAGE = ${HSMBUILD_CODECOVERAGE}")
 message("")
 message("HSMBUILD_PLATFORM = ${HSMBUILD_PLATFORM}")
 if (HSMBUILD_PLATFORM STREQUAL "freertos")
@@ -102,7 +103,8 @@ if (HSMBUILD_PLATFORM STREQUAL "freertos")
     set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/freertos/Mutex.cpp
                                     ${HSM_SRC_ROOT}/os/freertos/ConditionVariable.cpp
                                     ${HSM_SRC_ROOT}/os/freertos/CriticalSection.cpp
-                                    ${HSM_SRC_ROOT}/os/freertos/FreeRtosPort.cpp)
+                                    ${HSM_SRC_ROOT}/os/freertos/FreeRtosPort.cpp
+                                    ${HSM_SRC_ROOT}/HsmEventDispatcherFreeRTOS.cpp)
     set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/freertos/ConditionVariable.hpp
                                             ${HSM_INCLUDES_ROOT}/os/freertos/CriticalSection.hpp
                                             ${HSM_INCLUDES_ROOT}/os/freertos/FreeRTOSConfig.h
@@ -111,14 +113,25 @@ if (HSMBUILD_PLATFORM STREQUAL "freertos")
                                             ${HSM_INCLUDES_ROOT}/HsmEventDispatcherFreeRTOS.hpp)
 elseif (HSMBUILD_PLATFORM STREQUAL "arduino")
     set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/arduino/ConditionVariable.cpp
+                                    ${HSM_SRC_ROOT}/os/arduino/CriticalSection.cpp
                                     ${HSM_SRC_ROOT}/HsmEventDispatcherArduino.cpp)
     set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/arduino/ConditionVariable.hpp
                                             ${HSM_INCLUDES_ROOT}/os/arduino/Mutex.hpp
                                             ${HSM_INCLUDES_ROOT}/HsmEventDispatcherArduino.hpp)
-else()
-    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/stl/ConditionVariable.cpp)
-    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/stl/ConditionVariable.hpp
+elseif (HSMBUILD_PLATFORM STREQUAL "posix")
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/posix/CriticalSection.cpp
+                                    ${HSM_SRC_ROOT}/os/stl/ConditionVariable.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/posix/CriticalSection.hpp
+                                            ${HSM_INCLUDES_ROOT}/os/stl/ConditionVariable.hpp
                                             ${HSM_INCLUDES_ROOT}/os/stl/Mutex.hpp)
+elseif (HSMBUILD_PLATFORM STREQUAL "windows")
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/windows/CriticalSection.cpp
+                                    ${HSM_SRC_ROOT}/os/stl/ConditionVariable.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/common/CriticalSection.hpp
+                                            ${HSM_INCLUDES_ROOT}/os/stl/ConditionVariable.hpp
+                                            ${HSM_INCLUDES_ROOT}/os/stl/Mutex.hpp)
+else()
+    message(FATAL_ERROR "Unsupported HSMBUILD_PLATFORM=${HSMBUILD_PLATFORM}")
 endif()
 
 # ================================================================================================
@@ -149,9 +162,10 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
     add_subdirectory(tools/scxml2gen)
 
     # =============================================
-    # Platform Environment: FREERTOS
+    # Platform Environment
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/platforms/${HSMBUILD_PLATFORM}.cmake)
+
     if (HSMBUILD_PLATFORM STREQUAL "freertos")
-        include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/freertos-config.cmake)
         target_include_directories(${HSM_LIBRARY_NAME} PRIVATE ${FREERTOS_INCLUDE}
                                                                ${HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY})
     endif()

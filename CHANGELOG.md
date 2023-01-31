@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.28.0] - 2023-02-01
+### Added
+- interrupts support for std, glib, glibmm and qt dispatchers
+
+### Updated
+- updated build logic based on HSMBUILD_PLATFORM. "windows" and "posix" values added
+
 ## [0.27.3] - 2023-01-26
 
 ### Fixed

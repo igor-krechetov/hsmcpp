@@ -33,7 +33,6 @@ public:
     void stop();
 
     void emitEvent(const HandlerID_t handlerID) override;
-    bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) override;
 
     void dispatchEvents();
 
@@ -41,7 +40,6 @@ protected:
     void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
     void stopTimerImpl(const TimerID_t timerID) override;
 
-    void handleEnqueuedEvents();
     void handleTimers();
 
 private:

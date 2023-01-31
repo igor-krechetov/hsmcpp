@@ -4,12 +4,18 @@
 #include "hsmcpp/HsmEventDispatcherBase.hpp"
 #include "hsmcpp/logging.hpp"
 #include "hsmcpp/os/LockGuard.hpp"
+#include "hsmcpp/os/CriticalSection.hpp"
 
 namespace hsmcpp
 {
 
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS                         "HsmEventDispatcherBase"
+
+HsmEventDispatcherBase::HsmEventDispatcherBase(const size_t eventsCacheSize)
+{
+    mEnqueuedEvents.reserve(eventsCacheSize);
+}
 
 HsmEventDispatcherBase::~HsmEventDispatcherBase()
 {
@@ -40,8 +46,30 @@ void HsmEventDispatcherBase::emitEvent(const HandlerID_t handlerID)
     LockGuard lck(mEmitSync);
 
     mPendingEvents.push_back(handlerID);
+    notifyDispatcherAboutEvent();
 
-    // NOTE: this is not a full implementations. child classes must implement additional logic
+    // NOTE: this is not a full implementation. child classes must implement additional logic
+}
+
+bool HsmEventDispatcherBase::enqueueEvent(const HandlerID_t handlerID, const EventID_t event) {
+    bool wasAdded = false;
+
+    if (mEnqueuedEvents.size() < mEnqueuedEvents.capacity()) {
+        EnqueuedEventInfo newEvent;
+
+        newEvent.handlerID = handlerID;
+        newEvent.eventID = event;
+
+        {
+            CriticalSection cs;
+            mEnqueuedEvents.push_back(newEvent);
+        }
+
+        wasAdded = true;
+        notifyDispatcherAboutEvent();
+    }
+
+    return wasAdded;
 }
 
 HandlerID_t HsmEventDispatcherBase::registerEnqueuedEventHandler(const EnqueuedEventHandlerFunc_t& handler)
@@ -61,12 +89,6 @@ void HsmEventDispatcherBase::unregisterEnqueuedEventHandler(const HandlerID_t ha
     LockGuard lck(mHandlersSync);
 
     mEnqueuedEventHandlers.erase(handlerID);
-}
-
-bool HsmEventDispatcherBase::enqueueEvent(const HandlerID_t handlerID, const EventID_t event)
-{
-    // NOTE: should be implemented if support for transitions for interupts is needed
-    return false;
 }
 
 HandlerID_t HsmEventDispatcherBase::registerTimerHandler(const TimerHandlerFunc_t& handler)
@@ -251,6 +273,35 @@ bool HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID)
     return restartTimer;
 }
 
+void HsmEventDispatcherBase::dispatchEnqueuedEvents()
+{
+    if (false == mEnqueuedEvents.empty())
+    {
+        HandlerID_t prevHandlerID = INVALID_HSM_DISPATCHER_HANDLER_ID;
+        EnqueuedEventHandlerFunc_t callback;
+        std::vector<EnqueuedEventInfo> currentEvents;
+
+        {
+            CriticalSection lck;
+        
+            currentEvents = mEnqueuedEvents;
+            mEnqueuedEvents.clear();
+        }
+
+        // need to traverse events in reverce order 
+        for (auto it = currentEvents.rbegin(); it != currentEvents.rend(); ++it)
+        {
+            if (prevHandlerID != it->handlerID)
+            {
+                callback = getEnqueuedEventHandlerFunc(it->handlerID);
+                prevHandlerID = it->handlerID;
+            }
+
+            callback(it->eventID);
+        }
+    }
+}
+
 void HsmEventDispatcherBase::dispatchPendingEvents()
 {
     std::list<HandlerID_t> events;
@@ -260,11 +311,13 @@ void HsmEventDispatcherBase::dispatchPendingEvents()
         events = std::move(mPendingEvents);
     }
 
-    dispatchPendingEvents(events);
+    dispatchPendingEventsImpl(events);
 }
 
-void HsmEventDispatcherBase::dispatchPendingEvents(const std::list<HandlerID_t>& events)
+void HsmEventDispatcherBase::dispatchPendingEventsImpl(const std::list<HandlerID_t>& events)
 {
+    dispatchEnqueuedEvents();
+
     if (events.size() > 0u)
     {
         std::map<HandlerID_t, EventHandlerFunc_t> eventHandlersCopy;

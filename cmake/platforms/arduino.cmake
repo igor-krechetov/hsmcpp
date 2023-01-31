@@ -1,0 +1,1 @@
+add_definitions(-DPLATFORM_ARDUINO=1)

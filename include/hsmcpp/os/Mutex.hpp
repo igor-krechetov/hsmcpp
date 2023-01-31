@@ -7,10 +7,10 @@
 
 #if defined(FREERTOS_AVAILABLE)
  #include "freertos/Mutex.hpp"
-#elif defined(STL_AVAILABLE)
- #include "stl/Mutex.hpp"
 #elif defined(PLATFORM_ARDUINO)
   #include "arduino/Mutex.hpp"
+#elif defined(STL_AVAILABLE)
+ #include "stl/Mutex.hpp"
 #else
  #error PLATFORM not supported
 #endif

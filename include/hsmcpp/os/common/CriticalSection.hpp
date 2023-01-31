@@ -1,9 +1,7 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2023 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#ifndef HSMCPP_OS_FREERTOS_CRITICALSECTION_HPP
-#define HSMCPP_OS_FREERTOS_CRITICALSECTION_HPP
-
-#include <FreeRTOS.h>
+#ifndef HSMCPP_OS_COMMON_CRITICALSECTION_HPP
+#define HSMCPP_OS_COMMON_CRITICALSECTION_HPP
 
 namespace hsmcpp
 {
@@ -19,11 +17,8 @@ private:
     CriticalSection& operator=(const CriticalSection&) = delete;
     CriticalSection(CriticalSection&&) = delete;
     CriticalSection& operator=(CriticalSection&&) = delete;
-
-private:
-    UBaseType_t mSavedInterruptStatus;
 };
 
 } // namespace hsmcpp
 
-#endif // HSMCPP_OS_FREERTOS_CRITICALSECTION_HPP
+#endif // HSMCPP_OS_COMMON_CRITICALSECTION_HPP

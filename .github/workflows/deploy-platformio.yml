@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       commit_version: ${{ steps.get_version.outputs.commit_version }}
+      commit_action: ${{ steps.get_version.outputs.commit_action }}
 
     steps:
       - uses: actions/checkout@v3
@@ -36,11 +37,6 @@ jobs:
     steps:
       # need to checkout current repo because workflow is not related with push event
       - uses: actions/checkout@v3
-      - uses: ./.github/workflows/get-commit-version
-        id: get_version
-        with:
-          repo_dir: ${{ env.GITHUB_WORKSPACE }}
-          commit_sha: ${{ github.event.workflow_run.head_sha }}
 
       # setup environment
       - name: Cache pip
@@ -94,6 +90,8 @@ jobs:
         run: cp -Rv ./main/build/deploy/* "$target_dir"
 
       - name: Publish PlatformIO package
+        # only publish release versions
+        if: ${{ needs.check-hsmcpp-version.outputs.commit_action == '[r]' }}
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_TOKEN }}
         run: |
@@ -103,7 +101,7 @@ jobs:
         run: |
           cd ./main
           git log -1 --format=%B ${{ github.event.workflow_run.head_sha }} > ../commit.txt
-          
+
       - name: Commit new files
         run: |
           cd "$target_dir"

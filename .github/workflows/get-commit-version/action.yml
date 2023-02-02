@@ -11,6 +11,12 @@ outputs:
   commit_version:
     description: "Version extracted from commit (head if commit_sha was not provided or is empty)"
     value: ${{ format('{0}{1}', steps.read_head_version.outputs.head_version, steps.read_commit_version.outputs.commit_version) }}
+  commit_tag:
+    description: "Tag extracted from commit (head if commit_sha was not provided or is empty)"
+    value: ${{ format('{0}{1}', steps.read_head_version.outputs.head_tag, steps.read_commit_version.outputs.commit_tag) }}
+  commit_action:
+    description: "Action extracted from commit (head if commit_sha was not provided or is empty)"
+    value: ${{ format('{0}{1}', steps.read_head_version.outputs.head_action, steps.read_commit_version.outputs.commit_action) }}
 
 runs:
   using: "composite"
@@ -21,19 +27,28 @@ runs:
       if: ${{ inputs.commit_sha == '' }}
       run: |
         cd "${{ inputs.repo_dir }}"
-        echo "head_version=$(git log -1 --pretty=format:"%s" | grep -Po '\[([\d.]+)\]')" >> $GITHUB_OUTPUT
+        git log -1 --pretty=format:"%s %d"
+        echo "head_version=$(git log -1 --pretty=format:"%s" | grep -Po '\[\K([\d.]+)\]' | grep -Po '[^\]]+')" >> $GITHUB_OUTPUT
+        echo "head_tag=$(git log -1 --pretty=format:"%d" | grep -Po 'tag: \K\d+\.\d+\.\d+')" >> $GITHUB_OUTPUT
+        echo "head_action=$(git log -1 --pretty=format:"%s" | grep -Po '\[([\d.]+)\]\[\K[\w]+\]' | grep -Po '[^\]]+')" >> $GITHUB_OUTPUT
     - if: ${{ inputs.commit_sha == '' }}
       shell: bash
       run: |
         echo "VERSION: '${{ steps.read_head_version.outputs.head_version }}'"
+        echo "TAG: '${{ steps.read_head_version.outputs.head_tag }}'"
+        echo "ACTION: '${{ steps.read_head_version.outputs.head_action }}'"
 
     - id: read_commit_version
       shell: bash
       if: ${{ inputs.commit_sha != '' }}
       run: |
         cd "${{ inputs.repo_dir }}"
-        echo "commit_version=$(git log -1 ${{ inputs.commit_sha }} --pretty=format:"%s" | grep -Po '\[([\d.]+)\]')" >> $GITHUB_OUTPUT
+        echo "commit_version=$(git log -1 ${{ inputs.commit_sha }} --pretty=format:"%s" | grep -Po '\[\K([\d.]+)\]' | grep -Po '[^\]]+')" >> $GITHUB_OUTPUT
+        echo "commit_tag=$(git log -1 ${{ inputs.commit_sha }} --pretty=format:"%d" | grep -Po 'tag: \K\d+\.\d+\.\d+')" >> $GITHUB_OUTPUT
+        echo "commit_action=$(git log -1 ${{ inputs.commit_sha }} --pretty=format:"%s" | grep -Po '\[([\d.]+)\]\[\K[\w]+\]' | grep -Po '[^\]]+')" >> $GITHUB_OUTPUT
     - if: ${{ inputs.commit_sha != '' }}
       shell: bash
       run: |
-        echo "VERSION: '${{ steps.read_commit_version.outputs.head_version }}'"
+        echo "VERSION: '${{ steps.read_commit_version.outputs.commit_version }}'"
+        echo "TAG: '${{ steps.read_commit_version.outputs.commit_tag }}'"
+        echo "ACTION: '${{ steps.read_commit_version.outputs.commit_action }}'"

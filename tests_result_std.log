@@ -30,7 +30,7 @@
 [ RUN      ] TrafficLightHsm.transition_self_internal
 [       OK ] TrafficLightHsm.transition_self_internal (0 ms)
 [ RUN      ] TrafficLightHsm.transition_self_external
-[       OK ] TrafficLightHsm.transition_self_external (1 ms)
+[       OK ] TrafficLightHsm.transition_self_external (0 ms)
 [ RUN      ] TrafficLightHsm.transition_entrypoint_raicecondition
 [       OK ] TrafficLightHsm.transition_entrypoint_raicecondition (0 ms)
 [ RUN      ] TrafficLightHsm.transition_conditional_simple_true
@@ -39,7 +39,7 @@
 [       OK ] TrafficLightHsm.transition_conditional_simple_false (0 ms)
 [ RUN      ] TrafficLightHsm.transition_conditional_multiple
 [       OK ] TrafficLightHsm.transition_conditional_multiple (0 ms)
-[----------] 19 tests from TrafficLightHsm (4 ms total)
+[----------] 19 tests from TrafficLightHsm (2 ms total)
 
 [----------] 64 tests from ABCHsm
 [ RUN      ] ABCHsm.substate_entrypoint
@@ -129,85 +129,85 @@
 [ RUN      ] ABCHsm.history_parallel
 [       OK ] ABCHsm.history_parallel (0 ms)
 [ RUN      ] ABCHsm.timers_onentry
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:36: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:41: Failure
 Expected equality of these values:
   getLastActiveState()
     Which is: 4-byte object <01-00 00-00>
   AbcState::C
     Which is: 4-byte object <02-00 00-00>
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:37: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:42: Failure
 Expected equality of these values:
   mStateCounterC
     Which is: 0
   1
 [  FAILED  ] ABCHsm.timers_onentry (150 ms)
 [ RUN      ] ABCHsm.timers_onexit
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:69: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:78: Failure
 Expected equality of these values:
   getLastActiveState()
     Which is: 4-byte object <01-00 00-00>
   AbcState::C
     Which is: 4-byte object <02-00 00-00>
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:70: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:79: Failure
 Expected equality of these values:
   mStateCounterC
     Which is: 0
   1
 [  FAILED  ] ABCHsm.timers_onexit (150 ms)
 [ RUN      ] ABCHsm.timers_multiple_actions
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:106: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:124: Failure
 Expected equality of these values:
   getLastActiveState()
     Which is: 4-byte object <01-00 00-00>
   AbcState::C
     Which is: 4-byte object <02-00 00-00>
-[  FAILED  ] ABCHsm.timers_multiple_actions (150 ms)
+[  FAILED  ] ABCHsm.timers_multiple_actions (153 ms)
 [ RUN      ] ABCHsm.timers_singleshot
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:144: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:166: Failure
 Expected equality of these values:
   getLastActiveState()
     Which is: 4-byte object <01-00 00-00>
   AbcState::C
     Which is: 4-byte object <02-00 00-00>
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:145: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:167: Failure
 Expected equality of these values:
   mStateCounterC
     Which is: 0
   1
 [  FAILED  ] ABCHsm.timers_singleshot (150 ms)
 [ RUN      ] ABCHsm.timers_repeating
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:179: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:205: Failure
 Expected equality of these values:
   getLastActiveState()
     Which is: 4-byte object <01-00 00-00>
   AbcState::D
     Which is: 4-byte object <03-00 00-00>
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:180: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:206: Failure
 Expected equality of these values:
   mStateCounterC
     Which is: 0
   1
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:181: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:207: Failure
 Expected equality of these values:
   mStateCounterD
     Which is: 0
   1
 [  FAILED  ] ABCHsm.timers_repeating (250 ms)
 [ RUN      ] ABCHsm.timers_stop
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:216: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:246: Failure
 Expected equality of these values:
   getLastActiveState()
     Which is: 4-byte object <01-00 00-00>
   AbcState::C
     Which is: 4-byte object <02-00 00-00>
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:217: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:247: Failure
 Expected equality of these values:
   mStateCounterC
     Which is: 0
   1
 [  FAILED  ] ABCHsm.timers_stop (300 ms)
 [ RUN      ] ABCHsm.timers_restart
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:255: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:294: Failure
 Expected equality of these values:
   getLastActiveState()
     Which is: 4-byte object <01-00 00-00>
@@ -217,13 +217,13 @@ Expected equality of these values:
 [ RUN      ] ABCHsm.timers_delete_running
 [       OK ] ABCHsm.timers_delete_running (150 ms)
 [ RUN      ] ABCHsm.timers_start_from_code
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:327: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:370: Failure
 Expected equality of these values:
   getLastActiveState()
     Which is: 4-byte object <00-00 00-00>
   AbcState::B
     Which is: 4-byte object <01-00 00-00>
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:328: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:371: Failure
 Expected equality of these values:
   mStateCounterB
     Which is: 0
@@ -232,13 +232,13 @@ Expected equality of these values:
 [ RUN      ] ABCHsm.timers_stop_from_code
 [       OK ] ABCHsm.timers_stop_from_code (150 ms)
 [ RUN      ] ABCHsm.timers_restart_from_code
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:392: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:432: Failure
 Expected equality of these values:
   getLastActiveState()
     Which is: 4-byte object <00-00 00-00>
   AbcState::B
     Which is: 4-byte object <01-00 00-00>
-/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:393: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:433: Failure
 Expected equality of these values:
   mStateCounterB
     Which is: 0
@@ -264,59 +264,24 @@ Expected equality of these values:
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 64 tests from ABCHsm (2778 ms total)
+[----------] 64 tests from ABCHsm (2781 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
------ waitAsyncOperation: unblock=1 (BEGIN)
-----> AsyncHsm::onStateChanged: wait
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: res=1 (END)
----- TEST DONE
-----> AsyncHsm::onStateChanged: done
 [       OK ] AsyncHsm.substate_parent_as_initial (0 ms)
 [ RUN      ] AsyncHsm.multithreaded_entrypoint_cancelation
------ waitAsyncOperation: unblock=0 (BEGIN)
------ waitAsyncOperation: res=1 (END)
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: unblock=0 (BEGIN)
-----> AsyncHsm::onStateChanged: wait
------ waitAsyncOperation: res=1 (END)
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: unblock=0 (BEGIN)
-----> AsyncHsm::onStateChanged: done
-----> AsyncHsm::onStateChanged: wait
------ waitAsyncOperation: res=1 (END)
------ unblockNextStep
------ unblockNextStep (DONE)
-----> AsyncHsm::onStateChanged: done
 [       OK ] AsyncHsm.multithreaded_entrypoint_cancelation (0 ms)
 [ RUN      ] AsyncHsm.multithreaded_transition_from_interrupt
------ waitAsyncOperation: unblock=1 (BEGIN)
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: res=0 (END)
-/home/runner/work/hsmcpp/hsmcpp/tests/04_multithreaded.cpp:137: Failure
+/home/runner/work/hsmcpp/hsmcpp/tests/04_multithreaded.cpp:130: Failure
 Value of: waitAsyncOperation(1000, true)
   Actual: false
 Expected: true
 [  FAILED  ] AsyncHsm.multithreaded_transition_from_interrupt (1000 ms)
 [ RUN      ] AsyncHsm.parallel_transition_04
------ waitAsyncOperation: unblock=1 (BEGIN)
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: res=0 (END)
 [       OK ] AsyncHsm.parallel_transition_04 (300 ms)
 [ RUN      ] AsyncHsm.parallel_transition_10_internal_priority
------ waitAsyncOperation: unblock=1 (BEGIN)
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: res=0 (END)
 [       OK ] AsyncHsm.parallel_transition_10_internal_priority (300 ms)
-[----------] 5 tests from AsyncHsm (1601 ms total)
+[----------] 5 tests from AsyncHsm (1602 ms total)
 
 [----------] 2 tests from dispatchers
 [ RUN      ] dispatchers.stresstest_create_destroy
@@ -346,7 +311,7 @@ Expected: true
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (151 ms)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (150 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1
@@ -368,7 +333,7 @@ Expected: true
 [----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
 
 [----------] Global test environment tear-down
-[==========] 105 tests from 8 test suites ran. (5394 ms total)
+[==========] 105 tests from 8 test suites ran. (5396 ms total)
 [  PASSED  ] 95 tests.
 [  FAILED  ] 10 tests, listed below:
 [  FAILED  ] ABCHsm.timers_onentry

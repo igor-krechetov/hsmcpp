@@ -39,7 +39,7 @@
 [       OK ] TrafficLightHsm.transition_conditional_simple_false (0 ms)
 [ RUN      ] TrafficLightHsm.transition_conditional_multiple
 [       OK ] TrafficLightHsm.transition_conditional_multiple (0 ms)
-[----------] 19 tests from TrafficLightHsm (3 ms total)
+[----------] 19 tests from TrafficLightHsm (2 ms total)
 
 [----------] 63 tests from ABCHsm
 [ RUN      ] ABCHsm.substate_entrypoint
@@ -168,59 +168,20 @@
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 63 tests from ABCHsm (3529 ms total)
+[----------] 63 tests from ABCHsm (3528 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
------ waitAsyncOperation: unblock=1 (BEGIN)
-----> AsyncHsm::onStateChanged: wait
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: res=1 (END)
----- TEST DONE
-----> AsyncHsm::onStateChanged: done
 [       OK ] AsyncHsm.substate_parent_as_initial (0 ms)
 [ RUN      ] AsyncHsm.multithreaded_entrypoint_cancelation
------ waitAsyncOperation: unblock=0 (BEGIN)
------ waitAsyncOperation: res=1 (END)
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: unblock=0 (BEGIN)
-----> AsyncHsm::onStateChanged: wait
------ waitAsyncOperation: res=1 (END)
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: unblock=0 (BEGIN)
-----> AsyncHsm::onStateChanged: done
-----> AsyncHsm::onStateChanged: wait
------ waitAsyncOperation: res=1 (END)
------ unblockNextStep
------ unblockNextStep (DONE)
-----> AsyncHsm::onStateChanged: done
 [       OK ] AsyncHsm.multithreaded_entrypoint_cancelation (0 ms)
 [ RUN      ] AsyncHsm.multithreaded_transition_from_interrupt
------ waitAsyncOperation: unblock=1 (BEGIN)
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: res=0 (END)
-/home/runner/work/hsmcpp/hsmcpp/tests/04_multithreaded.cpp:137: Failure
-Value of: waitAsyncOperation(1000, true)
-  Actual: false
-Expected: true
-[  FAILED  ] AsyncHsm.multithreaded_transition_from_interrupt (1000 ms)
+[       OK ] AsyncHsm.multithreaded_transition_from_interrupt (0 ms)
 [ RUN      ] AsyncHsm.parallel_transition_04
------ waitAsyncOperation: unblock=1 (BEGIN)
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: res=0 (END)
 [       OK ] AsyncHsm.parallel_transition_04 (300 ms)
 [ RUN      ] AsyncHsm.parallel_transition_10_internal_priority
------ waitAsyncOperation: unblock=1 (BEGIN)
------ unblockNextStep
------ unblockNextStep (DONE)
------ waitAsyncOperation: res=0 (END)
 [       OK ] AsyncHsm.parallel_transition_10_internal_priority (300 ms)
-[----------] 5 tests from AsyncHsm (1602 ms total)
+[----------] 5 tests from AsyncHsm (601 ms total)
 
 [----------] 1 test from dispatchers
 [ RUN      ] dispatchers.create_hsm_from_callback
@@ -252,7 +213,7 @@ Expected: true
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (151 ms)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (150 ms)
 [----------] 4 tests from finalstate/ParamFixtureFinalState1 (503 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState2
@@ -266,13 +227,9 @@ Expected: true
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0
 [       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1
-[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (150 ms)
+[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (151 ms)
 [----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
 
 [----------] Global test environment tear-down
-[==========] 103 tests from 8 test suites ran. (6142 ms total)
-[  PASSED  ] 102 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] AsyncHsm.multithreaded_transition_from_interrupt
-
- 1 FAILED TEST
+[==========] 103 tests from 8 test suites ran. (5140 ms total)
+[  PASSED  ] 103 tests.

@@ -39,7 +39,7 @@
 [       OK ] TrafficLightHsm.transition_conditional_simple_false (0 ms)
 [ RUN      ] TrafficLightHsm.transition_conditional_multiple
 [       OK ] TrafficLightHsm.transition_conditional_multiple (0 ms)
-[----------] 19 tests from TrafficLightHsm (3 ms total)
+[----------] 19 tests from TrafficLightHsm (2 ms total)
 
 [----------] 64 tests from ABCHsm
 [ RUN      ] ABCHsm.substate_entrypoint
@@ -264,7 +264,7 @@ Expected equality of these values:
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 64 tests from ABCHsm (2781 ms total)
+[----------] 64 tests from ABCHsm (2776 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
@@ -281,10 +281,10 @@ Expected equality of these values:
 
 [----------] 2 tests from dispatchers
 [ RUN      ] dispatchers.stresstest_create_destroy
-[       OK ] dispatchers.stresstest_create_destroy (14 ms)
+[       OK ] dispatchers.stresstest_create_destroy (12 ms)
 [ RUN      ] dispatchers.create_hsm_from_callback
 [       OK ] dispatchers.create_hsm_from_callback (0 ms)
-[----------] 2 tests from dispatchers (14 ms total)
+[----------] 2 tests from dispatchers (12 ms total)
 
 [----------] 7 tests from variant
 [ RUN      ] variant.vector
@@ -307,7 +307,7 @@ Expected equality of these values:
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (150 ms)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (151 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1
@@ -329,7 +329,7 @@ Expected equality of these values:
 [----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
 
 [----------] Global test environment tear-down
-[==========] 105 tests from 8 test suites ran. (4408 ms total)
+[==========] 105 tests from 8 test suites ran. (4399 ms total)
 [  PASSED  ] 96 tests.
 [  FAILED  ] 9 tests, listed below:
 [  FAILED  ] ABCHsm.timers_onentry

@@ -168,7 +168,7 @@
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 63 tests from ABCHsm (3528 ms total)
+[----------] 63 tests from ABCHsm (3525 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
@@ -231,5 +231,5 @@
 [----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
 
 [----------] Global test environment tear-down
-[==========] 103 tests from 8 test suites ran. (5140 ms total)
+[==========] 103 tests from 8 test suites ran. (5136 ms total)
 [  PASSED  ] 103 tests.

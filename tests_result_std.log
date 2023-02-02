@@ -39,7 +39,7 @@
 [       OK ] TrafficLightHsm.transition_conditional_simple_false (0 ms)
 [ RUN      ] TrafficLightHsm.transition_conditional_multiple
 [       OK ] TrafficLightHsm.transition_conditional_multiple (0 ms)
-[----------] 19 tests from TrafficLightHsm (2 ms total)
+[----------] 19 tests from TrafficLightHsm (1 ms total)
 
 [----------] 64 tests from ABCHsm
 [ RUN      ] ABCHsm.substate_entrypoint
@@ -161,7 +161,7 @@ Expected equality of these values:
     Which is: 4-byte object <01-00 00-00>
   AbcState::C
     Which is: 4-byte object <02-00 00-00>
-[  FAILED  ] ABCHsm.timers_multiple_actions (153 ms)
+[  FAILED  ] ABCHsm.timers_multiple_actions (150 ms)
 [ RUN      ] ABCHsm.timers_singleshot
 /home/runner/work/hsmcpp/hsmcpp/tests/09_timers.cpp:166: Failure
 Expected equality of these values:
@@ -264,7 +264,7 @@ Expected equality of these values:
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 64 tests from ABCHsm (2781 ms total)
+[----------] 64 tests from ABCHsm (2774 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
@@ -281,14 +281,14 @@ Expected: true
 [       OK ] AsyncHsm.parallel_transition_04 (300 ms)
 [ RUN      ] AsyncHsm.parallel_transition_10_internal_priority
 [       OK ] AsyncHsm.parallel_transition_10_internal_priority (300 ms)
-[----------] 5 tests from AsyncHsm (1602 ms total)
+[----------] 5 tests from AsyncHsm (1601 ms total)
 
 [----------] 2 tests from dispatchers
 [ RUN      ] dispatchers.stresstest_create_destroy
-[       OK ] dispatchers.stresstest_create_destroy (2 ms)
+[       OK ] dispatchers.stresstest_create_destroy (1 ms)
 [ RUN      ] dispatchers.create_hsm_from_callback
 [       OK ] dispatchers.create_hsm_from_callback (0 ms)
-[----------] 2 tests from dispatchers (2 ms total)
+[----------] 2 tests from dispatchers (1 ms total)
 
 [----------] 7 tests from variant
 [ RUN      ] variant.vector
@@ -316,7 +316,7 @@ Expected: true
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (150 ms)
-[----------] 4 tests from finalstate/ParamFixtureFinalState1 (503 ms total)
+[----------] 4 tests from finalstate/ParamFixtureFinalState1 (502 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState2
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0
@@ -333,7 +333,7 @@ Expected: true
 [----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
 
 [----------] Global test environment tear-down
-[==========] 105 tests from 8 test suites ran. (5396 ms total)
+[==========] 105 tests from 8 test suites ran. (5385 ms total)
 [  PASSED  ] 95 tests.
 [  FAILED  ] 10 tests, listed below:
 [  FAILED  ] ABCHsm.timers_onentry

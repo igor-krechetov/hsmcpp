@@ -2,18 +2,15 @@
 // Distributed under MIT license. See file LICENSE for details
 #include "hsmcpp/os/arduino/ConditionVariable.hpp"
 
-namespace hsmcpp
-{
+namespace hsmcpp {
 
-ConditionVariable::~ConditionVariable()
-{
+ConditionVariable::~ConditionVariable() {
     // mVariable.notify_all();
 }
 
-void ConditionVariable::wait(UniqueLock& sync, std::function<bool()> stopWaiting)
-{
+void ConditionVariable::wait(UniqueLock& sync, std::function<bool()> stopWaiting) {
     // std::unique_lock<std::mutex> lck;
-    
+
     // if (false == sync.owns_lock())
     // {
     //     lck = std::unique_lock<std::mutex>(sync.mutex()->nativeHandle(), std::try_to_lock);
@@ -27,11 +24,10 @@ void ConditionVariable::wait(UniqueLock& sync, std::function<bool()> stopWaiting
     // {
     //     mVariable.wait(lck, stopWaiting);
     // }
-    // else 
+    // else
     // {
     //     mVariable.wait(lck);
     // }
-
 
     // // no need to unlock on exit if lock already belonged to UniqueLock object
     // if (true == sync.owns_lock())
@@ -41,10 +37,9 @@ void ConditionVariable::wait(UniqueLock& sync, std::function<bool()> stopWaiting
     // }
 }
 
-bool ConditionVariable::wait_for(UniqueLock& sync, const int timeoutMs, std::function<bool()> stopWaiting)
-{
+bool ConditionVariable::wait_for(UniqueLock& sync, const int timeoutMs, std::function<bool()> stopWaiting) {
     // std::unique_lock<std::mutex> lck;
-    
+
     // if (false == sync.owns_lock())
     // {
     //     lck = std::unique_lock<std::mutex>(sync.mutex()->nativeHandle(), std::try_to_lock);
@@ -55,7 +50,6 @@ bool ConditionVariable::wait_for(UniqueLock& sync, const int timeoutMs, std::fun
     // }
 
     // const bool res = mVariable.wait_for(lck, std::chrono::milliseconds(timeoutMs), stopWaiting);
-
 
     // // no need to unlock on exit if lock already belonged to UniqueLock object
     // if (true == sync.owns_lock())
@@ -68,4 +62,4 @@ bool ConditionVariable::wait_for(UniqueLock& sync, const int timeoutMs, std::fun
     return false;
 }
 
-} // namespace hsmcpp
+}  // namespace hsmcpp

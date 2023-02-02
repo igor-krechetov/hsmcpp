@@ -1,7 +1,7 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#ifndef __HSMCPP_OS_STL_MUTEX_HPP__
-#define __HSMCPP_OS_STL_MUTEX_HPP__
+#ifndef HSMCPP_OS_STL_MUTEX_HPP
+#define HSMCPP_OS_STL_MUTEX_HPP
 
 namespace hsmcpp
 {
@@ -27,4 +27,4 @@ private:
 
 } // namespace hsmcpp
 
-#endif // __HSMCPP_OS_STL_MUTEX_HPP__
+#endif // HSMCPP_OS_STL_MUTEX_HPP

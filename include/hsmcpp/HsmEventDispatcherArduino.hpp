@@ -1,8 +1,8 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
-#ifndef __HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP__
-#define __HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP__
+#ifndef HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP
+#define HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP
 
 #include "HsmEventDispatcherBase.hpp"
 #include <vector>
@@ -33,7 +33,6 @@ public:
     void stop();
 
     void emitEvent(const HandlerID_t handlerID) override;
-    bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) override;
 
     void dispatchEvents();
 
@@ -41,7 +40,6 @@ protected:
     void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
     void stopTimerImpl(const TimerID_t timerID) override;
 
-    void handleEnqueuedEvents();
     void handleTimers();
 
 private:
@@ -52,4 +50,4 @@ private:
 
 } // namespace hsmcpp
 
-#endif // __HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP__
+#endif // HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP

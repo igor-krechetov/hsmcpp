@@ -3,13 +3,13 @@
 
 #ifdef PLATFORM_ARDUINO
 
-#include "hsmcpp/logging.hpp"
-#include <stdarg.h>
-#include <Arduino.h>
-#include <ArduinoLog.h>
+  #include "hsmcpp/logging.hpp"
 
-void serialPrintf(const char *fmt, ...)
-{
+  #include <Arduino.h>
+  #include <ArduinoLog.h>
+  #include <stdarg.h>
+
+void serialPrintf(const char *fmt, ...) {
     char buffer[1024] = {0};
     va_list args;
 

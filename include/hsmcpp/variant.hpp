@@ -1,8 +1,8 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
-#ifndef __HSMCPP_VARIANT_HPP__
-#define __HSMCPP_VARIANT_HPP__
+#ifndef HSMCPP_VARIANT_HPP
+#define HSMCPP_VARIANT_HPP
 
 #include <map>
 #include <list>
@@ -19,11 +19,13 @@ typedef std::list<Variant> VariantList_t;
 typedef std::map<Variant, Variant> VariantDict_t;
 typedef std::pair<Variant, Variant> VariantPair_t;
 
+// cppcheck-suppress misra-c2012-20.7
 #define DEF_CONSTRUCTOR(_val_type, _internal_type)                  \
     explicit Variant(const _val_type& v) {                          \
         assign<_val_type>(v, _internal_type);                       \
     }
 
+// cppcheck-suppress misra-c2012-20.7
 #define DEF_OPERATOR_ASSIGN(_val_type, _internal_type)              \
     Variant& operator=(const _val_type& v) {                        \
         assign<_val_type>(v, _internal_type);                       \
@@ -193,12 +195,12 @@ private:
     template <typename T>
     void assign(const T& v, const Type t)
     {
-        free();
+        freeMemory();
         data = new T(v);
         type = t;
     }
 
-    void free();
+    void freeMemory();
 
 private:
     void* data = nullptr;
@@ -311,4 +313,4 @@ std::map<K, V> Variant::toMap() const
 
 template struct std::pair<hsmcpp::Variant, hsmcpp::Variant>;
 
-#endif  // __HSMCPP_VARIANT_HPP__
+#endif  // HSMCPP_VARIANT_HPP

@@ -41,10 +41,13 @@ public:
     @CLASS_NAME@();
     virtual ~@CLASS_NAME@();
 
-    bool initialize(const std::shared_ptr<hsmcpp::IHsmEventDispatcher>& dispatcher) override;
-
 protected:
     void configureHsm();
+    void configureStates();
+    void configureSubstates();
+    void configureTransitions();
+    void configureTimers();
+    void configureActions();
 
 // HSM state changed callbacks
 protected:

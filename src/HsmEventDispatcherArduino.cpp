@@ -12,7 +12,6 @@ namespace hsmcpp
 #define HSM_TRACE_CLASS                         "HsmEventDispatcherArduino"
 
 // TODO: this dispatcher needs testing with interrupts (events, timers)
-// TODO: implement critical section for Arduino
 
 HsmEventDispatcherArduino::HsmEventDispatcherArduino(const size_t eventsCacheSize)
 {

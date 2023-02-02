@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.28.1] - 2023-02-02
+### Fixed
+- scxml2gen: changed template to reduce stack consumption during HSM initialization on Arduino
+
 ## [0.28.0] - 2023-02-01
 ### Added
 - interrupts support for std, glib, glibmm and qt dispatchers

@@ -2,8 +2,7 @@
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/ABCHsm.hpp"
 
-TEST_F(ABCHsm, history_simple)
-{
+TEST_F(ABCHsm, history_simple) {
     TEST_DESCRIPTION("simple history test; shallow, one level");
     // *F -> P1 {*A, B, H[x]} -> C -> H
 
@@ -46,10 +45,10 @@ TEST_F(ABCHsm, history_simple)
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
 }
 
-TEST_F(ABCHsm, history_default_shallow)
-{
-    TEST_DESCRIPTION("if transitioning to SHALLOW history state before it was able to store any "
-                     "previous states, HSM should use history default target");
+TEST_F(ABCHsm, history_default_shallow) {
+    TEST_DESCRIPTION(
+        "if transitioning to SHALLOW history state before it was able to store any "
+        "previous states, HSM should use history default target");
     // F -> P1 { *A, P2{ B }, H[-P2] }
 
     //-------------------------------------------
@@ -80,10 +79,10 @@ TEST_F(ABCHsm, history_default_shallow)
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::B}));
 }
 
-TEST_F(ABCHsm, history_default_deep)
-{
-    TEST_DESCRIPTION("if transitioning to DEEP history state before it was able to store any "
-                     "previous states, HSM should use history default target");
+TEST_F(ABCHsm, history_default_deep) {
+    TEST_DESCRIPTION(
+        "if transitioning to DEEP history state before it was able to store any "
+        "previous states, HSM should use history default target");
     // F -> P1 { *A, P2{ B }, H[-P2] }
 
     //-------------------------------------------
@@ -114,10 +113,10 @@ TEST_F(ABCHsm, history_default_deep)
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::B}));
 }
 
-TEST_F(ABCHsm, history_no_default)
-{
-    TEST_DESCRIPTION("if there is no default transition defined for history "
-                     "entry it should transition to parent's entry point");
+TEST_F(ABCHsm, history_no_default) {
+    TEST_DESCRIPTION(
+        "if there is no default transition defined for history "
+        "entry it should transition to parent's entry point");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -146,10 +145,10 @@ TEST_F(ABCHsm, history_no_default)
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 }
 
-TEST_F(ABCHsm, history_deep)
-{
-    TEST_DESCRIPTION("when deep history is used, HSM should activate "
-                     "exact states which were active before exiting parent");
+TEST_F(ABCHsm, history_deep) {
+    TEST_DESCRIPTION(
+        "when deep history is used, HSM should activate "
+        "exact states which were active before exiting parent");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -196,10 +195,10 @@ TEST_F(ABCHsm, history_deep)
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::P3, AbcState::B, AbcState::D}));
 }
 
-TEST_F(ABCHsm, history_shallow)
-{
-    TEST_DESCRIPTION("when shallow history is used, HSM should activate "
-                     "only direct child of the parent which owns history state");
+TEST_F(ABCHsm, history_shallow) {
+    TEST_DESCRIPTION(
+        "when shallow history is used, HSM should activate "
+        "only direct child of the parent which owns history state");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -244,10 +243,10 @@ TEST_F(ABCHsm, history_shallow)
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::A}));
 }
 
-TEST_F(ABCHsm, history_multiple)
-{
-    TEST_DESCRIPTION("history should be saved correctly when exiting from a top "
-                     "level parent which contains history and substate with history");
+TEST_F(ABCHsm, history_multiple) {
+    TEST_DESCRIPTION(
+        "history should be saved correctly when exiting from a top "
+        "level parent which contains history and substate with history");
     // TODO: review is this is the best way to validate this scenario
     //-------------------------------------------
     // PRECONDITIONS
@@ -290,16 +289,13 @@ TEST_F(ABCHsm, history_multiple)
 
     ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
 
-
-
     //-------------------------------------------
     // VALIDATION
     // history H is activated
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::P3, AbcState::B, AbcState::D}));
 }
 
-TEST_F(ABCHsm, history_callbacks)
-{
+TEST_F(ABCHsm, history_callbacks) {
     TEST_DESCRIPTION("check that all callbacks are correctly called during history transition");
 
     //-------------------------------------------
@@ -320,8 +316,12 @@ TEST_F(ABCHsm, history_callbacks)
     registerSubstateEntryPoint(AbcState::P3, AbcState::A);
     registerSubstate(AbcState::P3, AbcState::B);
     registerSubstate(AbcState::P3, AbcState::D);
-    registerHistory<ABCHsm>(AbcState::P1, AbcState::H, ABCHsm::HistoryType::DEEP, AbcState::P2,
-                            this, &ABCHsm::onRestoreHistoryTransition);
+    registerHistory<ABCHsm>(AbcState::P1,
+                            AbcState::H,
+                            ABCHsm::HistoryType::DEEP,
+                            AbcState::P2,
+                            this,
+                            &ABCHsm::onRestoreHistoryTransition);
 
     registerTransition(AbcState::F, AbcState::H, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
@@ -373,8 +373,7 @@ TEST_F(ABCHsm, history_callbacks)
     EXPECT_EQ(mStateCounterDExit, 1);
 }
 
-TEST_F(ABCHsm, history_parallel)
-{
+TEST_F(ABCHsm, history_parallel) {
     TEST_DESCRIPTION("history should restore parallel states");
     // *F -> P1 { A -> B + C, H } -> D
 

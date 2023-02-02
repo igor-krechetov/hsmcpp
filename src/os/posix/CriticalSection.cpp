@@ -2,10 +2,8 @@
 // Distributed under MIT license. See file LICENSE for details
 #include "hsmcpp/os/posix/CriticalSection.hpp"
 
-namespace hsmcpp
-{
-CriticalSection::CriticalSection()
-{
+namespace hsmcpp {
+CriticalSection::CriticalSection() {
     sigset_t blockMask;
 
     // add all signals to the set
@@ -14,10 +12,9 @@ CriticalSection::CriticalSection()
     pthread_sigmask(SIG_BLOCK, &blockMask, &mOriginalSigMask);
 }
 
-CriticalSection::~CriticalSection()
-{
+CriticalSection::~CriticalSection() {
     // restore signals mask
     pthread_sigmask(SIG_SETMASK, &mOriginalSigMask, nullptr);
 }
 
-} // namespace hsmcpp
+}  // namespace hsmcpp

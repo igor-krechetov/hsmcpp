@@ -7,28 +7,38 @@
 #include "hsmcpp/hsm.hpp"
 
 #undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS                         "ABCHsm"
+#define HSM_TRACE_CLASS "ABCHsm"
 
-enum class AbcState
-{
-    A, B, C, D, E, F,
-    H, H2,
-    P1, P2, P3, P4,
-    F1, F2, F3,
+enum class AbcState {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    H,
+    H2,
+    P1,
+    P2,
+    P3,
+    P4,
+    F1,
+    F2,
+    F3,
 };
 
-enum class AbcEvent
-{
-    E1, E2, E3,
-    EXIT1, EXIT2,
+enum class AbcEvent {
+    E1,
+    E2,
+    E3,
+    EXIT1,
+    EXIT2,
 
     INVALID = INVALID_ID
 
 };
 
-class ABCHsm: public testing::Test
-            , public HierarchicalStateMachine<AbcState, AbcEvent>
-{
+class ABCHsm : public testing::Test, public HierarchicalStateMachine<AbcState, AbcEvent> {
 public:
     ABCHsm();
     virtual ~ABCHsm();
@@ -54,8 +64,7 @@ public:
 
     bool conditionTrue(const VariantVector_t& args);
 
-    inline void initializeHsm()
-    {
+    inline void initializeHsm() {
         INITIALIZE_HSM();
     }
 
@@ -71,4 +80,4 @@ protected:
     VariantVector_t mArgsConditionTrue;
 };
 
-#endif // HSMCPP_TESTS_HSM_ABCHSM_HPP
+#endif  // HSMCPP_TESTS_HSM_ABCHSM_HPP

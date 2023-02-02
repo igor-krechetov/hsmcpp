@@ -7,18 +7,16 @@
  */
 #pragma once
 #include <stddef.h>
-namespace bin2cpp
-{
-  #ifndef BIN2CPP_EMBEDDEDFILE_CLASS
+namespace bin2cpp {
+#ifndef BIN2CPP_EMBEDDEDFILE_CLASS
   #define BIN2CPP_EMBEDDEDFILE_CLASS
-  class File
-  {
-  public:
+class File {
+public:
     virtual size_t getSize() const = 0;
-    virtual const char * getFilename() const = 0;
-    virtual const char * getBuffer() const = 0;
-    virtual bool save(const char * iFilename) const = 0;
-  };
-  #endif
-  const File & getBadgeTemplateFile();
-}; //bin2cpp
+    virtual const char* getFilename() const = 0;
+    virtual const char* getBuffer() const = 0;
+    virtual bool save(const char* iFilename) const = 0;
+};
+#endif
+const File& getBadgeTemplateFile();
+};  // namespace bin2cpp

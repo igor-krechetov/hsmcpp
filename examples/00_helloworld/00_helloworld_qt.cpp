@@ -1,35 +1,25 @@
-#include <chrono>
-#include <thread>
-#include <hsmcpp/hsm.hpp>
-#include <hsmcpp/HsmEventDispatcherQt.hpp>
 #include <QCoreApplication>
+#include <chrono>
+#include <hsmcpp/HsmEventDispatcherQt.hpp>
+#include <hsmcpp/hsm.hpp>
+#include <thread>
 
 using namespace hsmcpp;
 
-enum class States
-{
-    OFF,
-    ON
-};
+enum class States { OFF, ON };
 
-enum class Events
-{
-    SWITCH
-};
+enum class Events { SWITCH };
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     HierarchicalStateMachine<States, Events> hsm(States::OFF);
 
-    hsm.registerState(States::OFF, [&hsm](const VariantVector_t& args)
-    {
+    hsm.registerState(States::OFF, [&hsm](const VariantVector_t& args) {
         (void)printf("Off\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
     });
-    hsm.registerState(States::ON, [&hsm](const VariantVector_t& args)
-    {
+    hsm.registerState(States::ON, [&hsm](const VariantVector_t& args) {
         (void)printf("On\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);

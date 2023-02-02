@@ -1,11 +1,11 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#include "hsm/ABCHsm.hpp"
 #include <chrono>
 #include <thread>
 
-TEST_F(ABCHsm, finalstate_simple_exitpoint)
-{
+#include "hsm/ABCHsm.hpp"
+
+TEST_F(ABCHsm, finalstate_simple_exitpoint) {
     // 02_simple_substate_exitpoint
     TEST_DESCRIPTION("HSM should automatically generate event when entering final state");
 
@@ -39,11 +39,11 @@ TEST_F(ABCHsm, finalstate_simple_exitpoint)
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 }
 
-TEST_F(ABCHsm, finalstate_forward_event)
-{
+TEST_F(ABCHsm, finalstate_forward_event) {
     // 01_simple_substate_final
-    TEST_DESCRIPTION("HSM will trigger same event as exit event "
-                     "if final state didn't have any event registered");
+    TEST_DESCRIPTION(
+        "HSM will trigger same event as exit event "
+        "if final state didn't have any event registered");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -75,18 +75,15 @@ TEST_F(ABCHsm, finalstate_forward_event)
     ASSERT_EQ(getLastActiveState(), AbcState::A);
 }
 
-class ParamFixtureFinalState1: public ABCHsm
-                 , public ::testing::WithParamInterface<std::tuple<std::list<AbcEvent>, AbcState>>
-{};
+class ParamFixtureFinalState1 : public ABCHsm,
+                                public ::testing::WithParamInterface<std::tuple<std::list<AbcEvent>, AbcState>> {};
 
-INSTANTIATE_TEST_CASE_P(finalstate, ParamFixtureFinalState1,
-                        ::testing::Values(
-                            std::make_tuple(std::list<AbcEvent>({AbcEvent::E1}), AbcState::C),
-                            std::make_tuple(std::list<AbcEvent>({AbcEvent::E3, AbcEvent::E2}), AbcState::D)
-                        ));
+INSTANTIATE_TEST_CASE_P(finalstate,
+                        ParamFixtureFinalState1,
+                        ::testing::Values(std::make_tuple(std::list<AbcEvent>({AbcEvent::E1}), AbcState::C),
+                                          std::make_tuple(std::list<AbcEvent>({AbcEvent::E3, AbcEvent::E2}), AbcState::D)));
 
-TEST_P(ParamFixtureFinalState1, finalstate_multiple_final)
-{
+TEST_P(ParamFixtureFinalState1, finalstate_multiple_final) {
     // 03_multi_substate_final
     TEST_DESCRIPTION("HSM should support multiple path to a final state");
     std::tuple<std::list<AbcEvent>, AbcState> param = GetParam();
@@ -121,8 +118,7 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_final)
 
     //-------------------------------------------
     // ACTIONS
-    for (auto curEvent: argEvents)
-    {
+    for (auto curEvent : argEvents) {
         ASSERT_TRUE(transitionSync(curEvent, HSM_WAIT_INDEFINITELY));
         // wait a bit since exit transition will be async
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -133,8 +129,7 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_final)
     ASSERT_EQ(getLastActiveState(), expectedState);
 }
 
-TEST_P(ParamFixtureFinalState1, finalstate_multiple_exitpoints)
-{
+TEST_P(ParamFixtureFinalState1, finalstate_multiple_exitpoints) {
     // 04_multi_substate_exitpoints
     TEST_DESCRIPTION("HSM should support multiple exit points");
     std::tuple<std::list<AbcEvent>, AbcState> param = GetParam();
@@ -171,8 +166,7 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_exitpoints)
 
     //-------------------------------------------
     // ACTIONS
-    for (auto curEvent: argEvents)
-    {
+    for (auto curEvent : argEvents) {
         ASSERT_TRUE(transitionSync(curEvent, HSM_WAIT_INDEFINITELY));
         // wait a bit since exit transition will be async
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -183,8 +177,7 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_exitpoints)
     ASSERT_EQ(getLastActiveState(), expectedState);
 }
 
-TEST_F(ABCHsm, finalstate_blocked_final)
-{
+TEST_F(ABCHsm, finalstate_blocked_final) {
     // 05_blocked_substate_final
     TEST_DESCRIPTION("");
 
@@ -219,8 +212,7 @@ TEST_F(ABCHsm, finalstate_blocked_final)
     ASSERT_EQ(getLastActiveState(), AbcState::F1);
 }
 
-TEST_F(ABCHsm, finalstate_blocked_exitpoint)
-{
+TEST_F(ABCHsm, finalstate_blocked_exitpoint) {
     // 06_blocked_substate_exitpoint
     TEST_DESCRIPTION("");
 
@@ -255,8 +247,7 @@ TEST_F(ABCHsm, finalstate_blocked_exitpoint)
     ASSERT_EQ(getLastActiveState(), AbcState::F1);
 }
 
-TEST_F(ABCHsm, finalstate_transition_args)
-{
+TEST_F(ABCHsm, finalstate_transition_args) {
     TEST_DESCRIPTION("final state shold forward transition arguments when rasing exit event");
 
     //-------------------------------------------
@@ -293,11 +284,11 @@ TEST_F(ABCHsm, finalstate_transition_args)
     ASSERT_EQ(mTransitionArgsE3[0].toInt64(), testArg);
 }
 
-TEST_F(ABCHsm, finalstate_no_transition)
-{
+TEST_F(ABCHsm, finalstate_no_transition) {
     // 05_blocked_substate_final
-    TEST_DESCRIPTION("HSM will be stuck in a final state if no one handles "
-                     "it's substate exit transition");
+    TEST_DESCRIPTION(
+        "HSM will be stuck in a final state if no one handles "
+        "it's substate exit transition");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -314,9 +305,7 @@ TEST_F(ABCHsm, finalstate_no_transition)
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition<ABCHsm>(AbcState::C, AbcState::D, AbcEvent::E2);
 
-    registerFailedTransitionCallback([&](const AbcEvent event, const VariantVector_t& args){
-        failedEvent = event;
-    });
+    registerFailedTransitionCallback([&](const AbcEvent event, const VariantVector_t& args) { failedEvent = event; });
 
     initializeHsm();
 
@@ -336,12 +325,12 @@ TEST_F(ABCHsm, finalstate_no_transition)
     ASSERT_EQ(failedEvent, AbcEvent::E3);
 }
 
-TEST_F(ABCHsm, finalstate_toplevel)
-{
+TEST_F(ABCHsm, finalstate_toplevel) {
     // 00_simple_final
-    TEST_DESCRIPTION("HSM will not generate event if final "
-                     "state has no parent (top level final state). "
-                     "Defined events will be ignored");
+    TEST_DESCRIPTION(
+        "HSM will not generate event if final "
+        "state has no parent (top level final state). "
+        "Defined events will be ignored");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -352,9 +341,7 @@ TEST_F(ABCHsm, finalstate_toplevel)
 
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
 
-    registerFailedTransitionCallback([&](const AbcEvent event, const VariantVector_t& args){
-        wasFailedEvent = true;
-    });
+    registerFailedTransitionCallback([&](const AbcEvent event, const VariantVector_t& args) { wasFailedEvent = true; });
 
     initializeHsm();
 
@@ -371,18 +358,15 @@ TEST_F(ABCHsm, finalstate_toplevel)
     ASSERT_FALSE(wasFailedEvent);
 }
 
-class ParamFixtureFinalState2: public ABCHsm
-                 , public ::testing::WithParamInterface<std::tuple<std::list<AbcEvent>, AbcState>>
-{};
+class ParamFixtureFinalState2 : public ABCHsm,
+                                public ::testing::WithParamInterface<std::tuple<std::list<AbcEvent>, AbcState>> {};
 
-INSTANTIATE_TEST_CASE_P(finalstate, ParamFixtureFinalState2,
-                        ::testing::Values(
-                            std::make_tuple(std::list<AbcEvent>({AbcEvent::E1}), AbcState::C),
-                            std::make_tuple(std::list<AbcEvent>({AbcEvent::E3, AbcEvent::E2}), AbcState::C)
-                        ));
+INSTANTIATE_TEST_CASE_P(finalstate,
+                        ParamFixtureFinalState2,
+                        ::testing::Values(std::make_tuple(std::list<AbcEvent>({AbcEvent::E1}), AbcState::C),
+                                          std::make_tuple(std::list<AbcEvent>({AbcEvent::E3, AbcEvent::E2}), AbcState::C)));
 
-TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path)
-{
+TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path) {
     // 07_multi_substate_single_exitpoint
     TEST_DESCRIPTION("Check that multiple paths to a single exit point are supported");
     std::tuple<std::list<AbcEvent>, AbcState> param = GetParam();
@@ -415,8 +399,7 @@ TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path)
 
     //-------------------------------------------
     // ACTIONS
-    for (auto curEvent: argEvents)
-    {
+    for (auto curEvent : argEvents) {
         ASSERT_TRUE(transitionSync(curEvent, HSM_WAIT_INDEFINITELY));
         // wait a bit since exit transition will be async
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -427,18 +410,15 @@ TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path)
     ASSERT_EQ(getLastActiveState(), expectedState);
 }
 
-class ParamFixtureFinalState3: public ABCHsm
-                 , public ::testing::WithParamInterface<std::tuple<std::list<AbcEvent>, AbcState>>
-{};
+class ParamFixtureFinalState3 : public ABCHsm,
+                                public ::testing::WithParamInterface<std::tuple<std::list<AbcEvent>, AbcState>> {};
 
-INSTANTIATE_TEST_CASE_P(finalstate, ParamFixtureFinalState3,
-                        ::testing::Values(
-                            std::make_tuple(std::list<AbcEvent>({AbcEvent::E1}), AbcState::C),
-                            std::make_tuple(std::list<AbcEvent>({AbcEvent::E3, AbcEvent::E2}), AbcState::D)
-                        ));
+INSTANTIATE_TEST_CASE_P(finalstate,
+                        ParamFixtureFinalState3,
+                        ::testing::Values(std::make_tuple(std::list<AbcEvent>({AbcEvent::E1}), AbcState::C),
+                                          std::make_tuple(std::list<AbcEvent>({AbcEvent::E3, AbcEvent::E2}), AbcState::D)));
 
-TEST_P(ParamFixtureFinalState3, finalstate_both_types)
-{
+TEST_P(ParamFixtureFinalState3, finalstate_both_types) {
     // 08_multi_substate_both
     // 09_multi_substate_both
     TEST_DESCRIPTION("Both exitpoints and final states can exist in the same parent state");
@@ -476,8 +456,7 @@ TEST_P(ParamFixtureFinalState3, finalstate_both_types)
 
     //-------------------------------------------
     // ACTIONS
-    for (auto curEvent: argEvents)
-    {
+    for (auto curEvent : argEvents) {
         ASSERT_TRUE(transitionSync(curEvent, HSM_WAIT_INDEFINITELY));
         // wait a bit since exit transition will be async
         std::this_thread::sleep_for(std::chrono::milliseconds(50));

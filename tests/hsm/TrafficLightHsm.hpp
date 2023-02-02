@@ -7,10 +7,9 @@
 #include "hsmcpp/hsm.hpp"
 
 #undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS                         "TrafficLightHsm"
+#define HSM_TRACE_CLASS "TrafficLightHsm"
 
-enum class TrafficLightState
-{
+enum class TrafficLightState {
     OFF,
     STARTING,
 
@@ -21,16 +20,9 @@ enum class TrafficLightState
     GREEN
 };
 
-enum class TrafficLightEvent
-{
-    TURN_ON,
-    TURN_OFF,
-    NEXT_STATE
-};
+enum class TrafficLightEvent { TURN_ON, TURN_OFF, NEXT_STATE };
 
-class TrafficLightHsm: public testing::Test
-                     , public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent>
-{
+class TrafficLightHsm : public testing::Test, public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent> {
 public:
     TrafficLightHsm();
     virtual ~TrafficLightHsm();
@@ -69,4 +61,4 @@ public:
     VariantVector_t mLastFailedTransitionArgs;
 };
 
-#endif // HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP
+#endif  // HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP

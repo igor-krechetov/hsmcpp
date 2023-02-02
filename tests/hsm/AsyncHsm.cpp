@@ -1,35 +1,32 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "AsyncHsm.hpp"
-#include "hsmcpp/logging.hpp"
-#include "hsmcpp/os/UniqueLock.hpp"
+
 #include <chrono>
 
+#include "hsmcpp/logging.hpp"
+#include "hsmcpp/os/UniqueLock.hpp"
+
 #undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS                         "AsyncHsm"
+#define HSM_TRACE_CLASS "AsyncHsm"
 
-AsyncHsm::AsyncHsm() : HierarchicalStateMachine(AsyncHsmState::A)
-{
-}
+AsyncHsm::AsyncHsm()
+    : HierarchicalStateMachine(AsyncHsmState::A) {}
 
-AsyncHsm::~AsyncHsm()
-{}
+AsyncHsm::~AsyncHsm() {}
 
-void AsyncHsm::SetUp()
-{
+void AsyncHsm::SetUp() {
     mSyncVariableCheck = false;
 }
 
-void AsyncHsm::TearDown()
-{
+void AsyncHsm::TearDown() {
     HSM_TRACE_CALL_DEBUG_ARGS("----> TearDown AsyncHsm");
     mSyncVariable.notify();
     mBlockNextStep.notify();
     RELEASE_HSM();
 }
 
-bool AsyncHsm::onExit()
-{
+bool AsyncHsm::onExit() {
     HSM_TRACE_CALL_DEBUG_ARGS("----> AsyncHsm::onExit");
     UniqueLock lck(mSyncBlockNextStep);
 
@@ -44,8 +41,7 @@ bool AsyncHsm::onExit()
     return true;
 }
 
-bool AsyncHsm::onEnter(const VariantVector_t& args)
-{
+bool AsyncHsm::onEnter(const VariantVector_t& args) {
     UniqueLock lck(mSyncBlockNextStep);
 
     HSM_TRACE_CALL_DEBUG_ARGS("----> AsyncHsm::onEnter");
@@ -59,8 +55,7 @@ bool AsyncHsm::onEnter(const VariantVector_t& args)
     return true;
 }
 
-void AsyncHsm::onStateChanged(const VariantVector_t& args)
-{
+void AsyncHsm::onStateChanged(const VariantVector_t& args) {
     HSM_TRACE_CALL_DEBUG_ARGS("----> AsyncHsm::onStateChanged");
     UniqueLock lck(mSyncBlockNextStep);
 
@@ -73,8 +68,7 @@ void AsyncHsm::onStateChanged(const VariantVector_t& args)
     HSM_TRACE_DEBUG("----> AsyncHsm::onStateChanged: done");
 }
 
-void AsyncHsm::onNextStateTransition(const VariantVector_t& args)
-{
+void AsyncHsm::onNextStateTransition(const VariantVector_t& args) {
     UniqueLock lck(mSyncBlockNextStep);
 
     HSM_TRACE_CALL_DEBUG_ARGS("----> AsyncHsm::onNextStateTransition");
@@ -84,12 +78,11 @@ void AsyncHsm::onNextStateTransition(const VariantVector_t& args)
     mBlockNextStep.wait(lck);
 }
 
-bool AsyncHsm::waitAsyncOperation(const int timeoutMs, const bool unblockNext)
-{
+bool AsyncHsm::waitAsyncOperation(const int timeoutMs, const bool unblockNext) {
     UniqueLock lck(mSyncLock);
 
     HSM_TRACE_CALL_DEBUG_ARGS("----> AsyncHsm::waitAsyncOperation");
-    bool res = mSyncVariable.wait_for(lck, timeoutMs, [&](){ return mSyncVariableCheck.load(); });
+    bool res = mSyncVariable.wait_for(lck, timeoutMs, [&]() { return mSyncVariableCheck.load(); });
     mSyncVariableCheck = false;
     HSM_TRACE_DEBUG("----> AsyncHsm::waitAsyncOperation: DONE (res=%s)", BOOL2STR(res));
 
@@ -100,8 +93,7 @@ bool AsyncHsm::waitAsyncOperation(const int timeoutMs, const bool unblockNext)
     return res;
 }
 
-void AsyncHsm::unblockNextStep()
-{
+void AsyncHsm::unblockNextStep() {
     HSM_TRACE_CALL_DEBUG_ARGS("----> AsyncHsm::unblockNextStep");
     mBlockNextStep.notify();
 }

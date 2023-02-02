@@ -1,11 +1,11 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#include "hsm/ABCHsm.hpp"
 #include <chrono>
 #include <thread>
 
-TEST_F(ABCHsm, timers_onentry)
-{
+#include "hsm/ABCHsm.hpp"
+
+TEST_F(ABCHsm, timers_onentry) {
     TEST_DESCRIPTION("Validate that timer actions can be executed on state entry");
 
     //-------------------------------------------
@@ -21,7 +21,12 @@ TEST_F(ABCHsm, timers_onentry)
     registerTransition<ABCHsm>(AbcState::B, AbcState::C, AbcEvent::E2);
 
     registerTimer(timer1, AbcEvent::E2);
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::START_TIMER, timer1, timer1Duration, true);
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::START_TIMER,
+                        timer1,
+                        timer1Duration,
+                        true);
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
@@ -37,8 +42,7 @@ TEST_F(ABCHsm, timers_onentry)
     EXPECT_EQ(mStateCounterC, 1);
 }
 
-TEST_F(ABCHsm, timers_onexit)
-{
+TEST_F(ABCHsm, timers_onexit) {
     TEST_DESCRIPTION("Validate that timer actions can be executed on state exit");
 
     //-------------------------------------------
@@ -54,7 +58,12 @@ TEST_F(ABCHsm, timers_onexit)
     registerTransition<ABCHsm>(AbcState::B, AbcState::C, AbcEvent::E2);
 
     registerTimer(timer1, AbcEvent::E2);
-    registerStateAction(AbcState::A, ABCHsm::StateActionTrigger::ON_STATE_EXIT, ABCHsm::StateAction::START_TIMER, timer1, timer1Duration, true);
+    registerStateAction(AbcState::A,
+                        ABCHsm::StateActionTrigger::ON_STATE_EXIT,
+                        ABCHsm::StateAction::START_TIMER,
+                        timer1,
+                        timer1Duration,
+                        true);
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
@@ -70,8 +79,7 @@ TEST_F(ABCHsm, timers_onexit)
     EXPECT_EQ(mStateCounterC, 1);
 }
 
-TEST_F(ABCHsm, timers_multiple_actions)
-{
+TEST_F(ABCHsm, timers_multiple_actions) {
     TEST_DESCRIPTION("Validate that timer actions can be executed on state entry");
 
     //-------------------------------------------
@@ -93,8 +101,18 @@ TEST_F(ABCHsm, timers_multiple_actions)
     registerTimer(timer1, AbcEvent::E2);
     registerTimer(timer2, AbcEvent::E3);
 
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::START_TIMER, timer1, timer1Duration, true);
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::START_TIMER, timer2, timer2Duration, true);
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::START_TIMER,
+                        timer1,
+                        timer1Duration,
+                        true);
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::START_TIMER,
+                        timer2,
+                        timer2Duration,
+                        true);
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
@@ -112,8 +130,7 @@ TEST_F(ABCHsm, timers_multiple_actions)
     EXPECT_EQ(getLastActiveState(), AbcState::D);
 }
 
-TEST_F(ABCHsm, timers_singleshot)
-{
+TEST_F(ABCHsm, timers_singleshot) {
     TEST_DESCRIPTION("Validate support for single shot timer");
 
     //-------------------------------------------
@@ -129,7 +146,12 @@ TEST_F(ABCHsm, timers_singleshot)
     registerTransition<ABCHsm>(AbcState::B, AbcState::C, AbcEvent::E2);
 
     registerTimer(timer1, AbcEvent::E2);
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::START_TIMER, timer1, timer1Duration, true);
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::START_TIMER,
+                        timer1,
+                        timer1Duration,
+                        true);
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
@@ -145,8 +167,7 @@ TEST_F(ABCHsm, timers_singleshot)
     EXPECT_EQ(mStateCounterC, 1);
 }
 
-TEST_F(ABCHsm, timers_repeating)
-{
+TEST_F(ABCHsm, timers_repeating) {
     TEST_DESCRIPTION("Validate support for repeating timers");
 
     //-------------------------------------------
@@ -164,7 +185,12 @@ TEST_F(ABCHsm, timers_repeating)
     registerTransition<ABCHsm>(AbcState::C, AbcState::D, AbcEvent::E2);
 
     registerTimer(timer1, AbcEvent::E2);
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::START_TIMER, timer1, timer1Duration, false);
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::START_TIMER,
+                        timer1,
+                        timer1Duration,
+                        false);
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
@@ -181,8 +207,7 @@ TEST_F(ABCHsm, timers_repeating)
     EXPECT_EQ(mStateCounterD, 1);
 }
 
-TEST_F(ABCHsm, timers_stop)
-{
+TEST_F(ABCHsm, timers_stop) {
     TEST_DESCRIPTION("Validate stop timer action");
 
     //-------------------------------------------
@@ -200,7 +225,12 @@ TEST_F(ABCHsm, timers_stop)
     registerTransition<ABCHsm>(AbcState::C, AbcState::D, AbcEvent::E2);
 
     registerTimer(timer1, AbcEvent::E2);
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::START_TIMER, timer1, timer1Duration, false);
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::START_TIMER,
+                        timer1,
+                        timer1Duration,
+                        false);
     registerStateAction(AbcState::C, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::STOP_TIMER, timer1);
     initializeHsm();
 
@@ -218,8 +248,7 @@ TEST_F(ABCHsm, timers_stop)
     EXPECT_EQ(mStateCounterD, 0);
 }
 
-TEST_F(ABCHsm, timers_restart)
-{
+TEST_F(ABCHsm, timers_restart) {
     TEST_DESCRIPTION("Validate restart timer action");
 
     //-------------------------------------------
@@ -240,8 +269,18 @@ TEST_F(ABCHsm, timers_restart)
     registerTimer(timer1, AbcEvent::E3);
     registerTimer(timer2, AbcEvent::E2);
 
-    registerStateAction(AbcState::A, ABCHsm::StateActionTrigger::ON_STATE_EXIT, ABCHsm::StateAction::START_TIMER, timer1, timer1Duration, true);
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::START_TIMER, timer2, timer2Duration, true);
+    registerStateAction(AbcState::A,
+                        ABCHsm::StateActionTrigger::ON_STATE_EXIT,
+                        ABCHsm::StateAction::START_TIMER,
+                        timer1,
+                        timer1Duration,
+                        true);
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::START_TIMER,
+                        timer2,
+                        timer2Duration,
+                        true);
     registerStateAction(AbcState::C, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::RESTART_TIMER, timer1);
 
     initializeHsm();
@@ -254,7 +293,8 @@ TEST_F(ABCHsm, timers_restart)
     std::this_thread::sleep_for(std::chrono::milliseconds(timer2Duration + 50));
     ASSERT_EQ(getLastActiveState(), AbcState::C);
 
-    // elapsed 250ms. at this point timer1 should have 350ms left if it hasn't been restarted. let's wait for 400ms to check that
+    // elapsed 250ms. at this point timer1 should have 350ms left if it hasn't been restarted. let's wait for 400ms to check
+    // that
     std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration - timer2Duration));
     ASSERT_EQ(getLastActiveState(), AbcState::C);
 
@@ -266,8 +306,7 @@ TEST_F(ABCHsm, timers_restart)
     EXPECT_EQ(getLastActiveState(), AbcState::B);
 }
 
-TEST_F(ABCHsm, timers_delete_running)
-{
+TEST_F(ABCHsm, timers_delete_running) {
     TEST_DESCRIPTION("Delete HSM instance while timer is still running");
 
     //-------------------------------------------
@@ -284,7 +323,12 @@ TEST_F(ABCHsm, timers_delete_running)
     registerTransition<ABCHsm>(AbcState::C, AbcState::B, AbcEvent::E2);
 
     registerTimer(timer1, AbcEvent::E2);
-    registerStateAction(AbcState::A, ABCHsm::StateActionTrigger::ON_STATE_EXIT, ABCHsm::StateAction::START_TIMER, timer1, timer1Duration, false);
+    registerStateAction(AbcState::A,
+                        ABCHsm::StateActionTrigger::ON_STATE_EXIT,
+                        ABCHsm::StateAction::START_TIMER,
+                        timer1,
+                        timer1Duration,
+                        false);
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
@@ -299,8 +343,7 @@ TEST_F(ABCHsm, timers_delete_running)
     // NOTE: in case of an error test will crash. using "death tests" is impossible due to multiple threads
 }
 
-TEST_F(ABCHsm, timers_start_from_code)
-{
+TEST_F(ABCHsm, timers_start_from_code) {
     TEST_DESCRIPTION("Validate support for starting timers from code");
 
     //-------------------------------------------
@@ -328,8 +371,7 @@ TEST_F(ABCHsm, timers_start_from_code)
     EXPECT_EQ(mStateCounterB, 1);
 }
 
-TEST_F(ABCHsm, timers_stop_from_code)
-{
+TEST_F(ABCHsm, timers_stop_from_code) {
     TEST_DESCRIPTION("Validate support for stopping timers from code");
 
     //-------------------------------------------
@@ -359,9 +401,7 @@ TEST_F(ABCHsm, timers_stop_from_code)
     EXPECT_EQ(mStateCounterB, 0);
 }
 
-
-TEST_F(ABCHsm, timers_restart_from_code)
-{
+TEST_F(ABCHsm, timers_restart_from_code) {
     TEST_DESCRIPTION("Validate support for stopping timers from code");
 
     //-------------------------------------------

@@ -1,5 +1,5 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v0.28.1-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-v0.28.2-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
 

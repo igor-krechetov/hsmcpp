@@ -1,36 +1,31 @@
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
+
 #include "gen/DebugTestHsmBase.hpp"
 
 using namespace hsmcpp;
 
-class DebugTestHsm: public DebugTestHsmBase
-{
+class DebugTestHsm : public DebugTestHsmBase {
 public:
-    virtual ~DebugTestHsm(){}
+    virtual ~DebugTestHsm() {}
 
-// HSM state changed callbacks
+    // HSM state changed callbacks
 protected:
-    void State1OnState(const VariantVector_t& args) override
-    {
-    }
+    void State1OnState(const VariantVector_t& args) override {}
 
-// HSM state entering callbacks
+    // HSM state entering callbacks
 protected:
-    bool State1OnEntry(const VariantVector_t& args) override
-    {
+    bool State1OnEntry(const VariantVector_t& args) override {
         return false;
     }
 
-// HSM state exiting callbacks
+    // HSM state exiting callbacks
 protected:
-    bool State1OnExit() override
-    {
+    bool State1OnExit() override {
         return true;
     }
 };
 
-int main(const int argc, const char**argv)
-{
+int main(const int argc, const char** argv) {
     std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
     DebugTestHsm hsm;
     Variant argPair = Variant::make(Variant::make(1), Variant::make(2));

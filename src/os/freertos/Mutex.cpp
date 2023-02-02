@@ -1,21 +1,18 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsmcpp/os/freertos/Mutex.hpp"
+
 #include "hsmcpp/os/freertos/FreeRtosPort.hpp"
 
-namespace hsmcpp
-{
+namespace hsmcpp {
 
-Mutex::Mutex()
-{
+Mutex::Mutex() {
     mHandle = xSemaphoreCreateMutex();
 }
 
-Mutex::~Mutex()
-{
-    if (nullptr != mHandle)
-    {
-        // NOTE: Do not delete a semaphore that has tasks blocked on it 
+Mutex::~Mutex() {
+    if (nullptr != mHandle) {
+        // NOTE: Do not delete a semaphore that has tasks blocked on it
         //       (tasks that are in the Blocked state waiting for the
         //        semaphore to become available).
         vSemaphoreDelete(mHandle);
@@ -23,33 +20,25 @@ Mutex::~Mutex()
     }
 }
 
-void Mutex::lock()
-{
-    if (nullptr != mHandle)
-    {
+void Mutex::lock() {
+    if (nullptr != mHandle) {
         bool locked;
         BaseType_t isInsideISR = xPortIsInsideInterrupt();
-    
-        do
-        {
-            if (pdTRUE == isInsideISR)
-            {
+
+        do {
+            if (pdTRUE == isInsideISR) {
                 locked = (pdTRUE == xSemaphoreTakeFromISR(mHandle, nullptr));
-            }
-            else
-            {
+            } else {
                 locked = (pdTRUE == xSemaphoreTake(mHandle, portMAX_DELAY));
             }
-        } while(false == locked);
+        } while (false == locked);
     }
 }
 
-void Mutex::unlock()
-{
-    if (nullptr != mHandle)
-    {
+void Mutex::unlock() {
+    if (nullptr != mHandle) {
         xSemaphoreGive(mHandle);
     }
 }
 
-} // namespace hsmcpp
+}  // namespace hsmcpp

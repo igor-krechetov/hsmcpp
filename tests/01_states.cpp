@@ -2,10 +2,9 @@
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/TrafficLightHsm.hpp"
 
-TEST_F(TrafficLightHsm, initial_state)
-{
+TEST_F(TrafficLightHsm, initial_state) {
     TEST_DESCRIPTION("after creation FSM should be in it's initial state");
-    
+
     //-------------------------------------------
     // PRECONDITIONS
     setupDefault();
@@ -19,8 +18,7 @@ TEST_F(TrafficLightHsm, initial_state)
     EXPECT_EQ(curState, TrafficLightState::OFF);
 }
 
-TEST_F(TrafficLightHsm, register_states)
-{
+TEST_F(TrafficLightHsm, register_states) {
     TEST_DESCRIPTION("simple test to check registration of two states and transition between them");
 
     //-------------------------------------------
@@ -41,8 +39,7 @@ TEST_F(TrafficLightHsm, register_states)
     EXPECT_EQ(mStateCounterStarting, 1);
 }
 
-TEST_F(TrafficLightHsm, register_state_without_action)
-{
+TEST_F(TrafficLightHsm, register_state_without_action) {
     TEST_DESCRIPTION("states without actions should be allowed");
 
     //-------------------------------------------
@@ -62,8 +59,7 @@ TEST_F(TrafficLightHsm, register_state_without_action)
     EXPECT_EQ(mStateCounterStarting, 0);
 }
 
-TEST_F(TrafficLightHsm, register_same_state_twice)
-{
+TEST_F(TrafficLightHsm, register_same_state_twice) {
     TEST_DESCRIPTION("registering same state twice should overwrite previous actions");
 
     //-------------------------------------------
@@ -83,8 +79,7 @@ TEST_F(TrafficLightHsm, register_same_state_twice)
     EXPECT_EQ(mStateCounterStarting, 0);
 }
 
-TEST_F(TrafficLightHsm, err_register_without_handler)
-{
+TEST_F(TrafficLightHsm, err_register_without_handler) {
     TEST_DESCRIPTION("registering an action without a handler should be ignored");
     //-------------------------------------------
     // PRECONDITIONS
@@ -103,8 +98,7 @@ TEST_F(TrafficLightHsm, err_register_without_handler)
     EXPECT_EQ(mStateCounterStarting, 0);
 }
 
-TEST_F(TrafficLightHsm, state_args_test)
-{
+TEST_F(TrafficLightHsm, state_args_test) {
     TEST_DESCRIPTION("");
 
     //-------------------------------------------

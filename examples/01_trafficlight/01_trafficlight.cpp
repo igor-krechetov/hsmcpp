@@ -1,38 +1,26 @@
 // NOTE: For internal testing and will be removed later
 
-#include "hsmcpp/hsm.hpp"
 #include <thread>
-#include "hsmcpp/logging.hpp"
+
 #include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
+#include "hsmcpp/hsm.hpp"
+#include "hsmcpp/logging.hpp"
 
 #undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS                         "01_trafficlight"
+#define HSM_TRACE_CLASS "01_trafficlight"
 
 HSM_TRACE_PREINIT();
 
 using namespace hsmcpp;
 
-enum class TrafficLightState
-{
-    OFF,
-    STARTING,
-    RED,
-    YELLOW,
-    GREEN
-};
+enum class TrafficLightState { OFF, STARTING, RED, YELLOW, GREEN };
 
-enum class TrafficLightEvent
-{
-    TURN_ON,
-    TURN_OFF,
-    NEXT_STATE
-};
+enum class TrafficLightEvent { TURN_ON, TURN_OFF, NEXT_STATE };
 
-class TrafficLight: public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent>
-{
+class TrafficLight : public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent> {
 public:
-    TrafficLight() : HierarchicalStateMachine(TrafficLightState::OFF)
-    {
+    TrafficLight()
+        : HierarchicalStateMachine(TrafficLightState::OFF) {
         registerState<TrafficLight>(TrafficLightState::OFF, this, &TrafficLight::onOff, nullptr, nullptr);
         registerState<TrafficLight>(TrafficLightState::STARTING, this, &TrafficLight::onStarting, nullptr, nullptr);
         registerState<TrafficLight>(TrafficLightState::RED, this, &TrafficLight::onRed, nullptr, nullptr);
@@ -40,40 +28,64 @@ public:
         registerState<TrafficLight>(TrafficLightState::GREEN, this, &TrafficLight::onGreen, nullptr, nullptr);
 
         registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, nullptr, nullptr);
-        registerTransition(TrafficLightState::STARTING, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE, this, &TrafficLight::onNextStateTransition);
-        registerTransition(TrafficLightState::RED, TrafficLightState::YELLOW, TrafficLightEvent::NEXT_STATE, this, &TrafficLight::onNextStateTransition);
-        registerTransition(TrafficLightState::YELLOW, TrafficLightState::GREEN, TrafficLightEvent::NEXT_STATE, this, &TrafficLight::onNextStateTransition);
-        registerTransition(TrafficLightState::GREEN, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE, this, &TrafficLight::onNextStateTransition);
+        registerTransition(TrafficLightState::STARTING,
+                           TrafficLightState::RED,
+                           TrafficLightEvent::NEXT_STATE,
+                           this,
+                           &TrafficLight::onNextStateTransition);
+        registerTransition(TrafficLightState::RED,
+                           TrafficLightState::YELLOW,
+                           TrafficLightEvent::NEXT_STATE,
+                           this,
+                           &TrafficLight::onNextStateTransition);
+        registerTransition(TrafficLightState::YELLOW,
+                           TrafficLightState::GREEN,
+                           TrafficLightEvent::NEXT_STATE,
+                           this,
+                           &TrafficLight::onNextStateTransition);
+        registerTransition(TrafficLightState::GREEN,
+                           TrafficLightState::RED,
+                           TrafficLightEvent::NEXT_STATE,
+                           this,
+                           &TrafficLight::onNextStateTransition);
 
         initialize(std::make_shared<HsmEventDispatcherGLibmm>());
     }
 
-    void onNextStateTransition(const VariantVector_t& args)
-    {
-        if (args.size() == 2)
-        {
-            printf("----> onNextStateTransition (args=%d, thread=%d, index=%d)\n", (int)args.size(), (int)args[0].toInt64(), (int)args[1].toInt64());
-        }
-        else
-        {
+    void onNextStateTransition(const VariantVector_t& args) {
+        if (args.size() == 2) {
+            printf("----> onNextStateTransition (args=%d, thread=%d, index=%d)\n",
+                   (int)args.size(),
+                   (int)args[0].toInt64(),
+                   (int)args[1].toInt64());
+        } else {
             printf("----> onNextStateTransition (no args)\n");
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    void onOff(const VariantVector_t& args){ printf("----> OFF\n"); }
-    void onStarting(const VariantVector_t& args){ printf("----> onStarting\n"); }
-    void onRed(const VariantVector_t& args){ printf("----> onRed\n"); }
-    void onYellow(const VariantVector_t& args){ printf("----> onYellow\n"); }
-    void onGreen(const VariantVector_t& args){ printf("----> onGreen\n"); }
+    void onOff(const VariantVector_t& args) {
+        printf("----> OFF\n");
+    }
+    void onStarting(const VariantVector_t& args) {
+        printf("----> onStarting\n");
+    }
+    void onRed(const VariantVector_t& args) {
+        printf("----> onRed\n");
+    }
+    void onYellow(const VariantVector_t& args) {
+        printf("----> onYellow\n");
+    }
+    void onGreen(const VariantVector_t& args) {
+        printf("----> onGreen\n");
+    }
 };
 
 Glib::RefPtr<Glib::MainLoop> mMainLoop;
 TrafficLight* tl = nullptr;
 
-void simulate()
-{
+void simulate() {
     int index = 0;
 
     printf("[T0] wait 2000 ms...\n");
@@ -83,16 +95,14 @@ void simulate()
     tl->transition(TrafficLightEvent::TURN_ON);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
-    while(true)
-    {
+    while (true) {
         tl->transition(TrafficLightEvent::NEXT_STATE);
         index++;
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
-void simulateSync1()
-{
+void simulateSync1() {
     int index = 0;
 
     printf("[T1] wait 2000 ms...\n");
@@ -102,8 +112,7 @@ void simulateSync1()
     tl->transition(TrafficLightEvent::TURN_ON);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
-    while(true)
-    {
+    while (true) {
         bool status;
 
         printf("[T1] BEFORE transition\n");
@@ -114,8 +123,7 @@ void simulateSync1()
     }
 }
 
-void simulateSync2()
-{
+void simulateSync2() {
     int index = 0;
 
     printf("[T2] wait 2000 ms...\n");
@@ -125,8 +133,7 @@ void simulateSync2()
     tl->transition(TrafficLightEvent::TURN_ON);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
-    while(true)
-    {
+    while (true) {
         bool status;
 
         printf("[T2] BEFORE transition\n");
@@ -137,8 +144,7 @@ void simulateSync2()
     }
 }
 
-int main(const int argc, const char**argv)
-{
+int main(const int argc, const char** argv) {
     HSM_TRACE_INIT();
     HSM_TRACE_CALL_ARGS("01_trafficlight");
 

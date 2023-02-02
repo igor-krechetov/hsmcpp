@@ -1,29 +1,21 @@
 #include <malloc.h>
-#include <hsmcpp/hsm.hpp>
+
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
+#include <hsmcpp/hsm.hpp>
 
 using namespace hsmcpp;
 
-enum class States
-{
-    OFF,
-    ON
-};
+enum class States { OFF, ON };
 
-enum class Events
-{
-    SWITCH
-};
+enum class Events { SWITCH };
 
-long getAllocatedHeapMemory()
-{
+long getAllocatedHeapMemory() {
     struct mallinfo mi = mallinfo();
 
     return mi.uordblks + mi.hblkhd;
 }
 
-int main(const int argc, const char** argv)
-{
+int main(const int argc, const char** argv) {
     long memBefore;
     long memAfter;
     long memAfterEmpty;
@@ -38,18 +30,17 @@ int main(const int argc, const char** argv)
     memBefore = getAllocatedHeapMemory();
 
     std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
-    std::shared_ptr<HierarchicalStateMachine<States, Events>> hsm = std::make_shared<HierarchicalStateMachine<States, Events>>(States::OFF);
+    std::shared_ptr<HierarchicalStateMachine<States, Events>> hsm =
+        std::make_shared<HierarchicalStateMachine<States, Events>>(States::OFF);
 
     hsm->initialize(dispatcher);
     memAfterEmpty = getAllocatedHeapMemory();
 
-    hsm->registerState(States::OFF, [&hsm](const VariantVector_t& args)
-    {
+    hsm->registerState(States::OFF, [&hsm](const VariantVector_t& args) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm->transition(Events::SWITCH);
     });
-    hsm->registerState(States::ON, [&hsm](const VariantVector_t& args)
-    {
+    hsm->registerState(States::ON, [&hsm](const VariantVector_t& args) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm->transition(Events::SWITCH);
     });
@@ -69,7 +60,9 @@ int main(const int argc, const char** argv)
     printf("memAfterEmpty=%li, diff=%li bytes\n", memAfterEmpty, memAfterEmpty - memBefore);
     printf("memAfterStates=%li, diff=%li bytes\n", memAfterStates, memAfterStates - memAfterEmpty);
     printf("memAfterTransitions=%li, diff=%li bytes\n", memAfterTransitions, memAfterTransitions - memAfterStates);
-    printf("memAfterTransitionExecute=%li, diff=%li bytes\n", memAfterTransitionExecute, memAfterTransitionExecute - memAfterTransitions);
+    printf("memAfterTransitionExecute=%li, diff=%li bytes\n",
+           memAfterTransitionExecute,
+           memAfterTransitionExecute - memAfterTransitions);
 
     printf("\nTOTAL=%li bytes\n", memAfter - memBefore);
 

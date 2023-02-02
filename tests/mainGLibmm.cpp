@@ -1,12 +1,13 @@
+#include <glibmm.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <glibmm.h>
+
 #include <future>
 #include <thread>
+
 #include "TestsCommon.hpp"
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     Glib::init();
     Glib::RefPtr<Glib::MainLoop> glibMainLoop = Glib::MainLoop::create();
     std::future<int> unitTestResult;

@@ -9,21 +9,19 @@
 
 // hsmcpp
 #include <hsmcpp/HsmEventDispatcherFreeRTOS.hpp>
+
 #include "SwitchHsm.hpp"
 
-
-extern "C"
-{
-    void taskInitHSM(void* pvParameters);
-    void taskTransitions(void* pvParameters);
+extern "C" {
+void taskInitHSM(void* pvParameters);
+void taskTransitions(void* pvParameters);
 }
 
 SwitchHsm* hsm = nullptr;
 
-int main()
-{
+int main() {
     printf("BEGIN\n");
-    
+
     xTaskCreate(taskInitHSM, "taskInitHSM", configMINIMAL_STACK_SIZE, nullptr, tskIDLE_PRIORITY, NULL);
 
     // Start the tasks and timer running.
@@ -36,50 +34,42 @@ int main()
      * there was insufficient FreeRTOS heap memory available for the idle and/or
      * timer tasks	to be created.  See the memory management section on the
      * FreeRTOS web site for more details. */
-    for( ; ; )
-    {
-    }
+    for (;;) {}
 }
 
-extern "C"
-{
-    void taskInitHSM(void* pvParameters)
-    {
-        printf("taskInitHSM\n");
-        // NOTE: it's important to set correct priority for dispatcher
-        std::shared_ptr<hsmcpp::HsmEventDispatcherFreeRTOS> dispatcher = std::make_shared<hsmcpp::HsmEventDispatcherFreeRTOS>();
+extern "C" {
+void taskInitHSM(void* pvParameters) {
+    printf("taskInitHSM\n");
+    // NOTE: it's important to set correct priority for dispatcher
+    std::shared_ptr<hsmcpp::HsmEventDispatcherFreeRTOS> dispatcher = std::make_shared<hsmcpp::HsmEventDispatcherFreeRTOS>();
 
-        hsm = new SwitchHsm();
-        // NOTE: initialize() must be called from a Task!
-        hsm->initialize(dispatcher);
+    hsm = new SwitchHsm();
+    // NOTE: initialize() must be called from a Task!
+    hsm->initialize(dispatcher);
 
-        xTaskCreate(taskTransitions, "taskTransitions", configMINIMAL_STACK_SIZE, hsm, tskIDLE_PRIORITY, NULL);
-        vTaskSuspend(nullptr);
+    xTaskCreate(taskTransitions, "taskTransitions", configMINIMAL_STACK_SIZE, hsm, tskIDLE_PRIORITY, NULL);
+    vTaskSuspend(nullptr);
 
-        // we should never reach this part, but adding resources cleanup just in case
-        hsm->release();
-        delete hsm;
-        hsm = nullptr;
-        vTaskDelete(nullptr);
-    }
+    // we should never reach this part, but adding resources cleanup just in case
+    hsm->release();
+    delete hsm;
+    hsm = nullptr;
+    vTaskDelete(nullptr);
+}
 
-    void taskTransitions(void* pvParameters)
-    {
-        SwitchHsm* hsm = static_cast<SwitchHsm*>(pvParameters);
-        printf("taskTransitions - BEGIN\n");
+void taskTransitions(void* pvParameters) {
+    SwitchHsm* hsm = static_cast<SwitchHsm*>(pvParameters);
+    printf("taskTransitions - BEGIN\n");
 
-        while(true)
-        {
-            vTaskDelay(800 / portTICK_PERIOD_MS);
+    while (true) {
+        vTaskDelay(800 / portTICK_PERIOD_MS);
 
-            if (true == hsm->isInitialized())
-            {
-                printf("SwitchHsmEvents::SWITCH --> HSM\n");
-                hsm->transition(SwitchHsmEvents::SWITCH);
-            }
+        if (true == hsm->isInitialized()) {
+            printf("SwitchHsmEvents::SWITCH --> HSM\n");
+            hsm->transition(SwitchHsmEvents::SWITCH);
         }
-
-        vTaskDelete(nullptr);
     }
-}
 
+    vTaskDelete(nullptr);
+}
+}

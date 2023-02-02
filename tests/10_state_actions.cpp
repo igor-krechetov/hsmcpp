@@ -1,11 +1,11 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#include "hsm/ABCHsm.hpp"
 #include <chrono>
 #include <thread>
 
-TEST_F(ABCHsm, state_actions_simple)
-{
+#include "hsm/ABCHsm.hpp"
+
+TEST_F(ABCHsm, state_actions_simple) {
     TEST_DESCRIPTION("Validate that state actions can be executed on state entry and exit");
 
     //-------------------------------------------
@@ -18,10 +18,14 @@ TEST_F(ABCHsm, state_actions_simple)
     registerTransition<ABCHsm>(AbcState::B, AbcState::C, AbcEvent::E2);
     registerTransition<ABCHsm>(AbcState::C, AbcState::A, AbcEvent::E3);
 
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::TRANSITION, static_cast<int>(AbcEvent::E2));
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_EXIT,
-                        ABCHsm::StateAction::TRANSITION, static_cast<int>(AbcEvent::E3));
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::TRANSITION,
+                        static_cast<int>(AbcEvent::E2));
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_EXIT,
+                        ABCHsm::StateAction::TRANSITION,
+                        static_cast<int>(AbcEvent::E3));
     initializeHsm();
 
     //-------------------------------------------
@@ -35,8 +39,7 @@ TEST_F(ABCHsm, state_actions_simple)
     EXPECT_EQ(getLastActiveState(), AbcState::A);
 }
 
-TEST_F(ABCHsm, state_actions_multiple)
-{
+TEST_F(ABCHsm, state_actions_multiple) {
     TEST_DESCRIPTION("Validate that multiple state actions will be executed on state entry");
 
     //-------------------------------------------
@@ -49,10 +52,14 @@ TEST_F(ABCHsm, state_actions_multiple)
     registerTransition<ABCHsm>(AbcState::B, AbcState::C, AbcEvent::E2);
     registerTransition<ABCHsm>(AbcState::C, AbcState::A, AbcEvent::E3);
 
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::TRANSITION, static_cast<int>(AbcEvent::E2));
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::TRANSITION, static_cast<int>(AbcEvent::E3));
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::TRANSITION,
+                        static_cast<int>(AbcEvent::E2));
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::TRANSITION,
+                        static_cast<int>(AbcEvent::E3));
     initializeHsm();
 
     //-------------------------------------------
@@ -66,8 +73,7 @@ TEST_F(ABCHsm, state_actions_multiple)
     EXPECT_EQ(getLastActiveState(), AbcState::A);
 }
 
-TEST_F(ABCHsm, state_actions_args)
-{
+TEST_F(ABCHsm, state_actions_args) {
     TEST_DESCRIPTION("transition actions should support arguments");
 
     //-------------------------------------------
@@ -79,8 +85,12 @@ TEST_F(ABCHsm, state_actions_args)
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition<ABCHsm>(AbcState::B, AbcState::C, AbcEvent::E2);
 
-    registerStateAction(AbcState::B, ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::TRANSITION, static_cast<int>(AbcEvent::E2), 123, "string arg");
+    registerStateAction(AbcState::B,
+                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
+                        ABCHsm::StateAction::TRANSITION,
+                        static_cast<int>(AbcEvent::E2),
+                        123,
+                        "string arg");
     initializeHsm();
 
     //-------------------------------------------

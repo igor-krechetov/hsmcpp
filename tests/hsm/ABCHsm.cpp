@@ -2,27 +2,21 @@
 // Distributed under MIT license. See file LICENSE for details
 #include "ABCHsm.hpp"
 
-ABCHsm::ABCHsm() : HierarchicalStateMachine(AbcState::A)
-{
-}
+ABCHsm::ABCHsm()
+    : HierarchicalStateMachine(AbcState::A) {}
 
-ABCHsm::~ABCHsm()
-{
-}
+ABCHsm::~ABCHsm() {}
 
-bool ABCHsm::conditionTrue(const VariantVector_t& args)
-{
+bool ABCHsm::conditionTrue(const VariantVector_t& args) {
     ++mConditionTrueCounter;
     mArgsConditionTrue = args;
     return true;
 }
 
-std::string ABCHsm::getStateName(const AbcState state) const
-{
+std::string ABCHsm::getStateName(const AbcState state) const {
     std::string res;
 
-    switch(state)
-    {
+    switch (state) {
         case AbcState::A:
             res = "A";
             break;
@@ -31,40 +25,40 @@ std::string ABCHsm::getStateName(const AbcState state) const
             break;
         case AbcState::C:
             res = "C";
-            break;    
+            break;
         case AbcState::D:
             res = "D";
-            break;    
+            break;
         case AbcState::E:
             res = "E";
-            break;    
+            break;
         case AbcState::F:
             res = "F";
-            break;    
+            break;
         case AbcState::H:
             res = "H";
-            break;    
+            break;
         case AbcState::H2:
             res = "H2";
-            break;    
+            break;
         case AbcState::P1:
             res = "P1";
-            break;    
+            break;
         case AbcState::P2:
             res = "P2";
-            break;    
+            break;
         case AbcState::P3:
             res = "P3";
-            break;    
+            break;
         case AbcState::P4:
             res = "P4";
-            break;    
+            break;
         case AbcState::F1:
             res = "F1";
-            break;    
+            break;
         case AbcState::F2:
             res = "F2";
-            break;    
+            break;
         case AbcState::F3:
             res = "F3";
             break;
@@ -76,12 +70,10 @@ std::string ABCHsm::getStateName(const AbcState state) const
     return res;
 }
 
-std::string ABCHsm::getEventName(const AbcEvent event) const
-{
+std::string ABCHsm::getEventName(const AbcEvent event) const {
     std::string res;
 
-    switch(event)
-    {
+    switch (event) {
         case AbcEvent::E1:
             res = "E1";
             break;
@@ -105,11 +97,8 @@ std::string ABCHsm::getEventName(const AbcEvent event) const
     return res;
 }
 
-void ABCHsm::SetUp()
-{
-}
+void ABCHsm::SetUp() {}
 
-void ABCHsm::TearDown()
-{
+void ABCHsm::TearDown() {
     RELEASE_HSM();
 }

@@ -1,8 +1,10 @@
+#include <glib.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <glib.h>
+
 #include <future>
 #include <thread>
+
 #include "TestsCommon.hpp"
 
 GMainLoop* gMainLoop = nullptr;
@@ -10,8 +12,7 @@ std::future<int> gUnitTestResult;
 int gArgc = 0;
 char** gArgv = nullptr;
 
-gboolean runTests(gpointer user_data)
-{
+gboolean runTests(gpointer user_data) {
     gUnitTestResult = std::async(std::launch::async, [&] {
         ::testing::InitGoogleMock(&gArgc, gArgv);
         configureGTest("glib");
@@ -26,8 +27,7 @@ gboolean runTests(gpointer user_data)
     return FALSE;
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     gArgc = argc;
     gArgv = argv;
     gMainLoop = g_main_loop_new(nullptr, FALSE);

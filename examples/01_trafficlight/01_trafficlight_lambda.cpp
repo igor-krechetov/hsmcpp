@@ -1,11 +1,11 @@
 #include <unistd.h>
-#include "hsmcpp/hsm.hpp"
+
 #include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
+#include "hsmcpp/hsm.hpp"
 
 using namespace hsmcpp;
 
-enum class TrafficLightState
-{
+enum class TrafficLightState {
     OFF,
 
     OPERABLE,
@@ -15,34 +15,24 @@ enum class TrafficLightState
     GREEN
 };
 
-enum class TrafficLightEvent
-{
-    POWER_ON,
-    POWER_OFF,
-    INIT_DONE,
-    NEXT_STATE
-};
+enum class TrafficLightEvent { POWER_ON, POWER_OFF, INIT_DONE, NEXT_STATE };
 
-int main(const int argc, const char**argv)
-{
+int main(const int argc, const char** argv) {
     Glib::init();
 
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();
     HierarchicalStateMachine<TrafficLightState, TrafficLightEvent> hsm(TrafficLightState::OFF);
 
-    hsm.registerState(TrafficLightState::OFF, [mainLoop](const VariantVector_t& args)
-    {
+    hsm.registerState(TrafficLightState::OFF, [mainLoop](const VariantVector_t& args) {
         printf("onOff\n");
         mainLoop->quit();
     });
-    hsm.registerState(TrafficLightState::INITIALIZING, [&hsm](const VariantVector_t& args)
-    {
+    hsm.registerState(TrafficLightState::INITIALIZING, [&hsm](const VariantVector_t& args) {
         printf("onInitializing\n");
         usleep(1000000);
         hsm.transition(TrafficLightEvent::INIT_DONE);
     });
-    hsm.registerState(TrafficLightState::RED, [&hsm](const VariantVector_t& args)
-    {
+    hsm.registerState(TrafficLightState::RED, [&hsm](const VariantVector_t& args) {
         static int iteration = 0;
 
         printf("onRed\n");
@@ -50,14 +40,12 @@ int main(const int argc, const char**argv)
         hsm.transition(iteration < 2 ? TrafficLightEvent::NEXT_STATE : TrafficLightEvent::POWER_OFF);
         ++iteration;
     });
-    hsm.registerState(TrafficLightState::YELLOW, [&hsm](const VariantVector_t& args)
-    {
+    hsm.registerState(TrafficLightState::YELLOW, [&hsm](const VariantVector_t& args) {
         printf("onYellow\n");
         usleep(1000000);
         hsm.transition(TrafficLightEvent::NEXT_STATE);
     });
-    hsm.registerState(TrafficLightState::GREEN, [&hsm](const VariantVector_t& args)
-    {
+    hsm.registerState(TrafficLightState::GREEN, [&hsm](const VariantVector_t& args) {
         printf("onGreen\n");
         usleep(1000000);
         hsm.transition(TrafficLightEvent::NEXT_STATE);

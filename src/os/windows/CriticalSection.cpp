@@ -2,16 +2,13 @@
 // Distributed under MIT license. See file LICENSE for details
 #include "hsmcpp/os/common/CriticalSection.hpp"
 
-namespace hsmcpp
-{
-CriticalSection::CriticalSection()
-{
+namespace hsmcpp {
+CriticalSection::CriticalSection() {
     // do nothing
 }
 
-CriticalSection::~CriticalSection()
-{
+CriticalSection::~CriticalSection() {
     // do nothing
 }
 
-} // namespace hsmcpp
+}  // namespace hsmcpp

@@ -1,38 +1,33 @@
-#include "gen/ActionsHsmBase.hpp"
 #include <hsmcpp/HsmEventDispatcherGLibmm.hpp>
+
+#include "gen/ActionsHsmBase.hpp"
 
 using namespace hsmcpp;
 
-class ActionsHsm: public ActionsHsmBase
-{
+class ActionsHsm : public ActionsHsmBase {
 public:
-    virtual ~ActionsHsm(){}
+    virtual ~ActionsHsm() {}
 
-// HSM state changed callbacks
+    // HSM state changed callbacks
 protected:
-    void On(const hsmcpp::VariantVector_t& args) override
-    {
+    void On(const hsmcpp::VariantVector_t& args) override {
         printf("On\n");
     }
 
-    void Off(const hsmcpp::VariantVector_t& args) override
-    {
+    void Off(const hsmcpp::VariantVector_t& args) override {
         printf("Off\n");
     }
 
-    void onNextStep(const hsmcpp::VariantVector_t& args) override
-    {
+    void onNextStep(const hsmcpp::VariantVector_t& args) override {
         printf("onNextStep: <%s>, %ld\n", args[0].toString().c_str(), args[1].toInt64());
     }
 
-    bool isTransitionAllowed(const VariantVector_t&) override
-    {
+    bool isTransitionAllowed(const VariantVector_t&) override {
         return true;
     }
 };
 
-int main(const int argc, const char**argv)
-{
+int main(const int argc, const char** argv) {
     Glib::init();
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();
     ActionsHsm hsm;

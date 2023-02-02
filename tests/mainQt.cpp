@@ -1,12 +1,13 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <QCoreApplication>
 #include <future>
 #include <thread>
-#include "TestsCommon.hpp"
-#include <QCoreApplication>
 
-int main(int argc, char** argv)
-{
+#include "TestsCommon.hpp"
+
+int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     std::future<int> unitTestResult;
 

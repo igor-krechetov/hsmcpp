@@ -3,32 +3,31 @@
 #ifndef HSMCPP_TESTS_HSM_ASYNCHSM_HPP
 #define HSMCPP_TESTS_HSM_ASYNCHSM_HPP
 
-#include "TestsCommon.hpp"
 #include <atomic>
 
+#include "TestsCommon.hpp"
 #include "hsmcpp/hsm.hpp"
-#include "hsmcpp/os/Mutex.hpp"
 #include "hsmcpp/os/ConditionVariable.hpp"
+#include "hsmcpp/os/Mutex.hpp"
 
 #undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS                         "AsyncHsm"
+#define HSM_TRACE_CLASS "AsyncHsm"
 
-enum class AsyncHsmState
-{
-    A, B, C, D, E,
+enum class AsyncHsmState {
+    A,
+    B,
+    C,
+    D,
+    E,
 
-    P1, P2, P3
+    P1,
+    P2,
+    P3
 };
 
-enum class AsyncHsmEvent
-{
-    NEXT_STATE,
-    EXIT_SUBSTATE
-};
+enum class AsyncHsmEvent { NEXT_STATE, EXIT_SUBSTATE };
 
-class AsyncHsm: public testing::Test
-              , public HierarchicalStateMachine<AsyncHsmState, AsyncHsmEvent>
-{
+class AsyncHsm : public testing::Test, public HierarchicalStateMachine<AsyncHsmState, AsyncHsmEvent> {
 public:
     AsyncHsm();
     virtual ~AsyncHsm();
@@ -36,8 +35,7 @@ public:
     void SetUp() override;
     void TearDown() override;
 
-    inline void initializeHsm()
-    {
+    inline void initializeHsm() {
         INITIALIZE_HSM();
     }
 
@@ -58,4 +56,4 @@ protected:
     hsmcpp::ConditionVariable mBlockNextStep;
 };
 
-#endif // HSMCPP_TESTS_HSM_ASYNCHSM_HPP
+#endif  // HSMCPP_TESTS_HSM_ASYNCHSM_HPP

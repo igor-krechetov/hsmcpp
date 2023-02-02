@@ -15,6 +15,8 @@ BinPackParameters: false
 ColumnLimit: 128
 DerivePointerAlignment: true
 IndentWidth: 4
+IndentPPDirectives: BeforeHash
+PPIndentWidth: 2
 AlwaysBreakAfterReturnType: None
 PenaltyReturnTypeOnItsOwnLine: 130
 AlwaysBreakTemplateDeclarations: Yes

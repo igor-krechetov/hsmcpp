@@ -2,8 +2,7 @@
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/ABCHsm.hpp"
 
-TEST_F(ABCHsm, callbacks_class_pointers)
-{
+TEST_F(ABCHsm, callbacks_class_pointers) {
     TEST_DESCRIPTION("test that all callbacks work when specified as class members");
 
     //-------------------------------------------
@@ -39,8 +38,7 @@ TEST_F(ABCHsm, callbacks_class_pointers)
     EXPECT_EQ(mArgsConditionTrue, expectedArgs);
 }
 
-TEST_F(ABCHsm, callbacks_lambdas)
-{
+TEST_F(ABCHsm, callbacks_lambdas) {
     TEST_DESCRIPTION("test that all callbacks work when specified as lambda functions");
 
     //-------------------------------------------
@@ -55,18 +53,37 @@ TEST_F(ABCHsm, callbacks_lambdas)
     VariantVector_t transitionArgsE1;
     VariantVector_t argsConditionTrue;
 
-    registerState(AbcState::A,
-                  nullptr,
-                  nullptr,
-                  [&](){ ++stateCounterAExit; return true; });
-    registerState(AbcState::B,
-                  [&](const VariantVector_t& args){ ++stateCounterB; argsB = args; },
-                  [&](const VariantVector_t& args){ ++stateCounterBEnter; argsBEnter = args; return true; },
-                  nullptr);
+    registerState(AbcState::A, nullptr, nullptr, [&]() {
+        ++stateCounterAExit;
+        return true;
+    });
+    registerState(
+        AbcState::B,
+        [&](const VariantVector_t& args) {
+            ++stateCounterB;
+            argsB = args;
+        },
+        [&](const VariantVector_t& args) {
+            ++stateCounterBEnter;
+            argsBEnter = args;
+            return true;
+        },
+        nullptr);
 
-    registerTransition(AbcState::A, AbcState::B, AbcEvent::E1,
-                       [&](const VariantVector_t& args){ ++transitionCounterE1; transitionArgsE1 = args; return true; },
-                       [&](const VariantVector_t& args){ ++conditionTrueCounter; argsConditionTrue = args; return true; });
+    registerTransition(
+        AbcState::A,
+        AbcState::B,
+        AbcEvent::E1,
+        [&](const VariantVector_t& args) {
+            ++transitionCounterE1;
+            transitionArgsE1 = args;
+            return true;
+        },
+        [&](const VariantVector_t& args) {
+            ++conditionTrueCounter;
+            argsConditionTrue = args;
+            return true;
+        });
 
     initializeHsm();
 
@@ -94,8 +111,7 @@ TEST_F(ABCHsm, callbacks_lambdas)
     EXPECT_EQ(argsConditionTrue, expectedArgs);
 }
 
-TEST_F(ABCHsm, callbacks_entering_substates)
-{
+TEST_F(ABCHsm, callbacks_entering_substates) {
     TEST_DESCRIPTION("when entering a state with substates, HSM should only call it's onEnter, onState callbacks");
 
     //-------------------------------------------
@@ -125,9 +141,7 @@ TEST_F(ABCHsm, callbacks_entering_substates)
     EXPECT_EQ(mStateCounterP1Exit, 0);
 }
 
-
-TEST_F(ABCHsm, callbacks_exiting_substates)
-{
+TEST_F(ABCHsm, callbacks_exiting_substates) {
     TEST_DESCRIPTION("when exiting a state with substates, HSM should only call it's onExit callbacks");
     // *A -e1-> P1{*B} -e2-> A
 
@@ -173,8 +187,7 @@ TEST_F(ABCHsm, callbacks_exiting_substates)
     EXPECT_EQ(mStateCounterP1Exit, 1);
 }
 
-TEST_F(ABCHsm, callbacks_initial_state)
-{
+TEST_F(ABCHsm, callbacks_initial_state) {
     TEST_DESCRIPTION("all callbacks of the initial HSM state should be called correctly");
     /*
     @startuml

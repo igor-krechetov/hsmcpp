@@ -1,13 +1,12 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#include "hsm/AsyncHsm.hpp"
 #include "hsm/ABCHsm.hpp"
+#include "hsm/AsyncHsm.hpp"
 #ifndef WIN32
   #include <signal.h>
 #endif
 
-TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
-{
+TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation) {
     TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be canceled");
     /*
     @startuml
@@ -46,21 +45,21 @@ TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
     // ACTIONS
     // this should trigger A -> [P1 -> B]
     transition(AsyncHsmEvent::NEXT_STATE);
-    waitAsyncOperation(200, false);// wait for A::onExit
+    waitAsyncOperation(200, false);  // wait for A::onExit
 
     // send new event with clearQueue=TRUE
     transitionWithQueueClear(AsyncHsmEvent::EXIT_SUBSTATE);
 
-    unblockNextStep();// allow A::onExit to continue
-    waitAsyncOperation(200, false);// wait for B::onStateChanged
+    unblockNextStep();               // allow A::onExit to continue
+    waitAsyncOperation(200, false);  // wait for B::onStateChanged
 
     // NOTE: this is the main validation point. In case of an error state would be C since we would never go into B
     ASSERT_EQ(getLastActiveState(), AsyncHsmState::B);
-    unblockNextStep();// allow B::onStateChanged to continue
+    unblockNextStep();  // allow B::onStateChanged to continue
 
-    waitAsyncOperation(200, false);// wait for C::onStateChanged
+    waitAsyncOperation(200, false);  // wait for C::onStateChanged
     ASSERT_EQ(getLastActiveState(), AsyncHsmState::C);
-    unblockNextStep();// allow C::onStateChanged to continue
+    unblockNextStep();  // allow C::onStateChanged to continue
 
     //-------------------------------------------
     // VALIDATION
@@ -70,8 +69,7 @@ TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation)
 // NOTE: Qt doesn't support cancelation of already posted events. So deleting dispatcher before
 //       all events are processed will result in a crash.
 #ifndef TEST_HSM_QT
-TEST_F(ABCHsm, multithreaded_deleting_running_dispatcher)
-{
+TEST_F(ABCHsm, multithreaded_deleting_running_dispatcher) {
     TEST_DESCRIPTION("");
 
     //-------------------------------------------
@@ -86,30 +84,26 @@ TEST_F(ABCHsm, multithreaded_deleting_running_dispatcher)
 
     //-------------------------------------------
     // ACTIONS
-    for (int i = 0; i < 100; ++i)
-    {
+    for (int i = 0; i < 100; ++i) {
         transition(AbcEvent::E1);
     }
 
     //-------------------------------------------
     // VALIDATION
 }
-#endif // !TEST_HSM_QT
+#endif  // !TEST_HSM_QT
 
 // NOTE: Disable tests because we don't have signals on Windows platfroms
 #ifndef WIN32
 AsyncHsm *gAsyncHsmInstance = nullptr;
 
-void sigHandler(int signo, siginfo_t *info, void *context)
-{
-    if (nullptr != gAsyncHsmInstance)
-    {
+void sigHandler(int signo, siginfo_t *info, void *context) {
+    if (nullptr != gAsyncHsmInstance) {
         gAsyncHsmInstance->transitionInterruptSafe(AsyncHsmEvent::NEXT_STATE);
     }
 }
 
-TEST_F(AsyncHsm, multithreaded_transition_from_interrupt)
-{
+TEST_F(AsyncHsm, multithreaded_transition_from_interrupt) {
     TEST_DESCRIPTION("Simple transition from interrupts");
 
     //-------------------------------------------
@@ -124,7 +118,7 @@ TEST_F(AsyncHsm, multithreaded_transition_from_interrupt)
 
     initializeHsm();
 
-    struct sigaction act = { 0 };
+    struct sigaction act = {0};
 
     act.sa_flags = SA_SIGINFO;
     act.sa_sigaction = &sigHandler;
@@ -139,4 +133,4 @@ TEST_F(AsyncHsm, multithreaded_transition_from_interrupt)
     // VALIDATION
     EXPECT_EQ(getLastActiveState(), AsyncHsmState::B);
 }
-#endif // !WIN32
+#endif  // !WIN32

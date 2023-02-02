@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.28.2] - 2023-02-02
+### Fixed
+- applied clang format to all code
+- scxml2gen: fixed MISRA warnings in template code
+
 ## [0.28.1] - 2023-02-02
 ### Fixed
 - scxml2gen: changed template to reduce stack consumption during HSM initialization on Arduino

@@ -1,11 +1,11 @@
 #include <unistd.h>
-#include "hsmcpp/hsm.hpp"
+
 #include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
+#include "hsmcpp/hsm.hpp"
 
 using namespace hsmcpp;
 
-enum class TrafficLightState
-{
+enum class TrafficLightState {
     OFF,
 
     OPERABLE,
@@ -15,21 +15,13 @@ enum class TrafficLightState
     GREEN
 };
 
-enum class TrafficLightEvent
-{
-    POWER_ON,
-    POWER_OFF,
-    INIT_DONE,
-    NEXT_STATE
-};
+enum class TrafficLightEvent { POWER_ON, POWER_OFF, INIT_DONE, NEXT_STATE };
 
-class TrafficLight: public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent>
-{
+class TrafficLight : public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent> {
 public:
     TrafficLight(Glib::RefPtr<Glib::MainLoop> loop)
         : HierarchicalStateMachine(TrafficLightState::OFF)
-        , mLoop(loop)
-    {
+        , mLoop(loop) {
         registerState(TrafficLightState::OFF, this, &TrafficLight::onOff);
         registerState(TrafficLightState::INITIALIZING, this, &TrafficLight::onInitializing);
         registerState(TrafficLightState::RED, this, &TrafficLight::onRed);
@@ -52,21 +44,18 @@ public:
         initialize(std::make_shared<HsmEventDispatcherGLibmm>());
     }
 
-    void onOff(const VariantVector_t& args)
-    {
+    void onOff(const VariantVector_t& args) {
         printf("onOff\n");
         mLoop->quit();
     }
 
-    void onInitializing(const VariantVector_t& args)
-    {
+    void onInitializing(const VariantVector_t& args) {
         printf("onInitializing\n");
         usleep(1000000);
         transition(TrafficLightEvent::INIT_DONE);
     }
 
-    void onRed(const VariantVector_t& args)
-    {
+    void onRed(const VariantVector_t& args) {
         static int iteration = 0;
 
         printf("onRed\n");
@@ -75,15 +64,13 @@ public:
         ++iteration;
     }
 
-    void onYellow(const VariantVector_t& args)
-    {
+    void onYellow(const VariantVector_t& args) {
         printf("onYellow\n");
         usleep(1000000);
         transition(TrafficLightEvent::NEXT_STATE);
     }
 
-    void onGreen(const VariantVector_t& args)
-    {
+    void onGreen(const VariantVector_t& args) {
         printf("onGreen\n");
         usleep(1000000);
         transition(TrafficLightEvent::NEXT_STATE);
@@ -93,8 +80,7 @@ private:
     Glib::RefPtr<Glib::MainLoop> mLoop;
 };
 
-int main(const int argc, const char**argv)
-{
+int main(const int argc, const char** argv) {
     Glib::init();
 
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();

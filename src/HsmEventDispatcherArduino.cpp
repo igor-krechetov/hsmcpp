@@ -2,32 +2,30 @@
 // Distributed under MIT license. See file LICENSE for details
 
 #include "hsmcpp/HsmEventDispatcherArduino.hpp"
-#include "hsmcpp/logging.hpp"
+
 #include <Arduino.h>
 
-namespace hsmcpp
-{
+#include "hsmcpp/logging.hpp"
+
+namespace hsmcpp {
 
 #undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS                         "HsmEventDispatcherArduino"
+#define HSM_TRACE_CLASS "HsmEventDispatcherArduino"
 
 // TODO: this dispatcher needs testing with interrupts (events, timers)
 
-HsmEventDispatcherArduino::HsmEventDispatcherArduino(const size_t eventsCacheSize)
-{
+HsmEventDispatcherArduino::HsmEventDispatcherArduino(const size_t eventsCacheSize) {
     HSM_TRACE_CALL();
     mEnqueuedEvents.reserve(eventsCacheSize);
 }
 
-HsmEventDispatcherArduino::~HsmEventDispatcherArduino()
-{
+HsmEventDispatcherArduino::~HsmEventDispatcherArduino() {
     HSM_TRACE_CALL();
 
     unregisterAllEventHandlers();
 }
 
-bool HsmEventDispatcherArduino::start()
-{
+bool HsmEventDispatcherArduino::start() {
     HSM_TRACE_CALL();
 
     mStopDispatcher = false;
@@ -35,17 +33,14 @@ bool HsmEventDispatcherArduino::start()
     return true;
 }
 
-void HsmEventDispatcherArduino::stop()
-{
+void HsmEventDispatcherArduino::stop() {
     HSM_TRACE_CALL();
 
     mStopDispatcher = true;
 }
 
-void HsmEventDispatcherArduino::emitEvent(const HandlerID_t handlerID)
-{
-    if (false == mStopDispatcher)
-    {
+void HsmEventDispatcherArduino::emitEvent(const HandlerID_t handlerID) {
+    if (false == mStopDispatcher) {
         HsmEventDispatcherBase::emitEvent(handlerID);
     }
 }
@@ -54,19 +49,17 @@ void HsmEventDispatcherSTD::notifyDispatcherAboutEvent() {
     // NOTE: do nothing since it's a single thread implementation
 }
 
-void HsmEventDispatcherArduino::dispatchEvents()
-{
-    if (false == mStopDispatcher)
-    {
+void HsmEventDispatcherArduino::dispatchEvents() {
+    if (false == mStopDispatcher) {
         handleTimers();
         HsmEventDispatcherBase::dispatchPendingEvents();
     }
 }
 
-void HsmEventDispatcherArduino::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot)
-{
-    HSM_TRACE_CALL_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d",
-                            SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
+void HsmEventDispatcherArduino::startTimerImpl(const TimerID_t timerID,
+                                               const unsigned int intervalMs,
+                                               const bool isSingleShot) {
+    HSM_TRACE_CALL_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d", SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
     auto it = mRunningTimers.end();
 
     {
@@ -75,8 +68,7 @@ void HsmEventDispatcherArduino::startTimerImpl(const TimerID_t timerID, const un
     }
 
     // new timer
-    if (mRunningTimers.end() == it)
-    {
+    if (mRunningTimers.end() == it) {
         RunningTimerInfo newTimer;
 
         newTimer.startedAt = millis();
@@ -86,16 +78,14 @@ void HsmEventDispatcherArduino::startTimerImpl(const TimerID_t timerID, const un
             // CriticalSection lck;
             mRunningTimers.emplace(timerID, newTimer);
         }
-    }
-    else // restart timer
+    } else  // restart timer
     {
         it->second.startedAt = millis();
         it->second.elapseAfter = it->second.startedAt + intervalMs;
     }
 }
 
-void HsmEventDispatcherArduino::stopTimerImpl(const TimerID_t timerID)
-{
+void HsmEventDispatcherArduino::stopTimerImpl(const TimerID_t timerID) {
     HSM_TRACE_CALL_ARGS("timerID=%d", SC2INT(timerID));
 
     {
@@ -104,19 +94,14 @@ void HsmEventDispatcherArduino::stopTimerImpl(const TimerID_t timerID)
     }
 }
 
-void HsmEventDispatcherArduino::handleTimers()
-{
-    if (mRunningTimers.size() > 0)
-    {
+void HsmEventDispatcherArduino::handleTimers() {
+    if (mRunningTimers.size() > 0) {
         unsigned long curTime = millis();
         auto it = mRunningTimers.begin();
 
-        while (it != mRunningTimers.end())
-        {
-            if (curTime >= it->second.elapseAfter)
-            {
-                if (true == handleTimerEvent(it->first))
-                {
+        while (it != mRunningTimers.end()) {
+            if (curTime >= it->second.elapseAfter) {
+                if (true == handleTimerEvent(it->first)) {
                     // fast way to check timer interval without searching the map
                     it->second.elapseAfter = it->second.elapseAfter - it->second.startedAt;
                     it->second.startedAt = millis();
@@ -125,13 +110,11 @@ void HsmEventDispatcherArduino::handleTimers()
                 } else {
                     it = mRunningTimers.erase(it);
                 }
-            }
-            else
-            {
+            } else {
                 ++it;
             }
         }
     }
 }
 
-}
+}  // namespace hsmcpp

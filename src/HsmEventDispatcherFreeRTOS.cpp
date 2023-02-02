@@ -1,12 +1,13 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsmcpp/HsmEventDispatcherFreeRTOS.hpp"
+
+#include "hsmcpp/logging.hpp"
 #include "hsmcpp/os/CriticalSection.hpp"
 #include "hsmcpp/os/freertos/FreeRtosPort.hpp"
-#include "hsmcpp/logging.hpp"
 
 #if (INCLUDE_xTaskGetCurrentTaskHandle != 1)
- #error INCLUDE_xTaskGetCurrentTaskHandle feature is required
+  #error INCLUDE_xTaskGetCurrentTaskHandle feature is required
 #endif
 #if (configUSE_TASK_NOTIFICATIONS != 1)
   #error configUSE_TASK_NOTIFICATIONS feature is required
@@ -19,26 +20,22 @@
 //       - AMP or SMP is used?
 //       - can multiple ISR be called at the same time?
 
-namespace hsmcpp
-{
+namespace hsmcpp {
 
 #undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS                         "HsmEventDispatcherFreeRTOS"
+#define HSM_TRACE_CLASS "HsmEventDispatcherFreeRTOS"
 
 HsmEventDispatcherFreeRTOS::HsmEventDispatcherFreeRTOS(const configSTACK_DEPTH_TYPE stackDepth, const UBaseType_t priority)
     : mStackDepth(stackDepth)
-    , mPriority(priority)
-{
+    , mPriority(priority) {
     HSM_TRACE_CALL_DEBUG_ARGS("stackDepth=%d, priority=%d", static_cast<int>(stackDepth), static_cast<int>(priority));
 }
 
-HsmEventDispatcherFreeRTOS::~HsmEventDispatcherFreeRTOS()
-{
+HsmEventDispatcherFreeRTOS::~HsmEventDispatcherFreeRTOS() {
     HSM_TRACE_CALL_DEBUG();
 
     // delete timers
-    for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it)
-    {
+    for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it) {
         xTimerDelete(it->second, 0);
     }
     mNativeTimerHandlers.clear();
@@ -48,12 +45,10 @@ HsmEventDispatcherFreeRTOS::~HsmEventDispatcherFreeRTOS()
     join();
 }
 
-void HsmEventDispatcherFreeRTOS::emitEvent(const HandlerID_t handlerID)
-{
+void HsmEventDispatcherFreeRTOS::emitEvent(const HandlerID_t handlerID) {
     HSM_TRACE_CALL_DEBUG();
 
-    if (nullptr != mDispatcherTask)
-    {
+    if (nullptr != mDispatcherTask) {
         dispatchEnqueuedEvents();
 
         {
@@ -66,42 +61,32 @@ void HsmEventDispatcherFreeRTOS::emitEvent(const HandlerID_t handlerID)
     }
 }
 
-bool HsmEventDispatcherFreeRTOS::start()
-{
+bool HsmEventDispatcherFreeRTOS::start() {
     HSM_TRACE_CALL_DEBUG();
     bool result = false;
 
-    if (nullptr == mDispatcherTask)
-    {
+    if (nullptr == mDispatcherTask) {
         mMainTask = xTaskGetCurrentTaskHandle();
 
-        if (nullptr != mMainTask)
-        {
+        if (nullptr != mMainTask) {
             HSM_TRACE_DEBUG("starting task...");
             BaseType_t taskStatus = xTaskCreate(HsmEventDispatcherFreeRTOS::doDispatching,
-                                                "HsmEventDispatcherFreeRTOS", 
-                                                mStackDepth, 
-                                                this, 
-                                                mPriority, 
+                                                "HsmEventDispatcherFreeRTOS",
+                                                mStackDepth,
+                                                this,
+                                                mPriority,
                                                 &mDispatcherTask);
 
-            if (pdPASS == taskStatus)
-            {
+            if (pdPASS == taskStatus) {
                 mStopDispatcher = false;
                 result = true;
-            }
-            else
-            {
+            } else {
                 HSM_TRACE_ERROR("failed to start task");
             }
-        }
-        else
-        {
+        } else {
             HSM_TRACE_ERROR("dispatcher must be started from a Task");
         }
-    }
-    else
-    {
+    } else {
         // just make sure that task was not requested to stop
         result = (false == mStopDispatcher);
     }
@@ -109,31 +94,30 @@ bool HsmEventDispatcherFreeRTOS::start()
     return result;
 }
 
-void HsmEventDispatcherFreeRTOS::stop()
-{
+void HsmEventDispatcherFreeRTOS::stop() {
     HSM_TRACE_CALL_DEBUG();
 
-    if (nullptr != mDispatcherTask)
-    {
+    if (nullptr != mDispatcherTask) {
         mStopDispatcher = true;
         notifyDispatcherAboutEvent();
     }
 }
 
-void HsmEventDispatcherFreeRTOS::join()
-{
+void HsmEventDispatcherFreeRTOS::join() {
     HSM_TRACE_CALL_DEBUG();
 
-    if (nullptr != mDispatcherTask)
-    {
+    if (nullptr != mDispatcherTask) {
         vTaskSuspend(nullptr);
     }
 }
 
-void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot)
-{
+void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID,
+                                                const unsigned int intervalMs,
+                                                const bool isSingleShot) {
     HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d",
-                                  SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
+                              SC2INT(timerID),
+                              intervalMs,
+                              BOOL2INT(isSingleShot));
     auto it = mNativeTimerHandlers.end();
     TimerHandle_t timer = nullptr;
     UBaseType_t reloadMode = (false == isSingleShot ? pdTRUE : pdFALSE);
@@ -143,28 +127,22 @@ void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID, const u
         it = mNativeTimerHandlers.find(timerID);
     }
 
-    if (mNativeTimerHandlers.end() == it)
-    {
+    if (mNativeTimerHandlers.end() == it) {
         timer = xTimerCreate("hsmtimer",
                              intervalMs / portTICK_PERIOD_MS,
                              reloadMode,
                              this,
                              HsmEventDispatcherFreeRTOS::onTimerEvent);
 
-        if (nullptr != timer)
-        {
+        if (nullptr != timer) {
             CriticalSection lck;
             mNativeTimerHandlers.emplace(timerID, timer);
         }
-    }
-    else
-    {
+    } else {
         timer = it->second;
 
-        if ((xTimerGetPeriod(timer) * portTICK_PERIOD_MS) != intervalMs)
-        {
-            if (pdPASS != xTimerChangePeriod(timer, intervalMs / portTICK_PERIOD_MS, 0))
-            {
+        if ((xTimerGetPeriod(timer) * portTICK_PERIOD_MS) != intervalMs) {
+            if (pdPASS != xTimerChangePeriod(timer, intervalMs / portTICK_PERIOD_MS, 0)) {
                 xTimerDelete(timer, 0);
                 {
                     CriticalSection lck;
@@ -177,17 +155,13 @@ void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID, const u
 
         // NOTE: not available in all versions
         // if (uxTimerGetReloadMode(timer) != reloadMode)
-        {
-            vTimerSetReloadMode(timer, reloadMode);
-        }
+        { vTimerSetReloadMode(timer, reloadMode); }
     }
 
-    if (nullptr != timer)
-    {
+    if (nullptr != timer) {
         // try to start timer without blocking
         // NOTE: this will not work for sync transitions which are called from ISR
-        if (pdPASS != xTimerStart(timer, 0))
-        {
+        if (pdPASS != xTimerStart(timer, 0)) {
             xTimerDelete(timer, 0);
             {
                 CriticalSection lck;
@@ -196,15 +170,12 @@ void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID, const u
 
             HSM_TRACE_ERROR("xTimerStart failed");
         }
-    }
-    else
-    {
+    } else {
         HSM_TRACE_ERROR("xTimerCreate failed");
     }
 }
 
-void HsmEventDispatcherFreeRTOS::stopTimerImpl(const TimerID_t timerID)
-{
+void HsmEventDispatcherFreeRTOS::stopTimerImpl(const TimerID_t timerID) {
     HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
     auto it = mNativeTimerHandlers.end();
 
@@ -213,39 +184,30 @@ void HsmEventDispatcherFreeRTOS::stopTimerImpl(const TimerID_t timerID)
         it = mNativeTimerHandlers.find(timerID);
     }
 
-    if (mNativeTimerHandlers.end() != it)
-    {
+    if (mNativeTimerHandlers.end() != it) {
         // NOTE: this will not work for sync transitions which are called from ISR
-        xTimerStop(it->second, 0);// NOTE: this will not be processed instantly and can actually fail
+        xTimerStop(it->second, 0);  // NOTE: this will not be processed instantly and can actually fail
     }
 }
 
-void HsmEventDispatcherFreeRTOS::notifyDispatcherAboutEvent()
-{
-    if (nullptr != mDispatcherTask)
-    {
+void HsmEventDispatcherFreeRTOS::notifyDispatcherAboutEvent() {
+    if (nullptr != mDispatcherTask) {
         BaseType_t isInsideISR = xPortIsInsideInterrupt();
 
-        if (pdFALSE == isInsideISR)
-        {
+        if (pdFALSE == isInsideISR) {
             xTaskNotifyGive(mDispatcherTask);
-        }
-        else
-        {
+        } else {
             vTaskNotifyGiveFromISR(mDispatcherTask, nullptr);
         }
     }
 }
 
-void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters)
-{
+void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters) {
     HSM_TRACE_CALL_DEBUG();
     HsmEventDispatcherFreeRTOS* pThis = static_cast<HsmEventDispatcherFreeRTOS*>(pvParameters);
 
-    if (nullptr != pThis)
-    {
-        while (false == pThis->mStopDispatcher)
-        {
+    if (nullptr != pThis) {
+        while (false == pThis->mStopDispatcher) {
             std::list<HandlerID_t> events;
 
             {
@@ -257,10 +219,8 @@ void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters)
 
             pThis->dispatchPendingEventsImpl(events);
 
-            if (false == pThis->mStopDispatcher)
-            {
-                if (true == pThis->mPendingEvents.empty())
-                {
+            if (false == pThis->mStopDispatcher) {
+                if (true == pThis->mPendingEvents.empty()) {
                     HSM_TRACE_DEBUG("wait for emit...");
                     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                     HSM_TRACE_DEBUG("woke up. pending events=%lu", pThis->mPendingEvents.size());
@@ -271,10 +231,8 @@ void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters)
 
     HSM_TRACE_DEBUG("EXIT");
 
-    if (nullptr != pThis->mMainTask)
-    {
-        if (eSuspended == eTaskGetState(pThis->mMainTask))
-        {
+    if (nullptr != pThis->mMainTask) {
+        if (eSuspended == eTaskGetState(pThis->mMainTask)) {
             vTaskResume(pThis->mMainTask);
         }
     }
@@ -283,25 +241,20 @@ void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters)
     vTaskDelete(nullptr);
 }
 
-void HsmEventDispatcherFreeRTOS::onTimerEvent(TimerHandle_t timerHandle)
-{
+void HsmEventDispatcherFreeRTOS::onTimerEvent(TimerHandle_t timerHandle) {
     HSM_TRACE_CALL_DEBUG_ARGS("timerHandle=%p", timerHandle);
 
-    if (nullptr != timerHandle)
-    {
+    if (nullptr != timerHandle) {
         HsmEventDispatcherFreeRTOS* pThis = static_cast<HsmEventDispatcherFreeRTOS*>(pvTimerGetTimerID(timerHandle));
 
-        if (nullptr != pThis)
-        {
+        if (nullptr != pThis) {
             TimerID_t timerID = INVALID_HSM_TIMER_ID;
 
             {
                 CriticalSection lck;
 
-                for (auto it = pThis->mNativeTimerHandlers.begin(); it != pThis->mNativeTimerHandlers.end(); ++it)
-                {
-                    if (it->second == timerHandle)
-                    {
+                for (auto it = pThis->mNativeTimerHandlers.begin(); it != pThis->mNativeTimerHandlers.end(); ++it) {
+                    if (it->second == timerHandle) {
                         timerID = it->first;
                         break;
                     }
@@ -312,17 +265,13 @@ void HsmEventDispatcherFreeRTOS::onTimerEvent(TimerHandle_t timerHandle)
 
             HSM_TRACE_DEBUG("restartTimer=%d", (int)restartTimer);
 
-            if (false == restartTimer)
-            {
+            if (false == restartTimer) {
                 CriticalSection lck;
                 auto itTimer = pThis->mNativeTimerHandlers.find(timerID);
 
-                if (pThis->mNativeTimerHandlers.end() != itTimer)
-                {
+                if (pThis->mNativeTimerHandlers.end() != itTimer) {
                     pThis->mNativeTimerHandlers.erase(itTimer);
-                }
-                else
-                {
+                } else {
                     HSM_TRACE_ERROR("unexpected error. timer not found");
                 }
             }
@@ -330,4 +279,4 @@ void HsmEventDispatcherFreeRTOS::onTimerEvent(TimerHandle_t timerHandle)
     }
 }
 
-}
+}  // namespace hsmcpp

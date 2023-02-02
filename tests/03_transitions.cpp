@@ -1,10 +1,9 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#include "hsm/TrafficLightHsm.hpp"
 #include "hsm/ABCHsm.hpp"
+#include "hsm/TrafficLightHsm.hpp"
 
-TEST_F(TrafficLightHsm, simple_transition)
-{
+TEST_F(TrafficLightHsm, simple_transition) {
     TEST_DESCRIPTION("Simple transition between two states");
 
     //-------------------------------------------
@@ -22,8 +21,7 @@ TEST_F(TrafficLightHsm, simple_transition)
     EXPECT_EQ(mStateCounterStarting, 1);
 }
 
-TEST_F(TrafficLightHsm, transition_check)
-{
+TEST_F(TrafficLightHsm, transition_check) {
     TEST_DESCRIPTION("Checking that transition is possible before executing it");
 
     //-------------------------------------------
@@ -45,15 +43,18 @@ TEST_F(TrafficLightHsm, transition_check)
     EXPECT_TRUE(isTransitionPossible(TrafficLightEvent::NEXT_STATE));
 }
 
-TEST_F(TrafficLightHsm, transition_with_args)
-{
+TEST_F(TrafficLightHsm, transition_with_args) {
     TEST_DESCRIPTION("Test if args are correctly passed to transition action handler");
 
     //-------------------------------------------
     // PRECONDITIONS
     registerState(TrafficLightState::OFF);
     registerState(TrafficLightState::STARTING);
-    registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition);
+    registerTransition<TrafficLightHsm>(TrafficLightState::OFF,
+                                        TrafficLightState::STARTING,
+                                        TrafficLightEvent::TURN_ON,
+                                        this,
+                                        &TrafficLightHsm::onNextStateTransition);
 
     //-------------------------------------------
     // ACTIONS
@@ -79,8 +80,7 @@ TEST_F(TrafficLightHsm, transition_with_args)
     EXPECT_FALSE(mTransitionArgsNextState[3].toBool());
 }
 
-TEST_F(TrafficLightHsm, transition_failed_notification)
-{
+TEST_F(TrafficLightHsm, transition_failed_notification) {
     TEST_DESCRIPTION("Clients can receive notifications about failed transitions");
 
     //-------------------------------------------
@@ -103,8 +103,7 @@ TEST_F(TrafficLightHsm, transition_failed_notification)
     EXPECT_EQ(mLastFailedTransitionArgs[0].toInt64(), 123);
 }
 
-TEST_F(TrafficLightHsm, transition_non_existent)
-{
+TEST_F(TrafficLightHsm, transition_non_existent) {
     TEST_DESCRIPTION("Check that non registered transitions don't change HSM state");
 
     //-------------------------------------------
@@ -128,13 +127,16 @@ TEST_F(TrafficLightHsm, transition_non_existent)
     EXPECT_TRUE(mLastFailedTransitionArgs.empty());
 }
 
-TEST_F(TrafficLightHsm, transition_cancel_on_exit)
-{
+TEST_F(TrafficLightHsm, transition_cancel_on_exit) {
     TEST_DESCRIPTION("It should be possible to cancel transition if OnExit handler returns FALSE");
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, nullptr, &TrafficLightHsm::onExitCancel);
+    registerState<TrafficLightHsm>(TrafficLightState::OFF,
+                                   this,
+                                   &TrafficLightHsm::onOff,
+                                   nullptr,
+                                   &TrafficLightHsm::onExitCancel);
     registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter);
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON);
 
@@ -156,14 +158,20 @@ TEST_F(TrafficLightHsm, transition_cancel_on_exit)
     EXPECT_TRUE(mLastFailedTransitionArgs.empty());
 }
 
-TEST_F(TrafficLightHsm, transition_cancel_on_enter)
-{
+TEST_F(TrafficLightHsm, transition_cancel_on_enter) {
     TEST_DESCRIPTION("It should be possible to cancel transition if onEnter handler returns FALSE");
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
-    registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnterCancel);
+    registerState<TrafficLightHsm>(TrafficLightState::OFF,
+                                   this,
+                                   &TrafficLightHsm::onOff,
+                                   &TrafficLightHsm::onEnter,
+                                   &TrafficLightHsm::onExit);
+    registerState<TrafficLightHsm>(TrafficLightState::STARTING,
+                                   this,
+                                   &TrafficLightHsm::onStarting,
+                                   &TrafficLightHsm::onEnterCancel);
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON);
 
     //-------------------------------------------
@@ -185,17 +193,25 @@ TEST_F(TrafficLightHsm, transition_cancel_on_enter)
     EXPECT_TRUE(mLastFailedTransitionArgs.empty());
 }
 
-TEST_F(TrafficLightHsm, transition_self_internal)
-{
-    TEST_DESCRIPTION("Internal self transition should not trigger any state handlers. Only transition handler must be excecuted");
+TEST_F(TrafficLightHsm, transition_self_internal) {
+    TEST_DESCRIPTION(
+        "Internal self transition should not trigger any state handlers. Only transition handler must be excecuted");
 
     //-------------------------------------------
     // PRECONDITIONS
     registerState<TrafficLightHsm>(TrafficLightState::OFF);
-    registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+    registerState<TrafficLightHsm>(TrafficLightState::STARTING,
+                                   this,
+                                   &TrafficLightHsm::onStarting,
+                                   &TrafficLightHsm::onEnter,
+                                   &TrafficLightHsm::onExit);
 
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON);
-    registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING, TrafficLightEvent::NEXT_STATE, TrafficLightHsm::TransitionType::INTERNAL_TRANSITION, this, &TrafficLightHsm::onNextStateTransition);
+    registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING,
+                                            TrafficLightEvent::NEXT_STATE,
+                                            TrafficLightHsm::TransitionType::INTERNAL_TRANSITION,
+                                            this,
+                                            &TrafficLightHsm::onNextStateTransition);
 
     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
@@ -213,17 +229,26 @@ TEST_F(TrafficLightHsm, transition_self_internal)
     EXPECT_EQ(mTransitionCounterNextState, 1);
 }
 
-TEST_F(TrafficLightHsm, transition_self_external)
-{
-    TEST_DESCRIPTION("External self transition should result in exiting an reentering current state with all state callbacks correctly executed");
+TEST_F(TrafficLightHsm, transition_self_external) {
+    TEST_DESCRIPTION(
+        "External self transition should result in exiting an reentering current state with all state callbacks correctly "
+        "executed");
 
     //-------------------------------------------
     // PRECONDITIONS
     registerState<TrafficLightHsm>(TrafficLightState::OFF);
-    registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+    registerState<TrafficLightHsm>(TrafficLightState::STARTING,
+                                   this,
+                                   &TrafficLightHsm::onStarting,
+                                   &TrafficLightHsm::onEnter,
+                                   &TrafficLightHsm::onExit);
 
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON);
-    registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING, TrafficLightEvent::NEXT_STATE, TrafficLightHsm::TransitionType::EXTERNAL_TRANSITION, this, &TrafficLightHsm::onNextStateTransition);
+    registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING,
+                                            TrafficLightEvent::NEXT_STATE,
+                                            TrafficLightHsm::TransitionType::EXTERNAL_TRANSITION,
+                                            this,
+                                            &TrafficLightHsm::onNextStateTransition);
 
     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
@@ -241,8 +266,7 @@ TEST_F(TrafficLightHsm, transition_self_external)
     EXPECT_EQ(mTransitionCounterNextState, 1);
 }
 
-TEST_F(ABCHsm, transition_self_external_deep)
-{
+TEST_F(ABCHsm, transition_self_external_deep) {
     TEST_DESCRIPTION("Correctly exit child subscates when doing external self transition on parent state");
 
     //-------------------------------------------
@@ -253,13 +277,17 @@ TEST_F(ABCHsm, transition_self_external_deep)
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, &ABCHsm::onBExit);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC, &ABCHsm::onCEnter, &ABCHsm::onCExit);
 
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::P2) );
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P2, AbcState::B) );
-    ASSERT_TRUE( registerSubstate(AbcState::P2, AbcState::C) );
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::P2));
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P2, AbcState::B));
+    ASSERT_TRUE(registerSubstate(AbcState::P2, AbcState::C));
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::B, AbcState::C, AbcEvent::E1);
-    registerSelfTransition<ABCHsm>(AbcState::P1, AbcEvent::E2, ABCHsm::TransitionType::EXTERNAL_TRANSITION, this, &ABCHsm::onE2Transition);
+    registerSelfTransition<ABCHsm>(AbcState::P1,
+                                   AbcEvent::E2,
+                                   ABCHsm::TransitionType::EXTERNAL_TRANSITION,
+                                   this,
+                                   &ABCHsm::onE2Transition);
 
     initializeHsm();
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
@@ -314,8 +342,7 @@ TEST_F(ABCHsm, transition_self_external_deep)
     EXPECT_EQ(mStateCounterP2Exit, 1);
 }
 
-TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition)
-{
+TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition) {
     TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be canceled");
 
     //-------------------------------------------
@@ -335,16 +362,28 @@ TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition)
     EXPECT_EQ(mStateCounterStarting, 0);
 }
 
-TEST_F(TrafficLightHsm, transition_conditional_simple_true)
-{
+TEST_F(TrafficLightHsm, transition_conditional_simple_true) {
     TEST_DESCRIPTION("checks a simple conditional transition (condition satisfied)");
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
-    registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+    registerState<TrafficLightHsm>(TrafficLightState::OFF,
+                                   this,
+                                   &TrafficLightHsm::onOff,
+                                   &TrafficLightHsm::onEnter,
+                                   &TrafficLightHsm::onExit);
+    registerState<TrafficLightHsm>(TrafficLightState::STARTING,
+                                   this,
+                                   &TrafficLightHsm::onStarting,
+                                   &TrafficLightHsm::onEnter,
+                                   &TrafficLightHsm::onExit);
 
-    registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2On);
+    registerTransition<TrafficLightHsm>(TrafficLightState::OFF,
+                                        TrafficLightState::STARTING,
+                                        TrafficLightEvent::TURN_ON,
+                                        this,
+                                        &TrafficLightHsm::onNextStateTransition,
+                                        &TrafficLightHsm::checkConditionOff2On);
 
     //-------------------------------------------
     // ACTIONS
@@ -356,16 +395,28 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_true)
     EXPECT_EQ(mTransitionCounterNextState, 1);
 }
 
-TEST_F(TrafficLightHsm, transition_conditional_simple_false)
-{
+TEST_F(TrafficLightHsm, transition_conditional_simple_false) {
     TEST_DESCRIPTION("checks a simple conditional transition (condition not satisfied)");
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
-    registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+    registerState<TrafficLightHsm>(TrafficLightState::OFF,
+                                   this,
+                                   &TrafficLightHsm::onOff,
+                                   &TrafficLightHsm::onEnter,
+                                   &TrafficLightHsm::onExit);
+    registerState<TrafficLightHsm>(TrafficLightState::STARTING,
+                                   this,
+                                   &TrafficLightHsm::onStarting,
+                                   &TrafficLightHsm::onEnter,
+                                   &TrafficLightHsm::onExit);
 
-    registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2On);
+    registerTransition<TrafficLightHsm>(TrafficLightState::OFF,
+                                        TrafficLightState::STARTING,
+                                        TrafficLightEvent::TURN_ON,
+                                        this,
+                                        &TrafficLightHsm::onNextStateTransition,
+                                        &TrafficLightHsm::checkConditionOff2On);
 
     //-------------------------------------------
     // ACTIONS
@@ -384,25 +435,43 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_false)
     EXPECT_EQ(mLastFailedTransitionArgs[0].toString(), "turn off");
 }
 
-TEST_F(TrafficLightHsm, transition_conditional_multiple)
-{
-    TEST_DESCRIPTION("checks a conditional transition when same event is used for two different transitions from the same state");
+TEST_F(TrafficLightHsm, transition_conditional_multiple) {
+    TEST_DESCRIPTION(
+        "checks a conditional transition when same event is used for two different transitions from the same state");
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
-    registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+    registerState<TrafficLightHsm>(TrafficLightState::OFF,
+                                   this,
+                                   &TrafficLightHsm::onOff,
+                                   &TrafficLightHsm::onEnter,
+                                   &TrafficLightHsm::onExit);
+    registerState<TrafficLightHsm>(TrafficLightState::STARTING,
+                                   this,
+                                   &TrafficLightHsm::onStarting,
+                                   &TrafficLightHsm::onEnter,
+                                   &TrafficLightHsm::onExit);
 
-    registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2On);
-    registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2Off);
+    registerTransition<TrafficLightHsm>(TrafficLightState::OFF,
+                                        TrafficLightState::STARTING,
+                                        TrafficLightEvent::TURN_ON,
+                                        this,
+                                        &TrafficLightHsm::onNextStateTransition,
+                                        &TrafficLightHsm::checkConditionOff2On);
+    registerTransition<TrafficLightHsm>(TrafficLightState::OFF,
+                                        TrafficLightState::OFF,
+                                        TrafficLightEvent::TURN_ON,
+                                        this,
+                                        &TrafficLightHsm::onNextStateTransition,
+                                        &TrafficLightHsm::checkConditionOff2Off);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));// fail
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "ignore"));// fail
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));// ok: off->off
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn on"));// ok: off->starting
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));// fail
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));              // fail
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "ignore"));    // fail
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));   // ok: off->off
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn on"));    // ok: off->starting
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));  // fail
 
     //-------------------------------------------
     // VALIDATION
@@ -418,15 +487,19 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple)
 // NOTE: test is obsolete with introduction of parallel feature
 // TEST_F(TrafficLightHsm, transition_conditional_multiple_valid)
 // {
-//     TEST_DESCRIPTION("if there are multiple valid transitions HSM will pick self-transition or the first applicable one based on registration order");
+//     TEST_DESCRIPTION("if there are multiple valid transitions HSM will pick self-transition or the first applicable one based
+//     on registration order");
 
 //     //-------------------------------------------
 //     // PRECONDITIONS
-//     registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
-//     registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+//     registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter,
+//     &TrafficLightHsm::onExit); registerState<TrafficLightHsm>(TrafficLightState::STARTING, this,
+//     &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
 
-//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2On);
-//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2Off);
+//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON,
+//     this, &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2On);
+//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::TURN_ON, this,
+//     &TrafficLightHsm::onNextStateTransition, &TrafficLightHsm::checkConditionOff2Off);
 
 //     //-------------------------------------------
 //     // ACTIONS
@@ -442,15 +515,18 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple)
 // NOTE: test is obsolete with introduction of parallel feature
 // TEST_F(TrafficLightHsm, transition_multiple_valid)
 // {
-//     TEST_DESCRIPTION("if there are multiple valid transitions HSM will pick the first applicable one based on registration order");
+//     TEST_DESCRIPTION("if there are multiple valid transitions HSM will pick the first applicable one based on registration
+//     order");
 
 //     //-------------------------------------------
 //     // PRECONDITIONS
-//     registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
-//     registerState<TrafficLightHsm>(TrafficLightState::STARTING, this, &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
+//     registerState<TrafficLightHsm>(TrafficLightState::OFF, this, &TrafficLightHsm::onOff, &TrafficLightHsm::onEnter,
+//     &TrafficLightHsm::onExit); registerState<TrafficLightHsm>(TrafficLightState::STARTING, this,
+//     &TrafficLightHsm::onStarting, &TrafficLightHsm::onEnter, &TrafficLightHsm::onExit);
 
-//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition);
-//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition);
+//     registerTransition<TrafficLightHsm>(TrafficLightState::OFF, TrafficLightState::OFF, TrafficLightEvent::TURN_ON, this,
+//     &TrafficLightHsm::onNextStateTransition); registerTransition<TrafficLightHsm>(TrafficLightState::OFF,
+//     TrafficLightState::STARTING, TrafficLightEvent::TURN_ON, this, &TrafficLightHsm::onNextStateTransition);
 
 //     //-------------------------------------------
 //     // ACTIONS

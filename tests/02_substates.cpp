@@ -1,12 +1,10 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#include "hsm/TrafficLightHsm.hpp"
 #include "hsm/ABCHsm.hpp"
 #include "hsm/AsyncHsm.hpp"
+#include "hsm/TrafficLightHsm.hpp"
 
-
-TEST_F(ABCHsm, substate_entrypoint)
-{
+TEST_F(ABCHsm, substate_entrypoint) {
     TEST_DESCRIPTION("");
     /*
     @startuml
@@ -27,8 +25,8 @@ TEST_F(ABCHsm, substate_entrypoint)
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B) );
-    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::C) );
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B));
+    EXPECT_TRUE(registerSubstate(AbcState::P1, AbcState::C));
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::B, AbcState::C, AbcEvent::E1);
@@ -44,9 +42,7 @@ TEST_F(ABCHsm, substate_entrypoint)
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
 }
 
-
-TEST_F(ABCHsm, substate_entrypoints_multiple_behavioral)
-{
+TEST_F(ABCHsm, substate_entrypoints_multiple_behavioral) {
     TEST_DESCRIPTION("hsm must support multiple exclusive conditional entry points");
     /*
     @startuml
@@ -69,8 +65,8 @@ TEST_F(ABCHsm, substate_entrypoints_multiple_behavioral)
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B, AbcEvent::E1) );
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::C, AbcEvent::E2) );
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B, AbcEvent::E1));
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::C, AbcEvent::E2));
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E2);
@@ -95,8 +91,7 @@ TEST_F(ABCHsm, substate_entrypoints_multiple_behavioral)
     // VALIDATION
 }
 
-TEST_F(ABCHsm, substate_entrypoints_multiple_various)
-{
+TEST_F(ABCHsm, substate_entrypoints_multiple_various) {
     TEST_DESCRIPTION("if state contains both conditional and non-conditional entry points then all of them will be processed");
     /*
     @startuml
@@ -136,8 +131,8 @@ TEST_F(ABCHsm, substate_entrypoints_multiple_various)
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B) );
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::C, AbcEvent::E2) );
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B));
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::C, AbcEvent::E2));
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E2);
@@ -161,8 +156,7 @@ TEST_F(ABCHsm, substate_entrypoints_multiple_various)
     // VALIDATION
 }
 
-TEST_F(ABCHsm, substate_entrypoints_behavioral_with_conditions)
-{
+TEST_F(ABCHsm, substate_entrypoints_behavioral_with_conditions) {
     TEST_DESCRIPTION("entry point transitions can have both event filter and condition defined");
     /*
     @startuml
@@ -183,8 +177,18 @@ TEST_F(ABCHsm, substate_entrypoints_behavioral_with_conditions)
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B, AbcEvent::E1, [](const hsmcpp::VariantVector_t&){ return true; }, false) );
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::C, AbcEvent::E1, [](const hsmcpp::VariantVector_t&){ return false; }, false) );
+    ASSERT_TRUE(registerSubstateEntryPoint(
+        AbcState::P1,
+        AbcState::B,
+        AbcEvent::E1,
+        [](const hsmcpp::VariantVector_t&) { return true; },
+        false));
+    ASSERT_TRUE(registerSubstateEntryPoint(
+        AbcState::P1,
+        AbcState::C,
+        AbcEvent::E1,
+        [](const hsmcpp::VariantVector_t&) { return false; },
+        false));
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
@@ -200,8 +204,7 @@ TEST_F(ABCHsm, substate_entrypoints_behavioral_with_conditions)
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::C}));
 }
 
-TEST_F(ABCHsm, substate_entrypoints_conditional)
-{
+TEST_F(ABCHsm, substate_entrypoints_conditional) {
     TEST_DESCRIPTION("entry point transitions can have conditions callbacks defined without event filters");
     /*
     @startuml
@@ -222,8 +225,18 @@ TEST_F(ABCHsm, substate_entrypoints_conditional)
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B, AbcEvent::INVALID, [](const hsmcpp::VariantVector_t&){ return true; }, false) );
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::C, AbcEvent::INVALID, [](const hsmcpp::VariantVector_t&){ return false; }, false) );
+    ASSERT_TRUE(registerSubstateEntryPoint(
+        AbcState::P1,
+        AbcState::B,
+        AbcEvent::INVALID,
+        [](const hsmcpp::VariantVector_t&) { return true; },
+        false));
+    ASSERT_TRUE(registerSubstateEntryPoint(
+        AbcState::P1,
+        AbcState::C,
+        AbcEvent::INVALID,
+        [](const hsmcpp::VariantVector_t&) { return false; },
+        false));
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
@@ -239,8 +252,7 @@ TEST_F(ABCHsm, substate_entrypoints_conditional)
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::C}));
 }
 
-TEST_F(ABCHsm, substate_entrypoints_block_conditional_transition)
-{
+TEST_F(ABCHsm, substate_entrypoints_block_conditional_transition) {
     TEST_DESCRIPTION("if state doesnt have matching entry points for ongoing transition, then transition will be canceled");
     /*
     @startuml
@@ -286,11 +298,11 @@ TEST_F(ABCHsm, substate_entrypoints_block_conditional_transition)
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::P2, AbcEvent::E2) );
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P2, AbcState::B, AbcEvent::E1) );
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::P2, AbcEvent::E2));
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P2, AbcState::B, AbcEvent::E1));
 
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::P3, AbcEvent::E1) );
-    ASSERT_TRUE( registerSubstateEntryPoint(AbcState::P3, AbcState::C, AbcEvent::E1) );
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::P3, AbcEvent::E1));
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P3, AbcState::C, AbcEvent::E1));
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E2);
@@ -312,8 +324,7 @@ TEST_F(ABCHsm, substate_entrypoints_block_conditional_transition)
     // VALIDATION
 }
 
-TEST_F(ABCHsm, substate_entrypoints_substate)
-{
+TEST_F(ABCHsm, substate_entrypoints_substate) {
     TEST_DESCRIPTION("entry point of a substate could be another state with substates");
     /*
     @startuml
@@ -340,10 +351,10 @@ TEST_F(ABCHsm, substate_entrypoints_substate)
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::P2) );
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P2, AbcState::P3) );
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P3, AbcState::B) );
-    EXPECT_TRUE( registerSubstate(AbcState::P3, AbcState::C) );
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::P2));
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P2, AbcState::P3));
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P3, AbcState::B));
+    EXPECT_TRUE(registerSubstate(AbcState::P3, AbcState::C));
 
     initializeHsm();
 
@@ -362,8 +373,7 @@ TEST_F(ABCHsm, substate_entrypoints_substate)
     EXPECT_EQ(mStateCounterC, 0);
 }
 
-TEST_F(ABCHsm, substate_exit_single)
-{
+TEST_F(ABCHsm, substate_exit_single) {
     TEST_DESCRIPTION("exit state throug external parent transition");
     /*
     @startuml
@@ -385,8 +395,8 @@ TEST_F(ABCHsm, substate_exit_single)
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC, nullptr, &ABCHsm::onCExit);
 
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B) );
-    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::C) );
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B));
+    EXPECT_TRUE(registerSubstate(AbcState::P1, AbcState::C));
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::B, AbcState::C, AbcEvent::E2);
@@ -412,8 +422,7 @@ TEST_F(ABCHsm, substate_exit_single)
     EXPECT_EQ(mTransitionCounterE3, 1);
 }
 
-TEST_F(ABCHsm, substate_exit_multiple_layers)
-{
+TEST_F(ABCHsm, substate_exit_multiple_layers) {
     TEST_DESCRIPTION("Validate that exiting from multiple depth states on a top level transition is correctly handled");
     /*
     @startuml
@@ -462,11 +471,11 @@ TEST_F(ABCHsm, substate_exit_multiple_layers)
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
     registerState<ABCHsm>(AbcState::D, this, &ABCHsm::onD);
 
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::B) );
-    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::P2) );
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P2, AbcState::C) );
-    EXPECT_TRUE( registerSubstate(AbcState::P2, AbcState::P3) );
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P3, AbcState::D) );
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B));
+    EXPECT_TRUE(registerSubstate(AbcState::P1, AbcState::P2));
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P2, AbcState::C));
+    EXPECT_TRUE(registerSubstate(AbcState::P2, AbcState::P3));
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P3, AbcState::D));
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::B, AbcState::P2, AbcEvent::E1);
@@ -497,10 +506,10 @@ TEST_F(ABCHsm, substate_exit_multiple_layers)
     EXPECT_EQ(mStateCounterD, 1);
 }
 
-TEST_F(ABCHsm, substate_safe_registration)
-{
-    TEST_DESCRIPTION("If HSM is compiled with safety check then it should prevent cyclic and multiple inclusions of substates. "
-                     "This test will fail if HSM_ENABLE_SAFE_STRUCTURE is not defined");
+TEST_F(ABCHsm, substate_safe_registration) {
+    TEST_DESCRIPTION(
+        "If HSM is compiled with safety check then it should prevent cyclic and multiple inclusions of substates. "
+        "This test will fail if HSM_ENABLE_SAFE_STRUCTURE is not defined");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -508,25 +517,25 @@ TEST_F(ABCHsm, substate_safe_registration)
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
 
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P1, AbcState::A) );
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::A));
 
     //-------------------------------------------
     // ACTIONS
 
     // each state can be a part of only one substate
-    EXPECT_FALSE( registerSubstateEntryPoint(AbcState::P2, AbcState::A) );// A is already part of P1
+    EXPECT_FALSE(registerSubstateEntryPoint(AbcState::P2, AbcState::A));  // A is already part of P1
 
     // prevent recursion
-    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::B) );
-    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::P2) );
-    EXPECT_FALSE( registerSubstateEntryPoint(AbcState::P2, AbcState::P1) );// P1 -> B2 -X P1
+    EXPECT_TRUE(registerSubstate(AbcState::P1, AbcState::B));
+    EXPECT_TRUE(registerSubstate(AbcState::P1, AbcState::P2));
+    EXPECT_FALSE(registerSubstateEntryPoint(AbcState::P2, AbcState::P1));  // P1 -> B2 -X P1
 
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P4, AbcState::C) );
-    EXPECT_TRUE( registerSubstate(AbcState::P4, AbcState::P3) );
-    EXPECT_FALSE( registerSubstateEntryPoint(AbcState::P3, AbcState::P4) );// P3 -X P4 -> P3
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P4, AbcState::C));
+    EXPECT_TRUE(registerSubstate(AbcState::P4, AbcState::P3));
+    EXPECT_FALSE(registerSubstateEntryPoint(AbcState::P3, AbcState::P4));  // P3 -X P4 -> P3
 
-    EXPECT_TRUE( registerSubstateEntryPoint(AbcState::P3, AbcState::P1) );
-    EXPECT_FALSE( registerSubstateEntryPoint(AbcState::P2, AbcState::P4) );// prevent recursion: (P4) -> P3 -> P1 -> P2 -X (P4)
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P3, AbcState::P1));
+    EXPECT_FALSE(registerSubstateEntryPoint(AbcState::P2, AbcState::P4));  // prevent recursion: (P4) -> P3 -> P1 -> P2 -X (P4)
 
     initializeHsm();
 
@@ -534,8 +543,7 @@ TEST_F(ABCHsm, substate_safe_registration)
     // VALIDATION
 }
 
-TEST_F(ABCHsm, substate_error_no_entrypoint)
-{
+TEST_F(ABCHsm, substate_error_no_entrypoint) {
     TEST_DESCRIPTION("transition to a state should fail if no entry point was defined");
     /*
     @startuml
@@ -554,7 +562,7 @@ TEST_F(ABCHsm, substate_error_no_entrypoint)
     registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
 
-    EXPECT_TRUE( registerSubstate(AbcState::P1, AbcState::B) );
+    EXPECT_TRUE(registerSubstate(AbcState::P1, AbcState::B));
 
     registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
 
@@ -571,8 +579,7 @@ TEST_F(ABCHsm, substate_error_no_entrypoint)
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 }
 
-TEST_F(AsyncHsm, substate_parent_as_initial)
-{
+TEST_F(AsyncHsm, substate_parent_as_initial) {
     TEST_DESCRIPTION("when parent state is set as initial it should automatically transition into substate on startup");
     /*
     @startuml

@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
     ::testing::InitGoogleMock(&argc, argv);
     configureGTest("std");
 
-    RUN_ALL_TESTS();
+    (void)RUN_ALL_TESTS();
 
     return 0;
 }

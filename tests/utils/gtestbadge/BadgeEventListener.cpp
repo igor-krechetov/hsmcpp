@@ -65,13 +65,17 @@ void BadgeEventListener::OnTestProgramEnd(const UnitTest& unit_test) {
         //   icon = ICON_TRAVIS;
         // }
 
-        mSuccess = generateBadge(mOutputFilename, numSuccess, numFailed, numDisabled, icon, mWarningRatio);
+        mSuccess = generateBadge(mOutputFilename, numSuccess, numFailed, numDisabled, mTitle, icon, mWarningRatio);
         if (!mSuccess && !mSilent) {
             printf("BadgeEventListener: [ERROR] Failed saving '%s' test result badge.\n", mOutputFilename.c_str());
         }
     } else if (!mSilent) {
         printf("BadgeEventListener: [WARNING] Badge filename not specified. Skipping badge creation.\n");
     }
+}
+
+void BadgeEventListener::setTitle(const std::string& title) {
+    mTitle = title;
 }
 
 void BadgeEventListener::setOutputFilename(const std::string& iFilename) {
@@ -90,14 +94,16 @@ bool BadgeEventListener::generateBadge(const std::string& iFilename,
                                        int success,
                                        int failures,
                                        int disabled,
+                                       const std::string& title,
                                        const SYSTEM_ICON& iIcon) {
-    return generateBadge(iFilename, success, failures, disabled, iIcon, DEFAULT_WARNING_RATIO);
+    return generateBadge(iFilename, success, failures, disabled, title, iIcon, DEFAULT_WARNING_RATIO);
 }
 
 bool BadgeEventListener::generateBadge(const std::string& iFilename,
                                        int success,
                                        int failures,
                                        int disabled,
+                                       const std::string& title,
                                        const SYSTEM_ICON& iIcon,
                                        const double& iWarningRatio) {
     int total = success + failures;
@@ -233,7 +239,7 @@ bool BadgeEventListener::generateBadge(const std::string& iFilename,
     Badge b;
     b.setBase64Icon(icon);
     b.setRightBackgroundColor(color);
-    b.setLeftText("tests");
+    b.setLeftText(title);
     b.setRightText(right_text);
     bool saved = b.save(iFilename.c_str());
 

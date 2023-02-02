@@ -48,12 +48,15 @@ void configureGTest(const std::string& name) {
     // Create and register a new BadgeEventListener
     BadgeEventListener* bel = new BadgeEventListener();
 
-    bel->setOutputFilename("tests_result_" + name + ".svg");  // set badge filename
-    bel->setSilent(true);                                     // disable all console output
-    bel->setWarningRatio(
-        0.3);  // if less than 30% of test fails, show the `warning` badge type. Else, show the `failed` badge type.
-    listeners.Append(bel);  // Google Test assumes the ownership of the listener (i.e. it will delete the listener when the test
-                            // program finishes).
+    bel->setTitle(name + " dispatcher tests");
+    // set badge filename
+    bel->setOutputFilename("tests_result_" + name + ".svg");
+    // disable all console output
+    bel->setSilent(true);
+    // if less than 30% of test fails, show the `warning` badge type. Else, show the `failed` badge type.
+    bel->setWarningRatio(0.3);
+    // Google Test assumes the ownership of the listener (i.e. it will delete the listener when the test program finishes).
+    listeners.Append(bel);
 }
 
 #if defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM) || defined(TEST_HSM_QT)

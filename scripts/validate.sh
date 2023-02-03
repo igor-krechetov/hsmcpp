@@ -59,6 +59,7 @@ then
     lcov -r ./coverage.info /usr/include/\* . -o ./coverage.info
     lcov -r ./coverage.info \*/build/\* . -o ./coverage.info
     lcov -r ./coverage.info \*/tests/\* . -o ./coverage.info
+    lcov -r ./coverage.info \*/gcc_64/include/QtCore/\* . -o ./coverage.info
 
     genhtml ./coverage.info --output-directory out
 fi

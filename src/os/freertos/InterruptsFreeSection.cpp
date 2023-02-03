@@ -1,6 +1,6 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#include "hsmcpp/os/freertos/CriticalSection.hpp"
+#include "hsmcpp/os/freertos/InterruptsFreeSection.hpp"
 
 #include <task.h>
 
@@ -22,7 +22,7 @@ namespace hsmcpp {
 // used does not support interrupt nesting then taskENTER_CRITICAL_FROM_ISR()
 // and taskEXIT_CRITICAL_FROM_ISR() will have no effect.
 
-CriticalSection::CriticalSection() {
+InterruptsFreeSection::InterruptsFreeSection() {
     BaseType_t isInsideISR = xPortIsInsideInterrupt();
 
     if (pdFALSE == isInsideISR) {
@@ -32,7 +32,7 @@ CriticalSection::CriticalSection() {
     }
 }
 
-CriticalSection::~CriticalSection() {
+InterruptsFreeSection::~InterruptsFreeSection() {
     BaseType_t isInsideISR = xPortIsInsideInterrupt();
 
     if (pdFALSE == isInsideISR) {

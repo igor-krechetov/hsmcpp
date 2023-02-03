@@ -53,7 +53,7 @@ void TrafficLightHsm::setupDefault() {
 bool TrafficLightHsm::checkConditionOff2Off(const VariantVector_t& args) {
     bool result = false;
 
-    if (args.size() > 0) {
+    if (false == args.empty()) {
         if (args[0].isString()) {
             result = (args[0].toString() == "turn off") || (args[0].toString() == "any");
         }
@@ -65,7 +65,7 @@ bool TrafficLightHsm::checkConditionOff2Off(const VariantVector_t& args) {
 bool TrafficLightHsm::checkConditionOff2On(const VariantVector_t& args) {
     bool result = false;
 
-    if (args.size() > 0) {
+    if (false == args.empty()) {
         if (args[0].isString()) {
             result = (args[0].toString() == "turn on") || (args[0].toString() == "any");
         }

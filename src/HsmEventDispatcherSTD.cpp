@@ -4,11 +4,19 @@
 #include "hsmcpp/HsmEventDispatcherSTD.hpp"
 
 #include "hsmcpp/logging.hpp"
+#include "hsmcpp/os/CriticalSection.hpp"
 
 namespace hsmcpp {
 
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "HsmEventDispatcherSTD"
+
+HsmEventDispatcherSTD::HsmEventDispatcherSTD(const size_t eventsCacheSize)
+    // NOTE: false-positive. thinks that ':' is arithmetic operation
+    // cppcheck-suppress misra-c2012-10.4
+    : HsmEventDispatcherBase(eventsCacheSize) {
+    HSM_TRACE_CALL_DEBUG();
+}
 
 HsmEventDispatcherSTD::~HsmEventDispatcherSTD() {
     HSM_TRACE_CALL_DEBUG();
@@ -47,6 +55,7 @@ void HsmEventDispatcherSTD::stop() {
 
     if (true == mDispatcherThread.joinable()) {
         mStopDispatcher = true;
+        notifyTimersThread();
         notifyDispatcherAboutEvent();
     }
 }
@@ -57,6 +66,54 @@ void HsmEventDispatcherSTD::join() {
     if (true == mDispatcherThread.joinable()) {
         mDispatcherThread.join();
     }
+
+    if (true == mTimersThread.joinable()) {
+        mTimersThread.join();
+    }
+}
+
+void HsmEventDispatcherSTD::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) {
+    HSM_TRACE_CALL_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d", SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
+    auto it = mRunningTimers.end();
+
+    // lazy initialization of timers thread
+    if (false == mTimersThread.joinable()) {
+        mTimersThread = std::thread(&HsmEventDispatcherSTD::handleTimers, this);
+    }
+
+    {
+        CriticalSection cs(mRunningTimersSync);
+        it = mRunningTimers.find(timerID);
+
+        // new timer
+        if (mRunningTimers.end() == it) {
+            RunningTimerInfo newTimer;
+
+            newTimer.startedAt = std::chrono::steady_clock::now();
+            newTimer.elapseAfter = newTimer.startedAt + std::chrono::milliseconds(intervalMs);
+
+            mRunningTimers.emplace(timerID, newTimer);
+        } else {
+            // restart timer
+            it->second.startedAt = std::chrono::steady_clock::now();
+            it->second.elapseAfter = it->second.startedAt + std::chrono::milliseconds(intervalMs);
+        }
+    }
+
+    // wakeup timers thread
+    notifyTimersThread();
+}
+
+void HsmEventDispatcherSTD::stopTimerImpl(const TimerID_t timerID) {
+    HSM_TRACE_CALL_ARGS("timerID=%d", SC2INT(timerID));
+
+    {
+        CriticalSection cs(mRunningTimersSync);
+        mRunningTimers.erase(timerID);
+    }
+
+    // wakeup timers thread
+    notifyTimersThread();
 }
 
 void HsmEventDispatcherSTD::notifyDispatcherAboutEvent() {
@@ -77,9 +134,78 @@ void HsmEventDispatcherSTD::doDispatching() {
                 // NOTE: false-positive. "A function should have a single point of exit at the end" is not vialated because
                 //       "return" statement belogs to a lamda function, not doDispatching.
                 // cppcheck-suppress misra-c2012-15.5
-                mEmitEvent.wait(lck, [=]() { return (false == mPendingEvents.empty()) || (true == mStopDispatcher); });
+                mEmitEvent.wait(lck, [=]() { return (false == mPendingEvents.empty()) || (false == mEnqueuedEvents.empty()) || (true == mStopDispatcher); });
                 HSM_TRACE_DEBUG("woke up. pending events=%lu", mPendingEvents.size());
             }
+        }
+    }
+
+    HSM_TRACE_DEBUG("EXIT");
+}
+
+void HsmEventDispatcherSTD::notifyTimersThread() {
+    HSM_TRACE_CALL_DEBUG();
+    mNotifiedTimersThread = true;
+    mTimerEvent.notify();
+}
+
+void HsmEventDispatcherSTD::handleTimers() {
+    HSM_TRACE_CALL_DEBUG();
+    Mutex timerEventSync;
+    UniqueLock lck(timerEventSync);
+
+    while (false == mStopDispatcher) {
+        mRunningTimersSync.lock();
+
+        if (false == mRunningTimers.empty()) {
+            auto itTimeout = mRunningTimers.begin();
+
+            for (auto it = mRunningTimers.begin(); it != mRunningTimers.end(); ++it) {
+                if (it->second.elapseAfter < itTimeout->second.elapseAfter) {
+                    itTimeout = it;
+                }
+            }
+
+            TimerID_t waitingTimerId = itTimeout->first;
+            const int intervalMs = std::chrono::duration_cast<std::chrono::milliseconds>(itTimeout->second.elapseAfter -
+                                                                                         std::chrono::steady_clock::now())
+                                       .count();
+
+            mRunningTimersSync.unlock();
+
+            // NOTE: false-positive. "A function should have a single point of exit at the end" is not vialated because
+            //       "return" statement belogs to a lamda function, not doDispatching.
+            // cppcheck-suppress misra-c2012-15.5
+            const bool waitResult = mTimerEvent.wait_for(lck, intervalMs, [&]() { return mNotifiedTimersThread; });
+
+            mNotifiedTimersThread = false;
+
+            if (false == waitResult) {
+                // timeout expired
+                CriticalSection lckExpired(mRunningTimersSync);
+
+                itTimeout = mRunningTimers.find(waitingTimerId);
+
+                if (itTimeout != mRunningTimers.end()) {
+                    if (true == handleTimerEvent(waitingTimerId)) {
+                        // restart timer
+                        itTimeout->second.startedAt = std::chrono::steady_clock::now();
+                        itTimeout->second.elapseAfter = itTimeout->second.startedAt + std::chrono::milliseconds(intervalMs);
+                    } else {
+                        // single shot timer. remove from queue
+                        mRunningTimers.erase(itTimeout);
+                    }
+                } else {
+                    // do nothing
+                }
+            } else {
+                // thread was woken up by start/stop operation. no need to do anything
+            }
+        } else {
+            mRunningTimersSync.unlock();
+
+            // wait for timer events
+            mTimerEvent.wait(lck);
         }
     }
 

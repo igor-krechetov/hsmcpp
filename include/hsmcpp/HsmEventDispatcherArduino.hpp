@@ -13,20 +13,14 @@ namespace hsmcpp
 
 class HsmEventDispatcherArduino: public HsmEventDispatcherBase
 {
-    struct EnqueuedEventInfo
-    {
-        HandlerID_t handlerID;
-        EventID_t eventID;
-    };
-
     struct RunningTimerInfo
     {
-        unsigned long startedAt;// time when timer was started (ms)
-        unsigned long elapseAfter;// time when timer should elapse next time (ms)
+        unsigned long startedAt;// monotonic time when timer was started (ms)
+        unsigned long elapseAfter;// monotonic time when timer should elapse next time (ms)
     };
 
 public:
-    HsmEventDispatcherArduino(const size_t eventsCacheSize=32);
+    explicit HsmEventDispatcherArduino(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
     virtual ~HsmEventDispatcherArduino();
 
     bool start() override;
@@ -37,6 +31,8 @@ public:
     void dispatchEvents();
 
 protected:
+    void notifyDispatcherAboutEvent() override;
+    
     void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
     void stopTimerImpl(const TimerID_t timerID) override;
 
@@ -45,7 +41,6 @@ protected:
 private:
     bool mStopDispatcher = false;
     std::map<TimerID_t, RunningTimerInfo> mRunningTimers;
-    std::vector<EnqueuedEventInfo> mEnqueuedEvents;
 };
 
 } // namespace hsmcpp

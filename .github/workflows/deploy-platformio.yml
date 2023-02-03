@@ -91,7 +91,7 @@ jobs:
 
       - name: Publish PlatformIO package
         # only publish release versions
-        if: ${{ needs.check-hsmcpp-version.outputs.commit_action == '[r]' }}
+        if: ${{ needs.check-hsmcpp-version.outputs.commit_action == 'r' }}
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_TOKEN }}
         run: |

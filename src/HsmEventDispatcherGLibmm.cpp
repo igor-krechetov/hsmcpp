@@ -12,14 +12,16 @@ namespace hsmcpp {
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "HsmEventDispatcherGLibmm"
 
-HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm()
-    : mMainContext(Glib::MainContext::get_default())
+HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm(const size_t eventsCacheSize)
+    : HsmEventDispatcherBase(eventsCacheSize)
+    , mMainContext(Glib::MainContext::get_default())
     , mDispatcher(new Glib::Dispatcher()) {
     HSM_TRACE_CALL_DEBUG();
 }
 
-HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context)
-    : mMainContext(context)
+HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context, const size_t eventsCacheSize)
+    : HsmEventDispatcherBase(eventsCacheSize)
+    , mMainContext(context)
     , mDispatcher(new Glib::Dispatcher(context)) {
     HSM_TRACE_CALL_DEBUG();
 }

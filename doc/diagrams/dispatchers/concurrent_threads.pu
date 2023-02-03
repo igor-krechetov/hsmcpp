@@ -1,0 +1,51 @@
+@startuml
+mode compact
+scale 1 as 100 pixels
+
+<style>
+    timingDiagram {
+        .thread1 {
+            BackgroundColor LightGreen
+        }
+        .thread2 {
+            BackgroundColor LightSalmon
+        }
+    }
+</style>
+
+concise "Thread 1" as T1 <<thread1>>
+concise "Dispatcher Thread" as DT  <<thread2>>
+concise "Signal" as S
+concise "Mutex" as M
+
+@0
+M is Locked #LightGreen
+T1 is emitEvent
+
+@+1
+T1 -> DT@+1: notify
+M is {-}
+T1 is {-}
+
+@+1
+M is Locked #LightSalmon
+DT is "Copy events"
+
+@3
+T1 is blocked #red
+@+1
+T1 is emitEvent
+M is Locked #LightGreen
+@+1
+T1 -> DT: notify
+T1 is {-}
+M is {-}
+
+@4
+M is {-}
+DT is "Call event handlers"
+
+@+3
+DT is {-}
+
+@enduml

@@ -3,7 +3,7 @@
 #include "hsmcpp/HsmEventDispatcherFreeRTOS.hpp"
 
 #include "hsmcpp/logging.hpp"
-#include "hsmcpp/os/CriticalSection.hpp"
+#include "hsmcpp/os/InterruptsFreeSection.hpp"
 #include "hsmcpp/os/freertos/FreeRtosPort.hpp"
 
 #if (INCLUDE_xTaskGetCurrentTaskHandle != 1)
@@ -19,14 +19,19 @@
 // TODO: supports only single core implementation of FreeRTOS. For multi-core systems need to clarify:
 //       - AMP or SMP is used?
 //       - can multiple ISR be called at the same time?
+//       - need to test if it's safe to lock a Mutex inside ISR. Then it would be better
+//         to replace InterruptsFreeSection with CriticalSection
 
 namespace hsmcpp {
 
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "HsmEventDispatcherFreeRTOS"
 
-HsmEventDispatcherFreeRTOS::HsmEventDispatcherFreeRTOS(const configSTACK_DEPTH_TYPE stackDepth, const UBaseType_t priority)
-    : mStackDepth(stackDepth)
+HsmEventDispatcherFreeRTOS::HsmEventDispatcherFreeRTOS(const configSTACK_DEPTH_TYPE stackDepth,
+                                                       const UBaseType_t priority,
+                                                       const size_t eventsCacheSize)
+    : HsmEventDispatcherBase(eventsCacheSize)
+    , mStackDepth(stackDepth)
     , mPriority(priority) {
     HSM_TRACE_CALL_DEBUG_ARGS("stackDepth=%d, priority=%d", static_cast<int>(stackDepth), static_cast<int>(priority));
 }
@@ -53,7 +58,7 @@ void HsmEventDispatcherFreeRTOS::emitEvent(const HandlerID_t handlerID) {
 
         {
             // TODO: this will work only for single-core FreeRTOS
-            CriticalSection lck;
+            InterruptsFreeSection lck;
             mPendingEvents.push_back(handlerID);
         }
 
@@ -123,7 +128,7 @@ void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID,
     UBaseType_t reloadMode = (false == isSingleShot ? pdTRUE : pdFALSE);
 
     {
-        CriticalSection lck;
+        InterruptsFreeSection lck;
         it = mNativeTimerHandlers.find(timerID);
     }
 
@@ -135,7 +140,7 @@ void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID,
                              HsmEventDispatcherFreeRTOS::onTimerEvent);
 
         if (nullptr != timer) {
-            CriticalSection lck;
+            InterruptsFreeSection lck;
             mNativeTimerHandlers.emplace(timerID, timer);
         }
     } else {
@@ -145,7 +150,7 @@ void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID,
             if (pdPASS != xTimerChangePeriod(timer, intervalMs / portTICK_PERIOD_MS, 0)) {
                 xTimerDelete(timer, 0);
                 {
-                    CriticalSection lck;
+                    InterruptsFreeSection lck;
                     mNativeTimerHandlers.erase(timerID);
                 }
 
@@ -164,7 +169,7 @@ void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID,
         if (pdPASS != xTimerStart(timer, 0)) {
             xTimerDelete(timer, 0);
             {
-                CriticalSection lck;
+                InterruptsFreeSection lck;
                 mNativeTimerHandlers.erase(timerID);
             }
 
@@ -180,7 +185,7 @@ void HsmEventDispatcherFreeRTOS::stopTimerImpl(const TimerID_t timerID) {
     auto it = mNativeTimerHandlers.end();
 
     {
-        CriticalSection lck;
+        InterruptsFreeSection lck;
         it = mNativeTimerHandlers.find(timerID);
     }
 
@@ -213,7 +218,7 @@ void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters) {
             {
                 // NOTE: this will work only on a single core implementation of FreeRTOS
                 //       for multi-core system mutex lock will be required
-                CriticalSection lck;
+                InterruptsFreeSection lck;
                 events = std::move(pThis->mPendingEvents);
             }
 
@@ -251,7 +256,7 @@ void HsmEventDispatcherFreeRTOS::onTimerEvent(TimerHandle_t timerHandle) {
             TimerID_t timerID = INVALID_HSM_TIMER_ID;
 
             {
-                CriticalSection lck;
+                InterruptsFreeSection lck;
 
                 for (auto it = pThis->mNativeTimerHandlers.begin(); it != pThis->mNativeTimerHandlers.end(); ++it) {
                     if (it->second == timerHandle) {
@@ -266,7 +271,7 @@ void HsmEventDispatcherFreeRTOS::onTimerEvent(TimerHandle_t timerHandle) {
             HSM_TRACE_DEBUG("restartTimer=%d", (int)restartTimer);
 
             if (false == restartTimer) {
-                CriticalSection lck;
+                InterruptsFreeSection lck;
                 auto itTimer = pThis->mNativeTimerHandlers.find(timerID);
 
                 if (pThis->mNativeTimerHandlers.end() != itTimer) {

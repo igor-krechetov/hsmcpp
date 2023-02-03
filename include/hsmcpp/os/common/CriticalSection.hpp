@@ -6,10 +6,13 @@
 namespace hsmcpp
 {
 
+class Mutex;
+class InterruptsFreeSection;
+
 class CriticalSection
 {
 public:
-    CriticalSection();
+    explicit CriticalSection(Mutex& sync);
     ~CriticalSection();
 
 private:
@@ -17,6 +20,10 @@ private:
     CriticalSection& operator=(const CriticalSection&) = delete;
     CriticalSection(CriticalSection&&) = delete;
     CriticalSection& operator=(CriticalSection&&) = delete;
+
+private:
+    Mutex& mSync;
+    InterruptsFreeSection* mInterruptsBlock = nullptr;
 };
 
 } // namespace hsmcpp

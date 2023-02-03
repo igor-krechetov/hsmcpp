@@ -11,10 +11,16 @@ namespace hsmcpp {
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "HsmEventDispatcherGLib"
 
-HsmEventDispatcherGLib::HsmEventDispatcherGLib() {}
+HsmEventDispatcherGLib::HsmEventDispatcherGLib(const size_t eventsCacheSize)
+    // NOTE: false-positive. thinks that ':' is arithmetic operation
+    // cppcheck-suppress misra-c2012-10.4
+    : HsmEventDispatcherBase(eventsCacheSize) {}
 
-HsmEventDispatcherGLib::HsmEventDispatcherGLib(GMainContext* context)
-    : mContext(context) {}
+HsmEventDispatcherGLib::HsmEventDispatcherGLib(GMainContext* context, const size_t eventsCacheSize)
+    // NOTE: false-positive. thinks that ':' is arithmetic operation
+    // cppcheck-suppress misra-c2012-10.4
+    : HsmEventDispatcherBase(eventsCacheSize)
+    , mContext(context) {}
 
 HsmEventDispatcherGLib::~HsmEventDispatcherGLib() {
     HSM_TRACE_CALL();
@@ -26,6 +32,7 @@ HsmEventDispatcherGLib::~HsmEventDispatcherGLib() {
         mDispatchingDoneEvent.wait(lck);
     }
 
+    unregisterAllTimerHandlers();
     unregisterAllEventHandlers();
 
     g_source_destroy(mIoSource);
@@ -93,6 +100,74 @@ bool HsmEventDispatcherGLib::start() {
     }
 
     return result;
+}
+
+void HsmEventDispatcherGLib::unregisterAllTimerHandlers() {
+    for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it) {
+        g_source_destroy(it->second);
+        g_source_unref(it->second);
+    }
+
+    mNativeTimerHandlers.clear();
+}
+
+void HsmEventDispatcherGLib::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) {
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d",
+                              SC2INT(timerID),
+                              intervalMs,
+                              BOOL2INT(isSingleShot));
+    auto it = mNativeTimerHandlers.find(timerID);
+
+    if (mNativeTimerHandlers.end() == it) {
+        GSource* timeoutSource = g_timeout_source_new(intervalMs);
+
+        g_source_set_callback(timeoutSource,
+                              G_SOURCE_FUNC(&HsmEventDispatcherGLib::onTimerEvent),
+                              new TimerData_t(this, timerID),
+                              &HsmEventDispatcherGLib::onFreeTimerData);
+
+        g_source_attach(timeoutSource, mContext);
+        mNativeTimerHandlers.emplace(timerID, timeoutSource);
+    } else {
+        HSM_TRACE_ERROR("timer with id=%d already exists", timerID);
+    }
+}
+
+void HsmEventDispatcherGLib::stopTimerImpl(const TimerID_t timerID) {
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
+    auto it = mNativeTimerHandlers.find(timerID);
+
+    if (mNativeTimerHandlers.end() != it) {
+        g_source_destroy(it->second);
+        g_source_unref(it->second);
+        mNativeTimerHandlers.erase(it);
+    }
+}
+
+gboolean HsmEventDispatcherGLib::onTimerEvent(const TimerData_t* timerData) {
+    bool restartTimer = false;
+
+    if (nullptr != timerData) {
+        restartTimer = timerData->first->handleTimerEvent(timerData->second);
+
+        if (false == restartTimer) {
+            // TODO:  mNativeTimerHandlers is not thread-safe
+            auto itTimer = timerData->first->mNativeTimerHandlers.find(timerData->second);
+
+            if (timerData->first->mNativeTimerHandlers.end() != itTimer) {
+                g_source_unref(itTimer->second);
+                timerData->first->mNativeTimerHandlers.erase(itTimer);
+            } else {
+                HSM_TRACE_ERROR("unexpected error. timer not found");
+            }
+        }
+    }
+
+    return restartTimer;
+}
+
+void HsmEventDispatcherGLib::onFreeTimerData(void* timerData) {
+    delete reinterpret_cast<TimerData_t*>(timerData);
 }
 
 void HsmEventDispatcherGLib::notifyDispatcherAboutEvent() {

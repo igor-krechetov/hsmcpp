@@ -17,7 +17,9 @@ public:
 private:
     LockGuard(const LockGuard&) = delete;
     LockGuard& operator=(const LockGuard&) = delete;
-    
+    LockGuard(LockGuard&&) = delete;
+    LockGuard& operator=(LockGuard&&) = delete;
+
 private:
     Mutex& mSync;
 };

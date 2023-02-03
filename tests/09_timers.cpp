@@ -250,6 +250,20 @@ TEST_F(ABCHsm, timers_stop) {
 
 TEST_F(ABCHsm, timers_restart) {
     TEST_DESCRIPTION("Validate restart timer action");
+    /*
+    @startuml
+    left to right direction
+    title substate_entrypoints_multiple_behavioral
+
+    state A: **onStateExit: startTimer(E3, single, 600ms)**
+    state B #orange: **onStateEntry: startTimer(E2, single, 200ms)**
+    state C: onStateEntry: restartTimer(E3)
+
+    A --> B: E1
+    B -up[#green,bold]-> C: E2
+    C --> B: E3
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -286,24 +300,24 @@ TEST_F(ABCHsm, timers_restart) {
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    ASSERT_EQ(getLastActiveState(), AbcState::B);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 
     //-------------------------------------------
     // ACTIONS
     std::this_thread::sleep_for(std::chrono::milliseconds(timer2Duration + 50));
-    ASSERT_EQ(getLastActiveState(), AbcState::C);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
 
     // elapsed 250ms. at this point timer1 should have 350ms left if it hasn't been restarted. let's wait for 400ms to check
     // that
     std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration - timer2Duration));
-    ASSERT_EQ(getLastActiveState(), AbcState::C);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
 
     // wait for remaining time
     std::this_thread::sleep_for(std::chrono::milliseconds(timer2Duration + 50));
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AbcState::B);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 }
 
 TEST_F(ABCHsm, timers_delete_running) {

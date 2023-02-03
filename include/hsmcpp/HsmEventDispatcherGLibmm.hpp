@@ -26,8 +26,8 @@ namespace hsmcpp
 class HsmEventDispatcherGLibmm: public HsmEventDispatcherBase
 {
 public:
-    HsmEventDispatcherGLibmm();
-    explicit HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context);
+    explicit HsmEventDispatcherGLibmm(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+    HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context, const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
     virtual ~HsmEventDispatcherGLibmm();
 
     virtual bool start() override;

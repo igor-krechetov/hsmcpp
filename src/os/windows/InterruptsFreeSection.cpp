@@ -1,13 +1,13 @@
 // Copyright (C) 2023 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#include "hsmcpp/os/common/CriticalSection.hpp"
+#include "hsmcpp/os/common/InterruptsFreeSection.hpp"
 
 namespace hsmcpp {
-CriticalSection::CriticalSection() {
+InterruptsFreeSection::InterruptsFreeSection() {
     // do nothing
 }
 
-CriticalSection::~CriticalSection() {
+InterruptsFreeSection::~InterruptsFreeSection() {
     // do nothing
 }
 

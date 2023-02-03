@@ -38,7 +38,8 @@ public:
      * @param eventsCacheSize size of the queue preallocated for delayed events
      */
     HsmEventDispatcherFreeRTOS(const configSTACK_DEPTH_TYPE stackDepth = configMINIMAL_STACK_SIZE,
-                               const UBaseType_t priority = tskIDLE_PRIORITY);
+                               const UBaseType_t priority = tskIDLE_PRIORITY,
+                               const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
     virtual ~HsmEventDispatcherFreeRTOS();
 
     virtual void emitEvent(const HandlerID_t handlerID) override;

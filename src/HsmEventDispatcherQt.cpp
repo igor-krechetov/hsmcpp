@@ -19,8 +19,9 @@ namespace hsmcpp {
 
 QEvent::Type HsmEventDispatcherQt::mQtEventType = QEvent::None;
 
-HsmEventDispatcherQt::HsmEventDispatcherQt()
-    : QObject(nullptr) {}
+HsmEventDispatcherQt::HsmEventDispatcherQt(const size_t eventsCacheSize)
+    : HsmEventDispatcherBase(eventsCacheSize)
+    , QObject(nullptr) {}
 
 HsmEventDispatcherQt::~HsmEventDispatcherQt() {
     HSM_TRACE_CALL_DEBUG();

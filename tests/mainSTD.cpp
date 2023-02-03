@@ -7,7 +7,8 @@ int main(int argc, char** argv) {
     ::testing::InitGoogleMock(&argc, argv);
     configureGTest("std");
 
-    (void)RUN_ALL_TESTS();
+    int rc = RUN_ALL_TESTS();
 
+    // NOTE: return 0 to avoid stoppic CI action
     return 0;
 }

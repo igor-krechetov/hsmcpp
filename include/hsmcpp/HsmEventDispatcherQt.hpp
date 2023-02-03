@@ -18,7 +18,9 @@ class HsmEventDispatcherQt: public QObject
     Q_OBJECT
 
 public:
-    HsmEventDispatcherQt();
+    // NOTE: false positive. setting default parameter value is not parameter modification
+    // cppcheck-suppress misra-c2012-17.8
+    explicit HsmEventDispatcherQt(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
     virtual ~HsmEventDispatcherQt();
 
     bool start() override;

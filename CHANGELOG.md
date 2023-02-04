@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.29.0] - 2023-02-03
+### Added
+- timers support for std, glib dispatchers
+- interrupts safety for Arduino dispatcher
+
+### Updated
+- CriticalSection was renamed into InterruptsFreeSection
+- added a new CriticalSection class
+
 ## [0.28.2] - 2023-02-02
 ### Fixed
 - applied clang format to all code

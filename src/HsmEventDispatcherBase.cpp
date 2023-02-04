@@ -55,7 +55,7 @@ bool HsmEventDispatcherBase::enqueueEvent(const HandlerID_t handlerID, const Eve
         newEvent.eventID = event;
 
         {
-            CriticalSection cs;
+            CriticalSection cs(mEnqueuedEventsSync);
             mEnqueuedEvents.push_back(newEvent);
         }
 
@@ -245,8 +245,9 @@ void HsmEventDispatcherBase::dispatchEnqueuedEvents() {
         std::vector<EnqueuedEventInfo> currentEvents;
 
         {
-            CriticalSection lck;
+            CriticalSection lck(mEnqueuedEventsSync);
 
+            // copy instead of move. we want to keep memory allocated in mEnqueuedEvents
             currentEvents = mEnqueuedEvents;
             mEnqueuedEvents.clear();
         }
@@ -277,7 +278,7 @@ void HsmEventDispatcherBase::dispatchPendingEvents() {
 void HsmEventDispatcherBase::dispatchPendingEventsImpl(const std::list<HandlerID_t>& events) {
     dispatchEnqueuedEvents();
 
-    if (events.size() > 0u) {
+    if (false == events.empty()) {
         std::map<HandlerID_t, EventHandlerFunc_t> eventHandlersCopy;
 
         {

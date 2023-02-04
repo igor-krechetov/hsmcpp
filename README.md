@@ -1,20 +1,26 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v0.28.2-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-v0.29.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
 
 # Quality Status
 
 [![Build Status](https://github.com/igor-krechetov/hsmcpp/actions/workflows/build.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/build.yml)
+
+## Static Code Analysis
+
 [![SCA: MISRA](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_misra.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_misra.yml)
 [![SCA: CodeQL](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_codeql.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_codeql.yml)
 
 ## Unit Tests
 
 [![Coverage Status](https://coveralls.io/repos/github/igor-krechetov/hsmcpp/badge.svg?branch=main)](https://coveralls.io/github/igor-krechetov/hsmcpp?branch=main)
-| STD | glib | glibmm | Qt |
-|-----|------|--------|----|
-| [![Tests: STD](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_std.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_std.log)  | [![Tests: Glib](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_glib.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_glib.log)   | [![Tests: GLibmm](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_glibmm.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_glibmm.log)     | [![Tests: Qt](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_qt.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_qt.log) |
+
+[![Tests: STD](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_std.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_std.log)
+[![Tests: Glib](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_glib.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_glib.log)
+[![Tests: GLibmm](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_glibmm.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_glibmm.log)
+[![Tests: Qt](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_qt.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_qt.log)
+
 
 # Overview
 HSMCPP is a C++ library providing an easy way (hopefully) to add hierarchical (HSM) or finite state machine (FSM) to your project. Main motivation behind making it was lack of suitable alternatives which do not involve large frameworks (often commercial). And even they couldn't satisfy projects needs that I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multithreading or event driven applications.

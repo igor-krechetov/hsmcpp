@@ -32,6 +32,10 @@ protected:
     };
 
 public:
+    /**
+     * Constructor for FreeRTOS based event dispatcher.
+     * @param eventsCacheSize size of the queue preallocated for delayed events
+     */
     // NOTE: false positive. setting default parameter value is not parameter modification
     // cppcheck-suppress misra-c2012-17.8
     HsmEventDispatcherBase(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
@@ -97,6 +101,7 @@ protected:
     std::vector<EnqueuedEventInfo> mEnqueuedEvents;
     Mutex mEmitSync;
     Mutex mHandlersSync;
+    Mutex mEnqueuedEventsSync;
 };
 
 }// namespace hsmcpp

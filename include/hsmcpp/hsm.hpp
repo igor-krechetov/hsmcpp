@@ -1872,7 +1872,7 @@ HierarchicalStateMachine<HsmStateEnum, HsmEventEnum>::handleSingleTransition(con
                                                 itHistoryData->second.previousActiveStates.size());
 
                                 // transition to previous states
-                                if (itHistoryData->second.previousActiveStates.size() > 0) {
+                                if (itHistoryData->second.previousActiveStates.empty() == false) {
                                     PendingEventInfo historyTransitionEvent = event;
 
                                     historyTransitionEvent.transitionType = TransitionBehavior::FORCED;

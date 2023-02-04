@@ -6,6 +6,7 @@
 #include <Arduino.h>
 
 #include "hsmcpp/logging.hpp"
+#include "hsmcpp/os/InterruptsFreeSection.hpp"
 
 namespace hsmcpp {
 
@@ -14,9 +15,9 @@ namespace hsmcpp {
 
 // TODO: this dispatcher needs testing with interrupts (events, timers)
 
-HsmEventDispatcherArduino::HsmEventDispatcherArduino(const size_t eventsCacheSize) {
+HsmEventDispatcherArduino::HsmEventDispatcherArduino(const size_t eventsCacheSize)
+    : HsmEventDispatcherBase(eventsCacheSize) {
     HSM_TRACE_CALL();
-    mEnqueuedEvents.reserve(eventsCacheSize);
 }
 
 HsmEventDispatcherArduino::~HsmEventDispatcherArduino() {
@@ -45,15 +46,15 @@ void HsmEventDispatcherArduino::emitEvent(const HandlerID_t handlerID) {
     }
 }
 
-void HsmEventDispatcherSTD::notifyDispatcherAboutEvent() {
-    // NOTE: do nothing since it's a single thread implementation
-}
-
 void HsmEventDispatcherArduino::dispatchEvents() {
     if (false == mStopDispatcher) {
         handleTimers();
         HsmEventDispatcherBase::dispatchPendingEvents();
     }
+}
+
+void HsmEventDispatcherArduino::notifyDispatcherAboutEvent() {
+    // NOTE: do nothing since it's a single thread implementation
 }
 
 void HsmEventDispatcherArduino::startTimerImpl(const TimerID_t timerID,
@@ -63,7 +64,7 @@ void HsmEventDispatcherArduino::startTimerImpl(const TimerID_t timerID,
     auto it = mRunningTimers.end();
 
     {
-        // CriticalSection lck;
+        InterruptsFreeSection lck;
         it = mRunningTimers.find(timerID);
     }
 
@@ -75,7 +76,7 @@ void HsmEventDispatcherArduino::startTimerImpl(const TimerID_t timerID,
         newTimer.elapseAfter = newTimer.startedAt + intervalMs;
 
         {
-            // CriticalSection lck;
+            InterruptsFreeSection lck;
             mRunningTimers.emplace(timerID, newTimer);
         }
     } else  // restart timer
@@ -89,13 +90,13 @@ void HsmEventDispatcherArduino::stopTimerImpl(const TimerID_t timerID) {
     HSM_TRACE_CALL_ARGS("timerID=%d", SC2INT(timerID));
 
     {
-        // CriticalSection lck;
+        InterruptsFreeSection lck;
         mRunningTimers.erase(timerID);
     }
 }
 
 void HsmEventDispatcherArduino::handleTimers() {
-    if (mRunningTimers.size() > 0) {
+    if (false == mRunningTimers.empty()) {
         unsigned long curTime = millis();
         auto it = mRunningTimers.begin();
 

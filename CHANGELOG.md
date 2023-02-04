@@ -6,6 +6,9 @@ All notable changes to project will be documented in this file.
 - timers support for std, glib dispatchers
 - interrupts safety for Arduino dispatcher
 
+### Fixed
+- std dispatcher didn't wake up when events were emited from interrupts
+
 ### Updated
 - CriticalSection was renamed into InterruptsFreeSection
 - added a new CriticalSection class

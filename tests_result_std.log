@@ -129,7 +129,7 @@
 [ RUN      ] ABCHsm.history_parallel
 [       OK ] ABCHsm.history_parallel (0 ms)
 [ RUN      ] ABCHsm.timers_onentry
-[       OK ] ABCHsm.timers_onentry (150 ms)
+[       OK ] ABCHsm.timers_onentry (151 ms)
 [ RUN      ] ABCHsm.timers_onexit
 [       OK ] ABCHsm.timers_onexit (150 ms)
 [ RUN      ] ABCHsm.timers_multiple_actions
@@ -170,7 +170,7 @@
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 64 tests from ABCHsm (3527 ms total)
+[----------] 64 tests from ABCHsm (3530 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
@@ -178,23 +178,19 @@
 [ RUN      ] AsyncHsm.multithreaded_entrypoint_cancelation
 [       OK ] AsyncHsm.multithreaded_entrypoint_cancelation (0 ms)
 [ RUN      ] AsyncHsm.multithreaded_transition_from_interrupt
-/home/runner/work/hsmcpp/hsmcpp/tests/04_multithreaded.cpp:130: Failure
-Value of: waitAsyncOperation(1000, true)
-  Actual: false
-Expected: true
-[  FAILED  ] AsyncHsm.multithreaded_transition_from_interrupt (1000 ms)
+[       OK ] AsyncHsm.multithreaded_transition_from_interrupt (0 ms)
 [ RUN      ] AsyncHsm.parallel_transition_04
 [       OK ] AsyncHsm.parallel_transition_04 (300 ms)
 [ RUN      ] AsyncHsm.parallel_transition_10_internal_priority
 [       OK ] AsyncHsm.parallel_transition_10_internal_priority (300 ms)
-[----------] 5 tests from AsyncHsm (1601 ms total)
+[----------] 5 tests from AsyncHsm (601 ms total)
 
 [----------] 2 tests from dispatchers
 [ RUN      ] dispatchers.stresstest_create_destroy
-[       OK ] dispatchers.stresstest_create_destroy (2 ms)
+[       OK ] dispatchers.stresstest_create_destroy (3 ms)
 [ RUN      ] dispatchers.create_hsm_from_callback
 [       OK ] dispatchers.create_hsm_from_callback (0 ms)
-[----------] 2 tests from dispatchers (2 ms total)
+[----------] 2 tests from dispatchers (3 ms total)
 
 [----------] 7 tests from variant
 [ RUN      ] variant.vector
@@ -228,20 +224,16 @@ Expected: true
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0
 [       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1
-[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1 (150 ms)
-[----------] 2 tests from finalstate/ParamFixtureFinalState2 (251 ms total)
+[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1 (151 ms)
+[----------] 2 tests from finalstate/ParamFixtureFinalState2 (252 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState3
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0
 [       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1
-[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (150 ms)
-[----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
+[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (151 ms)
+[----------] 2 tests from finalstate/ParamFixtureFinalState3 (252 ms total)
 
 [----------] Global test environment tear-down
-[==========] 105 tests from 8 test suites ran. (6140 ms total)
-[  PASSED  ] 104 tests.
-[  FAILED  ] 1 test, listed below:
-[  FAILED  ] AsyncHsm.multithreaded_transition_from_interrupt
-
- 1 FAILED TEST
+[==========] 105 tests from 8 test suites ran. (5147 ms total)
+[  PASSED  ] 105 tests.

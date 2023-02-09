@@ -1,0 +1,73 @@
+name: "SCA: Coverity"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  check-hsmcpp-version:
+    runs-on: ubuntu-latest
+    outputs:
+      commit_version: ${{ steps.get_version.outputs.commit_version }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/get-commit-version
+        id: get_version
+        with:
+          repo_dir: ${{ env.GITHUB_WORKSPACE }}
+          commit_sha: ${{ github.event.workflow_run.head_sha }}
+
+  sca-coverity:
+    needs: check-hsmcpp-version
+    runs-on: ubuntu-latest
+
+    env:
+      COVERITY_NAME: 'Igor Krechetov'
+      COVERITY_VERSION: 'cov-analysis-linux64-2022.6.0'
+      COVERITY_PROJECT_DESCRIPTION: 'C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.'
+      COVERITY_PROJECT: 'igor-krechetov/hsmcpp'
+      COVERITY_PROJECT_URL: 'igor-krechetov%2Fhsmcpp'
+      BUILDCMD: 'cmake --build ./build --parallel 2 --config Release'
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+      - name: Cache Coverity
+        id: cache-coverity
+        uses: actions/cache@v3
+        with:
+          path: ~/coverity
+          key: coverity-tool
+          restore-keys: coverity-tool
+
+      - name: Coverity Download & Install
+        if: ${{ steps.cache-coverity.outputs.cache-hit != 'true' }}
+        run: |
+          mkdir -p ~/download
+          mkdir -p ~/coverity
+          wget https://scan.coverity.com/download/linux64 --post-data "token=${{ secrets.COVERITY_TOKEN }}&project=$COVERITY_PROJECT_URL" -O ~/download/coverity_tool.tgz
+          cd ~/coverity
+          tar -xvzf ~/download/coverity_tool.tgz
+
+      - name: Configure project build
+        uses: ./.github/workflows/build_helper
+        with:
+          src_dir: ${{github.workspace}}
+          build_dir: ${{github.workspace}}/build
+          platform: 'posix'
+          build_tests: 'OFF'
+          only_configure: true
+
+      - name: Coverity Full Scan
+        run: |
+          export PATH=$PATH:~/coverity/$COVERITY_VERSION/bin/
+          cov-configure --config ./coverity.xml --template --compiler c++ --comptype gcc --xml-option=skip_file:"/usr/include/.*" --xml-option=skip_file:".*/build/hsmcpp_qt_autogen/.*" --xml-option=skip_file:".*/build/include/hsmcpp/.*"
+          python3 ./scripts/coverity/coverity-submit.py -u "$COVERITY_NAME" -b ${{ needs.check-hsmcpp-version.outputs.commit_version }} -config ./coverity.xml -t "$COVERITY_PROJECT_DESCRIPTION" -p "$COVERITY_PROJECT" -pu "$COVERITY_PROJECT_URL" -token "${{ secrets.COVERITY_TOKEN }}" -email "${{ secrets.COVERITY_EMAIL }}" -build "$BUILDCMD"

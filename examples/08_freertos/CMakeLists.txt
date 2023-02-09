@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.16)
 project(example)
 set(BINARY_NAME "08_freertos")
 set(CMAKE_CXX_STANDARD 11)
 
 # ----------------------------------------------------------------------
 # Configure FreeRTOS
-SET(FREERTOS_ROOT "~/projects/FreeRTOS")
+# SET(FREERTOS_ROOT "full path to FreeRTOS directory")
 SET(FREERTOS_DIR "${FREERTOS_ROOT}/FreeRTOS")
 SET(FREERTOS_PLUS_DIR "${FREERTOS_ROOT}/FreeRTOS-Plus")
 SET(FREERTOS_KERNEL_DIR  "${FREERTOS_DIR}/Source")
@@ -25,7 +25,7 @@ ExternalProject_Add(FREERTOS
                     BINARY_DIR "${FREERTOS_LIB_DIR}"
                     INSTALL_DIR ""
                     CMAKE_ARGS "-DFREERTOS_CONFIG_FILE_DIRECTORY=${CMAKE_CURRENT_SOURCE_DIR}"
-                               "-DFREERTOS_HEAP=3"
+                               "-DFREERTOS_HEAP=4"
                                "-DFREERTOS_PORT=GCC_POSIX"
                     INSTALL_COMMAND ""
                     )

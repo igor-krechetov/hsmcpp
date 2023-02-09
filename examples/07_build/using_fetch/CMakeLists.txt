@@ -1,6 +1,6 @@
 # This is an example showing how to use hsmcpp library directly from GitHub
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.16)
 project(example)
 set(BINARY_NAME "07_build_fetch")
 set(CMAKE_CXX_STANDARD 11)

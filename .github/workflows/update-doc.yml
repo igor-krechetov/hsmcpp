@@ -1,4 +1,4 @@
-name: Update Documentation
+name: "Update Documentation"
 
 on:
   workflow_dispatch:

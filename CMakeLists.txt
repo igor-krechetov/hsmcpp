@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.29.0")
+set(PROJECT_VERSION "0.29.1")
 set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -165,15 +165,6 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
     add_subdirectory(tools/scxml2gen)
 
     # =============================================
-    # Platform Environment
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/platforms/${HSMBUILD_PLATFORM}.cmake)
-
-    if (HSMBUILD_PLATFORM STREQUAL "freertos")
-        target_include_directories(${HSM_LIBRARY_NAME} PRIVATE ${FREERTOS_INCLUDE}
-                                                               ${HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY})
-    endif()
-
-    # =============================================
     # Build HSMCPP library
     set(HSM_LIBRARY_NAME "hsmcpp")
 
@@ -203,6 +194,15 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
     target_include_directories(${HSM_LIBRARY_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
     if (NOT WIN32)
         target_compile_options(${HSM_LIBRARY_NAME} PUBLIC "-fPIC")
+    endif()
+
+        # =============================================
+    # Platform Environment
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/platforms/${HSMBUILD_PLATFORM}.cmake)
+
+    if (HSMBUILD_PLATFORM STREQUAL "freertos")
+        target_include_directories(${HSM_LIBRARY_NAME} PRIVATE ${FREERTOS_INCLUDE}
+                                                               ${HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY})
     endif()
 
     # =============================================

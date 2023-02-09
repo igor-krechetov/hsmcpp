@@ -15,5 +15,6 @@ foreach(ITEM ${DEPLOY_FILES})
     install(FILES ${ITEM} DESTINATION ${DEPLOY_DIR}/${ITEM_PATH_RELATIVE}/)
 endforeach()
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/examples/09_arduino/ DESTINATION ${DEPLOY_DIR}/examples)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/platformio/hsmcpp_pio_integration.py DESTINATION ${DEPLOY_DIR}/)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/platformio/library.json.in ${DEPLOY_DIR}/library.json @ONLY)

@@ -45,6 +45,10 @@ inputs:
     required: false
     type: string
     default: 'OFF'
+  only_configure:
+    required: false
+    type: boolean
+    default: false
 
 runs:
   using: "composite"
@@ -89,7 +93,7 @@ runs:
           ${{ inputs.src_dir }}
 
     - name: Build (Ubuntu)
-      if: ${{ inputs.platform == 'posix' }}
+      if: ${{ (inputs.platform == 'posix') && (inputs.only_configure == 'false') }}
       shell: bash
       run: cmake --build ${{ inputs.build_dir }} --parallel 2 --config ${{ inputs.build_type }}
 
@@ -123,6 +127,6 @@ runs:
             ${{ inputs.src_dir }}
 
     - name: Build (Windows)
-      if: ${{ inputs.platform == 'windows' }}
+      if: ${{ (inputs.platform == 'windows') && (inputs.only_configure == 'false') }}
       shell: cmd
       run: cmake --build ${{github.workspace}}\build --parallel 2 --config ${{env.BUILD_TYPE}}

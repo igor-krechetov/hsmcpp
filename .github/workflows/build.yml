@@ -62,3 +62,56 @@ jobs:
           src_dir: ${{github.workspace}}
           build_dir: ${{github.workspace}}/build
           platform: 'windows'
+
+  build-arduino:
+    needs: validate-metadata
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/install_platformio
+
+      # deploy files
+      - name: Generate package
+        run: |
+          cmake -S ./ -B ./build -DHSMBUILD_TARGET=package -DHSMBUILD_PLATFORM=arduino
+          cmake --build ./build --target install
+
+      - name: Copy package to examples folder
+        run: |
+          mkdir -p ./examples/09_arduino/01_blink/lib/hsmcpp
+          cp -Rv ./build/deploy/* ./examples/09_arduino/01_blink/lib/hsmcpp
+          mkdir -p ./examples/09_arduino/02_blink_button/lib/hsmcpp
+          cp -Rv ./build/deploy/* ./examples/09_arduino/02_blink_button/lib/hsmcpp
+
+      # build examples
+      - name: Build 01_blink
+        run: |
+          cd ./examples/09_arduino/01_blink/
+          pio run
+
+      - name: Build 02_blink_button
+        run: |
+          cd ./examples/09_arduino/02_blink_button/
+          pio run
+
+  build-freertos:
+    needs: validate-metadata
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: './source'
+      - uses: actions/checkout@v3
+        with:
+          repository: 'FreeRTOS/FreeRTOS'
+          ref: '202212.00'
+          submodules: 'recursive'
+          path: './FreeRTOS'
+
+      # build FreeRTOS example
+      - name: Build 08_freertos
+        run: |
+          cd ./source/examples/08_freertos
+          ./build.sh '${{github.workspace}}/FreeRTOS'

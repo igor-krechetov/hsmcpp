@@ -1,0 +1,58 @@
+@startuml
+start
+
+if (Is main or dev branch?) then (yes)
+    fork
+        :Build;
+        note right
+            Ubuntu, Windows,
+            Arduino, FreeRTOS
+        end note
+
+        if (Is main branch?) then (yes)
+            fork
+                :Update Documentation;
+            fork again
+                :Deploy PlatformIO;
+                note right: Publish code to github
+                if (Is release commit?) then (yes)
+                    :Deploy library;
+                    note right
+                        Publish library
+                        to PlatformIO
+                    end note
+                else (no)
+                    ' skip
+                endif
+            fork again
+                if (Is release commit?) then (yes)
+                    :Create Tags;
+                else (no)
+                    ' skip
+                endif
+            end fork
+        else (no)
+            ' skip
+        endif
+    fork again
+        if (Is main branch?) then (yes)
+            fork
+                :Unit Tests;
+                note right: Ubuntu
+            fork again
+                :SCA: Coverity;
+            end fork
+        else (no)
+            ' skip
+        endif
+    fork again
+        :SCA: CodeQL;
+    fork again
+        :SCA: MISRA-C-2012;
+    end fork
+else (no)
+    stop
+endif
+
+stop
+@enduml

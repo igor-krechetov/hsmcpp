@@ -34,7 +34,7 @@ jobs:
       # need to checkout current repo because workflow is not related with push event
       - uses: actions/checkout@v3
 
-      # prepare gpg for sommit signing
+      # prepare gpg for commit signing
       - name: Import GPG key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v5

@@ -1,13 +1,12 @@
 // Copyright (C) 2022 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
-#ifdef PLATFORM_ARDUINO
+#if defined(PLATFORM_ARDUINO) && defined(HSM_DISABLE_TRACES)
 
-  #include "hsmcpp/logging.hpp"
+#include "hsmcpp/logging.hpp"
 
-  #include <Arduino.h>
-  #include <ArduinoLog.h>
-  #include <stdarg.h>
+#include <Arduino.h>
+#include <stdarg.h>
 
 void serialPrintf(const char *fmt, ...) {
     char buffer[1024] = {0};
@@ -17,8 +16,7 @@ void serialPrintf(const char *fmt, ...) {
     vsprintf(buffer, fmt, args);
     vsnprintf(buffer, sizeof(buffer), fmt, args);
     va_end(args);
-    // Serial.println(buffer);
-    Log.traceln(buffer);
+    Serial.println(buffer);
 }
 
 #endif

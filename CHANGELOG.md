@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.29.1] - 2023-02-09
+### Added
+- Arudino examples
+
+### Updated
+- removed ArduinoLog dependency
+
+### Fixed
+- scxml2gen: generation of PlantUML diagrams was broken when state machine had conditional entry transition without event
+- fixed FreeRTOS build
+
 ## [0.29.0] - 2023-02-03
 ### Added
 - timers support for std, glib dispatchers
@@ -71,8 +82,8 @@ All notable changes to project will be documented in this file.
 
 ### Fixed
 - improved handling of parent states:
--- parent states are now kept active when activating substates
--- parent state's enter/exit callbacks are called correctly during transitions
+  - parent states are now kept active when activating substates
+  - parent state's enter/exit callbacks are called correctly during transitions
 - hsmdebugger was not generating diagrams after update to scxml2gen api
 
 ## [0.24.6] - 2022-09-27

@@ -777,7 +777,7 @@ def generateStatesList(states, level):
     offset = generateOffset(level * 4)
 
     for curState in states:
-        if curState["type"] != STATETYPE_HISTORY:
+        if curState["type"] not in [STATETYPE_HISTORY, STATETYPE_FINAL]:
             statesList += f"{offset}state {curState['id']}\n"
     statesList += "\n"
     return statesList
@@ -852,7 +852,9 @@ def generatePlantumlState(hsm, stateData, level, highlight=None):
         for currentEntryTransition in initialTransitions:
             condition = ""
             if currentEntryTransition is not None:
-                condition = f" : {currentEntryTransition['event']}"
+                condition = " : "
+                if 'event' in currentEntryTransition:
+                    condition += currentEntryTransition['event']
                 if 'condition' in currentEntryTransition:
                     condition += f" [{currentEntryTransition['condition'][0]} is {currentEntryTransition['condition'][1]}]"
 

@@ -1,6 +1,6 @@
 # This is an example showing how to use hsmcpp library as a source code
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.16)
 project(example)
 set(BINARY_NAME "07_build_code")
 set(CMAKE_CXX_STANDARD 11)

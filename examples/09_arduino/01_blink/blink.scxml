@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" name="blink.scxml" initial="setup">
+    <state id="LED_On">
+        <transition type="external" event="ON_TIMER_SWITCH" target="LED_Off"/>
+        <invoke srcexpr="onOn"/>
+    </state>
+    <state id="LED_Off">
+        <transition type="external" event="ON_TIMER_SWITCH" target="LED_On"/>
+        <invoke srcexpr="onOff"/>
+    </state>
+    <state id="setup">
+        <transition type="external" event="START" target="LED_On"/>
+        <onexit>
+            <script>start_timer(SWITCH,1000,false)</script>
+        </onexit>
+    </state>
+</scxml>

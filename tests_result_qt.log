@@ -139,7 +139,7 @@
 [ RUN      ] ABCHsm.timers_stop
 [       OK ] ABCHsm.timers_stop (300 ms)
 [ RUN      ] ABCHsm.timers_restart
-[       OK ] ABCHsm.timers_restart (901 ms)
+[       OK ] ABCHsm.timers_restart (900 ms)
 [ RUN      ] ABCHsm.timers_delete_running
 [       OK ] ABCHsm.timers_delete_running (150 ms)
 [ RUN      ] ABCHsm.timers_start_from_code
@@ -168,7 +168,7 @@
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 63 tests from ABCHsm (3531 ms total)
+[----------] 63 tests from ABCHsm (3526 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
@@ -181,7 +181,7 @@
 [       OK ] AsyncHsm.parallel_transition_04 (300 ms)
 [ RUN      ] AsyncHsm.parallel_transition_10_internal_priority
 [       OK ] AsyncHsm.parallel_transition_10_internal_priority (300 ms)
-[----------] 5 tests from AsyncHsm (602 ms total)
+[----------] 5 tests from AsyncHsm (601 ms total)
 
 [----------] 1 test from dispatchers
 [ RUN      ] dispatchers.create_hsm_from_callback
@@ -209,27 +209,27 @@
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (151 ms)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (150 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (151 ms)
-[----------] 4 tests from finalstate/ParamFixtureFinalState1 (504 ms total)
+[----------] 4 tests from finalstate/ParamFixtureFinalState1 (503 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState2
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0
 [       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1
 [       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1 (151 ms)
-[----------] 2 tests from finalstate/ParamFixtureFinalState2 (252 ms total)
+[----------] 2 tests from finalstate/ParamFixtureFinalState2 (251 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState3
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0
 [       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1
-[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (151 ms)
-[----------] 2 tests from finalstate/ParamFixtureFinalState3 (252 ms total)
+[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (150 ms)
+[----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
 
 [----------] Global test environment tear-down
-[==========] 103 tests from 8 test suites ran. (5145 ms total)
+[==========] 103 tests from 8 test suites ran. (5138 ms total)
 [  PASSED  ] 103 tests.

@@ -22,7 +22,7 @@
 #include "logging.hpp"
 
 #if !defined(HSM_DISABLE_THREADSAFETY) && defined(FREERTOS_AVAILABLE)
-  #include "os/CriticalSection.hpp"
+  #include "os/InterruptsFreeSection.hpp"
 #endif
 
 #ifdef HSMBUILD_DEBUGGING
@@ -54,7 +54,7 @@ namespace hsmcpp {
 #ifdef HSM_DISABLE_THREADSAFETY
   #define HSM_SYNC_EVENTS_QUEUE()
 #elif defined(FREERTOS_AVAILABLE)
-  #define HSM_SYNC_EVENTS_QUEUE() CriticalSection lck
+  #define HSM_SYNC_EVENTS_QUEUE() InterruptsFreeSection lck
 #else
   #define HSM_SYNC_EVENTS_QUEUE() LockGuard lck(mEventsSync)
 #endif  // HSM_DISABLE_THREADSAFETY

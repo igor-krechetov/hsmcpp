@@ -1,5 +1,5 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v0.29.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-v0.29.1-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
 
@@ -11,6 +11,7 @@
 
 [![SCA: MISRA](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_misra.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_misra.yml)
 [![SCA: CodeQL](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_codeql.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_codeql.yml)
+[![SCA: Coverity](https://img.shields.io/coverity/scan/27361.svg)](https://scan.coverity.com/projects/igor-krechetov-hsmcpp)
 
 ## Unit Tests
 

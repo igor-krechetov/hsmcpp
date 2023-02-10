@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" name="blink_button.scxml" initial="LED_Off">
+    <state id="LED_On">
+        <transition type="external" event="BUTTON_PRESSED" target="LED_Off" />
+        <invoke srcexpr="onOn"/>
+    </state>
+    <state id="LED_Off">
+        <transition type="external" event="BUTTON_RELEASED" target="LED_On" />
+        <invoke srcexpr="onOff"/>
+    </state>
+</scxml>

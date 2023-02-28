@@ -16,7 +16,7 @@ TEST(dispatchers, stresstest_create_destroy) {
     // ACTIONS
 
     for (int i = 0; i < 10; ++i) {
-        HierarchicalStateMachine<AbcState, AbcEvent>* hsm = new HierarchicalStateMachine<AbcState, AbcEvent>(AbcState::A);
+        HierarchicalStateMachine* hsm = new HierarchicalStateMachine(AbcState::A);
 
         hsm->registerState(AbcState::A, [](const VariantVector_t& args) {});
         hsm->registerState(AbcState::B, [](const VariantVector_t& args) {});
@@ -46,12 +46,12 @@ TEST(dispatchers, create_hsm_from_callback) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    HierarchicalStateMachine<AbcState, AbcEvent>* hsm = new HierarchicalStateMachine<AbcState, AbcEvent>(AbcState::A);
+    HierarchicalStateMachine* hsm = new HierarchicalStateMachine(AbcState::A);
     auto dispatcher = CREATE_DISPATCHER();
 
     hsm->registerState(AbcState::A);
     hsm->registerState(AbcState::B, [&](const VariantVector_t& args) {
-        HierarchicalStateMachine<AbcState, AbcEvent> hsm2(AbcState::A);
+        HierarchicalStateMachine hsm2(AbcState::A);
         hsm2.initialize(dispatcher);
     });
     hsm->registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);

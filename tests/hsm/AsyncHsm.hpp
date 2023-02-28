@@ -13,21 +13,24 @@
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "AsyncHsm"
 
-enum class AsyncHsmState {
-    A,
-    B,
-    C,
-    D,
-    E,
+namespace AsyncHsmState {
+    const hsmcpp::StateID_t A = 0;
+    const hsmcpp::StateID_t B = 1;
+    const hsmcpp::StateID_t C = 2;
+    const hsmcpp::StateID_t D = 3;
+    const hsmcpp::StateID_t E = 4;
 
-    P1,
-    P2,
-    P3
+    const hsmcpp::StateID_t P1 = 5;
+    const hsmcpp::StateID_t P2 = 6;
+    const hsmcpp::StateID_t P3 = 7;
+}
+
+namespace AsyncHsmEvent {
+    const hsmcpp::EventID_t NEXT_STATE = 0;
+    const hsmcpp::EventID_t EXIT_SUBSTATE = 1;
 };
 
-enum class AsyncHsmEvent { NEXT_STATE, EXIT_SUBSTATE };
-
-class AsyncHsm : public testing::Test, public HierarchicalStateMachine<AsyncHsmState, AsyncHsmEvent> {
+class AsyncHsm : public testing::Test, public HierarchicalStateMachine {
 public:
     AsyncHsm();
     virtual ~AsyncHsm();

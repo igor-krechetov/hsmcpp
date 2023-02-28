@@ -89,7 +89,7 @@ TEST_F(TrafficLightHsm, transition_failed_notification) {
 
     //-------------------------------------------
     // ACTIONS
-    TrafficLightState prevState = getLastActiveState();
+    hsmcpp::StateID_t prevState = getLastActiveState();
 
     ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY, 123));
 
@@ -112,7 +112,7 @@ TEST_F(TrafficLightHsm, transition_non_existent) {
 
     //-------------------------------------------
     // ACTIONS
-    TrafficLightState prevState = getLastActiveState();
+    hsmcpp::StateID_t prevState = getLastActiveState();
 
     ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
 
@@ -351,7 +351,7 @@ TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition) {
 
     //-------------------------------------------
     // ACTIONS
-    TrafficLightState prevState = getLastActiveState();
+    hsmcpp::StateID_t prevState = getLastActiveState();
 
     ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
 

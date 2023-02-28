@@ -11,7 +11,7 @@ TEST_F(TrafficLightHsm, initial_state) {
 
     //-------------------------------------------
     // ACTIONS
-    TrafficLightState curState = getLastActiveState();
+    hsmcpp::StateID_t curState = getLastActiveState();
 
     //-------------------------------------------
     // VALIDATION

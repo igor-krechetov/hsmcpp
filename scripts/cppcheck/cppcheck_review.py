@@ -14,8 +14,11 @@ if __name__ == "__main__":
         issuesCount = 0
 
         for currentError in errors.iter("error"):
-            issuesCount += 1
-            ET.dump(currentError)
+            # NOTE: there is a crash in misra.py. fixed in 2.8+ (b444c00)
+            #       misra plugin couldn't handle passing string literal to a function with variadic arguments
+            if ("id" not in currentError.attrib) or (currentError.attrib["id"] != "internalError"):
+                issuesCount += 1
+                ET.dump(currentError)
 
         if issuesCount > 0:
             print("cppcheck: FOUND ISSUES")

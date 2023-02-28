@@ -13,7 +13,7 @@ bool ABCHsm::conditionTrue(const VariantVector_t& args) {
     return true;
 }
 
-std::string ABCHsm::getStateName(const AbcState state) const {
+std::string ABCHsm::getStateName(const hsmcpp::StateID_t state) const {
     std::string res;
 
     switch (state) {
@@ -70,7 +70,7 @@ std::string ABCHsm::getStateName(const AbcState state) const {
     return res;
 }
 
-std::string ABCHsm::getEventName(const AbcEvent event) const {
+std::string ABCHsm::getEventName(const hsmcpp::EventID_t event) const {
     std::string res;
 
     switch (event) {

@@ -4,22 +4,25 @@
 #include <hsmcpp/hsm.hpp>
 #include <thread>
 
-using namespace hsmcpp;
+namespace States {
+    const hsmcpp::StateID_t OFF = 0;
+    const hsmcpp::StateID_t ON = 1;
+}
 
-enum class States { OFF, ON };
-
-enum class Events { SWITCH };
+namespace Events {
+    const hsmcpp::EventID_t SWITCH = 0;
+}
 
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
-    HierarchicalStateMachine<States, Events> hsm(States::OFF);
+    hsmcpp::HierarchicalStateMachine hsm(States::OFF);
 
-    hsm.registerState(States::OFF, [&hsm](const VariantVector_t& args) {
+    hsm.registerState(States::OFF, [&hsm](const hsmcpp::VariantVector_t& args) {
         (void)printf("Off\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
     });
-    hsm.registerState(States::ON, [&hsm](const VariantVector_t& args) {
+    hsm.registerState(States::ON, [&hsm](const hsmcpp::VariantVector_t& args) {
         (void)printf("On\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
@@ -28,7 +31,7 @@ int main(int argc, char** argv) {
     hsm.registerTransition(States::OFF, States::ON, Events::SWITCH);
     hsm.registerTransition(States::ON, States::OFF, Events::SWITCH);
 
-    if (true == hsm.initialize(std::make_shared<HsmEventDispatcherQt>())) {
+    if (true == hsm.initialize(std::make_shared<hsmcpp::HsmEventDispatcherQt>())) {
         hsm.transition(Events::SWITCH);
 
         app.exec();

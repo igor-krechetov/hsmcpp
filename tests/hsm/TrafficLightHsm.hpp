@@ -9,20 +9,24 @@
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "TrafficLightHsm"
 
-enum class TrafficLightState {
-    OFF,
-    STARTING,
+namespace TrafficLightState {
+    const hsmcpp::StateID_t OFF = 0;
+    const hsmcpp::StateID_t STARTING = 1;
 
-    OPERABLE,
+    const hsmcpp::StateID_t OPERABLE = 2;
 
-    RED,
-    YELLOW,
-    GREEN
-};
+    const hsmcpp::StateID_t RED = 3;
+    const hsmcpp::StateID_t YELLOW = 4;
+    const hsmcpp::StateID_t GREEN = 5;
+}
 
-enum class TrafficLightEvent { TURN_ON, TURN_OFF, NEXT_STATE };
+namespace TrafficLightEvent {
+    const hsmcpp::EventID_t TURN_ON = 0;
+    const hsmcpp::EventID_t TURN_OFF = 1;
+    const hsmcpp::EventID_t NEXT_STATE = 2;
+}
 
-class TrafficLightHsm : public testing::Test, public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent> {
+class TrafficLightHsm : public testing::Test, public HierarchicalStateMachine {
 public:
     TrafficLightHsm();
     virtual ~TrafficLightHsm();
@@ -49,7 +53,7 @@ public:
     bool checkConditionOff2Off(const VariantVector_t& args);
     bool checkConditionOff2On(const VariantVector_t& args);
 
-    void onTransitionFailed(const TrafficLightEvent event, const VariantVector_t& args);
+    void onTransitionFailed(const hsmcpp::EventID_t event, const VariantVector_t& args);
 
 protected:
     void SetUp() override;
@@ -57,7 +61,7 @@ protected:
 
 public:
     int mFailedTransitionCounter = 0;
-    TrafficLightEvent mLastFailedTransition;
+    hsmcpp::EventID_t mLastFailedTransition;
     VariantVector_t mLastFailedTransitionArgs;
 };
 

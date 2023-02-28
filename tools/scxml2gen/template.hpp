@@ -5,33 +5,33 @@
 
 #include <hsmcpp/hsm.hpp>
 
-enum class @ENUM_STATES@ {
+namespace @ENUM_STATES@ {
 ~~~BLOCK:ENUM_STATES_ITEM~~~
-    @ENUM_STATES_ITEM@,
+    const hsmcpp::StateID_t @ENUM_STATES_ITEM@ = @BLOCK_ITEM_INDEX@;
 ~~~BLOCK_END~~~
-};
+}
 
-enum class @ENUM_EVENTS@ {
+namespace @ENUM_EVENTS@ {
 ~~~BLOCK:ENUM_EVENTS_ITEM~~~
-    @ENUM_EVENTS_ITEM@,
+    const hsmcpp::EventID_t @ENUM_EVENTS_ITEM@ = @BLOCK_ITEM_INDEX@;
 ~~~BLOCK_END~~~
 
-    INVALID = INVALID_ID
-};
+    // INVALID = INVALID_ID
+}
 
-enum class @ENUM_TIMERS@ {
+namespace @ENUM_TIMERS@ {
 ~~~BLOCK:ENUM_TIMERS_ITEM~~~
-    @ENUM_TIMERS_ITEM@,
+    const hsmcpp::TimerID_t @ENUM_TIMERS_ITEM@ = @BLOCK_ITEM_INDEX@;
 ~~~BLOCK_END~~~
-};
+}
 
-class @CLASS_NAME@: public hsmcpp::HierarchicalStateMachine<@ENUM_STATES@, @ENUM_EVENTS@> {
+class @CLASS_NAME@: public hsmcpp::HierarchicalStateMachine {
     using @CLASS_NAME@TransitionCallbackPtr_t           = void (@CLASS_NAME@::*)(const hsmcpp::VariantVector_t&);
     using @CLASS_NAME@TransitionConditionCallbackPtr_t  = bool (@CLASS_NAME@::*)(const hsmcpp::VariantVector_t&);
     using @CLASS_NAME@StateChangedCallbackPtr_t         = void (@CLASS_NAME@::*)(const hsmcpp::VariantVector_t&);
     using @CLASS_NAME@StateEnterCallbackPtr_t           = bool (@CLASS_NAME@::*)(const hsmcpp::VariantVector_t&);
     using @CLASS_NAME@StateExitCallbackPtr_t            = bool (@CLASS_NAME@::*)();
-    using @CLASS_NAME@TransitionFailedCallbackPtr_t     = void (@CLASS_NAME@::*)(const @ENUM_EVENTS@, const hsmcpp::VariantVector_t&);
+    using @CLASS_NAME@TransitionFailedCallbackPtr_t     = void (@CLASS_NAME@::*)(const hsmcpp::EventID_t, const hsmcpp::VariantVector_t&);
 
 public:
     @CLASS_NAME@();
@@ -62,7 +62,7 @@ protected:
 // HSM transition callbacks
 protected:
     // NOTE: override this method in child class if needed
-    virtual void onTransitionFailed(const @ENUM_EVENTS@ event, const hsmcpp::VariantVector_t& args);
+    virtual void onTransitionFailed(const hsmcpp::EventID_t event, const hsmcpp::VariantVector_t& args);
 
     @HSM_TRANSITION_ACTIONS@
 
@@ -71,8 +71,8 @@ protected:
     @HSM_TRANSITION_CONDITIONS@
 
 protected:
-    std::string getStateName(const @ENUM_STATES@ state) const override;
-    std::string getEventName(const @ENUM_EVENTS@ event) const override;
+    std::string getStateName(const hsmcpp::StateID_t state) const override;
+    std::string getEventName(const hsmcpp::EventID_t event) const override;
 };
 
 #endif // GEN_HSM_%CLASS_NAME%

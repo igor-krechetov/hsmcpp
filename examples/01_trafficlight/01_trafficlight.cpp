@@ -9,18 +9,26 @@
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "01_trafficlight"
 
-HSM_TRACE_PREINIT();
-
 using namespace hsmcpp;
 
-enum class TrafficLightState { OFF, STARTING, RED, YELLOW, GREEN };
+namespace TrafficLightState {
+    const hsmcpp::StateID_t OFF = 0;
+    const hsmcpp::StateID_t STARTING = 1;
+    const hsmcpp::StateID_t RED = 2;
+    const hsmcpp::StateID_t YELLOW = 3;
+    const hsmcpp::StateID_t GREEN = 4;
+}  // namespace TrafficLightState
 
-enum class TrafficLightEvent { TURN_ON, TURN_OFF, NEXT_STATE };
+namespace TrafficLightEvent {
+    const hsmcpp::EventID_t TURN_ON = 0;
+    const hsmcpp::EventID_t TURN_OFF = 1;
+    const hsmcpp::EventID_t NEXT_STATE = 2;
+}  // namespace TrafficLightEvent
 
-class TrafficLight : public HierarchicalStateMachine<TrafficLightState, TrafficLightEvent> {
+class TrafficLight : public hsmcpp::HierarchicalStateMachine {
 public:
     TrafficLight()
-        : HierarchicalStateMachine(TrafficLightState::OFF) {
+        : hsmcpp::HierarchicalStateMachine(TrafficLightState::OFF) {
         registerState<TrafficLight>(TrafficLightState::OFF, this, &TrafficLight::onOff, nullptr, nullptr);
         registerState<TrafficLight>(TrafficLightState::STARTING, this, &TrafficLight::onStarting, nullptr, nullptr);
         registerState<TrafficLight>(TrafficLightState::RED, this, &TrafficLight::onRed, nullptr, nullptr);
@@ -49,10 +57,10 @@ public:
                            this,
                            &TrafficLight::onNextStateTransition);
 
-        initialize(std::make_shared<HsmEventDispatcherGLibmm>());
+        initialize(std::make_shared<hsmcpp::HsmEventDispatcherGLibmm>());
     }
 
-    void onNextStateTransition(const VariantVector_t& args) {
+    void onNextStateTransition(const hsmcpp::VariantVector_t& args) {
         if (args.size() == 2) {
             printf("----> onNextStateTransition (args=%d, thread=%d, index=%d)\n",
                    (int)args.size(),
@@ -65,19 +73,19 @@ public:
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
-    void onOff(const VariantVector_t& args) {
+    void onOff(const hsmcpp::VariantVector_t& args) {
         printf("----> OFF\n");
     }
-    void onStarting(const VariantVector_t& args) {
+    void onStarting(const hsmcpp::VariantVector_t& args) {
         printf("----> onStarting\n");
     }
-    void onRed(const VariantVector_t& args) {
+    void onRed(const hsmcpp::VariantVector_t& args) {
         printf("----> onRed\n");
     }
-    void onYellow(const VariantVector_t& args) {
+    void onYellow(const hsmcpp::VariantVector_t& args) {
         printf("----> onYellow\n");
     }
-    void onGreen(const VariantVector_t& args) {
+    void onGreen(const hsmcpp::VariantVector_t& args) {
         printf("----> onGreen\n");
     }
 };

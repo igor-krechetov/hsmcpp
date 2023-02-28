@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.29.1")
+set(PROJECT_VERSION "0.30.0")
 set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -72,6 +72,7 @@ set(HSM_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 set(HSM_INCLUDES_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/")
 
 set (LIBRARY_SRC ${HSM_SRC_ROOT}/hsm.cpp
+                 ${HSM_SRC_ROOT}/HsmImpl.cpp
                  ${HSM_SRC_ROOT}/variant.cpp
                  ${HSM_SRC_ROOT}/logging.cpp
                  ${HSM_SRC_ROOT}/HsmEventDispatcherBase.cpp
@@ -80,6 +81,7 @@ set (LIBRARY_SRC ${HSM_SRC_ROOT}/hsm.cpp
                  ${HSM_SRC_ROOT}/os/common/CriticalSection.cpp)
 
 set (LIBRARY_HEADERS ${HSM_INCLUDES_ROOT}/hsm.hpp
+                     ${HSM_INCLUDES_ROOT}/HsmTypes.hpp
                      ${HSM_INCLUDES_ROOT}/HsmEventDispatcherBase.hpp
                      ${HSM_INCLUDES_ROOT}/IHsmEventDispatcher.hpp
                      ${HSM_INCLUDES_ROOT}/logging.hpp

@@ -5,12 +5,17 @@
 
 using namespace hsmcpp;
 
-enum class States { OFF, ON };
+namespace States {
+    const hsmcpp::StateID_t OFF = 0;
+    const hsmcpp::StateID_t ON = 1;
+}
 
-enum class Events { SWITCH };
+namespace Events {
+    const hsmcpp::EventID_t SWITCH = 0;
+}
 
 long getAllocatedHeapMemory() {
-    struct mallinfo mi = mallinfo();
+    struct mallinfo2 mi = mallinfo2();
 
     return mi.uordblks + mi.hblkhd;
 }
@@ -30,8 +35,7 @@ int main(const int argc, const char** argv) {
     memBefore = getAllocatedHeapMemory();
 
     std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
-    std::shared_ptr<HierarchicalStateMachine<States, Events>> hsm =
-        std::make_shared<HierarchicalStateMachine<States, Events>>(States::OFF);
+    std::shared_ptr<HierarchicalStateMachine> hsm = std::make_shared<HierarchicalStateMachine>(States::OFF);
 
     hsm->initialize(dispatcher);
     memAfterEmpty = getAllocatedHeapMemory();

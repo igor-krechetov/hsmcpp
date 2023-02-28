@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.30.0] - 2023-02-28
+### Updated
+- removed template from HierarchicalStateMachine and separated implementaion (BREAKS INTERFACE)
+  - state, event and timer enums were replaced with integer type (no extra work is needed if scxml generation is used)
+
 ## [0.29.1] - 2023-02-09
 ### Added
 - Arudino examples

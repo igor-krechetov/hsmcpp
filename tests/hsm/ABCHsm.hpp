@@ -9,36 +9,35 @@
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "ABCHsm"
 
-enum class AbcState {
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    H,
-    H2,
-    P1,
-    P2,
-    P3,
-    P4,
-    F1,
-    F2,
-    F3,
-};
+namespace AbcState {
+    const hsmcpp::StateID_t A = 0;
+    const hsmcpp::StateID_t B = 1;
+    const hsmcpp::StateID_t C = 2;
+    const hsmcpp::StateID_t D = 3;
+    const hsmcpp::StateID_t E = 4;
+    const hsmcpp::StateID_t F = 5;
+    const hsmcpp::StateID_t H = 6;
+    const hsmcpp::StateID_t H2 = 7;
+    const hsmcpp::StateID_t P1 = 8;
+    const hsmcpp::StateID_t P2 = 9;
+    const hsmcpp::StateID_t P3 = 10;
+    const hsmcpp::StateID_t P4 = 11;
+    const hsmcpp::StateID_t F1 = 12;
+    const hsmcpp::StateID_t F2 = 13;
+    const hsmcpp::StateID_t F3 = 14;
+}
 
-enum class AbcEvent {
-    E1,
-    E2,
-    E3,
-    EXIT1,
-    EXIT2,
+namespace AbcEvent {
+    const hsmcpp::EventID_t E1 = 0;
+    const hsmcpp::EventID_t E2 = 1;
+    const hsmcpp::EventID_t E3 = 2;
+    const hsmcpp::EventID_t EXIT1 = 3;
+    const hsmcpp::EventID_t EXIT2 = 4;
 
-    INVALID = INVALID_ID
+    const hsmcpp::EventID_t INVALID = INVALID_ID;
+}
 
-};
-
-class ABCHsm : public testing::Test, public HierarchicalStateMachine<AbcState, AbcEvent> {
+class ABCHsm : public testing::Test, public HierarchicalStateMachine {
 public:
     ABCHsm();
     virtual ~ABCHsm();
@@ -68,8 +67,8 @@ public:
         INITIALIZE_HSM();
     }
 
-    std::string getStateName(const AbcState state) const override;
-    std::string getEventName(const AbcEvent event) const override;
+    std::string getStateName(const hsmcpp::StateID_t state) const override;
+    std::string getEventName(const hsmcpp::EventID_t event) const override;
 
 protected:
     void SetUp() override;

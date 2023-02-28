@@ -4,18 +4,10 @@
 #ifndef HSMCPP_IHSMEVENTDISPATCHER_HPP
 #define HSMCPP_IHSMEVENTDISPATCHER_HPP
 
-#include <functional>
+#include "HsmTypes.hpp"
 
 namespace hsmcpp
 {
-#define INVALID_HSM_DISPATCHER_HANDLER_ID           (0)
-#define INVALID_HSM_TIMER_ID                        (-1000)
-
-
-using HandlerID_t = int32_t;
-using TimerID_t = int32_t;
-using EventID_t = int32_t;
-
 using EventHandlerFunc_t = std::function<void(void)>;
 using TimerHandlerFunc_t = std::function<void(const TimerID_t)>;
 using EnqueuedEventHandlerFunc_t = std::function<void(const EventID_t)>;

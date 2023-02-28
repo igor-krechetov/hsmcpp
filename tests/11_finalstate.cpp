@@ -76,19 +76,19 @@ TEST_F(ABCHsm, finalstate_forward_event) {
 }
 
 class ParamFixtureFinalState1 : public ABCHsm,
-                                public ::testing::WithParamInterface<std::tuple<std::list<AbcEvent>, AbcState>> {};
+                                public ::testing::WithParamInterface<std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t>> {};
 
 INSTANTIATE_TEST_CASE_P(finalstate,
                         ParamFixtureFinalState1,
-                        ::testing::Values(std::make_tuple(std::list<AbcEvent>({AbcEvent::E1}), AbcState::C),
-                                          std::make_tuple(std::list<AbcEvent>({AbcEvent::E3, AbcEvent::E2}), AbcState::D)));
+                        ::testing::Values(std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E1}), AbcState::C),
+                                          std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E3, AbcEvent::E2}), AbcState::D)));
 
 TEST_P(ParamFixtureFinalState1, finalstate_multiple_final) {
     // 03_multi_substate_final
     TEST_DESCRIPTION("HSM should support multiple path to a final state");
-    std::tuple<std::list<AbcEvent>, AbcState> param = GetParam();
-    std::list<AbcEvent> argEvents = std::get<0>(param);
-    AbcState expectedState = std::get<1>(param);
+    std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t> param = GetParam();
+    std::list<hsmcpp::EventID_t> argEvents = std::get<0>(param);
+    hsmcpp::StateID_t expectedState = std::get<1>(param);
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -132,9 +132,9 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_final) {
 TEST_P(ParamFixtureFinalState1, finalstate_multiple_exitpoints) {
     // 04_multi_substate_exitpoints
     TEST_DESCRIPTION("HSM should support multiple exit points");
-    std::tuple<std::list<AbcEvent>, AbcState> param = GetParam();
-    std::list<AbcEvent> argEvents = std::get<0>(param);
-    AbcState expectedState = std::get<1>(param);
+    std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t> param = GetParam();
+    std::list<hsmcpp::EventID_t> argEvents = std::get<0>(param);
+    hsmcpp::StateID_t expectedState = std::get<1>(param);
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -292,7 +292,7 @@ TEST_F(ABCHsm, finalstate_no_transition) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    AbcEvent failedEvent;
+    hsmcpp::EventID_t failedEvent;
 
     registerState<ABCHsm>(AbcState::A);
     registerState<ABCHsm>(AbcState::B);
@@ -305,7 +305,7 @@ TEST_F(ABCHsm, finalstate_no_transition) {
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition<ABCHsm>(AbcState::C, AbcState::D, AbcEvent::E2);
 
-    registerFailedTransitionCallback([&](const AbcEvent event, const VariantVector_t& args) { failedEvent = event; });
+    registerFailedTransitionCallback([&](const hsmcpp::EventID_t event, const VariantVector_t& args) { failedEvent = event; });
 
     initializeHsm();
 
@@ -336,12 +336,12 @@ TEST_F(ABCHsm, finalstate_toplevel) {
     // PRECONDITIONS
     bool wasFailedEvent = false;
 
-    registerState<ABCHsm>(AbcState::A);
+    registerState(AbcState::A);
     registerFinalState(AbcState::B, AbcEvent::E2);
 
-    registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
+    registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
 
-    registerFailedTransitionCallback([&](const AbcEvent event, const VariantVector_t& args) { wasFailedEvent = true; });
+    registerFailedTransitionCallback([&](const hsmcpp::EventID_t event, const VariantVector_t& args) { wasFailedEvent = true; });
 
     initializeHsm();
 
@@ -359,19 +359,19 @@ TEST_F(ABCHsm, finalstate_toplevel) {
 }
 
 class ParamFixtureFinalState2 : public ABCHsm,
-                                public ::testing::WithParamInterface<std::tuple<std::list<AbcEvent>, AbcState>> {};
+                                public ::testing::WithParamInterface<std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t>> {};
 
 INSTANTIATE_TEST_CASE_P(finalstate,
                         ParamFixtureFinalState2,
-                        ::testing::Values(std::make_tuple(std::list<AbcEvent>({AbcEvent::E1}), AbcState::C),
-                                          std::make_tuple(std::list<AbcEvent>({AbcEvent::E3, AbcEvent::E2}), AbcState::C)));
+                        ::testing::Values(std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E1}), AbcState::C),
+                                          std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E3, AbcEvent::E2}), AbcState::C)));
 
 TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path) {
     // 07_multi_substate_single_exitpoint
     TEST_DESCRIPTION("Check that multiple paths to a single exit point are supported");
-    std::tuple<std::list<AbcEvent>, AbcState> param = GetParam();
-    std::list<AbcEvent> argEvents = std::get<0>(param);
-    AbcState expectedState = std::get<1>(param);
+    std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t> param = GetParam();
+    std::list<hsmcpp::EventID_t> argEvents = std::get<0>(param);
+    hsmcpp::StateID_t expectedState = std::get<1>(param);
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -411,20 +411,20 @@ TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path) {
 }
 
 class ParamFixtureFinalState3 : public ABCHsm,
-                                public ::testing::WithParamInterface<std::tuple<std::list<AbcEvent>, AbcState>> {};
+                                public ::testing::WithParamInterface<std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t>> {};
 
 INSTANTIATE_TEST_CASE_P(finalstate,
                         ParamFixtureFinalState3,
-                        ::testing::Values(std::make_tuple(std::list<AbcEvent>({AbcEvent::E1}), AbcState::C),
-                                          std::make_tuple(std::list<AbcEvent>({AbcEvent::E3, AbcEvent::E2}), AbcState::D)));
+                        ::testing::Values(std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E1}), AbcState::C),
+                                          std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E3, AbcEvent::E2}), AbcState::D)));
 
 TEST_P(ParamFixtureFinalState3, finalstate_both_types) {
     // 08_multi_substate_both
     // 09_multi_substate_both
     TEST_DESCRIPTION("Both exitpoints and final states can exist in the same parent state");
-    std::tuple<std::list<AbcEvent>, AbcState> param = GetParam();
-    std::list<AbcEvent> argEvents = std::get<0>(param);
-    AbcState expectedState = std::get<1>(param);
+    std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t> param = GetParam();
+    std::list<hsmcpp::EventID_t> argEvents = std::get<0>(param);
+    hsmcpp::StateID_t expectedState = std::get<1>(param);
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -456,7 +456,7 @@ TEST_P(ParamFixtureFinalState3, finalstate_both_types) {
 
     //-------------------------------------------
     // ACTIONS
-    for (auto curEvent : argEvents) {
+    for (const auto& curEvent : argEvents) {
         ASSERT_TRUE(transitionSync(curEvent, HSM_WAIT_INDEFINITELY));
         // wait a bit since exit transition will be async
         std::this_thread::sleep_for(std::chrono::milliseconds(50));

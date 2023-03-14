@@ -345,6 +345,10 @@ bool Variant::isDictionary() const {
     return (type == Type::DICTIONARY);
 }
 
+bool Variant::isPair() const {
+    return (type == Type::PAIR);
+}
+
 bool Variant::isNumeric() const {
     bool numeric = false;
 

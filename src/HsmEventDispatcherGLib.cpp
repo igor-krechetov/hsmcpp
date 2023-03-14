@@ -46,14 +46,6 @@ HsmEventDispatcherGLib::~HsmEventDispatcherGLib() {
     mPipeFD[1] = -1;
 }
 
-void HsmEventDispatcherGLib::emitEvent(const HandlerID_t handlerID) {
-    HSM_TRACE_CALL();
-
-    if (mPipeFD[1] > 0) {
-        HsmEventDispatcherBase::emitEvent(handlerID);
-    }
-}
-
 bool HsmEventDispatcherGLib::start() {
     HSM_TRACE_CALL_DEBUG();
     bool result = false;
@@ -100,6 +92,14 @@ bool HsmEventDispatcherGLib::start() {
     }
 
     return result;
+}
+
+void HsmEventDispatcherGLib::emitEvent(const HandlerID_t handlerID) {
+    HSM_TRACE_CALL();
+
+    if (mPipeFD[1] > 0) {
+        HsmEventDispatcherBase::emitEvent(handlerID);
+    }
 }
 
 void HsmEventDispatcherGLib::unregisterAllTimerHandlers() {

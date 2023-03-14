@@ -112,8 +112,8 @@ public:
      * @param dispatcher An event dispatcher that can be used to receive events and dispatch them to the HSM.
      * @return true if initialization succeeds, false otherwise.
      *
-     * @notthreadsafe{Uses registerEventHandler from Dispatcher. Usually must be called from the same thread where dispatcher
-     * was created.}
+     * @notthreadsafe{Uses IHsmEventDispatcher::registerEventHandler() and IHsmEventDispatcher::start(). Usually must be called
+     * from the same thread where dispatcher was created.}
      */
     virtual bool initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
 

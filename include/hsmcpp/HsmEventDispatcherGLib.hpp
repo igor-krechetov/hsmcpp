@@ -12,19 +12,45 @@
 namespace hsmcpp
 {
 
+/**
+ * @brief HsmEventDispatcherGLib provides dispatcher implementation based on glib library.
+ * @details Events queue is implemented by using glib IO channel. See @rstref{platforms-dispatcher-glib} for details.
+ */
 class HsmEventDispatcherGLib: public HsmEventDispatcherBase
 {
 private:
     using TimerData_t = std::pair<HsmEventDispatcherGLib*, TimerID_t>;
 
 public:
+    /**
+     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     * @details Uses default glib context.
+    */
     explicit HsmEventDispatcherGLib(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+
+    /**
+     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     * @param context custom glib context to use for dispatcher.
+    */
     HsmEventDispatcherGLib(GMainContext* context, const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+
+    /**
+     * Destructor.
+     */
     virtual ~HsmEventDispatcherGLib();
 
-    virtual void emitEvent(const HandlerID_t handlerID) override;
+    /**
+     * @brief Create a new IO channel and start events dispatching.
+     * @details See IHsmEventDispatcher::start() for details.
+     * @notthreadsafe{Thread safety is not required by HierarchicalStateMachine::initialize() which uses this API.}
+     */
+    bool start() override;
 
-    virtual bool start() override;
+    /**
+     * @brief See IHsmEventDispatcher::emitEvent()
+     * @threadsafe{ }
+     */
+    void emitEvent(const HandlerID_t handlerID) override;
 
 private:
     void unregisterAllTimerHandlers();

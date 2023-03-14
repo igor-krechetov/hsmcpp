@@ -48,7 +48,10 @@ bool HsmEventDispatcherGLibmm::start() {
     bool result = false;
 
     if (mDispatcher) {
-        mDispatcherConnection = mDispatcher->connect(sigc::mem_fun(this, &HsmEventDispatcherGLibmm::dispatchPendingEvents));
+        if (mDispatcherConnection.connected() == false) {
+            mDispatcherConnection = mDispatcher->connect(sigc::mem_fun(this, &HsmEventDispatcherGLibmm::dispatchPendingEvents));
+        }
+
         result = true;
     }
 

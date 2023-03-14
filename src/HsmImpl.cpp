@@ -141,8 +141,7 @@ void HierarchicalStateMachine::Impl::release() {
 
     disableHsmDebugging();
 
-    // NOTE: false-positive. std::shated_ptr has a bool() operator
-    // cppcheck-suppress misra-c2012-14.4
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
     if (mDispatcher) {
         mDispatcher->unregisterEventHandler(mEventsHandlerId);
         mDispatcher->unregisterEnqueuedEventHandler(mEnqueuedEventsHandlerId);
@@ -382,35 +381,41 @@ bool HierarchicalStateMachine::Impl::transitionExWithArgsArray(const EventID_t e
                               args.size());
 
     bool status = false;
-    PendingEventInfo eventInfo;
 
-    eventInfo.type = event;
-    eventInfo.args = args;
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    if (mDispatcher) {
+        PendingEventInfo eventInfo;
 
-    if (true == sync) {
-        eventInfo.initLock();
-    }
+        eventInfo.type = event;
+        eventInfo.args = args;
 
-    {
-        HSM_SYNC_EVENTS_QUEUE();
-
-        if (true == clearQueue) {
-            clearPendingEvents();
+        if (true == sync) {
+            eventInfo.initLock();
         }
 
-        mPendingEvents.push_back(eventInfo);
-    }
+        {
+            HSM_SYNC_EVENTS_QUEUE();
 
-    HSM_TRACE_DEBUG("transitionEx: emit");
-    mDispatcher->emitEvent(mEventsHandlerId);
+            if (true == clearQueue) {
+                clearPendingEvents();
+            }
 
-    if (true == sync) {
-        HSM_TRACE_DEBUG("transitionEx: wait...");
-        eventInfo.wait(timeoutMs);
-        status = (HsmEventStatus_t::DONE_OK == *eventInfo.transitionStatus);
+            mPendingEvents.push_back(eventInfo);
+        }
+
+        HSM_TRACE_DEBUG("transitionEx: emit");
+        mDispatcher->emitEvent(mEventsHandlerId);
+
+        if (true == sync) {
+            HSM_TRACE_DEBUG("transitionEx: wait...");
+            eventInfo.wait(timeoutMs);
+            status = (HsmEventStatus_t::DONE_OK == *eventInfo.transitionStatus);
+        } else {
+            // always return true for async transitions
+            status = true;
+        }
     } else {
-        // always return true for async transitions
-        status = true;
+        HSM_TRACE_ERROR("HSM is not initialized");
     }
 
     return status;
@@ -419,8 +424,7 @@ bool HierarchicalStateMachine::Impl::transitionExWithArgsArray(const EventID_t e
 bool HierarchicalStateMachine::Impl::transitionInterruptSafe(const EventID_t event) {
     bool res = false;
 
-    // NOTE: false-positive. std::shated_ptr has a bool() operator
-    // cppcheck-suppress misra-c2012-14.4
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
     if (mDispatcher) {
         res = mDispatcher->enqueueEvent(mEnqueuedEventsHandlerId, event);
     }
@@ -479,24 +483,22 @@ void HierarchicalStateMachine::Impl::handleStartup() {
     // NOTE: false-positive. std::shated_ptr has a bool() operator
     // cppcheck-suppress misra-c2012-14.4
     if (mDispatcher) {
-        {
-            HSM_TRACE_DEBUG("state=<%s>", mParent.getStateName(mInitialState).c_str());
-            std::list<StateID_t> entryPoints;
+        HSM_TRACE_DEBUG("state=<%s>", mParent.getStateName(mInitialState).c_str());
+        std::list<StateID_t> entryPoints;
 
-            (void)onStateEntering(mInitialState, VariantVector_t());
-            mActiveStates.push_back(mInitialState);
-            onStateChanged(mInitialState, VariantVector_t());
+        (void)onStateEntering(mInitialState, VariantVector_t());
+        mActiveStates.push_back(mInitialState);
+        onStateChanged(mInitialState, VariantVector_t());
 
-            if (true == getEntryPoints(mInitialState, INVALID_HSM_EVENT_ID, VariantVector_t(), entryPoints)) {
-                PendingEventInfo entryPointTransitionEvent;
+        if (true == getEntryPoints(mInitialState, INVALID_HSM_EVENT_ID, VariantVector_t(), entryPoints)) {
+            PendingEventInfo entryPointTransitionEvent;
 
-                entryPointTransitionEvent.transitionType = TransitionBehavior::ENTRYPOINT;
-                entryPointTransitionEvent.type = INVALID_HSM_EVENT_ID;
+            entryPointTransitionEvent.transitionType = TransitionBehavior::ENTRYPOINT;
+            entryPointTransitionEvent.type = INVALID_HSM_EVENT_ID;
 
-                {
-                    HSM_SYNC_EVENTS_QUEUE();
-                    mPendingEvents.push_front(entryPointTransitionEvent);
-                }
+            {
+                HSM_SYNC_EVENTS_QUEUE();
+                mPendingEvents.push_front(entryPointTransitionEvent);
             }
         }
 
@@ -513,24 +515,27 @@ void HierarchicalStateMachine::Impl::transitionSimple(const EventID_t event) {
 void HierarchicalStateMachine::Impl::dispatchEvents() {
     HSM_TRACE_CALL_DEBUG_ARGS("mPendingEvents.size=%ld", mPendingEvents.size());
 
-    if (false == mStopDispatching) {
-        if (false == mPendingEvents.empty()) {
-            PendingEventInfo pendingEvent;
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    if (mDispatcher) {
+        if (false == mStopDispatching) {
+            if (false == mPendingEvents.empty()) {
+                PendingEventInfo pendingEvent;
 
-            {
-                HSM_SYNC_EVENTS_QUEUE();
-                pendingEvent = mPendingEvents.front();
-                mPendingEvents.pop_front();
+                {
+                    HSM_SYNC_EVENTS_QUEUE();
+                    pendingEvent = mPendingEvents.front();
+                    mPendingEvents.pop_front();
+                }
+
+                HsmEventStatus_t transitiontStatus = doTransition(pendingEvent);
+
+                HSM_TRACE_DEBUG("unlock with status %d", SC2INT(transitiontStatus));
+                pendingEvent.unlock(transitiontStatus);
             }
 
-            HsmEventStatus_t transitiontStatus = doTransition(pendingEvent);
-
-            HSM_TRACE_DEBUG("unlock with status %d", SC2INT(transitiontStatus));
-            pendingEvent.unlock(transitiontStatus);
-        }
-
-        if ((false == mStopDispatching) && (false == mPendingEvents.empty())) {
-            mDispatcher->emitEvent(mEventsHandlerId);
+            if ((false == mStopDispatching) && (false == mPendingEvents.empty())) {
+                mDispatcher->emitEvent(mEventsHandlerId);
+            }
         }
     }
 }
@@ -603,48 +608,52 @@ void HierarchicalStateMachine::Impl::onStateChanged(const StateID_t state, const
 
 void HierarchicalStateMachine::Impl::executeStateAction(const StateID_t state, const StateActionTrigger actionTrigger) {
     HSM_TRACE_CALL_DEBUG_ARGS("state=<%s>, actionTrigger=%d", mParent.getStateName(state).c_str(), SC2INT(actionTrigger));
-    auto key = std::make_pair(state, actionTrigger);
-    auto itRange = mRegisteredActions.equal_range(key);
 
-    if (itRange.first != itRange.second) {
-        switch (actionTrigger) {
-            case StateActionTrigger::ON_STATE_ENTRY:
-                logHsmAction(HsmLogAction::ON_ENTER_ACTIONS, INVALID_HSM_STATE_ID, state);
-                break;
-            case StateActionTrigger::ON_STATE_EXIT:
-                logHsmAction(HsmLogAction::ON_EXIT_ACTIONS, INVALID_HSM_STATE_ID, state);
-                break;
-            default:
-                // NOTE: do nothing
-                break;
-        }
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    if (mDispatcher) {
+        auto key = std::make_pair(state, actionTrigger);
+        auto itRange = mRegisteredActions.equal_range(key);
 
-        for (auto it = itRange.first; it != itRange.second; ++it) {
-            const StateActionInfo& actionInfo = it->second;
+        if (itRange.first != itRange.second) {
+            switch (actionTrigger) {
+                case StateActionTrigger::ON_STATE_ENTRY:
+                    logHsmAction(HsmLogAction::ON_ENTER_ACTIONS, INVALID_HSM_STATE_ID, state);
+                    break;
+                case StateActionTrigger::ON_STATE_EXIT:
+                    logHsmAction(HsmLogAction::ON_EXIT_ACTIONS, INVALID_HSM_STATE_ID, state);
+                    break;
+                default:
+                    // NOTE: do nothing
+                    break;
+            }
 
-            if (StateAction::START_TIMER == actionInfo.action) {
-                mDispatcher->startTimer(mTimerHandlerId,
-                                        actionInfo.actionArgs[0].toInt64(),
-                                        actionInfo.actionArgs[1].toInt64(),
-                                        actionInfo.actionArgs[2].toBool());
-            } else if (StateAction::STOP_TIMER == actionInfo.action) {
-                mDispatcher->stopTimer(actionInfo.actionArgs[0].toInt64());
-            } else if (StateAction::RESTART_TIMER == actionInfo.action) {
-                mDispatcher->restartTimer(actionInfo.actionArgs[0].toInt64());
-            } else if (StateAction::TRANSITION == actionInfo.action) {
-                VariantVector_t transitionArgs;
+            for (auto it = itRange.first; it != itRange.second; ++it) {
+                const StateActionInfo& actionInfo = it->second;
 
-                if (actionInfo.actionArgs.size() > 1u) {
-                    transitionArgs.reserve(actionInfo.actionArgs.size() - 1u);
+                if (StateAction::START_TIMER == actionInfo.action) {
+                    mDispatcher->startTimer(mTimerHandlerId,
+                                            actionInfo.actionArgs[0].toInt64(),
+                                            actionInfo.actionArgs[1].toInt64(),
+                                            actionInfo.actionArgs[2].toBool());
+                } else if (StateAction::STOP_TIMER == actionInfo.action) {
+                    mDispatcher->stopTimer(actionInfo.actionArgs[0].toInt64());
+                } else if (StateAction::RESTART_TIMER == actionInfo.action) {
+                    mDispatcher->restartTimer(actionInfo.actionArgs[0].toInt64());
+                } else if (StateAction::TRANSITION == actionInfo.action) {
+                    VariantVector_t transitionArgs;
 
-                    for (size_t i = 1; i < actionInfo.actionArgs.size(); ++i) {
-                        transitionArgs.push_back(actionInfo.actionArgs[i]);
+                    if (actionInfo.actionArgs.size() > 1u) {
+                        transitionArgs.reserve(actionInfo.actionArgs.size() - 1u);
+
+                        for (size_t i = 1; i < actionInfo.actionArgs.size(); ++i) {
+                            transitionArgs.push_back(actionInfo.actionArgs[i]);
+                        }
                     }
-                }
 
-                transitionWithArgsArray(static_cast<EventID_t>(actionInfo.actionArgs[0].toInt64()), transitionArgs);
-            } else {
-                HSM_TRACE_WARNING("unsupported action <%d>", SC2INT(actionInfo.action));
+                    transitionWithArgsArray(static_cast<EventID_t>(actionInfo.actionArgs[0].toInt64()), transitionArgs);
+                } else {
+                    HSM_TRACE_WARNING("unsupported action <%d>", SC2INT(actionInfo.action));
+                }
             }
         }
     }

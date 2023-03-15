@@ -4,123 +4,206 @@
 #ifndef HSMCPP_IHSMEVENTDISPATCHER_HPP
 #define HSMCPP_IHSMEVENTDISPATCHER_HPP
 
-#include <functional>
+#include "HsmTypes.hpp"
 
-namespace hsmcpp
-{
-#define INVALID_HSM_DISPATCHER_HANDLER_ID           (0)
-#define INVALID_HSM_TIMER_ID                        (-1000)
-
-
-using HandlerID_t = int32_t;
-using TimerID_t = int32_t;
-using EventID_t = int32_t;
-
+namespace hsmcpp {
+/**
+ * @brief Event handler callback.
+ */
 using EventHandlerFunc_t = std::function<void(void)>;
+/**
+ * @brief Timer event handler callback.
+ */
 using TimerHandlerFunc_t = std::function<void(const TimerID_t)>;
+/**
+ * @brief Handler callback for enqueued events.
+ */
 using EnqueuedEventHandlerFunc_t = std::function<void(const EventID_t)>;
 
-class IHsmEventDispatcher
-{
+/**
+ * @brief IHsmEventDispatcher provides an interface for events dispatcher implementations.
+ * @details The IHsmEventDispatcher class defines the standard dispatcher interface that HSM uses to process internal events. It
+ * is not supposed to be instantiated directly. Instead, you should subclass it to create platform or framework specific
+ * dispatchers.
+ * When subclassing IHsmEventDispatcher, at the very least you must implement:
+ *  \li registerEventHandler()
+ *  \li unregisterEventHandler()
+ *  \li emitEvent()
+ *
+ * For other API you can make empty implementation. This will be sufficient for basic HierarchicalStateMachine functionality.
+ * For timers support following API must be implemented:
+ *  \li registerTimerHandler()
+ *  \li unregisterTimerHandler()
+ *  \li startTimer()
+ *  \li restartTimer()
+ *  \li stopTimer()
+ *  \li isTimerRunning()
+ *
+ * For interrupt-safe transitions you need to implement:
+ *  \li registerEnqueuedEventHandler()
+ *  \li unregisterEnqueuedEventHandler()
+ *  \li enqueueEvent()
+ */
+class IHsmEventDispatcher {
 public:
+    /**
+     * @brief Destructor.
+     */
     virtual ~IHsmEventDispatcher() {}
 
     /**
-     * Used to start event dispatching. Implementation is optional and depends
-     * on individual dispatcher. But it should be non blocking.
-     * Returns TRUE if dispatching was successfully started or if it is already running (calling multiple times will have no effect)
+     * @brief Start events dispatching.
+     * @details Is called by HierarchicalStateMachine::initialize(). Implementation of this method is optional and depends on
+     * individual dispatcher design. Calling this function multiple times should have no effect. In case there is no special
+     * start up logic dispatcher implementation must return true.
+     *
+     * @remark Implementation should be non blocking and doesn't have to be threadsafe.
+     *
+     * @retval true dispatching was successfully started or it is already running
+     * @retval false failed to start events dispatching
      */
     virtual bool start() = 0;
 
     /**
-     * As a general rule registerEventHandler and unregisterEventHandler are
-     * not expected to be thread-safe and should be used from the same thread.
-     * But this depends on specific Dispatcher implementation.
-     */
-
-    /**
-     * returns ID that should be used to unregister event handler
+     * @brief Register a new event handler.
+     * @details Dispatcher must support registering multiple handlers. Order in which these handlers are triggered is not
+     * important.
+     * @remark As a general rule registerEventHandler() and unregisterEventHandler() are not expected to be thread-safe and
+     * should be used from the same thread. But this depends on specific Dispatcher implementation.
+     *
+     * @param handler handler callback
+     *
+     * @return unique handler ID
      */
     virtual HandlerID_t registerEventHandler(const EventHandlerFunc_t& handler) = 0;
 
+    /**
+     * @brief Unregister events handler.
+     * @param handler handler ID received from registerEventHandler()
+     */
     virtual void unregisterEventHandler(const HandlerID_t handlerID) = 0;
 
     /**
-     * TODO
+     * @brief Register a new handler for enqueued events.
+     * @details Dispatcher must support registering multiple handlers. Order in which these handlers are triggered is not
+     * important.
+     * @remark As a general rule registerEnqueuedEventHandler() and unregisterEnqueuedEventHandler() are not expected to be
+     * thread-safe.
+     *
+     * @param handler handler callback
+     *
+     * @return unique handler ID
      */
     virtual HandlerID_t registerEnqueuedEventHandler(const EnqueuedEventHandlerFunc_t& handler) = 0;
+
+    /**
+     * @brief Unregister events handler.
+     * @param handler handler ID received from registerEnqueuedEventHandler()
+     */
     virtual void unregisterEnqueuedEventHandler(const HandlerID_t handlerID) = 0;
 
     /**
-     * Adds new event to the queue. Dispatcher must guarantee that emit call is thread-safe.
+     * @brief Add a new event to the queue for later dispatching.
+     * @details Dispatcher should initiate processing of the new event as soon as possible.
      *
-     * @param handlerID     id of the handler that should be called
+     * @param handlerID id of the handler that should process the event
+     *
+     * @threadsafe{Dispatcher implementation **must guarantee** that this call is thread-safe.}
      */
     virtual void emitEvent(const HandlerID_t handlerID) = 0;
 
     /**
-     * Same as emitEvent(), but is intended to be used only from inside interrupts.
-     * Unlike emitEvent(), there is a limit of how many events can be added to the queue
-     * at the same time.
+     * @brief Add a new event to the queue for later dispatching.
+     * @details Behaves same way as emitEvent(), but is intended to be used only from inside signals/interrupts.
+     * Unlike emitEvent(), there is usually a limit of how many events can be added to the queue
+     * at the same time (depends on individual implementation).
+     *
+     * @warning Implementation of this method **SHOULD NOT** use dynamic memory allocations.
      *
      * @param handlerID     id of the handler that should be called
      * @param event         id of the hsm event
      *
-     * @return              returns true if event was successfully added, or false if events queue is full
+     * @retval true event was successfully added
+     * @retval false failed to add event because internal queue is full
+     *
+     * @concurrencysafe{Dispatcher implementation **must guarantee** that this call is thread-safe and signals/interrupts safe.}
      */
     virtual bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) = 0;
 
     /**
-     * Used by HSM to receive notifications about timer events.
+     * @brief Register a new handler for timers.
+     * @details Dispatcher must support registering multiple handlers. Order in which these handlers are triggered is not
+     * important. Used by HierarchicalStateMachine to receive notifications about timer events.
      *
-     * @param handler       handler function
+     * @param handler       handler callback
      *
-     * @return              handlerID. This value must be used when starting a new timer
+     * @return              unique handler ID which must be used when starting a new timer with startTimer()
      */
     virtual HandlerID_t registerTimerHandler(const TimerHandlerFunc_t& handler) = 0;
 
     /**
-     * Unregister timer handler. This will automatically stop all timers registered with this handler.
+     * @brief Unregister timer handler.
+     * @details This will automatically stop all timers registered with this handler.
+     *
+     * @param handlerID handler ID received from registerTimerHandler()
      */
     virtual void unregisterTimerHandler(const HandlerID_t handlerID) = 0;
 
     /**
-     * Start a new timer. If timer with this ID is already running it will be restarted with new settings.
+     * @brief Start a timer.
+     * @details If timer with this ID is already running it will be restarted with new settings.
      *
+     * @param handlerID     handler id for wich to start the timer (returned from registerTimerHandler())
      * @param timerID       unique timer id
      * @param intervalMs    timer interval in milliseconds
      * @param isSingleShot  true - timer will run only once and then will stop
      *                      false - timer will keep running until stopTimer() is called or dispatcher is destroyed
+     *
+     * @threadsafe{Dispatcher implementation **must guarantee** that this call is thread-safe.}
      */
-    virtual void startTimer(const HandlerID_t handlerID, const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) = 0;
+    virtual void startTimer(const HandlerID_t handlerID,
+                            const TimerID_t timerID,
+                            const unsigned int intervalMs,
+                            const bool isSingleShot) = 0;
 
     /**
-     * Restarts running timer with the same arguments which were provided to startTimer().
-     * Does nothing if timer is not running.
+     * @brief Restart running or expired timer.
+     * @details Timer is restarted with the same arguments which were provided to startTimer(). Only currently running or
+     * expired timers (with isSingleShot set to true) will be restarted. Has no effect if called for a timer which was not
+     * started.
      *
      * @param timerID       id of running timer
+     *
+     * @threadsafe{Dispatcher implementation **must guarantee** that this call is thread-safe.}
      */
     virtual void restartTimer(const TimerID_t timerID) = 0;
 
     /**
-     * Restarts running timer with the same arguments which were provided to startTimer()
-     * Does nothing if timer is not running.
+     * @brief Stop active timer.
+     * @details Function stops an active timer without triggering any notifications and unregisters it. Further calls to
+     * restartTimer() will have no effects untill it's started again with startTimer().
      *
-     * @param timerID       id of running timer
+     * @remark For expired timers (which have isSingleShot property set to true), funtion simply unregisters them.
+     *
+     * @param timerID id of running or expired timer
+     *
+     * @threadsafe{Dispatcher implementation **must guarantee** that this call is thread-safe.}
      */
     virtual void stopTimer(const TimerID_t timerID) = 0;
 
     /**
-     * Check if timer is running.
+     * @brief Check if timer is currently running.
      *
-     * @param timerID       id of running timer
+     * @param timerID id of the timer to check
      *
-     * @return              true - timer is running
-     *                      false - timer is not running
+     * @retval true timer is running
+     * @retval false timer is not running
+     *
+     * @threadsafe{Dispatcher implementation **must guarantee** that this call is thread-safe.}
      */
     virtual bool isTimerRunning(const TimerID_t timerID) = 0;
 };
 
-}// namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_IHSMEVENTDISPATCHER_HPP
+#endif  // HSMCPP_IHSMEVENTDISPATCHER_HPP

@@ -1,6 +1,23 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.30.1] - 2023-03-14
+### Added
+- Variant::toPair() method
+- Variant::isPair() method
+
+### Fixed
+- calling HsmEventDispatcherGLibmm::start() multiple times is now safe
+- calling transition() or similar API before initialize() or after release() caused a crash
+
+### Updated
+- documentation for all public classes
+
+## [0.30.0] - 2023-02-28
+### Updated
+- removed template from HierarchicalStateMachine and separated implementaion (BREAKS INTERFACE)
+  - state, event and timer enums were replaced with integer type (no extra work is needed if scxml generation is used)
+
 ## [0.29.1] - 2023-02-09
 ### Added
 - Arudino examples

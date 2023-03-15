@@ -115,6 +115,14 @@ def getStateActions(elem):
     return actions
 
 
+def getStateEnumValue(genVars, name):
+    return f"{genVars['ENUM_STATES']}::{name}"
+
+
+def getEventEnumValue(genVars, name):
+    return f"{genVars['ENUM_EVENTS']}::{name}"
+
+
 def dumpXmlElement(elem):
     return ET.tostring(elem).decode()
 
@@ -419,10 +427,13 @@ def generateFile(genVars, templatePath, destPath):
                 elif templateLine.startswith("~~~BLOCK_END~~~"):
                     if currentBlockVariable:
                         templateLine = ""
+                        blockItemIndex = 0
                         for curVariableValue in genVars[currentBlockVariable]:
                             for blockLine in currentBlock:
                                 blockLine = applySingleVariableToLine(blockLine, currentBlockVariable, curVariableValue)
+                                blockLine = applySingleVariableToLine(blockLine, "BLOCK_ITEM_INDEX", str(blockItemIndex))
                                 templateLine += applyGenVariablesToLine(genVars, blockLine)
+                                blockItemIndex += 1
 
                         currentBlock = None
                         currentBlockVariable = None
@@ -479,10 +490,10 @@ def prepareRegisterActionFunction(state, eventsEnum, timersEnum, trigger, action
         print(f"action=<{action}>, {'_TIMER' in action}")
         if "_TIMER" in action:
             timerName = f"{timersEnum}::{actionInfo['args'][0]}"
-            func = f"registerStateAction({state}, {actionTrigger}, {action}, static_cast<hsmcpp::TimerID_t>({timerName}){args});"
+            func = f"(void)registerStateAction({state}, {actionTrigger}, {action}, static_cast<hsmcpp::TimerID_t>({timerName}){args});"
         else:
             eventName = f"{eventsEnum}::{actionInfo['args'][0]}"
-            func = f"registerStateAction({state}, {actionTrigger}, {action}, static_cast<hsmcpp::TimerID_t>({eventName}){args});"
+            func = f"(void)registerStateAction({state}, {actionTrigger}, {action}, {eventName}{args});"
     return func
 
 
@@ -561,15 +572,15 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
 
                             if ('transitions' in curSubstate) and (len(curSubstate['transitions']) > 0):
                                 defaultTransition = curSubstate['transitions'][0]
-                                defaultTarget = f", {genVars['ENUM_STATES']}::{defaultTransition['target']}"
+                                defaultTarget = f", {getStateEnumValue(genVars, defaultTransition['target'])})"
                                 if 'callback' in defaultTransition:
                                     if defaultTransition['callback'] not in definedCallbacks:
                                         genVars["HSM_TRANSITION_ACTIONS"].add(prepareHsmcppTransitionCallbackDeclaration(defaultTransition['callback']))
                                         definedCallbacks.append(defaultTransition['callback'])
                                     historyCallback += f", &{genVars['CLASS_NAME']}::{defaultTransition['callback']}"
 
-                            genVars["REGISTER_SUBSTATES"].append(f"registerHistory({genVars['ENUM_STATES']}::{curState['id']}, " +
-                                                                 f"{genVars['ENUM_STATES']}::{curSubstate['id']}, " +
+                            genVars["REGISTER_SUBSTATES"].append(f"registerHistory({getStateEnumValue(genVars, curState['id'])}, " +
+                                                                 f"{getStateEnumValue(genVars, curSubstate['id'])}, " +
                                                                  f"{historyType}" +
                                                                  f"{defaultTarget}" +
                                                                  f"{historyCallback});")
@@ -588,9 +599,9 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
 
                                             if 'event' in curTransition:
                                                 genVars["ENUM_EVENTS_ITEM"].add(curTransition['event'])
-                                                currentCondition = f", {genVars['ENUM_EVENTS']}::{curTransition['event']}"
+                                                currentCondition = f", {getEventEnumValue(genVars, curTransition['event'])}"
                                             elif transitionHasCallback is True:
-                                                currentCondition = f", {genVars['ENUM_EVENTS']}::INVALID"
+                                                currentCondition = f", INVALID_HSM_EVENT_ID"
 
                                             if transitionHasCallback is True:
                                                 genVars["HSM_TRANSITION_CONDITIONS"].add(prepareHsmcppConditionCallbackDeclaration(curTransition['condition'][0]))
@@ -604,12 +615,12 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
 
                             if len(initialStateConditions) > 0:
                                 for condition in initialStateConditions:
-                                    genVars["REGISTER_SUBSTATES"].append(f"{registerSubstateFunc}({genVars['ENUM_STATES']}::{curState['id']}, " +
-                                                                         f"{genVars['ENUM_STATES']}::{curSubstate['id']}" +
+                                    genVars["REGISTER_SUBSTATES"].append(f"(void){registerSubstateFunc}({getStateEnumValue(genVars, curState['id'])}, " +
+                                                                         f"{getStateEnumValue(genVars, curSubstate['id'])}" +
                                                                          f"{condition});")
                             else:
-                                genVars["REGISTER_SUBSTATES"].append(f"{registerSubstateFunc}({genVars['ENUM_STATES']}::{curState['id']}, " +
-                                                                     f"{genVars['ENUM_STATES']}::{curSubstate['id']});")
+                                genVars["REGISTER_SUBSTATES"].append(f"(void){registerSubstateFunc}({getStateEnumValue(genVars, curState['id'])}, " +
+                                                                     f"{getStateEnumValue(genVars, curSubstate['id'])});")
 
             genVars["ENUM_STATES_ITEM"].append({curState['id']})
             registerCallbacks = ""
@@ -641,7 +652,7 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
                     for curAction in curState['actions'][actionTrigger]:
                         if '_timer' in curAction['action']:
                             genVars["ENUM_TIMERS_ITEM"].add(curAction['args'][0])
-                        stateId = f"{genVars['ENUM_STATES']}::{curState['id']}"
+                        stateId = f"{getStateEnumValue(genVars, curState['id'])}"
                         genVars["REGISTER_ACTIONS"].append(prepareRegisterActionFunction(stateId,
                                                                                          genVars['ENUM_EVENTS'],
                                                                                          genVars['ENUM_TIMERS'],
@@ -656,12 +667,12 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
             if (curState["type"] != STATETYPE_HISTORY):
                 if curState["type"] == STATETYPE_FINAL:
                     if "final_event" in curState:
-                        finalEventID = f"{genVars['ENUM_EVENTS']}::{curState['final_event']}"
+                        finalEventID = f"{getEventEnumValue(genVars, curState['final_event'])}"
                     else:
-                        finalEventID = f"{genVars['ENUM_EVENTS']}::INVALID"
-                    genVars["REGISTER_STATES"].append(f"registerFinalState<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}, {finalEventID}{registerCallbacks});")
+                        finalEventID = "INVALID_HSM_EVENT_ID"
+                    genVars["REGISTER_STATES"].append(f"registerFinalState<{genVars['CLASS_NAME']}>({getStateEnumValue(genVars, curState['id'])}, {finalEventID}{registerCallbacks});")
                 else:
-                    genVars["REGISTER_STATES"].append(f"registerState<{genVars['CLASS_NAME']}>({genVars['ENUM_STATES']}::{curState['id']}{registerCallbacks});")
+                    genVars["REGISTER_STATES"].append(f"registerState<{genVars['CLASS_NAME']}>({getStateEnumValue(genVars, curState['id'])}{registerCallbacks});")
 
                 for curTransition in curState["transitions"]:
                     registerCallbacks = ""
@@ -687,11 +698,11 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
                     # check if it's a self-transition
                     if curState["id"] == curTransition["target"]:
                         registerFunction = "registerSelfTransition"
-                        transitionStates = f"{genVars['ENUM_STATES']}::{curState['id']}"
+                        transitionStates = f"{getStateEnumValue(genVars, curState['id'])}"
                         transitionType = f", TransitionType::{curTransition['type'].upper()}_TRANSITION"
                     else:
                         registerFunction = "registerTransition"
-                        transitionStates = f"{genVars['ENUM_STATES']}::{curState['id']}, {genVars['ENUM_STATES']}::{curTransition['target']}"
+                        transitionStates = f"{getStateEnumValue(genVars, curState['id'])}, {getStateEnumValue(genVars, curTransition['target'])}"
                         transitionType = ""
 
                     if len(registerCallbacks) > 0:
@@ -700,7 +711,7 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
                         registerTemplate = ""
 
                     genVars["REGISTER_TRANSITIONS"].append(f"{registerFunction}{registerTemplate}({transitionStates}, " +
-                                                           f"{genVars['ENUM_EVENTS']}::{curTransition['event']}" +
+                                                           f"{getEventEnumValue(genVars, curTransition['event'])}" +
                                                            transitionType +
                                                            registerCallbacks + ");")
         pendingStates = substates

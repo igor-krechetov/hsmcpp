@@ -88,20 +88,19 @@ public:
 
     /**
      * @brief See IHsmEventDispatcher::registerTimerHandler()
-     * @notthreadsafe{TODO}
+     * @threadsafe{ }
      */
     HandlerID_t registerTimerHandler(const TimerHandlerFunc_t& handler) override;
 
     /**
      * @brief See IHsmEventDispatcher::unregisterTimerHandler()
-     * @notthreadsafe{TODO}
+     * @threadsafe{ }
      */
     void unregisterTimerHandler(const HandlerID_t handlerID) override;
 
-    // TODO: make timers API threadsafe
     /**
      * @brief See IHsmEventDispatcher::startTimer()
-     * @notthreadsafe{TODO}
+     * @threadsafe{ }
      */
     void startTimer(const HandlerID_t handlerID,
                     const TimerID_t timerID,
@@ -110,19 +109,19 @@ public:
 
     /**
      * @brief See IHsmEventDispatcher::restartTimer()
-     * @notthreadsafe{TODO}
+     * @threadsafe{ }
      */
     void restartTimer(const TimerID_t timerID) override;
 
     /**
      * @brief See IHsmEventDispatcher::stopTimer()
-     * @notthreadsafe{TODO}
+     * @threadsafe{ }
      */
     void stopTimer(const TimerID_t timerID) override;
 
     /**
      * @brief See IHsmEventDispatcher::isTimerRunning()
-     * @notthreadsafe{TODO}
+     * @threadsafe{ }
      */
     bool isTimerRunning(const TimerID_t timerID) override;
 
@@ -243,12 +242,12 @@ protected:
 
 protected:
     HandlerID_t mNextHandlerId = 1;
-    std::map<TimerID_t, TimerInfo> mActiveTimers;
-    std::map<HandlerID_t, EventHandlerFunc_t> mEventHandlers;
-    std::map<HandlerID_t, EnqueuedEventHandlerFunc_t> mEnqueuedEventHandlers;
-    std::map<HandlerID_t, TimerHandlerFunc_t> mTimerHandlers;
-    std::list<HandlerID_t> mPendingEvents;
-    std::vector<EnqueuedEventInfo> mEnqueuedEvents;
+    std::map<TimerID_t, TimerInfo> mActiveTimers; // protected by mHandlersSync
+    std::map<HandlerID_t, EventHandlerFunc_t> mEventHandlers; // protected by mHandlersSync
+    std::map<HandlerID_t, EnqueuedEventHandlerFunc_t> mEnqueuedEventHandlers; // protected by mHandlersSync
+    std::map<HandlerID_t, TimerHandlerFunc_t> mTimerHandlers; // protected by mHandlersSync
+    std::list<HandlerID_t> mPendingEvents; // protected by mEmitSync
+    std::vector<EnqueuedEventInfo> mEnqueuedEvents; // protected by mEnqueuedEventsSync
     Mutex mEmitSync;
     Mutex mHandlersSync;
     Mutex mEnqueuedEventsSync;

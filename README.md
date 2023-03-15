@@ -1,7 +1,8 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v0.30.1-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
-[![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
+[![Changelog](https://img.shields.io/badge/changelog-v0.30.2-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Latest Release](https://img.shields.io/github/v/tag/igor-krechetov/hsmcpp?label=latest%20release)](https://github.com/igor-krechetov/hsmcpp/tags)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
+[![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 
 # Quality Status
 

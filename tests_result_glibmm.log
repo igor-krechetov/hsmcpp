@@ -39,7 +39,7 @@
 [       OK ] TrafficLightHsm.transition_conditional_simple_false (0 ms)
 [ RUN      ] TrafficLightHsm.transition_conditional_multiple
 [       OK ] TrafficLightHsm.transition_conditional_multiple (0 ms)
-[----------] 19 tests from TrafficLightHsm (2 ms total)
+[----------] 19 tests from TrafficLightHsm (3 ms total)
 
 [----------] 64 tests from ABCHsm
 [ RUN      ] ABCHsm.substate_entrypoint
@@ -67,7 +67,7 @@
 [ RUN      ] ABCHsm.transition_self_external_deep
 [       OK ] ABCHsm.transition_self_external_deep (0 ms)
 [ RUN      ] ABCHsm.multithreaded_deleting_running_dispatcher
-[       OK ] ABCHsm.multithreaded_deleting_running_dispatcher (0 ms)
+[       OK ] ABCHsm.multithreaded_deleting_running_dispatcher (1 ms)
 [ RUN      ] ABCHsm.callbacks_class_pointers
 [       OK ] ABCHsm.callbacks_class_pointers (0 ms)
 [ RUN      ] ABCHsm.callbacks_lambdas
@@ -101,7 +101,7 @@
 [ RUN      ] ABCHsm.parallel_transition_canceled_02
 [       OK ] ABCHsm.parallel_transition_canceled_02 (0 ms)
 [ RUN      ] ABCHsm.parallel_transition_mult2one_01
-[       OK ] ABCHsm.parallel_transition_mult2one_01 (1 ms)
+[       OK ] ABCHsm.parallel_transition_mult2one_01 (0 ms)
 [ RUN      ] ABCHsm.parallel_transition_mult2one_02
 [       OK ] ABCHsm.parallel_transition_mult2one_02 (0 ms)
 [ RUN      ] ABCHsm.parallel_callbacks
@@ -170,7 +170,7 @@
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 64 tests from ABCHsm (3529 ms total)
+[----------] 64 tests from ABCHsm (3530 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
@@ -187,7 +187,7 @@
 
 [----------] 2 tests from dispatchers
 [ RUN      ] dispatchers.stresstest_create_destroy
-[       OK ] dispatchers.stresstest_create_destroy (8 ms)
+[       OK ] dispatchers.stresstest_create_destroy (7 ms)
 [ RUN      ] dispatchers.create_hsm_from_callback
 [       OK ] dispatchers.create_hsm_from_callback (0 ms)
 [----------] 2 tests from dispatchers (8 ms total)
@@ -217,15 +217,15 @@
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (151 ms)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (150 ms)
 [----------] 4 tests from finalstate/ParamFixtureFinalState1 (503 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState2
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0
 [       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1
-[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1 (151 ms)
-[----------] 2 tests from finalstate/ParamFixtureFinalState2 (252 ms total)
+[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1 (150 ms)
+[----------] 2 tests from finalstate/ParamFixtureFinalState2 (251 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState3
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0
@@ -235,5 +235,5 @@
 [----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
 
 [----------] Global test environment tear-down
-[==========] 105 tests from 8 test suites ran. (5149 ms total)
+[==========] 105 tests from 8 test suites ran. (5150 ms total)
 [  PASSED  ] 105 tests.

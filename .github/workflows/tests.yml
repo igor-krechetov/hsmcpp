@@ -10,6 +10,8 @@ env:
 
 jobs:
   check-hsmcpp-version:
+    if: ${{ (github.repository == 'igor-krechetov/hsmcpp') }}
+
     runs-on: ubuntu-latest
     outputs:
       commit_version: ${{ steps.get_version.outputs.commit_version }}
@@ -24,7 +26,7 @@ jobs:
 
   run-tests:
     needs: check-hsmcpp-version
-    if: ${{ (github.repository == 'igor-krechetov/hsmcpp') && (needs.check-hsmcpp-version.outputs.commit_version != '') }}
+    if: ${{ (needs.check-hsmcpp-version.outputs.commit_version != '') }}
     runs-on: ubuntu-latest
 
     env:

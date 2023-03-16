@@ -1,4 +1,4 @@
-name: "Deploy PlatformIO library"
+name: "Deploy ArduinoIDE library"
 
 on:
   workflow_dispatch:
@@ -27,30 +27,30 @@ jobs:
           repo_dir: ${{ env.GITHUB_WORKSPACE }}
           commit_sha: ${{ github.event.workflow_run.head_sha }}
 
-  deploy-platformio:
-    runs-on: ubuntu-latest
+  deploy-arduinoide:
     needs: check-hsmcpp-version
+    # only if commit has version defined and is a release commit
+    if: ${{ (needs.check-hsmcpp-version.outputs.commit_version != '') && (needs.check-hsmcpp-version.outputs.commit_action == 'r') }}
 
-    # only run for successful build after push event
-    # avoid running this action on forks
-    if: ${{ (needs.check-hsmcpp-version.outputs.commit_version != '') }}
+    runs-on: ubuntu-latest
 
     env:
-      target_dir: './platformio_deploy/'
+      target_dir: './arduinoide_deploy/'
+      library_dir: './main/build/deploy/hsmcpp'
 
     steps:
       # need to checkout current repo because workflow is not related with push event
       - uses: actions/checkout@v3
-      - uses: ./.github/workflows/install_platformio
 
       # checkout repositories
       - uses: actions/checkout@v3
         with:
-          ref: main
           path: './main'
       - uses: actions/checkout@v3
         with:
-          ref: platformio_library
+          repository: 'igor-krechetov/hsmcpp-arduinoide'
+          token: ${{ secrets.HSMCPP_BOT_TOKEN }}
+          ref: main
           path: ${{ env.target_dir }}
 
       # prepare gpg for commit signing
@@ -66,28 +66,30 @@ jobs:
           workdir: ${{ env.target_dir }}
 
       # deploy files
-      - name: Generate package
+      - name: Generate hsmcpp package
         run: |
-          cmake -S ./main -B ./main/build -DHSMBUILD_TARGET=platformio -DHSMBUILD_PLATFORM=arduino
+          cmake -S ./main -B ./main/build -DHSMBUILD_TARGET=arduinoide -DHSMBUILD_PLATFORM=arduino
           cmake --build ./main/build --target install
+          mv ./main/build/deploy/arduinoide ${{ env.library_dir }}
+
+      - name: Install arduino-lint
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-lint/main/etc/install.sh | BINDIR=./ sh
+
+      # TODO: uncomment later
+      # - name: Validate arduino library structure
+      #   run: |
+      #     ./arduino-lint --compliance strict --recursive --library-manager update ${{ env.library_dir }}
 
       - name: Copy package files to target repository
-        run: cp -Rv ./main/build/deploy/platformio/* "$target_dir"
-
-      - name: Publish PlatformIO package
-        # only publish release versions
-        if: ${{ needs.check-hsmcpp-version.outputs.commit_action == 'r' }}
-        env:
-          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_TOKEN }}
-        run: |
-          pio pkg publish ./main/build/deploy/platformio --type library --no-interactive
+        run: cp -Rv ${{ env.library_dir }}/* "$target_dir"
 
       - name: Prepare commit message
         run: |
           cd ./main
           git log -1 --format=%B ${{ github.event.workflow_run.head_sha }} > ../commit.txt
 
-      - name: Commit new files
+      - name: Publish ArduinoIDE package
         run: |
           cd "$target_dir"
           git add -A

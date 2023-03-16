@@ -35,6 +35,7 @@ jobs:
     - if: ${{ (github.repository == 'igor-krechetov/hsmcpp') && (needs.check-hsmcpp-version.outputs.commit_version != '') }}
       run: ./scripts/validate_metadata.py ${{ needs.check-hsmcpp-version.outputs.commit_version }} ./
 
+  # -----------------------------------------------------------------
   build-ubuntu:
     needs: validate-metadata
     runs-on: ubuntu-latest
@@ -49,6 +50,7 @@ jobs:
           build_dir: ${{github.workspace}}/build
           platform: 'posix'
 
+  # -----------------------------------------------------------------
   build-windows:
     needs: validate-metadata
     runs-on: windows-latest
@@ -63,7 +65,8 @@ jobs:
           build_dir: ${{github.workspace}}/build
           platform: 'windows'
 
-  build-arduino:
+  # -----------------------------------------------------------------
+  build-platformio:
     needs: validate-metadata
     runs-on: ubuntu-latest
 
@@ -74,15 +77,15 @@ jobs:
       # deploy files
       - name: Generate package
         run: |
-          cmake -S ./ -B ./build -DHSMBUILD_TARGET=package -DHSMBUILD_PLATFORM=arduino
+          cmake -S ./ -B ./build -DHSMBUILD_TARGET=platformio -DHSMBUILD_PLATFORM=arduino
           cmake --build ./build --target install
 
       - name: Copy package to examples folder
         run: |
           mkdir -p ./examples/09_arduino/01_blink/lib/hsmcpp
-          cp -Rv ./build/deploy/* ./examples/09_arduino/01_blink/lib/hsmcpp
+          cp -Rv ./build/deploy/platformio/* ./examples/09_arduino/01_blink/lib/hsmcpp
           mkdir -p ./examples/09_arduino/02_blink_button/lib/hsmcpp
-          cp -Rv ./build/deploy/* ./examples/09_arduino/02_blink_button/lib/hsmcpp
+          cp -Rv ./build/deploy/platformio/* ./examples/09_arduino/02_blink_button/lib/hsmcpp
 
       # build examples
       - name: Build 01_blink
@@ -95,6 +98,65 @@ jobs:
           cd ./examples/09_arduino/02_blink_button/
           pio run
 
+  # -----------------------------------------------------------------
+  build-arduinoide:
+    needs: validate-metadata
+    runs-on: ubuntu-latest
+
+    env:
+      library_dir: ./build/deploy/arduinoide
+      example1_dir: ./build/deploy/arduinoide/examples/01_blink
+      example2_dir: ./build/deploy/arduinoide/examples/02_blink_button
+      scxml2gen_dir: ./build/deploy/arduinoide/tools/scxml2gen
+      hsmcpp_library: ./build/deploy/hsmcpp.zip
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate hsmcpp library package
+        run: |
+          cmake -S ./ -B ./build -DHSMBUILD_TARGET=arduinoide -DHSMBUILD_PLATFORM=arduino
+          cmake --build ./build --target install
+          cp -Rv ${{ env.library_dir }} ./build/deploy/hsmcpp
+          cd ./build/deploy/
+          zip -r ./hsmcpp.zip ./hsmcpp
+
+      - name: Generate HSM files
+        run: |
+          python3 ${{ env.scxml2gen_dir }}/scxml2gen.py -code -scxml ${{ env.example1_dir }}/blink.scxml \
+                                                                      -class_name BlinkHsm \
+                                                                      -class_suffix Base \
+                                                                      -template_hpp ${{ env.scxml2gen_dir }}/template.hpp \
+                                                                      -template_cpp ${{ env.scxml2gen_dir }}/template.cpp \
+                                                                      -dest_dir ${{ env.example1_dir }}/
+          python3 ${{ env.scxml2gen_dir }}/scxml2gen.py -code -scxml ${{ env.example2_dir }}/blink_button.scxml \
+                                                                      -class_name BlinkButtonHsm \
+                                                                      -class_suffix Base \
+                                                                      -template_hpp ${{ env.scxml2gen_dir }}/template.hpp \
+                                                                      -template_cpp ${{ env.scxml2gen_dir }}/template.cpp \
+                                                                      -dest_dir ${{ env.example2_dir }}/
+
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v1.1.1
+
+      - name: Install platform files
+        run: |
+          arduino-cli core update-index --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
+          arduino-cli core install esp8266:esp8266 --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
+
+      - name: Install hsmcpp library
+        run: |
+          arduino-cli config init
+          arduino-cli config set library.enable_unsafe_install true
+          arduino-cli lib install --zip-path ${{ env.hsmcpp_library }}
+
+      - name: Compile Sketch 01
+        run: arduino-cli compile --fqbn esp8266:esp8266:d1_mini ${{ env.example1_dir }}/ --warnings more
+
+      - name: Compile Sketch 02
+        run: arduino-cli compile --fqbn esp8266:esp8266:d1_mini ${{ env.example2_dir }}/ --warnings more
+
+  # -----------------------------------------------------------------
   build-freertos:
     needs: validate-metadata
     runs-on: ubuntu-latest

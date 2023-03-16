@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.30.2")
+set(PROJECT_VERSION "0.31.0")
 set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(HSMBUILD_TARGET "library" CACHE STRING "Desired build output")# Possible values: library, package
+set(HSMBUILD_TARGET "library" CACHE STRING "Desired build output. Possible values: library, platformio, arduinoide")
 
 option(HSMBUILD_VERBOSE "Enable/disable HSM verbosity [feature for DEBUG]" OFF)
 option(HSMBUILD_STRUCTURE_VALIDATION "Enable/disable HSM structure validation" ON)
@@ -141,16 +141,12 @@ endif()
 
 # ================================================================================================
 # Build Target: package
-if (HSMBUILD_TARGET STREQUAL "package")
-    set(DEPLOY_DIR ${CMAKE_BINARY_DIR}/deploy)
+set(DEPLOY_DIR_ROOT ${CMAKE_BINARY_DIR}/deploy)
 
-    if (HSMBUILD_PLATFORM STREQUAL "arduino")
-        include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/target/package/platformio_arduino.cmake)
-    else()
-        message(FATAL_ERROR "Unsupported HSMBUILD_PLATFORM=${HSMBUILD_PLATFORM}")
-    endif()
-
-    return()
+if (HSMBUILD_TARGET STREQUAL "platformio")
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/target/package/platformio.cmake)
+elseif (HSMBUILD_TARGET STREQUAL "arduinoide")
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/target/package/arduinoide.cmake)
 # ================================================================================================
 # Build Target: library
 elseif (HSMBUILD_TARGET STREQUAL "library")
@@ -253,5 +249,5 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/install.cmake)
 # ================================================================================================
 else()
-    message(FATAL_ERROR "Unsupported HSMBUILD_TARGET=${HSMBUILD_TARGET}")
+    message(FATAL_ERROR "Unsupported HSMBUILD_TARGET=${HSMBUILD_TARGET} NEW")
 endif()

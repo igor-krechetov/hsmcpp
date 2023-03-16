@@ -9,6 +9,10 @@ on:
 
 jobs:
   check-hsmcpp-version:
+    # only run for successful build after push event
+    # avoid running this action on forks
+    if: ${{ (github.repository == 'igor-krechetov/hsmcpp') && ((github.event.workflow_run == null) || ((github.event.workflow_run.conclusion == 'success') && (github.event.workflow_run.event == 'push'))) }}
+
     runs-on: ubuntu-latest
     outputs:
       commit_version: ${{ steps.get_version.outputs.commit_version }}
@@ -23,12 +27,10 @@ jobs:
           commit_sha: ${{ github.event.workflow_run.head_sha }}
 
   create-release-tag:
-    runs-on: ubuntu-latest
     needs: check-hsmcpp-version
+    if: ${{ (needs.check-hsmcpp-version.outputs.commit_version != '') && (needs.check-hsmcpp-version.outputs.commit_action == 'r') }}
 
-    # only run for successful build after push event
-    # avoid running this action on forks
-    if: ${{ (github.repository == 'igor-krechetov/hsmcpp') && (needs.check-hsmcpp-version.outputs.commit_version != '') && (needs.check-hsmcpp-version.outputs.commit_action == 'r') && ((github.event.workflow_run == null) || ((github.event.workflow_run.conclusion == 'success') && (github.event.workflow_run.event == 'push'))) }}
+    runs-on: ubuntu-latest
 
     steps:
       # need to checkout current repo because workflow is not related with push event

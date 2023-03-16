@@ -146,6 +146,7 @@ void HierarchicalStateMachine::Impl::release() {
         mDispatcher->unregisterEventHandler(mEventsHandlerId);
         mDispatcher->unregisterEnqueuedEventHandler(mEnqueuedEventsHandlerId);
         mDispatcher->unregisterTimerHandler(mTimerHandlerId);
+        // TODO: even though we unregistered handlers, callbacks still might be called
         mDispatcher.reset();
         mEventsHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
     }

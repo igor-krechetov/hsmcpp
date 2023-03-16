@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.31.0] - 2023-03-16
+### Added
+- ArduinoIDE support
+
 ## [0.30.2] - 2023-03-15
 ### Updated
 - scxml2gen: changed generated event, state, timer values from const to constexpr

@@ -1,0 +1,10 @@
+name=hsmcpp
+version=@PROJECT_VERSION@
+author=Ihor Krechetov <ihor.krechetov.public@gmail.com>
+maintainer=Ihor Krechetov <ihor.krechetov.public@gmail.com>
+sentence=C++ library for Hierarchical State Machines (HSM, FSM)
+paragraph=@PROJECT_DESCRIPTION@
+category=Other
+url=https://hsmcpp.readthedocs.io
+architectures=*
+includes=hsmcpp.hpp

@@ -1,10 +1,11 @@
 // Copyright (C) 2023 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
-#include "hsm/BlinkHsmBase.hpp"
 #include <Arduino.h>
-#include <hsmcpp/HsmEventDispatcherArduino.hpp>
+#include <hsmcpp.hpp>
 #include <memory>
+
+#include "BlinkHsmBase.hpp"
 
 /*
   This example demonstrates basic usage of hsmcpp library by implementing a LED
@@ -26,9 +27,24 @@
   state callback will be called from BlinkHSM When transition is executed and
   HSM moved to a new state.
 
+  ==============================
+  # Building with PlatformIO
+  ==============================
   blink.scxml will be automatically generated into BlinkHsmBase C++ class during
   build. Generation is controlled by "custom_hsm_files" and "custom_hsm_gendir"
   settings in platformio.ini.
+
+  ==============================
+  # Building with ArduinoIDE
+  ==============================
+  You will need to manually generate HSM class before compiling this sketch.
+  Generator is installed as part of the hsmcpp library and is located in:
+  <Arduino>/libraries/hsmcpp/tools/scxml2gen.py
+
+  <Arduino> is path to your sketchbook location (see File > Preferences > Sketchbook location).
+
+  To generate BlinkHsmBase class run this command from inside your sketch folder:
+  python3 <Arduino>/libraries/hsmcpp/tools/scxml2gen.py -code -scxml ./blink.scxml -class_name BlinkHsm -class_suffix Base -template_hpp <Arduino>/libraries/hsmcpp/tools/template.hpp -template_cpp <Arduino>/libraries/hsmcpp/tools/template.cpp -dest_dir ./
 */
 
 // Implementation of state machine callbacks.

@@ -293,7 +293,8 @@ void HsmEventDispatcherBase::dispatchPendingEventsImpl(const std::list<HandlerID
         std::map<HandlerID_t, EventHandlerFunc_t> eventHandlersCopy;
 
         {
-            // TODO: workaround to prevent recursive lock if registerEventHandler is called from another handler
+            // TODO: workaround to prevent recursive lock if registerEventHandler/unregisterEventHandler is called from handler
+            // callback
             LockGuard lck(mHandlersSync);
             eventHandlersCopy = mEventHandlers;
         }

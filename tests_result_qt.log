@@ -141,7 +141,7 @@
 [ RUN      ] ABCHsm.timers_restart
 [       OK ] ABCHsm.timers_restart (900 ms)
 [ RUN      ] ABCHsm.timers_delete_running
-[       OK ] ABCHsm.timers_delete_running (152 ms)
+[       OK ] ABCHsm.timers_delete_running (150 ms)
 [ RUN      ] ABCHsm.timers_start_from_code
 [       OK ] ABCHsm.timers_start_from_code (150 ms)
 [ RUN      ] ABCHsm.timers_stop_from_code
@@ -168,7 +168,7 @@
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 63 tests from ABCHsm (3531 ms total)
+[----------] 63 tests from ABCHsm (3528 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
@@ -185,8 +185,8 @@
 
 [----------] 1 test from dispatchers
 [ RUN      ] dispatchers.create_hsm_from_callback
-[       OK ] dispatchers.create_hsm_from_callback (1 ms)
-[----------] 1 test from dispatchers (1 ms total)
+[       OK ] dispatchers.create_hsm_from_callback (0 ms)
+[----------] 1 test from dispatchers (0 ms total)
 
 [----------] 7 tests from variant
 [ RUN      ] variant.vector
@@ -231,5 +231,5 @@
 [----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
 
 [----------] Global test environment tear-down
-[==========] 103 tests from 8 test suites ran. (5143 ms total)
+[==========] 103 tests from 8 test suites ran. (5139 ms total)
 [  PASSED  ] 103 tests.

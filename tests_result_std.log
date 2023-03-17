@@ -39,7 +39,7 @@
 [       OK ] TrafficLightHsm.transition_conditional_simple_false (0 ms)
 [ RUN      ] TrafficLightHsm.transition_conditional_multiple
 [       OK ] TrafficLightHsm.transition_conditional_multiple (0 ms)
-[----------] 19 tests from TrafficLightHsm (2 ms total)
+[----------] 19 tests from TrafficLightHsm (1 ms total)
 
 [----------] 64 tests from ABCHsm
 [ RUN      ] ABCHsm.substate_entrypoint
@@ -170,7 +170,7 @@
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 64 tests from ABCHsm (3526 ms total)
+[----------] 64 tests from ABCHsm (3525 ms total)
 
 [----------] 5 tests from AsyncHsm
 [ RUN      ] AsyncHsm.substate_parent_as_initial
@@ -217,7 +217,7 @@
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0
 [       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (151 ms)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (150 ms)
 [----------] 4 tests from finalstate/ParamFixtureFinalState1 (503 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState2
@@ -231,9 +231,9 @@
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0
 [       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0 (100 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1
-[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (151 ms)
+[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (150 ms)
 [----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
 
 [----------] Global test environment tear-down
-[==========] 105 tests from 8 test suites ran. (5137 ms total)
+[==========] 105 tests from 8 test suites ran. (5136 ms total)
 [  PASSED  ] 105 tests.

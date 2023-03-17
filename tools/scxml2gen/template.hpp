@@ -7,13 +7,13 @@
 
 namespace @ENUM_STATES@ {
 ~~~BLOCK:ENUM_STATES_ITEM~~~
-    const hsmcpp::StateID_t @ENUM_STATES_ITEM@ = @BLOCK_ITEM_INDEX@;
+    constexpr hsmcpp::StateID_t @ENUM_STATES_ITEM@ = @BLOCK_ITEM_INDEX@;
 ~~~BLOCK_END~~~
 }
 
 namespace @ENUM_EVENTS@ {
 ~~~BLOCK:ENUM_EVENTS_ITEM~~~
-    const hsmcpp::EventID_t @ENUM_EVENTS_ITEM@ = @BLOCK_ITEM_INDEX@;
+    constexpr hsmcpp::EventID_t @ENUM_EVENTS_ITEM@ = @BLOCK_ITEM_INDEX@;
 ~~~BLOCK_END~~~
 
     // INVALID = INVALID_ID
@@ -21,7 +21,7 @@ namespace @ENUM_EVENTS@ {
 
 namespace @ENUM_TIMERS@ {
 ~~~BLOCK:ENUM_TIMERS_ITEM~~~
-    const hsmcpp::TimerID_t @ENUM_TIMERS_ITEM@ = @BLOCK_ITEM_INDEX@;
+    constexpr hsmcpp::TimerID_t @ENUM_TIMERS_ITEM@ = @BLOCK_ITEM_INDEX@;
 ~~~BLOCK_END~~~
 }
 

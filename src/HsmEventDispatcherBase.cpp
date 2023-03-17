@@ -37,9 +37,12 @@ void HsmEventDispatcherBase::unregisterEventHandler(const HandlerID_t handlerID)
 
 void HsmEventDispatcherBase::emitEvent(const HandlerID_t handlerID) {
     HSM_TRACE_CALL_DEBUG();
-    LockGuard lck(mEmitSync);
 
-    mPendingEvents.push_back(handlerID);
+    {
+        LockGuard lck(mEmitSync);
+        mPendingEvents.push_back(handlerID);
+    }
+
     notifyDispatcherAboutEvent();
 
     // NOTE: this is not a full implementation. child classes must implement additional logic
@@ -85,6 +88,7 @@ void HsmEventDispatcherBase::unregisterEnqueuedEventHandler(const HandlerID_t ha
 
 HandlerID_t HsmEventDispatcherBase::registerTimerHandler(const TimerHandlerFunc_t& handler) {
     const HandlerID_t newID = getNextHandlerID();
+    LockGuard lck(mHandlersSync);
 
     mTimerHandlers.emplace(newID, handler);
 
@@ -92,6 +96,7 @@ HandlerID_t HsmEventDispatcherBase::registerTimerHandler(const TimerHandlerFunc_
 }
 
 void HsmEventDispatcherBase::unregisterTimerHandler(const HandlerID_t handlerID) {
+    LockGuard lck(mHandlersSync);
     auto itHandler = mTimerHandlers.find(handlerID);
 
     if (mTimerHandlers.end() != itHandler) {
@@ -117,6 +122,8 @@ void HsmEventDispatcherBase::startTimer(const HandlerID_t handlerID,
                               timerID,
                               intervalMs,
                               BOOL2INT(isSingleShot));
+    LockGuard lck(mHandlersSync);
+
     if (mTimerHandlers.find(handlerID) != mTimerHandlers.end()) {
         auto it = mActiveTimers.find(timerID);
 
@@ -143,6 +150,7 @@ void HsmEventDispatcherBase::startTimer(const HandlerID_t handlerID,
 
 void HsmEventDispatcherBase::restartTimer(const TimerID_t timerID) {
     HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
+    LockGuard lck(mHandlersSync);
     auto it = mActiveTimers.find(timerID);
 
     if (mActiveTimers.end() != it) {
@@ -153,6 +161,7 @@ void HsmEventDispatcherBase::restartTimer(const TimerID_t timerID) {
 
 void HsmEventDispatcherBase::stopTimer(const TimerID_t timerID) {
     HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
+    LockGuard lck(mHandlersSync);
     auto it = mActiveTimers.find(timerID);
 
     HSM_TRACE_DEBUG("mActiveTimers=%lu", mActiveTimers.size());
@@ -222,6 +231,8 @@ bool HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID) {
     bool restartTimer = false;
 
     if (INVALID_HSM_TIMER_ID != timerID) {
+        // NOTE: should lock the whole block to prevent situation when timer handler is unregistered during handler execution
+        LockGuard lck(mHandlersSync);
         TimerInfo curTimer = getTimerInfo(timerID);
 
         HSM_TRACE_DEBUG("curTimer.handlerID=%d", curTimer.handlerID);
@@ -282,7 +293,8 @@ void HsmEventDispatcherBase::dispatchPendingEventsImpl(const std::list<HandlerID
         std::map<HandlerID_t, EventHandlerFunc_t> eventHandlersCopy;
 
         {
-            // TODO: workaround to prevent recursive lock if registerEventHandler is called from another handler
+            // TODO: workaround to prevent recursive lock if registerEventHandler/unregisterEventHandler is called from handler
+            // callback
             LockGuard lck(mHandlersSync);
             eventHandlersCopy = mEventHandlers;
         }

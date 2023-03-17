@@ -1,7 +1,8 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v0.30.1-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
-[![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
+[![Changelog](https://img.shields.io/badge/changelog-v0.31.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Latest Release](https://img.shields.io/github/v/tag/igor-krechetov/hsmcpp?label=latest%20release)](https://github.com/igor-krechetov/hsmcpp/tags)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
+[![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 
 # Quality Status
 
@@ -42,6 +43,7 @@ If you are not familiar with HSM/FSM and which problems they can solve in your c
 - supported platforms:
   - POSIX compliant
   - Windows
+  - Arduino
   - FreeRTOS
 - [configurable event dispatchers](https://hsmcpp.readthedocs.io/en/latest/platforms/platforms.html#built-in-dispatchers):
   - std::thread based
@@ -49,6 +51,7 @@ If you are not familiar with HSM/FSM and which problems they can solve in your c
   - glibmm based
   - Qt based
   - FreeRTOS based
+  - Arduino based
   - possibility to [implement your own dispatcher](https://hsmcpp.readthedocs.io/en/latest/platforms/platforms.html#implementing-custom-dispatchers)
 - [visual debugger](https://hsmcpp.readthedocs.io/en/latest/tools/hsmdebugger/hsmdebugger.html) to help analyze state machine behavior
 
@@ -61,7 +64,7 @@ If you are not familiar with HSM/FSM and which problems they can solve in your c
 - state and transition [callbacks](https://hsmcpp.readthedocs.io/en/latest/code-generation/scxml/scxml.html#callbacks-definition) (enter, exit, state changed, on transition)
 - passing data to state and transition callbacks
 - [parallel states](https://hsmcpp.readthedocs.io/en/latest/features/parallel/parallel.html)
-- final states
+- [final states](https://hsmcpp.readthedocs.io/en/latest/features/substates/substates.html#final-state)
 - [conditional transitions](https://hsmcpp.readthedocs.io/en/latest/features/transitions/transitions.html#conditional-transitions)
 - [conditional entry points](https://hsmcpp.readthedocs.io/en/latest/features/substates/substates.html#conditional-entry-points)
 - [state actions](https://hsmcpp.readthedocs.io/en/latest/features/states/states.html#state-actions)

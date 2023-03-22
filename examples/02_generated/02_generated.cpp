@@ -26,7 +26,7 @@ protected:
 };
 
 int main(const int argc, const char** argv) {
-    std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
+    std::shared_ptr<HsmEventDispatcherSTD> dispatcher = HsmEventDispatcherSTD::create();
     SwitchHsm hsm;
 
     if (true == hsm.initialize(dispatcher)) {

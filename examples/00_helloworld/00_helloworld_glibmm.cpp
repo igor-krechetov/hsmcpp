@@ -17,6 +17,7 @@ namespace Events {
 int main(const int argc, const char** argv) {
     Glib::init();
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();
+    std::shared_ptr<hsmcpp::HsmEventDispatcherGLibmm> dispatcher = hsmcpp::HsmEventDispatcherGLibmm::create();
     HierarchicalStateMachine hsm(States::OFF);
 
     hsm.registerState(States::OFF, [&hsm](const hsmcpp::VariantVector_t& args) {
@@ -33,7 +34,7 @@ int main(const int argc, const char** argv) {
     hsm.registerTransition(States::OFF, States::ON, Events::SWITCH);
     hsm.registerTransition(States::ON, States::OFF, Events::SWITCH);
 
-    hsm.initialize(std::make_shared<HsmEventDispatcherGLibmm>());
+    hsm.initialize(dispatcher);
     hsm.transition(Events::SWITCH);
     mainLoop->run();
 

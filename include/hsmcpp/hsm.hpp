@@ -4,7 +4,10 @@
 #ifndef HSMCPP_HSM_HPP
 #define HSMCPP_HSM_HPP
 
+#include <list>
+#include <string>
 #include <memory>
+#include <functional>
 
 #include "HsmTypes.hpp"
 #include "variant.hpp"
@@ -109,13 +112,15 @@ public:
      * @remark In case initial state has registered callbacks or actions, then will be executed synchronously during
      * initialize() call.
      *
+     * @warning HSM does not take ownership of the dispatcher. User is responsible for keeping dispatcher instance alive as long as HSM object exists or until call to release().
+     *
      * @param dispatcher An event dispatcher that can be used to receive events and dispatch them to the HSM.
      * @return true if initialization succeeds, false otherwise.
      *
      * @notthreadsafe{Uses IHsmEventDispatcher::registerEventHandler() and IHsmEventDispatcher::start(). Usually must be called
      * from the same thread where dispatcher was created.}
      */
-    virtual bool initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
+    virtual bool initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher);
 
     /**
      * @brief Checks initialization status of HSM.
@@ -708,7 +713,7 @@ private:
 
 private:
     class Impl;
-    std::unique_ptr<Impl> mImpl;
+    std::shared_ptr<Impl> mImpl;
 };
 
 // =================================================================================================================

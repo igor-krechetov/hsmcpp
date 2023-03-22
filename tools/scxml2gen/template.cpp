@@ -6,7 +6,7 @@
     : hsmcpp::HierarchicalStateMachine(@ENUM_STATES@::@INITIAL_STATE@) {
 }
 
-bool @CLASS_NAME@::initialize(const std::shared_ptr<hsmcpp::IHsmEventDispatcher>& dispatcher) {
+bool @CLASS_NAME@::initialize(const std::weak_ptr<hsmcpp::IHsmEventDispatcher>& dispatcher) {
     configureHsm();
     return hsmcpp::HierarchicalStateMachine::initialize(dispatcher);
 }

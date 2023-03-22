@@ -25,27 +25,18 @@ private:
 
 public:
     /**
-     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     * @brief Create dispatcher instance.
+     *
+     * @threadsafe{Instance can be safely created and destroyed from any thread.}
      */
-    explicit HsmEventDispatcherArduino(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
-
-    /**
-     * Destructor.
-     */
-    virtual ~HsmEventDispatcherArduino();
+    // cppcheck-suppress misra-c2012-17.8 ; false positive. setting default parameter value is not parameter modification
+    static std::shared_ptr<HsmEventDispatcherArduino> create(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
 
     /**
      * @brief See IHsmEventDispatcher::start()
      * @concurrencysafe{ }
      */
     bool start() override;
-
-    /**
-     * @brief Stop dispatching events.
-     * @details Future calls to dispatchEvents() will have no effect.
-     * @concurrencysafe{ }
-     */
-    void stop();
 
     /**
      * @brief See IHsmEventDispatcher::emitEvent()
@@ -63,6 +54,18 @@ public:
     void dispatchEvents();
 
 protected:
+    /**
+     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     */
+    explicit HsmEventDispatcherArduino(const size_t eventsCacheSize);
+
+    /**
+     * Destructor.
+     */
+    virtual ~HsmEventDispatcherArduino();
+
+    bool deleteSafe() override;
+
     void notifyDispatcherAboutEvent() override;
 
     void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
@@ -71,7 +74,6 @@ protected:
     void handleTimers();
 
 private:
-    bool mStopDispatcher = false;
     std::map<TimerID_t, RunningTimerInfo> mRunningTimers;
 };
 

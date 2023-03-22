@@ -6,6 +6,7 @@
 
 #include <list>
 #include <string>
+#include <memory>
 
 #include "hsmcpp/IHsmEventDispatcher.hpp"
 #include "hsmcpp/logging.hpp"
@@ -86,6 +87,8 @@ bool compareStateLists(const std::list<HsmStateEnum> l1, const std::list<HsmStat
 // ======================================================
 // HSM initialization
 
+extern std::shared_ptr<hsmcpp::IHsmEventDispatcher> gDispatcher;
+
 // since unit tests are executed on a separate thread we need a way to create/destroy dispatchers on main thread (in a sync way)
 // this function blocks thread execution until func() is finished running on main thread.
 // implementation depends on used dispatcher
@@ -94,32 +97,38 @@ bool executeOnMainThread(std::function<bool()> func);
 #if defined(TEST_HSM_GLIB)
   #include "hsmcpp/HsmEventDispatcherGLib.hpp"
 
-  #define CREATE_DISPATCHER() std::make_shared<HsmEventDispatcherGLib>()
+  #define CREATE_DISPATCHER() HsmEventDispatcherGLib::create()
 #elif defined(TEST_HSM_GLIBMM)
   #include "hsmcpp/HsmEventDispatcherGLibmm.hpp"
 
-  #define CREATE_DISPATCHER() std::make_shared<HsmEventDispatcherGLibmm>()
+  #define CREATE_DISPATCHER() HsmEventDispatcherGLibmm::create()
 #elif defined(TEST_HSM_STD)
   #include "hsmcpp/HsmEventDispatcherSTD.hpp"
 
-  #define CREATE_DISPATCHER() std::make_shared<HsmEventDispatcherSTD>()
+  #define CREATE_DISPATCHER() HsmEventDispatcherSTD::create()
 #elif defined(TEST_HSM_QT)
   #include "hsmcpp/HsmEventDispatcherQt.hpp"
 
-  #define CREATE_DISPATCHER() std::make_shared<HsmEventDispatcherQt>()
+  #define CREATE_DISPATCHER() HsmEventDispatcherQt::create()
 #elif defined(TEST_HSM_FREERTOS)
   #include "hsmcpp/HsmEventDispatcherFreeRTOS.hpp"
 
     // NOTE: priority should be higher than priority of the task where gTest is running
-  #define CREATE_DISPATCHER() std::make_shared<HsmEventDispatcherFreeRTOS>(configMINIMAL_STACK_SIZE, tskIDLE_PRIORITY + 1)
+  #define CREATE_DISPATCHER() HsmEventDispatcherFreeRTOS::create(configMINIMAL_STACK_SIZE, tskIDLE_PRIORITY + 1)
 #else
   #error HSM Dispatcher not specified
 #endif
 
-#define INITIALIZE_HSM() ASSERT_TRUE(executeOnMainThread([&]() { return initialize(CREATE_DISPATCHER()); }))
+#define INITIALIZE_HSM()                                                                        \
+  ASSERT_TRUE(executeOnMainThread([this]() {                                                    \
+    if (!gDispatcher){                                                                          \
+      gDispatcher = std::static_pointer_cast<hsmcpp::IHsmEventDispatcher>(CREATE_DISPATCHER()); \
+    }                                                                                           \
+    return initialize(gDispatcher);                                                             \
+  }))
+
 #define RELEASE_HSM()                     \
-  ASSERT_TRUE(executeOnMainThread([&]() { \
-release();                                \
+  ASSERT_TRUE(executeOnMainThread([this]() { \
 return true;                              \
   }))
 

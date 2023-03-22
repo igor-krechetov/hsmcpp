@@ -14,32 +14,53 @@ namespace hsmcpp {
 
 HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm(const size_t eventsCacheSize)
     : HsmEventDispatcherBase(eventsCacheSize)
-    , mMainContext(Glib::MainContext::get_default())
-    , mDispatcher(new Glib::Dispatcher()) {
+    , mMainContext(Glib::MainContext::get_default()) {
     HSM_TRACE_CALL_DEBUG();
 }
 
 HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context, const size_t eventsCacheSize)
     : HsmEventDispatcherBase(eventsCacheSize)
-    , mMainContext(context)
-    , mDispatcher(new Glib::Dispatcher(context)) {
+    , mMainContext(context) {
     HSM_TRACE_CALL_DEBUG();
 }
 
 HsmEventDispatcherGLibmm::~HsmEventDispatcherGLibmm() {
     HSM_TRACE_CALL_DEBUG();
 
-    if (true == mDispatcherConnection.connected()) {
-        mDispatcherConnection.disconnect();
+    stop();
+}
+
+std::shared_ptr<HsmEventDispatcherGLibmm> HsmEventDispatcherGLibmm::create(const size_t eventsCacheSize) {
+    return std::shared_ptr<HsmEventDispatcherGLibmm>(new HsmEventDispatcherGLibmm(eventsCacheSize), &HsmEventDispatcherBase::handleDelete);
+}
+
+std::shared_ptr<HsmEventDispatcherGLibmm> HsmEventDispatcherGLibmm::create(const Glib::RefPtr<Glib::MainContext>& context, const size_t eventsCacheSize) {
+    return std::shared_ptr<HsmEventDispatcherGLibmm>(new HsmEventDispatcherGLibmm(context, eventsCacheSize), &HsmEventDispatcherBase::handleDelete);
+}
+
+bool HsmEventDispatcherGLibmm::deleteSafe() {
+    bool deleteNow = false;
+
+    if (mMainContext) {
+        mMainContext->signal_idle().connect(sigc::bind([](HsmEventDispatcherGLibmm* pThis){
+            if (nullptr != pThis) {
+                pThis->stop();
+                delete pThis;
+            }
+
+            return false;// unregister idle signal
+        }, this));
+    } else {
+        deleteNow = true;
     }
 
-    unregisterAllTimerHandlers();
-    unregisterAllEventHandlers();
+    return deleteNow;
 }
 
 void HsmEventDispatcherGLibmm::emitEvent(const HandlerID_t handlerID) {
     HSM_TRACE_CALL_DEBUG();
-    if (mDispatcher) {
+
+    if (mDispatcherConnection.connected() == true) {
         HsmEventDispatcherBase::emitEvent(handlerID);
     }
 }
@@ -47,15 +68,33 @@ void HsmEventDispatcherGLibmm::emitEvent(const HandlerID_t handlerID) {
 bool HsmEventDispatcherGLibmm::start() {
     bool result = false;
 
-    if (mDispatcher) {
-        if (mDispatcherConnection.connected() == false) {
-            mDispatcherConnection = mDispatcher->connect(sigc::mem_fun(this, &HsmEventDispatcherGLibmm::dispatchPendingEvents));
-        }
+    if (!mDispatcher && mMainContext) {
+        mDispatcher.reset(new Glib::Dispatcher(mMainContext));
 
-        result = true;
+        if (mDispatcher) {
+            if (mDispatcherConnection.connected() == false) {
+                mDispatcherConnection = mDispatcher->connect(sigc::mem_fun(this, &HsmEventDispatcherGLibmm::dispatchPendingEvents));
+            }
+
+            result = true;
+        }
     }
 
     return result;
+}
+
+void HsmEventDispatcherGLibmm::stop() {
+    HSM_TRACE_CALL_DEBUG();
+
+    HsmEventDispatcherBase::stop();
+
+    if (true == mDispatcherConnection.connected()) {
+        mDispatcherConnection.disconnect();
+    }
+
+    unregisterAllTimerHandlers();
+    unregisterAllEventHandlers();
+    mDispatcher.reset();
 }
 
 void HsmEventDispatcherGLibmm::unregisterAllTimerHandlers() {

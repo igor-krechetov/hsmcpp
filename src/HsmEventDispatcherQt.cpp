@@ -15,30 +15,40 @@ namespace hsmcpp {
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "HsmEventDispatcherQt"
 
-#define QT_EVENT_OFFSET (777)
+#define QT_DISPATCH_EVENT (777)
 
-QEvent::Type HsmEventDispatcherQt::mQtEventType = QEvent::None;
+QEvent::Type HsmEventDispatcherQt::mQtDispatchEventType = QEvent::None;
 
 HsmEventDispatcherQt::HsmEventDispatcherQt(const size_t eventsCacheSize)
     : HsmEventDispatcherBase(eventsCacheSize)
-    , QObject(nullptr) {}
+    , QObject(nullptr) {
+}
 
 HsmEventDispatcherQt::~HsmEventDispatcherQt() {
     HSM_TRACE_CALL_DEBUG();
 
-    unregisterAllTimerHandlers();
-    unregisterAllEventHandlers();
+    HsmEventDispatcherQt::stop();
+}
+
+std::shared_ptr<HsmEventDispatcherQt> HsmEventDispatcherQt::create(const size_t eventsCacheSize) {
+    return std::shared_ptr<HsmEventDispatcherQt>(new HsmEventDispatcherQt(eventsCacheSize), &HsmEventDispatcherBase::handleDelete);
+}
+
+bool HsmEventDispatcherQt::deleteSafe() {
+    QObject::deleteLater();
+
+    return false;
 }
 
 bool HsmEventDispatcherQt::start() {
     HSM_TRACE_CALL_DEBUG();
     bool result = true;
 
-    if (QEvent::None == mQtEventType) {
-        int newEvent = QEvent::registerEventType(static_cast<int>(QEvent::User) + QT_EVENT_OFFSET);
+    if (QEvent::None == mQtDispatchEventType) {
+        int newDispatchEvent = QEvent::registerEventType(static_cast<int>(QEvent::User) + QT_DISPATCH_EVENT);
 
-        if (newEvent > 0) {
-            mQtEventType = static_cast<QEvent::Type>(newEvent);
+        if (newDispatchEvent > 0) {
+            mQtDispatchEventType = static_cast<QEvent::Type>(newDispatchEvent);
         } else {
             result = false;
         }
@@ -54,10 +64,18 @@ bool HsmEventDispatcherQt::start() {
     return result;
 }
 
+void HsmEventDispatcherQt::stop() {
+    HSM_TRACE_CALL_DEBUG();
+
+    HsmEventDispatcherBase::stop();
+    unregisterAllTimerHandlers();
+    unregisterAllEventHandlers();
+}
+
 void HsmEventDispatcherQt::emitEvent(const HandlerID_t handlerID) {
     HSM_TRACE_CALL_DEBUG();
 
-    if (QEvent::None != mQtEventType) {
+    if (QEvent::None != mQtDispatchEventType) {
         HsmEventDispatcherBase::emitEvent(handlerID);
     }
 }
@@ -143,20 +161,15 @@ void HsmEventDispatcherQt::onTimerEvent() {
 }
 
 void HsmEventDispatcherQt::notifyDispatcherAboutEvent() {
-    QCoreApplication::postEvent(this, new QEvent(mQtEventType));
+    QCoreApplication::postEvent(this, new QEvent(mQtDispatchEventType));
 }
 
-bool HsmEventDispatcherQt::event(QEvent* ev) {
+void HsmEventDispatcherQt::customEvent(QEvent* ev) {
     HSM_TRACE_CALL_DEBUG();
-    bool processed = false;
 
-    if (ev->type() == mQtEventType) {
+    if ((false == mStopDispatcher) && (ev->type() == mQtDispatchEventType)) {
         HsmEventDispatcherBase::dispatchPendingEvents();
-
-        processed = true;
     }
-
-    return processed;
 }
 
 }  // namespace hsmcpp

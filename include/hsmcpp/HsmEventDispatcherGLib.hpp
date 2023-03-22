@@ -4,40 +4,27 @@
 #ifndef HSMCPP_HSMEVENTDISPATCHERGLIB_HPP
 #define HSMCPP_HSMEVENTDISPATCHERGLIB_HPP
 
-#include "HsmEventDispatcherBase.hpp"
 #include <glib.h>
+
 #include <condition_variable>
 #include <map>
 
-namespace hsmcpp
-{
+#include "HsmEventDispatcherBase.hpp"
+
+namespace hsmcpp {
 
 /**
  * @brief HsmEventDispatcherGLib provides dispatcher implementation based on glib library.
  * @details Events queue is implemented by using glib IO channel. See @rstref{platforms-dispatcher-glib} for details.
  */
-class HsmEventDispatcherGLib: public HsmEventDispatcherBase
-{
+class HsmEventDispatcherGLib : public HsmEventDispatcherBase {
 private:
     using TimerData_t = std::pair<HsmEventDispatcherGLib*, TimerID_t>;
 
 public:
-    /**
-     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
-     * @details Uses default glib context.
-    */
-    explicit HsmEventDispatcherGLib(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
-
-    /**
-     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
-     * @param context custom glib context to use for dispatcher.
-    */
-    HsmEventDispatcherGLib(GMainContext* context, const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
-
-    /**
-     * Destructor.
-     */
-    virtual ~HsmEventDispatcherGLib();
+    static std::shared_ptr<HsmEventDispatcherGLib> create(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+    static std::shared_ptr<HsmEventDispatcherGLib> create(GMainContext* context,
+                                                          const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
 
     /**
      * @brief Create a new IO channel and start events dispatching.
@@ -47,12 +34,37 @@ public:
     bool start() override;
 
     /**
+     * @copydoc IHsmEventDispatcher::stop()
+     * @notthreadsafe{TODO: Current timers implementation is not thread-safe}
+     */
+    void stop() override;
+
+    /**
      * @brief See IHsmEventDispatcher::emitEvent()
      * @threadsafe{ }
      */
     void emitEvent(const HandlerID_t handlerID) override;
 
 private:
+    /**
+     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     * @details Uses default glib context.
+     */
+    explicit HsmEventDispatcherGLib(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+
+    /**
+     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     * @param context custom glib context to use for dispatcher.
+     */
+    HsmEventDispatcherGLib(GMainContext* context, const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+
+    /**
+     * Destructor.
+     */
+    virtual ~HsmEventDispatcherGLib();
+
+    bool deleteSafe() override;
+
     void unregisterAllTimerHandlers();
 
     void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
@@ -70,13 +82,12 @@ private:
     GSource* mIoSource = nullptr;
     std::mutex mPipeSync;
     int mPipeFD[2] = {-1, -1};
-    bool mStopDispatcher = false;
     bool mDispatchingIterationRunning = false;
     std::mutex mDispatchingSync;
     std::condition_variable mDispatchingDoneEvent;
-    std::map<TimerID_t, GSource*> mNativeTimerHandlers;// <timerID, nativeTimerID>
+    std::map<TimerID_t, GSource*> mNativeTimerHandlers;  // <timerID, nativeTimerID>
 };
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_HSMEVENTDISPATCHERGLIB_HPP
+#endif  // HSMCPP_HSMEVENTDISPATCHERGLIB_HPP

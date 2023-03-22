@@ -13,7 +13,7 @@ namespace Events {
 }
 
 int main(const int argc, const char** argv) {
-    std::shared_ptr<hsmcpp::HsmEventDispatcherSTD> dispatcher = std::make_shared<hsmcpp::HsmEventDispatcherSTD>();
+    std::shared_ptr<hsmcpp::HsmEventDispatcherSTD> dispatcher = hsmcpp::HsmEventDispatcherSTD::create();
     hsmcpp::HierarchicalStateMachine hsm(States::OFF);
 
     hsm.registerState(States::OFF, [&hsm](const hsmcpp::VariantVector_t& args) {

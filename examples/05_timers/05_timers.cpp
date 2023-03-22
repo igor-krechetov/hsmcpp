@@ -23,6 +23,7 @@ using TimersHSM_t = hsmcpp::HierarchicalStateMachine;
 int main(const int argc, const char** argv) {
     Glib::init();
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();
+    std::shared_ptr<hsmcpp::HsmEventDispatcherGLibmm> dispatcher = hsmcpp::HsmEventDispatcherGLibmm::create();
     hsmcpp::HierarchicalStateMachine hsm(States::IDLE);
 
     hsm.registerState(States::IDLE, [&hsm](const hsmcpp::VariantVector_t& args) { printf("Idle\n"); });
@@ -42,7 +43,7 @@ int main(const int argc, const char** argv) {
                             1000,
                             false);
 
-    hsm.initialize(std::make_shared<hsmcpp::HsmEventDispatcherGLibmm>());
+    hsm.initialize(dispatcher);
 
     hsm.transition(Events::START);
     mainLoop->run();

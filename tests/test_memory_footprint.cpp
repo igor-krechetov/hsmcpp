@@ -34,7 +34,7 @@ int main(const int argc, const char** argv) {
     //-------------------------------------------
     memBefore = getAllocatedHeapMemory();
 
-    std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
+    std::shared_ptr<HsmEventDispatcherSTD> dispatcher = HsmEventDispatcherSTD::create();
     std::shared_ptr<HierarchicalStateMachine> hsm = std::make_shared<HierarchicalStateMachine>(States::OFF);
 
     hsm->initialize(dispatcher);

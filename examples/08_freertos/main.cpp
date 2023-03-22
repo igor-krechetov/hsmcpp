@@ -41,7 +41,7 @@ extern "C" {
 void taskInitHSM(void* pvParameters) {
     printf("taskInitHSM\n");
     // NOTE: it's important to set correct priority for dispatcher
-    std::shared_ptr<hsmcpp::HsmEventDispatcherFreeRTOS> dispatcher = std::make_shared<hsmcpp::HsmEventDispatcherFreeRTOS>();
+    std::shared_ptr<hsmcpp::HsmEventDispatcherFreeRTOS> dispatcher = hsmcpp::HsmEventDispatcherFreeRTOS::create();
 
     hsm = new SwitchHsm();
     // NOTE: initialize() must be called from a Task!

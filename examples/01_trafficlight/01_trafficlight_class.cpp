@@ -22,7 +22,7 @@ namespace TrafficLightEvent {
 
 class TrafficLight : public hsmcpp::HierarchicalStateMachine {
 public:
-    TrafficLight(Glib::RefPtr<Glib::MainLoop> loop)
+    TrafficLight(const std::shared_ptr<hsmcpp::HsmEventDispatcherGLibmm>& dispatcher, Glib::RefPtr<Glib::MainLoop> loop)
         : hsmcpp::HierarchicalStateMachine(TrafficLightState::OFF)
         , mLoop(loop) {
         registerState(TrafficLightState::OFF, this, &TrafficLight::onOff);
@@ -44,7 +44,7 @@ public:
         registerTransition(TrafficLightState::YELLOW, TrafficLightState::GREEN, TrafficLightEvent::NEXT_STATE);
         registerTransition(TrafficLightState::GREEN, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE);
 
-        initialize(std::make_shared<hsmcpp::HsmEventDispatcherGLibmm>());
+        initialize(dispatcher);
     }
 
     void onOff(const hsmcpp::VariantVector_t& args) {
@@ -87,7 +87,8 @@ int main(const int argc, const char** argv) {
     Glib::init();
 
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();
-    TrafficLight hsm(mainLoop);
+    std::shared_ptr<hsmcpp::HsmEventDispatcherGLibmm> dispatcher = hsmcpp::HsmEventDispatcherGLibmm::create();
+    TrafficLight hsm(dispatcher, mainLoop);
 
     hsm.transition(TrafficLightEvent::POWER_ON);
 

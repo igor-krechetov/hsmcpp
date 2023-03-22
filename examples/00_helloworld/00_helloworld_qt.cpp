@@ -15,6 +15,7 @@ namespace Events {
 
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
+    std::shared_ptr<hsmcpp::HsmEventDispatcherQt> dispatcher = hsmcpp::HsmEventDispatcherQt::create();
     hsmcpp::HierarchicalStateMachine hsm(States::OFF);
 
     hsm.registerState(States::OFF, [&hsm](const hsmcpp::VariantVector_t& args) {
@@ -31,7 +32,7 @@ int main(int argc, char** argv) {
     hsm.registerTransition(States::OFF, States::ON, Events::SWITCH);
     hsm.registerTransition(States::ON, States::OFF, Events::SWITCH);
 
-    if (true == hsm.initialize(std::make_shared<hsmcpp::HsmEventDispatcherQt>())) {
+    if (true == hsm.initialize(dispatcher)) {
         hsm.transition(Events::SWITCH);
 
         app.exec();

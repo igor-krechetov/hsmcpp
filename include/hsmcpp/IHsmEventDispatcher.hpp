@@ -9,16 +9,32 @@
 namespace hsmcpp {
 /**
  * @brief Event handler callback.
+ * @details When using class members, developers are responsible to track corresponding object's lifetime. Clients can notify
+ * dispatcher that callback became invalid by returning FALSE.
+ * @retval true handler's callback can be used further
+ * @retval false handler's callback is invalid and should not be reused
  */
-using EventHandlerFunc_t = std::function<void(void)>;
+using EventHandlerFunc_t = std::function<bool(void)>;
 /**
  * @brief Timer event handler callback.
+ * @details When using class members, developers are responsible to track corresponding object's lifetime. Clients can notify
+ * dispatcher that callback became invalid by returning FALSE.
+ *
+ * @param timerID id of the timer event
+ * @retval true handler's callback can be used further
+ * @retval false handler's callback is invalid and should not be reused
  */
-using TimerHandlerFunc_t = std::function<void(const TimerID_t)>;
+using TimerHandlerFunc_t = std::function<bool(const TimerID_t)>;
 /**
  * @brief Handler callback for enqueued events.
+ * @details When using class members, developers are responsible to track corresponding object's lifetime. Clients can notify
+ * dispatcher that callback became invalid by returning FALSE.
+ *
+ * @param eventID id of the event
+ * @retval true handler's callback can be used further
+ * @retval false handler's callback is invalid and should not be reused
  */
-using EnqueuedEventHandlerFunc_t = std::function<void(const EventID_t)>;
+using EnqueuedEventHandlerFunc_t = std::function<bool(const EventID_t)>;
 
 /**
  * @brief IHsmEventDispatcher provides an interface for events dispatcher implementations.
@@ -48,8 +64,11 @@ class IHsmEventDispatcher {
 public:
     /**
      * @brief Destructor.
+     *
+     * @warning Make sure to release/delete all HSM instances which are using this dispatcher before deleting it. Failing to do
+     * so will result in undefined behavior and (usually) a crash.
      */
-    virtual ~IHsmEventDispatcher() {}
+    virtual ~IHsmEventDispatcher() = default;
 
     /**
      * @brief Start events dispatching.
@@ -63,6 +82,14 @@ public:
      * @retval false failed to start events dispatching
      */
     virtual bool start() = 0;
+
+    /**
+     * @brief Stop dispatching events.
+     * @details Future calls to dispatchEvents() will have no effect.
+     * @remark Operation is performed asynchronously. It does not interrupt currently handled event, but will cancel all other
+     * pending events.
+     */
+    virtual void stop() = 0;
 
     /**
      * @brief Register a new event handler.

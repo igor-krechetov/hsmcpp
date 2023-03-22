@@ -39,15 +39,20 @@ HsmEventDispatcherFreeRTOS::HsmEventDispatcherFreeRTOS(const configSTACK_DEPTH_T
 HsmEventDispatcherFreeRTOS::~HsmEventDispatcherFreeRTOS() {
     HSM_TRACE_CALL_DEBUG();
 
-    // delete timers
-    for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it) {
-        xTimerDelete(it->second, 0);
-    }
-    mNativeTimerHandlers.clear();
-
-    unregisterAllEventHandlers();
     stop();
     join();
+}
+
+bool HsmEventDispatcherFreeRTOS::deleteSafe() {
+    // NOTE: just delete the instance. Calling destructor from any thread is safe
+    return true;
+}
+
+std::shared_ptr<HsmEventDispatcherFreeRTOS> HsmEventDispatcherFreeRTOS::create(const configSTACK_DEPTH_TYPE stackDepth,
+                                                                               const UBaseType_t priority,
+                                                                               const size_t eventsCacheSize) {
+    return std::shared_ptr<HsmEventDispatcherFreeRTOS>(new HsmEventDispatcherFreeRTOS(stackDepth, priority, eventsCacheSize),
+                                                       &HsmEventDispatcherBase::handleDelete);
 }
 
 void HsmEventDispatcherFreeRTOS::emitEvent(const HandlerID_t handlerID) {
@@ -102,10 +107,19 @@ bool HsmEventDispatcherFreeRTOS::start() {
 void HsmEventDispatcherFreeRTOS::stop() {
     HSM_TRACE_CALL_DEBUG();
 
+    HsmEventDispatcherBase::stop();
+
+    unregisterAllEventHandlers();
+
     if (nullptr != mDispatcherTask) {
-        mStopDispatcher = true;
         notifyDispatcherAboutEvent();
     }
+
+    // delete timers
+    for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it) {
+        xTimerDelete(it->second, 0);
+    }
+    mNativeTimerHandlers.clear();
 }
 
 void HsmEventDispatcherFreeRTOS::join() {

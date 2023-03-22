@@ -24,6 +24,7 @@ int main(const int argc, const char** argv) {
     Glib::init();
 
     Glib::RefPtr<Glib::MainLoop> mainLoop = Glib::MainLoop::create();
+    std::shared_ptr<hsmcpp::HsmEventDispatcherGLibmm> dispatcher = hsmcpp::HsmEventDispatcherGLibmm::create();
     hsmcpp::HierarchicalStateMachine hsm(TrafficLightState::OFF);
 
     hsm.registerState(TrafficLightState::OFF, [mainLoop](const hsmcpp::VariantVector_t& args) {
@@ -66,7 +67,7 @@ int main(const int argc, const char** argv) {
     hsm.registerTransition(TrafficLightState::YELLOW, TrafficLightState::GREEN, TrafficLightEvent::NEXT_STATE);
     hsm.registerTransition(TrafficLightState::GREEN, TrafficLightState::RED, TrafficLightEvent::NEXT_STATE);
 
-    hsm.initialize(std::make_shared<hsmcpp::HsmEventDispatcherGLibmm>());
+    hsm.initialize(dispatcher);
     hsm.transition(TrafficLightEvent::POWER_ON);
 
     mainLoop->run();

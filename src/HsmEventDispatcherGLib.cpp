@@ -25,25 +25,33 @@ HsmEventDispatcherGLib::HsmEventDispatcherGLib(GMainContext* context, const size
 HsmEventDispatcherGLib::~HsmEventDispatcherGLib() {
     HSM_TRACE_CALL();
 
-    mStopDispatcher = true;
+    stop();
+}
 
-    if (true == mDispatchingIterationRunning) {
-        std::unique_lock<std::mutex> lck(mDispatchingSync);
-        mDispatchingDoneEvent.wait(lck);
-    }
+std::shared_ptr<HsmEventDispatcherGLib> HsmEventDispatcherGLib::create(const size_t eventsCacheSize) {
+    return std::shared_ptr<HsmEventDispatcherGLib>(new HsmEventDispatcherGLib(eventsCacheSize), &HsmEventDispatcherBase::handleDelete);
+}
 
-    unregisterAllTimerHandlers();
-    unregisterAllEventHandlers();
+std::shared_ptr<HsmEventDispatcherGLib> HsmEventDispatcherGLib::create(GMainContext* context, const size_t eventsCacheSize) {
+    return std::shared_ptr<HsmEventDispatcherGLib>(new HsmEventDispatcherGLib(context, eventsCacheSize), &HsmEventDispatcherBase::handleDelete);
+}
 
-    g_source_destroy(mIoSource);
-    g_source_unref(mIoSource);
-    mIoSource = nullptr;
-    g_io_channel_unref(mReadChannel);
-    mReadChannel = nullptr;
-    close(mPipeFD[0]);
-    close(mPipeFD[1]);
-    mPipeFD[0] = -1;
-    mPipeFD[1] = -1;
+bool HsmEventDispatcherGLib::deleteSafe() {
+    // cppcheck-suppress misra-c2012-13.1 ; false-positive. this is a functor, not initializer list
+    g_idle_add([](void* data){
+        if (nullptr != data) {
+            HsmEventDispatcherGLib* pThis = reinterpret_cast<HsmEventDispatcherGLib*>(data);
+
+            pThis->stop();
+            delete pThis;
+        }
+
+        // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
+        // cppcheck-suppress misra-c2012-15.5
+        return G_SOURCE_REMOVE;
+    }, this);
+
+    return false;
 }
 
 bool HsmEventDispatcherGLib::start() {
@@ -92,6 +100,27 @@ bool HsmEventDispatcherGLib::start() {
     }
 
     return result;
+}
+
+void HsmEventDispatcherGLib::stop() {
+    HsmEventDispatcherBase::stop();
+    unregisterAllTimerHandlers();
+    unregisterAllEventHandlers();
+
+    if (nullptr != mIoSource) {
+        g_source_destroy(mIoSource);
+        g_source_unref(mIoSource);
+        mIoSource = nullptr;
+    }
+
+    if (nullptr != mReadChannel) {
+        g_io_channel_unref(mReadChannel);
+        mReadChannel = nullptr;
+        close(mPipeFD[0]);
+        close(mPipeFD[1]);
+        mPipeFD[0] = -1;
+        mPipeFD[1] = -1;
+    }
 }
 
 void HsmEventDispatcherGLib::emitEvent(const HandlerID_t handlerID) {

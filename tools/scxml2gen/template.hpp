@@ -37,7 +37,7 @@ public:
     @CLASS_NAME@();
     virtual ~@CLASS_NAME@() = default;
 
-    bool initialize(const std::shared_ptr<hsmcpp::IHsmEventDispatcher>& dispatcher) override;
+    bool initialize(const std::weak_ptr<hsmcpp::IHsmEventDispatcher>& dispatcher) override;
 
 protected:
     void configureHsm();

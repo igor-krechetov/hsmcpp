@@ -22,23 +22,20 @@ class HsmEventDispatcherQt: public QObject
     Q_OBJECT
 
 public:
-    /**
-     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
-     * @details Uses default GLib content.
-    */
     // cppcheck-suppress misra-c2012-17.8 ; false positive. setting default parameter value is not parameter modification
-    explicit HsmEventDispatcherQt(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
-
-    /**
-     * @brief Destructor.
-     */
-    virtual ~HsmEventDispatcherQt();
+    static std::shared_ptr<HsmEventDispatcherQt> create(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
 
     /**
      * @brief See IHsmEventDispatcher::start()
      * @notthreadsafe{Thread safety is not required by HierarchicalStateMachine::initialize() which uses this API.}
      */
     bool start() override;
+
+    /**
+     * @copydoc IHsmEventDispatcher::stop()
+     * @notthreadsafe{TODO: Current timers implementation is not thread-safe}
+    */
+    void stop() override;
 
     /**
      * @brief See IHsmEventDispatcher::emitEvent()
@@ -57,11 +54,23 @@ private slots:
     void onTimerEvent();
 
 protected:
+    /**
+     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     * @details Uses default GLib content.
+    */
+    explicit HsmEventDispatcherQt(const size_t eventsCacheSize);
+
+    /**
+     * @brief Destructor.
+     */
+    virtual ~HsmEventDispatcherQt();
+
+    bool deleteSafe() override;
     void notifyDispatcherAboutEvent() override;
-    bool event(QEvent* ev) override;
+    void customEvent(QEvent* ev) override;
 
 private:
-    static QEvent::Type mQtEventType;
+    static QEvent::Type mQtDispatchEventType;
     std::map<TimerID_t, QTimer*> mNativeTimerHandlers;// <timerID, QTimer>
 };
 

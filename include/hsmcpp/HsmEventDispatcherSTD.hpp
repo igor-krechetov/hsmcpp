@@ -20,18 +20,18 @@ namespace hsmcpp {
 class HsmEventDispatcherSTD : public HsmEventDispatcherBase {
 private:
     struct RunningTimerInfo {
-        std::chrono::time_point<std::chrono::steady_clock> startedAt;  ///< monotonic time when timer was started (ms)
-        std::chrono::time_point<std::chrono::steady_clock>
-            elapseAfter;  ///< monotonic time when timer should elapse next time (ms)
+        std::chrono::time_point<std::chrono::steady_clock> startedAt;  ///< time when timer was started (monotonic, ms)
+        std::chrono::time_point<std::chrono::steady_clock> elapseAfter;  ///< time when timer should elapse next (monotonic , ms)
     };
 
 public:
     /**
-     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
-    */
+     * @brief Create dispatcher instance.
+     *
+     * @threadsafe{Instance can be safely created and destroyed from any thread.}
+     */
     // cppcheck-suppress misra-c2012-17.8 ; false positive. setting default parameter value is not parameter modification
-    explicit HsmEventDispatcherSTD(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
-    virtual ~HsmEventDispatcherSTD();
+    static std::shared_ptr<HsmEventDispatcherSTD> create(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
 
     /**
      * @brief See IHsmEventDispatcher::emitEvent()
@@ -44,37 +44,52 @@ public:
      * @details Function starts a new std::thread for dispatching events. Thread can be stopped by calling stop().
      *
      * @notthreadsafe{This API is intended to be called only once during startup.}
-    */
+     */
     bool start() override;
 
     /**
-     * @brief Stop events dispatcher thread.
+     * @copydoc IHsmEventDispatcher::stop()
      * @details Wakes up dispatcher thread and instructs it to stop. Has not effect if thread is not running.
      *
-     * @remark Operation is performed asynchronously.
-    */
-    void stop();
+     * @remark Operation is performed asynchronously. Call join() if you need to wait for dispatcher to fully stop.
+     *
+     * @threadsafe{ }
+     */
+    void stop() override;
 
     /**
      * @brief Blocks current thread until dispatcher is stopped.
      * @details This API can be useful if you want to block your main() function until HSM is operable. See
      * ./examples/00_helloworld/00_helloworld_std.cpp for a reference.
      *
-     * @remark: Make sure you call stop() before destroying dispatcher object if you use join() API. Failing to do so will
-     * result in an undefined behaviour.
+     * @remark: Make sure you call stop() before you use join() API.
      */
     void join();
 
 protected:
     /**
-     * @brief See HsmEventDispatcherBase::startTimerImpl()
+     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     */
+    explicit HsmEventDispatcherSTD(const size_t eventsCacheSize);
+
+    /**
+     * @brief Destructor
+     * @details Internally calls stop() and join().
+     *
      * @threadsafe{ }
     */
+    virtual ~HsmEventDispatcherSTD();
+
+    bool deleteSafe() override;
+    /**
+     * @brief See HsmEventDispatcherBase::startTimerImpl()
+     * @threadsafe{ }
+     */
     void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
     /**
      * @brief See HsmEventDispatcherBase::stopTimerImpl()
      * @threadsafe{ }
-    */
+     */
     void stopTimerImpl(const TimerID_t timerID) override;
 
     void notifyDispatcherAboutEvent() override;
@@ -89,7 +104,6 @@ private:
     // NOTE: ideally it would be better to use a semaphore here, but there are no semaphores in C++11
     ConditionVariable mEmitEvent;
     ConditionVariable mTimerEvent;
-    bool mStopDispatcher = false;
     bool mNotifiedTimersThread = false;
     std::map<TimerID_t, RunningTimerInfo> mRunningTimers;
     Mutex mRunningTimersSync;

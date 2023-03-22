@@ -18,6 +18,22 @@ HsmEventDispatcherBase::HsmEventDispatcherBase(const size_t eventsCacheSize) {
 
 HsmEventDispatcherBase::~HsmEventDispatcherBase() {}
 
+void HsmEventDispatcherBase::handleDelete(HsmEventDispatcherBase* dispatcher) {
+    if (nullptr != dispatcher) {
+        dispatcher->stop();
+
+        if (true == dispatcher->deleteSafe()) {
+            delete dispatcher;
+        }
+    }
+}
+
+void HsmEventDispatcherBase::stop() {
+    HSM_TRACE_CALL_DEBUG();
+    mStopDispatcher = true;
+    // NOTE: child classes must provide additional logic
+}
+
 HandlerID_t HsmEventDispatcherBase::registerEventHandler(const EventHandlerFunc_t& handler) {
     HSM_TRACE_CALL_DEBUG();
     HandlerID_t id = getNextHandlerID();
@@ -186,6 +202,7 @@ void HsmEventDispatcherBase::unregisterAllEventHandlers() {
 }
 
 EnqueuedEventHandlerFunc_t HsmEventDispatcherBase::getEnqueuedEventHandlerFunc(const HandlerID_t handlerID) const {
+    // cppcheck-suppress misra-c2012-17.7 ; false-positive. This a function pointer, not function call.
     EnqueuedEventHandlerFunc_t func;
     auto it = mEnqueuedEventHandlers.find(handlerID);
 
@@ -208,6 +225,7 @@ HsmEventDispatcherBase::TimerInfo HsmEventDispatcherBase::getTimerInfo(const Tim
 }
 
 TimerHandlerFunc_t HsmEventDispatcherBase::getTimerHandlerFunc(const HandlerID_t handlerID) const {
+    // cppcheck-suppress misra-c2012-17.7 ; false-positive. This a function pointer, not function call.
     TimerHandlerFunc_t func;
     auto it = mTimerHandlers.find(handlerID);
 
@@ -250,7 +268,7 @@ bool HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID) {
 }
 
 void HsmEventDispatcherBase::dispatchEnqueuedEvents() {
-    if (false == mEnqueuedEvents.empty()) {
+    if ((false == mStopDispatcher) && (false == mEnqueuedEvents.empty())) {
         HandlerID_t prevHandlerID = INVALID_HSM_DISPATCHER_HANDLER_ID;
         EnqueuedEventHandlerFunc_t callback;
         std::vector<EnqueuedEventInfo> currentEvents;
@@ -263,8 +281,8 @@ void HsmEventDispatcherBase::dispatchEnqueuedEvents() {
             mEnqueuedEvents.clear();
         }
 
-        // need to traverse events in reverce order
-        for (auto it = currentEvents.rbegin(); it != currentEvents.rend(); ++it) {
+        // need to traverse events in reverse order
+        for (auto it = currentEvents.rbegin(); (it != currentEvents.rend()) && (false == mStopDispatcher) ; ++it) {
             if (prevHandlerID != it->handlerID) {
                 callback = getEnqueuedEventHandlerFunc(it->handlerID);
                 prevHandlerID = it->handlerID;
@@ -289,7 +307,7 @@ void HsmEventDispatcherBase::dispatchPendingEvents() {
 void HsmEventDispatcherBase::dispatchPendingEventsImpl(const std::list<HandlerID_t>& events) {
     dispatchEnqueuedEvents();
 
-    if (false == events.empty()) {
+    if ((false == mStopDispatcher) && (false == events.empty())) {
         std::map<HandlerID_t, EventHandlerFunc_t> eventHandlersCopy;
 
         {
@@ -299,11 +317,14 @@ void HsmEventDispatcherBase::dispatchPendingEventsImpl(const std::list<HandlerID
             eventHandlersCopy = mEventHandlers;
         }
 
-        for (auto it = events.begin(); it != events.end(); ++it) {
+        for (auto it = events.begin(); (it != events.end()) && (false == mStopDispatcher); ++it) {
             auto itHandler = eventHandlersCopy.find(*it);
 
             if (itHandler != eventHandlersCopy.end()) {
-                itHandler->second();
+                // NOTE: if callback returns FALSE it means the handler doesn't want to process more events
+                if (false == itHandler->second()) {
+                    eventHandlersCopy.erase(itHandler);
+                }
             }
         }
     }

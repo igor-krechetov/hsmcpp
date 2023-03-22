@@ -12,8 +12,7 @@ namespace hsmcpp {
 #define HSM_TRACE_CLASS "HsmEventDispatcherSTD"
 
 HsmEventDispatcherSTD::HsmEventDispatcherSTD(const size_t eventsCacheSize)
-    // NOTE: false-positive. thinks that ':' is arithmetic operation
-    // cppcheck-suppress misra-c2012-10.4
+    // cppcheck-suppress misra-c2012-10.4 ; false-positive. thinks that ':' is arithmetic operation
     : HsmEventDispatcherBase(eventsCacheSize) {
     HSM_TRACE_CALL_DEBUG();
 }
@@ -21,9 +20,18 @@ HsmEventDispatcherSTD::HsmEventDispatcherSTD(const size_t eventsCacheSize)
 HsmEventDispatcherSTD::~HsmEventDispatcherSTD() {
     HSM_TRACE_CALL_DEBUG();
 
-    unregisterAllEventHandlers();
-    stop();
+    HsmEventDispatcherSTD::stop();
     join();
+}
+
+std::shared_ptr<HsmEventDispatcherSTD> HsmEventDispatcherSTD::create(const size_t eventsCacheSize) {
+    return std::shared_ptr<HsmEventDispatcherSTD>(new HsmEventDispatcherSTD(eventsCacheSize),
+                                                  &HsmEventDispatcherBase::handleDelete);
+}
+
+bool HsmEventDispatcherSTD::deleteSafe() {
+    // NOTE: just delete the instance. Calling destructor from any thread is safe
+    return true;
 }
 
 void HsmEventDispatcherSTD::emitEvent(const HandlerID_t handlerID) {
@@ -53,11 +61,10 @@ bool HsmEventDispatcherSTD::start() {
 void HsmEventDispatcherSTD::stop() {
     HSM_TRACE_CALL_DEBUG();
 
-    if (true == mDispatcherThread.joinable()) {
-        mStopDispatcher = true;
-        notifyTimersThread();
-        notifyDispatcherAboutEvent();
-    }
+    HsmEventDispatcherBase::stop();
+    unregisterAllEventHandlers();
+    notifyDispatcherAboutEvent();
+    notifyTimersThread();
 }
 
 void HsmEventDispatcherSTD::join() {
@@ -134,7 +141,10 @@ void HsmEventDispatcherSTD::doDispatching() {
                 // NOTE: false-positive. "A function should have a single point of exit at the end" is not vialated because
                 //       "return" statement belogs to a lamda function, not doDispatching.
                 // cppcheck-suppress misra-c2012-15.5
-                mEmitEvent.wait(lck, [=]() { return (false == mPendingEvents.empty()) || (false == mEnqueuedEvents.empty()) || (true == mStopDispatcher); });
+                mEmitEvent.wait(lck, [=]() {
+                    // cppcheck-suppress misra-c2012-15.5 ; false-positive. "return" statement belongs to lambda function
+                    return (false == mPendingEvents.empty()) || (false == mEnqueuedEvents.empty()) || (true == mStopDispatcher);
+                });
                 HSM_TRACE_DEBUG("woke up. pending events=%lu", mPendingEvents.size());
             }
         }

@@ -27,10 +27,10 @@ protected:
 };
 
 int main(const int argc, const char** argv) {
-    std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
+    std::shared_ptr<HsmEventDispatcherSTD> dispatcher = HsmEventDispatcherSTD::create();
     // NOTE: Second dispatched is only for build testing.
     //       In real situation one type of dispatcher is usually enough.
-    std::shared_ptr<HsmEventDispatcherGLibmm> dispatcher2 = std::make_shared<HsmEventDispatcherGLibmm>();
+    std::shared_ptr<HsmEventDispatcherGLibmm> dispatcher2 = HsmEventDispatcherGLibmm::create();
     SwitchHsm hsm;
 
     hsm.initialize(dispatcher);

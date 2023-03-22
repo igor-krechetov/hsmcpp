@@ -30,21 +30,12 @@ namespace hsmcpp {
 class HsmEventDispatcherGLibmm : public HsmEventDispatcherBase {
 public:
     /**
-     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
-     * @details Uses default GLib context.
+     * Must be called inside the same GLib MainContext
+     * The Dispatcher object must be deleted by the receiver thread.
     */
-    explicit HsmEventDispatcherGLibmm(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
-
-    /**
-     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
-     * @param context custom GLib context to use for dispatcher.
-    */
-    HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context,
-                             const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
-    /**
-     * Destructor.
-     */
-    virtual ~HsmEventDispatcherGLibmm();
+    static std::shared_ptr<HsmEventDispatcherGLibmm> create(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+    static std::shared_ptr<HsmEventDispatcherGLibmm> create(const Glib::RefPtr<Glib::MainContext>& context,
+                                                            const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
 
     /**
      * @brief See IHsmEventDispatcher::start()
@@ -53,12 +44,37 @@ public:
     bool start() override;
 
     /**
+     * @copydoc IHsmEventDispatcher::stop()
+     * @notthreadsafe{TODO: Current timers implementation is not thread-safe}
+    */
+    void stop() override;
+
+    /**
      * @brief See IHsmEventDispatcher::emitEvent()
      * @threadsafe{ }
      */
     void emitEvent(const HandlerID_t handlerID) override;
 
 protected:
+    /**
+     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     * @details Uses default GLib context.
+     */
+    explicit HsmEventDispatcherGLibmm(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+
+    /**
+     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     * @param context custom GLib context to use for dispatcher.
+     */
+    HsmEventDispatcherGLibmm(const Glib::RefPtr<Glib::MainContext>& context,
+                             const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+    /**
+     * Destructor.
+     */
+    virtual ~HsmEventDispatcherGLibmm();
+
+    bool deleteSafe() override;
+
     void unregisterAllTimerHandlers();
 
     /**
@@ -79,7 +95,7 @@ private:
     Glib::RefPtr<Glib::MainContext> mMainContext;
     std::unique_ptr<Glib::Dispatcher> mDispatcher;
     sigc::connection mDispatcherConnection;
-    std::map<TimerID_t, sigc::connection> mNativeTimerHandlers;  // <timerID, connection>
+    std::map<TimerID_t, sigc::connection> mNativeTimerHandlers;// TODO: not thread-safe
 };
 
 }  // namespace hsmcpp

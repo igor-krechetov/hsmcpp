@@ -15,6 +15,8 @@
   #include <QTimer>
 #endif
 
+std::shared_ptr<hsmcpp::IHsmEventDispatcher> gDispatcher;
+
 std::mutex gSyncCall;
 std::condition_variable gMainThreadCallDoneEvent;
 std::function<bool()> gFunc;
@@ -105,6 +107,7 @@ bool executeOnMainThread(std::function<bool()> func) {
   #elif defined(TEST_HSM_GLIBMM)
     const auto idle_source = Glib::IdleSource::create();
 
+    idle_source->set_priority(G_PRIORITY_HIGH_IDLE);
     idle_source->connect([]() { return static_cast<bool>(mainThreadCallback(nullptr)); });
     idle_source->attach(Glib::MainContext::get_default());
   #endif  // TEST_HSM_GLIBMM

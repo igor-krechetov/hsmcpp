@@ -26,7 +26,7 @@ protected:
 };
 
 int main(const int argc, const char** argv) {
-    std::shared_ptr<HsmEventDispatcherSTD> dispatcher = std::make_shared<HsmEventDispatcherSTD>();
+    std::shared_ptr<HsmEventDispatcherSTD> dispatcher = HsmEventDispatcherSTD::create();
     DebugTestHsm hsm;
     Variant argPair = Variant::make(Variant::make(1), Variant::make(2));
 

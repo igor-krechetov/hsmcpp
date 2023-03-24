@@ -133,6 +133,10 @@ void HierarchicalStateMachine::stopTimer(const TimerID_t timerID) {
     mImpl->stopTimer(timerID);
 }
 
+bool HierarchicalStateMachine::isTimerRunning(const TimerID_t timerID) {
+    return mImpl->isTimerRunning(timerID);
+}
+
 bool HierarchicalStateMachine::enableHsmDebugging() {
     return mImpl->enableHsmDebugging();
 }

@@ -188,6 +188,7 @@ public:
     void startTimer(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot);
     void restartTimer(const TimerID_t timerID);
     void stopTimer(const TimerID_t timerID);
+    bool isTimerRunning(const TimerID_t timerID);
     bool enableHsmDebugging();
     bool enableHsmDebugging(const std::string& dumpPath);
     void disableHsmDebugging();

@@ -22,7 +22,25 @@ private:
     using TimerData_t = std::pair<HsmEventDispatcherGLib*, TimerID_t>;
 
 public:
+    /**
+     * @brief Create dispatcher instance.
+     * @param eventsCacheSize size of the queue preallocated for delayed events
+     * @return New dispatcher instance.
+     *
+     * @notthreadsafe{Must be called inside the main GLib MainContext. The Dispatcher object must be deleted in the main GLib
+     * context.}
+     */
     static std::shared_ptr<HsmEventDispatcherGLib> create(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+
+    /**
+     * @brief Create dispatcher instance.
+     * @param context custom GLib context to use for dispatcher.
+     * @param eventsCacheSize size of the queue preallocated for delayed events
+     * @return New dispatcher instance.
+     *
+     * @notthreadsafe{Must be called inside the same GLib context provided in \a context. The Dispatcher object must be deleted
+     * in the same GLib context as \a context . }
+     */
     static std::shared_ptr<HsmEventDispatcherGLib> create(GMainContext* context,
                                                           const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
 
@@ -63,11 +81,22 @@ private:
      */
     virtual ~HsmEventDispatcherGLib();
 
+    /**
+     * @copydoc HsmEventDispatcherBase::deleteSafe()
+     */
     bool deleteSafe() override;
 
     void unregisterAllTimerHandlers();
 
+    /**
+     * @brief See HsmEventDispatcherBase::startTimerImpl()
+     * @threadsafe{ }
+     */
     void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
+    /**
+     * @brief See HsmEventDispatcherBase::stopTimerImpl()
+     * @threadsafe{ }
+     */
     void stopTimerImpl(const TimerID_t timerID) override;
 
     static gboolean onTimerEvent(const TimerData_t* timerData);
@@ -85,7 +114,7 @@ private:
     bool mDispatchingIterationRunning = false;
     std::mutex mDispatchingSync;
     std::condition_variable mDispatchingDoneEvent;
-    std::map<TimerID_t, GSource*> mNativeTimerHandlers;  // <timerID, nativeTimerID>
+    std::map<TimerID_t, GSource*> mNativeTimerHandlers; // protected by mRunningTimersSync
 };
 
 }  // namespace hsmcpp

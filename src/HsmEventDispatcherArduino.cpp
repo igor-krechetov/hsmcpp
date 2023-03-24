@@ -113,6 +113,7 @@ void HsmEventDispatcherArduino::handleTimers() {
                     it->second.elapseAfter += it->second.startedAt;
                     ++it;
                 } else {
+                    InterruptsFreeSection lck;
                     it = mRunningTimers.erase(it);
                 }
             } else {

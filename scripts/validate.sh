@@ -9,7 +9,8 @@ export Qt6_DIR=~/qt/6.4.2/gcc_64/lib/cmake/Qt6
 if [ ${PWD##*/} = "build" ]
 then
     rm -Rvf ./*
-    cmake -DHSMBUILD_VERBOSE=OFF \
+    cmake -DCMAKE_BUILD_TYPE=Debug \
+        -DHSMBUILD_VERBOSE=OFF \
         -DHSMBUILD_DISPATCHER_GLIB=ON \
         -DHSMBUILD_DISPATCHER_GLIBMM=ON \
         -DHSMBUILD_DISPATCHER_STD=ON \
@@ -33,7 +34,8 @@ then
     lcov -c -d . -o ./coverage_qt.info
 
     # disable tests to save time
-    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DHSMBUILD_TESTS=OFF -DHSMBUILD_VERBOSE=OFF \
+    cmake -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DHSMBUILD_TESTS=OFF -DHSMBUILD_VERBOSE=OFF \
           -DHSMBUILD_DISPATCHER_GLIB=ON \
           -DHSMBUILD_DISPATCHER_GLIBMM=ON \
           -DHSMBUILD_DISPATCHER_STD=ON \

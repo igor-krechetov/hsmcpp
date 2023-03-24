@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "hsmcpp/logging.hpp"
+#include "hsmcpp/os/CriticalSection.hpp"
 
 namespace hsmcpp {
 
@@ -31,25 +32,30 @@ HsmEventDispatcherGLibmm::~HsmEventDispatcherGLibmm() {
 }
 
 std::shared_ptr<HsmEventDispatcherGLibmm> HsmEventDispatcherGLibmm::create(const size_t eventsCacheSize) {
-    return std::shared_ptr<HsmEventDispatcherGLibmm>(new HsmEventDispatcherGLibmm(eventsCacheSize), &HsmEventDispatcherBase::handleDelete);
+    return std::shared_ptr<HsmEventDispatcherGLibmm>(new HsmEventDispatcherGLibmm(eventsCacheSize),
+                                                     &HsmEventDispatcherBase::handleDelete);
 }
 
-std::shared_ptr<HsmEventDispatcherGLibmm> HsmEventDispatcherGLibmm::create(const Glib::RefPtr<Glib::MainContext>& context, const size_t eventsCacheSize) {
-    return std::shared_ptr<HsmEventDispatcherGLibmm>(new HsmEventDispatcherGLibmm(context, eventsCacheSize), &HsmEventDispatcherBase::handleDelete);
+std::shared_ptr<HsmEventDispatcherGLibmm> HsmEventDispatcherGLibmm::create(const Glib::RefPtr<Glib::MainContext>& context,
+                                                                           const size_t eventsCacheSize) {
+    return std::shared_ptr<HsmEventDispatcherGLibmm>(new HsmEventDispatcherGLibmm(context, eventsCacheSize),
+                                                     &HsmEventDispatcherBase::handleDelete);
 }
 
 bool HsmEventDispatcherGLibmm::deleteSafe() {
     bool deleteNow = false;
 
     if (mMainContext) {
-        mMainContext->signal_idle().connect(sigc::bind([](HsmEventDispatcherGLibmm* pThis){
-            if (nullptr != pThis) {
-                pThis->stop();
-                delete pThis;
-            }
+        mMainContext->signal_idle().connect(sigc::bind(
+            [](HsmEventDispatcherGLibmm* pThis) {
+                if (nullptr != pThis) {
+                    pThis->stop();
+                    delete pThis;
+                }
 
-            return false;// unregister idle signal
-        }, this));
+                return false;  // unregister idle signal
+            },
+            this));
     } else {
         deleteNow = true;
     }
@@ -68,14 +74,19 @@ void HsmEventDispatcherGLibmm::emitEvent(const HandlerID_t handlerID) {
 bool HsmEventDispatcherGLibmm::start() {
     bool result = false;
 
-    if (!mDispatcher && mMainContext) {
-        mDispatcher.reset(new Glib::Dispatcher(mMainContext));
+    if (mMainContext) {
+        if (!mDispatcher) {
+            mDispatcher.reset(new Glib::Dispatcher(mMainContext));
 
-        if (mDispatcher) {
-            if (mDispatcherConnection.connected() == false) {
-                mDispatcherConnection = mDispatcher->connect(sigc::mem_fun(this, &HsmEventDispatcherGLibmm::dispatchPendingEvents));
+            if (mDispatcher) {
+                if (mDispatcherConnection.connected() == false) {
+                    mDispatcherConnection =
+                        mDispatcher->connect(sigc::mem_fun(this, &HsmEventDispatcherGLibmm::dispatchPendingEvents));
+                }
+
+                result = true;
             }
-
+        } else {
             result = true;
         }
     }
@@ -98,6 +109,8 @@ void HsmEventDispatcherGLibmm::stop() {
 }
 
 void HsmEventDispatcherGLibmm::unregisterAllTimerHandlers() {
+    CriticalSection cs(mRunningTimersSync);
+
     for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it) {
         it->second.disconnect();
     }
@@ -110,6 +123,7 @@ void HsmEventDispatcherGLibmm::startTimerImpl(const TimerID_t timerID, const uns
                               SC2INT(timerID),
                               intervalMs,
                               BOOL2INT(isSingleShot));
+    CriticalSection cs(mRunningTimersSync);
     auto it = mNativeTimerHandlers.find(timerID);
 
     if (mNativeTimerHandlers.end() == it) {
@@ -126,6 +140,7 @@ void HsmEventDispatcherGLibmm::startTimerImpl(const TimerID_t timerID, const uns
 
 void HsmEventDispatcherGLibmm::stopTimerImpl(const TimerID_t timerID) {
     HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
+    CriticalSection cs(mRunningTimersSync);
     auto it = mNativeTimerHandlers.find(timerID);
 
     if (mNativeTimerHandlers.end() != it) {
@@ -143,7 +158,7 @@ bool HsmEventDispatcherGLibmm::onTimerEvent(const TimerID_t timerID) {
     const bool restartTimer = handleTimerEvent(timerID);
 
     if (false == restartTimer) {
-        // TODO:  mNativeTimerHandlers is not thread-safe
+        CriticalSection cs(mRunningTimersSync);
         auto itTimer = mNativeTimerHandlers.find(timerID);
 
         if (mNativeTimerHandlers.end() != itTimer) {

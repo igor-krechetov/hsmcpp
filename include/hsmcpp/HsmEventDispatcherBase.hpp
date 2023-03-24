@@ -131,6 +131,13 @@ protected:
 
     static void handleDelete(HsmEventDispatcherBase* dispatcher);
 
+    /**
+     * @brief Schedule instance for deletion.
+     * @retval false instance will be deleted later automatically
+     * @retval true instance can be deleted now
+     *
+     * @notthreadsafe{Should not be called multiple times}
+    */
     virtual bool deleteSafe() = 0;
 
     /**
@@ -258,6 +265,7 @@ protected:
     Mutex mEmitSync;
     Mutex mHandlersSync;
     Mutex mEnqueuedEventsSync;
+    Mutex mRunningTimersSync;
     bool mStopDispatcher = false;
 };
 

@@ -40,6 +40,8 @@ public:
      *                   Priorities are asserted to be less than configMAX_PRIORITIES. If configASSERT is
      *                   undefined, priorities are silently capped at (configMAX_PRIORITIES - 1).
      * @param eventsCacheSize size of the queue preallocated for delayed events
+     *
+     * @return New dispatcher instance.
      */
     // cppcheck-suppress misra-c2012-17.8 ; false positive. setting default parameter value is not parameter modification
     static std::shared_ptr<HsmEventDispatcherFreeRTOS> create(
@@ -86,10 +88,21 @@ protected:
      */
     virtual ~HsmEventDispatcherFreeRTOS();
 
+    /**
+     * @copydoc HsmEventDispatcherBase::deleteSafe()
+     */
     bool deleteSafe() override;
 
-    virtual void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
-    virtual void stopTimerImpl(const TimerID_t timerID) override;
+    /**
+     * @brief See HsmEventDispatcherBase::startTimerImpl()
+     * @interruptsafe{ }
+     */
+    void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
+    /**
+     * @brief See HsmEventDispatcherBase::stopTimerImpl()
+     * @interruptsafe{ }
+     */
+    void stopTimerImpl(const TimerID_t timerID) override;
 
     void notifyDispatcherAboutEvent() override;
     static void doDispatching(void* pvParameters);
@@ -102,7 +115,7 @@ private:
 
     configSTACK_DEPTH_TYPE mStackDepth = configMINIMAL_STACK_SIZE;
     UBaseType_t mPriority = tskIDLE_PRIORITY;
-    std::map<TimerID_t, TimerHandle_t> mNativeTimerHandlers;
+    std::map<TimerID_t, TimerHandle_t> mNativeTimerHandlers; // protected by InterruptsFreeSection class
 };
 
 }  // namespace hsmcpp

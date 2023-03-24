@@ -6,6 +6,8 @@
 #include <unistd.h>
 
 #include "hsmcpp/logging.hpp"
+#include "hsmcpp/os/CriticalSection.hpp"
+
 namespace hsmcpp {
 
 #undef HSM_TRACE_CLASS
@@ -25,31 +27,35 @@ HsmEventDispatcherGLib::HsmEventDispatcherGLib(GMainContext* context, const size
 HsmEventDispatcherGLib::~HsmEventDispatcherGLib() {
     HSM_TRACE_CALL();
 
-    stop();
+    HsmEventDispatcherGLib::stop();
 }
 
 std::shared_ptr<HsmEventDispatcherGLib> HsmEventDispatcherGLib::create(const size_t eventsCacheSize) {
-    return std::shared_ptr<HsmEventDispatcherGLib>(new HsmEventDispatcherGLib(eventsCacheSize), &HsmEventDispatcherBase::handleDelete);
+    return std::shared_ptr<HsmEventDispatcherGLib>(new HsmEventDispatcherGLib(eventsCacheSize),
+                                                   &HsmEventDispatcherBase::handleDelete);
 }
 
 std::shared_ptr<HsmEventDispatcherGLib> HsmEventDispatcherGLib::create(GMainContext* context, const size_t eventsCacheSize) {
-    return std::shared_ptr<HsmEventDispatcherGLib>(new HsmEventDispatcherGLib(context, eventsCacheSize), &HsmEventDispatcherBase::handleDelete);
+    return std::shared_ptr<HsmEventDispatcherGLib>(new HsmEventDispatcherGLib(context, eventsCacheSize),
+                                                   &HsmEventDispatcherBase::handleDelete);
 }
 
 bool HsmEventDispatcherGLib::deleteSafe() {
-    // cppcheck-suppress misra-c2012-13.1 ; false-positive. this is a functor, not initializer list
-    g_idle_add([](void* data){
-        if (nullptr != data) {
-            HsmEventDispatcherGLib* pThis = reinterpret_cast<HsmEventDispatcherGLib*>(data);
+    g_idle_add(
+        // cppcheck-suppress misra-c2012-13.1 ; false-positive. this is a functor, not initializer list
+        [](void* data) {
+            if (nullptr != data) {
+                HsmEventDispatcherGLib* pThis = reinterpret_cast<HsmEventDispatcherGLib*>(data);
 
-            pThis->stop();
-            delete pThis;
-        }
+                pThis->stop();
+                delete pThis;
+            }
 
-        // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
-        // cppcheck-suppress misra-c2012-15.5
-        return G_SOURCE_REMOVE;
-    }, this);
+            // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
+            // cppcheck-suppress misra-c2012-15.5
+            return G_SOURCE_REMOVE;
+        },
+        this);
 
     return false;
 }
@@ -132,6 +138,8 @@ void HsmEventDispatcherGLib::emitEvent(const HandlerID_t handlerID) {
 }
 
 void HsmEventDispatcherGLib::unregisterAllTimerHandlers() {
+    CriticalSection lckExpired(mRunningTimersSync);
+
     for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it) {
         g_source_destroy(it->second);
         g_source_unref(it->second);
@@ -145,6 +153,7 @@ void HsmEventDispatcherGLib::startTimerImpl(const TimerID_t timerID, const unsig
                               SC2INT(timerID),
                               intervalMs,
                               BOOL2INT(isSingleShot));
+    CriticalSection lckExpired(mRunningTimersSync);
     auto it = mNativeTimerHandlers.find(timerID);
 
     if (mNativeTimerHandlers.end() == it) {
@@ -164,6 +173,7 @@ void HsmEventDispatcherGLib::startTimerImpl(const TimerID_t timerID, const unsig
 
 void HsmEventDispatcherGLib::stopTimerImpl(const TimerID_t timerID) {
     HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
+    CriticalSection lckExpired(mRunningTimersSync);
     auto it = mNativeTimerHandlers.find(timerID);
 
     if (mNativeTimerHandlers.end() != it) {
@@ -180,7 +190,7 @@ gboolean HsmEventDispatcherGLib::onTimerEvent(const TimerData_t* timerData) {
         restartTimer = timerData->first->handleTimerEvent(timerData->second);
 
         if (false == restartTimer) {
-            // TODO:  mNativeTimerHandlers is not thread-safe
+            CriticalSection lckExpired(timerData->first->mRunningTimersSync);
             auto itTimer = timerData->first->mNativeTimerHandlers.find(timerData->second);
 
             if (timerData->first->mNativeTimerHandlers.end() != itTimer) {

@@ -116,6 +116,8 @@ void HsmEventDispatcherFreeRTOS::stop() {
     }
 
     // delete timers
+    InterruptsFreeSection lck;
+
     for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it) {
         xTimerDelete(it->second, 0);
     }

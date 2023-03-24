@@ -535,6 +535,18 @@ void HierarchicalStateMachine::Impl::stopTimer(const TimerID_t timerID) {
     }
 }
 
+bool HierarchicalStateMachine::Impl::isTimerRunning(const TimerID_t timerID) {
+    bool running = false;
+    auto dispatcherPtr = mDispatcher.lock();
+
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    if (dispatcherPtr) {
+        running = dispatcherPtr->isTimerRunning(timerID);
+    }
+
+    return running;
+}
+
 // ============================================================================
 // PRIVATE
 // ============================================================================

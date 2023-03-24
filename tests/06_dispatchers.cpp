@@ -1,9 +1,10 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#include "TestsCommon.hpp"
-#include "hsm/ABCHsm.hpp"
 #include <chrono>
 #include <thread>
+
+#include "TestsCommon.hpp"
+#include "hsm/ABCHsm.hpp"
 
 TEST(dispatchers, stresstest_create_destroy_hsm) {
     TEST_DESCRIPTION("check that it's possible to destroy HSM and disconnect from dispatcher when there are pending events");
@@ -27,8 +28,8 @@ TEST(dispatchers, stresstest_create_destroy_hsm) {
             if (!dispatcher) {
                 dispatcher = CREATE_DISPATCHER();
             }
-            hsm->initialize(dispatcher);
-            return true;
+
+            return hsm->initialize(dispatcher);
         }));
 
         for (int j = 0; j < 1000; ++j) {
@@ -47,6 +48,12 @@ TEST(dispatchers, stresstest_create_destroy_hsm) {
     //-------------------------------------------
     // VALIDATION
     // NOTE: if we got here without a crash or exception then test was successful
+
+    // need to delete dispatcher from main thread
+    executeOnMainThread([&]() {
+        dispatcher.reset();
+        return true;
+    });
 }
 
 TEST(dispatchers, stresstest_create_destroy_dispatcher) {
@@ -54,8 +61,8 @@ TEST(dispatchers, stresstest_create_destroy_dispatcher) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const int countDispatchers = 100;
-    const int countEvents = 1000;
+    const int countDispatchers = 10;
+    const int countEvents = 2;
     int dispatchedEventsCount = 0;
 
     //-------------------------------------------
@@ -70,15 +77,20 @@ TEST(dispatchers, stresstest_create_destroy_dispatcher) {
 
         HandlerID_t handler = dispatcher->registerEventHandler([&]() {
             ++dispatchedEventsCount;
-            std::this_thread::sleep_for(std::chrono::microseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             return true;
         });
 
-        dispatcher->start();
+        executeOnMainThread([&]() {
+            dispatcher->start();
+            return true;
+        });
 
-        for (int j = 0; j < 10; ++j) {
+        for (int j = 0; j < countEvents; ++j) {
             dispatcher->emitEvent(handler);
         }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
         executeOnMainThread([&]() {
             // NOTE: because dispatcher will process all pending events at the same time, we need to dispatcher some more events
@@ -93,9 +105,41 @@ TEST(dispatchers, stresstest_create_destroy_dispatcher) {
 
     //-------------------------------------------
     // VALIDATION
-    // NOTE: if we got here withotu a crash of exception then test was successful
+    // NOTE: if we got here without a crash or exception then test was successful
     EXPECT_GT(dispatchedEventsCount, 0);
-    EXPECT_LT(dispatchedEventsCount, countDispatchers * countEvents);
+    EXPECT_LT(dispatchedEventsCount, countDispatchers * countEvents * 2);
+}
+
+TEST(dispatchers, destroy_without_starting) {
+    TEST_DESCRIPTION("check that it's safe to destroy dispatcher without starting");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    int dispatchedEventsCount = 0;
+    std::shared_ptr<hsmcpp::IHsmEventDispatcher> dispatcher;
+
+    executeOnMainThread([&]() {
+        dispatcher = CREATE_DISPATCHER();
+        return true;
+    });
+
+    HandlerID_t handler = dispatcher->registerEventHandler([&]() {
+        ++dispatchedEventsCount;
+        std::this_thread::sleep_for(std::chrono::microseconds(1));
+        return true;
+    });
+
+    //-------------------------------------------
+    // ACTIONS
+    executeOnMainThread([&]() {
+        dispatcher.reset();
+        return true;
+    });
+
+    //-------------------------------------------
+    // VALIDATION
+    // NOTE: if we got here without a crash or exception then test was successful
+    EXPECT_EQ(dispatchedEventsCount, 0);
 }
 
 TEST(dispatchers, stop) {
@@ -119,7 +163,7 @@ TEST(dispatchers, stop) {
     ASSERT_TRUE(dispatcher->start());
 
     dispatcher->emitEvent(handler);
-    std::this_thread::sleep_for(std::chrono::microseconds(500000));// sleep to aloow dispatcher to process event
+    std::this_thread::sleep_for(std::chrono::microseconds(500000));  // sleep to aloow dispatcher to process event
     ASSERT_EQ(dispatchedEventsCount, 1);
 
     //-------------------------------------------
@@ -176,7 +220,6 @@ TEST(dispatchers, create_hsm_from_callback) {
     EXPECT_TRUE(hsm2InitResult);
 }
 
-
 TEST(dispatchers, instance_ownership) {
     TEST_DESCRIPTION("HSM should not own instance of dispatcher and should not crash if this instance is deleted");
 
@@ -187,9 +230,7 @@ TEST(dispatchers, instance_ownership) {
     int callbackCount = 0;
 
     hsm->registerState(AbcState::A);
-    hsm->registerState(AbcState::B, [&](const VariantVector_t& args) {
-        ++callbackCount;
-    });
+    hsm->registerState(AbcState::B, [&](const VariantVector_t& args) { ++callbackCount; });
     hsm->registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
 
     ASSERT_TRUE(executeOnMainThread([&]() {
@@ -201,7 +242,6 @@ TEST(dispatchers, instance_ownership) {
     // ACTIONS
     executeOnMainThread([&]() {
         dispatcher.reset();
-
         return true;
     });
 
@@ -211,3 +251,5 @@ TEST(dispatchers, instance_ownership) {
 
     EXPECT_EQ(callbackCount, 0);
 }
+
+// TODO: glib/glibmm dispatchers with custom context

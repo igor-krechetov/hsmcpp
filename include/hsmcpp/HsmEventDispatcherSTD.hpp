@@ -27,6 +27,8 @@ private:
 public:
     /**
      * @brief Create dispatcher instance.
+     * @param eventsCacheSize size of the queue preallocated for delayed events
+     * @return New dispatcher instance.
      *
      * @threadsafe{Instance can be safely created and destroyed from any thread.}
      */
@@ -80,6 +82,9 @@ protected:
     */
     virtual ~HsmEventDispatcherSTD();
 
+    /**
+     * @copydoc HsmEventDispatcherBase::deleteSafe()
+     */
     bool deleteSafe() override;
     /**
      * @brief See HsmEventDispatcherBase::startTimerImpl()
@@ -105,8 +110,7 @@ private:
     ConditionVariable mEmitEvent;
     ConditionVariable mTimerEvent;
     bool mNotifiedTimersThread = false;
-    std::map<TimerID_t, RunningTimerInfo> mRunningTimers;
-    Mutex mRunningTimersSync;
+    std::map<TimerID_t, RunningTimerInfo> mRunningTimers; // protected by mRunningTimersSync
 };
 
 }  // namespace hsmcpp

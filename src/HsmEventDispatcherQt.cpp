@@ -9,6 +9,7 @@
 #include <QVariant>
 
 #include "hsmcpp/logging.hpp"
+#include "hsmcpp/os/CriticalSection.hpp"
 
 namespace hsmcpp {
 
@@ -81,9 +82,12 @@ void HsmEventDispatcherQt::emitEvent(const HandlerID_t handlerID) {
 }
 
 void HsmEventDispatcherQt::unregisterAllTimerHandlers() {
+    CriticalSection cs(mRunningTimersSync);
+
     for (auto it = mNativeTimerHandlers.begin(); it != mNativeTimerHandlers.end(); ++it) {
         it->second->deleteLater();
     }
+
     mNativeTimerHandlers.clear();
 }
 
@@ -102,6 +106,8 @@ void HsmEventDispatcherQt::startTimerImpl(const TimerID_t timerID, const unsigne
             connect(newTimer, SIGNAL(timeout()), this, SLOT(onTimerEvent()));
             newTimer->setSingleShot(isSingleShot);
             newTimer->start(intervalMs);
+
+            CriticalSection cs(mRunningTimersSync);
             mNativeTimerHandlers.emplace(timerID, newTimer);
         };
 
@@ -129,6 +135,7 @@ void HsmEventDispatcherQt::startTimerImpl(const TimerID_t timerID, const unsigne
 
 void HsmEventDispatcherQt::stopTimerImpl(const TimerID_t timerID) {
     HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
+    CriticalSection cs(mRunningTimersSync);
     auto it = mNativeTimerHandlers.find(timerID);
 
     if (mNativeTimerHandlers.end() != it) {
@@ -147,7 +154,7 @@ void HsmEventDispatcherQt::onTimerEvent() {
         const bool restartTimer = handleTimerEvent(timerID);
 
         if (false == restartTimer) {
-            // TODO:  mNativeTimerHandlers is not thread-safe
+            CriticalSection cs(mRunningTimersSync);
             auto itTimer = mNativeTimerHandlers.find(timerID);
 
             if (mNativeTimerHandlers.end() != itTimer) {

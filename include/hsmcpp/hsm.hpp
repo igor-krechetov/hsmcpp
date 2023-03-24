@@ -612,8 +612,9 @@ public:
 
     /**
      * @brief Restart running timer.
-     * @details Restarts running timer with the same arguments which were provided to startTimer(). Does nothing if timer is not
-     * running.
+     * @details Timer is restarted with the same arguments which were provided to startTimer(). Only currently running or
+     * expired timers (with isSingleShot set to true) will be restarted. Has no effect if called for a timer which was not
+     * started.
      *
      * @param timerID       id of running timer
      *
@@ -622,14 +623,29 @@ public:
     void restartTimer(const TimerID_t timerID);
 
     /**
-     * @brief Stop running timer.
-     * @details Does nothing if timer is not running.
+     * @brief Stop active timer.
+     * @details Function stops an active timer without triggering any notifications and unregisters it. Further calls to
+     * restartTimer() will have no effects untill it's started again with startTimer().
      *
-     * @param timerID       id of running timer
+     * @remark For expired timers (which have isSingleShot property set to true), funtion simply unregisters them.
+     *
+     * @param timerID id of running or expired timer
      *
      * @threadsafe{ }
      */
     void stopTimer(const TimerID_t timerID);
+
+    /**
+     * @brief Check if timer is currently running.
+     *
+     * @param timerID id of the timer to check
+     *
+     * @retval true timer is running
+     * @retval false timer is not running
+     *
+     * @threadsafe{ }
+     */
+    bool isTimerRunning(const TimerID_t timerID);
 
     /**
      * @brief Enable debugging for HSM instance.

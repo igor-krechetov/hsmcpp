@@ -446,3 +446,36 @@ TEST_F(ABCHsm, timers_restart_from_code) {
     EXPECT_EQ(getLastActiveState(), AbcState::B);
     EXPECT_EQ(mStateCounterB, 1);
 }
+
+TEST_F(ABCHsm, timers_is_running) {
+    TEST_DESCRIPTION("HSM should provide a way to check if timer is running");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    const TimerID_t timer1 = 1;
+    const int timer1Duration = 2000;
+
+    registerState<ABCHsm>(AbcState::A);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+
+    registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
+
+    registerTimer(timer1, AbcEvent::E1);
+    initializeHsm();
+    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_FALSE(isTimerRunning(timer1));
+
+    //-------------------------------------------
+    // ACTIONS
+    startTimer(timer1, timer1Duration, true);
+    ASSERT_TRUE(isTimerRunning(timer1));
+
+    stopTimer(timer1);
+    ASSERT_FALSE(isTimerRunning(timer1));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_EQ(getLastActiveState(), AbcState::A);
+}
+
+// TODO: start already running timer

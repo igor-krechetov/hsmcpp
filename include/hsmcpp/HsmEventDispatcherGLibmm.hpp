@@ -30,10 +30,24 @@ namespace hsmcpp {
 class HsmEventDispatcherGLibmm : public HsmEventDispatcherBase {
 public:
     /**
-     * Must be called inside the same GLib MainContext
-     * The Dispatcher object must be deleted by the receiver thread.
-    */
+     * @brief Create dispatcher instance.
+     * @param eventsCacheSize size of the queue preallocated for delayed events
+     * @return New dispatcher instance.
+     *
+     * @notthreadsafe{Must be called inside the main GLib MainContext. The Dispatcher object must be deleted in the main GLib
+     * context.}
+     */
     static std::shared_ptr<HsmEventDispatcherGLibmm> create(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+
+    /**
+     * @brief Create dispatcher instance.
+     * @param context custom GLib context to use for dispatcher.
+     * @param eventsCacheSize size of the queue preallocated for delayed events
+     * @return New dispatcher instance.
+     *
+     * @notthreadsafe{Must be called inside the same GLib context provided in \a context. The Dispatcher object must be deleted
+     * in the same GLib context as \a context . }
+     */
     static std::shared_ptr<HsmEventDispatcherGLibmm> create(const Glib::RefPtr<Glib::MainContext>& context,
                                                             const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
 
@@ -45,8 +59,8 @@ public:
 
     /**
      * @copydoc IHsmEventDispatcher::stop()
-     * @notthreadsafe{TODO: Current timers implementation is not thread-safe}
-    */
+     * @threadsafe{ }
+     */
     void stop() override;
 
     /**
@@ -73,18 +87,21 @@ protected:
      */
     virtual ~HsmEventDispatcherGLibmm();
 
+    /**
+     * @copydoc HsmEventDispatcherBase::deleteSafe()
+     */
     bool deleteSafe() override;
 
     void unregisterAllTimerHandlers();
 
     /**
      * @brief See HsmEventDispatcherBase::startTimerImpl()
-     * @notthreadsafe{Not required by base class}
+     * @threadsafe{ }
      */
     void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
     /**
      * @brief See HsmEventDispatcherBase::stopTimerImpl()
-     * @notthreadsafe{Not required by base class}
+     * @threadsafe{ }
      */
     void stopTimerImpl(const TimerID_t timerID) override;
 
@@ -95,7 +112,7 @@ private:
     Glib::RefPtr<Glib::MainContext> mMainContext;
     std::unique_ptr<Glib::Dispatcher> mDispatcher;
     sigc::connection mDispatcherConnection;
-    std::map<TimerID_t, sigc::connection> mNativeTimerHandlers;// TODO: not thread-safe
+    std::map<TimerID_t, sigc::connection> mNativeTimerHandlers; // protected by mRunningTimersSync
 };
 
 }  // namespace hsmcpp

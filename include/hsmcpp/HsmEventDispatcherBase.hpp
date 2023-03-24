@@ -7,6 +7,7 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <memory>
 
 #include "IHsmEventDispatcher.hpp"
 #include "os/Mutex.hpp"
@@ -38,18 +39,8 @@ protected:
     };
 
 public:
-    /**
-     * @brief Default constructor.
-     * @param eventsCacheSize size of the queue preallocated for delayed events
-     */
-    // cppcheck-suppress misra-c2012-17.8 ; false positive. setting default parameter value is not parameter modification
-    explicit HsmEventDispatcherBase(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
-
-    /**
-     * Destructor.
-     */
-    virtual ~HsmEventDispatcherBase();
-
+    void stop() override;
+    
     /**
      * @brief See IHsmEventDispatcher::registerEventHandler()
      * @threadsafe{ }
@@ -126,6 +117,29 @@ public:
     bool isTimerRunning(const TimerID_t timerID) override;
 
 protected:
+    /**
+     * @brief Default constructor.
+     * @param eventsCacheSize size of the queue preallocated for delayed events
+     */
+    // cppcheck-suppress misra-c2012-17.8 ; false positive. setting default parameter value is not parameter modification
+    explicit HsmEventDispatcherBase(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
+
+    /**
+     * Destructor.
+     */
+    virtual ~HsmEventDispatcherBase();
+
+    static void handleDelete(HsmEventDispatcherBase* dispatcher);
+
+    /**
+     * @brief Schedule instance for deletion.
+     * @retval false instance will be deleted later automatically
+     * @retval true instance can be deleted now
+     *
+     * @notthreadsafe{Should not be called multiple times}
+    */
+    virtual bool deleteSafe() = 0;
+
     /**
      * @brief Generate new unique ID for handler.
      * @details To avoid unintended errors, even different type of handlers have unique IDs. Current implementation just returns
@@ -251,6 +265,8 @@ protected:
     Mutex mEmitSync;
     Mutex mHandlersSync;
     Mutex mEnqueuedEventsSync;
+    Mutex mRunningTimersSync;
+    bool mStopDispatcher = false;
 };
 
 }  // namespace hsmcpp

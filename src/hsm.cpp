@@ -8,15 +8,19 @@
 namespace hsmcpp {
 
 HierarchicalStateMachine::HierarchicalStateMachine(const StateID_t initialState)
-    : mImpl(new HierarchicalStateMachine::Impl(*this, initialState)) {}
+    : mImpl(new HierarchicalStateMachine::Impl(this, initialState)) {
+}
 
-HierarchicalStateMachine::~HierarchicalStateMachine() {}
+HierarchicalStateMachine::~HierarchicalStateMachine() {
+    mImpl->release();
+    mImpl->resetParent();
+}
 
 void HierarchicalStateMachine::setInitialState(const StateID_t initialState) {
     mImpl->setInitialState(initialState);
 }
 
-bool HierarchicalStateMachine::initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher) {
+bool HierarchicalStateMachine::initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher) {
     return mImpl->initialize(dispatcher);
 }
 
@@ -127,6 +131,10 @@ void HierarchicalStateMachine::restartTimer(const TimerID_t timerID) {
 
 void HierarchicalStateMachine::stopTimer(const TimerID_t timerID) {
     mImpl->stopTimer(timerID);
+}
+
+bool HierarchicalStateMachine::isTimerRunning(const TimerID_t timerID) {
+    return mImpl->isTimerRunning(timerID);
 }
 
 bool HierarchicalStateMachine::enableHsmDebugging() {

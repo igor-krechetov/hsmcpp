@@ -9,7 +9,9 @@
 #include <map>
 #include <memory>
 #include <vector>
-#include <fstream>
+#ifdef HSMBUILD_DEBUGGING
+  #include <fstream>
+#endif
 
 #include "hsmcpp/hsm.hpp"
 #include "hsmcpp/os/ConditionVariable.hpp"
@@ -22,7 +24,7 @@ namespace hsmcpp {
 
 class IHsmEventDispatcher;
 
-class HierarchicalStateMachine::Impl {
+class HierarchicalStateMachine::Impl : public std::enable_shared_from_this<HierarchicalStateMachine::Impl> {
 private:
     enum class HsmLogAction {
         IDLE,
@@ -124,11 +126,13 @@ private:
     };
 
 public:
-    explicit Impl(HierarchicalStateMachine& parent, const StateID_t initialState);
-    ~Impl();
+    explicit Impl(HierarchicalStateMachine* parent, const StateID_t initialState);
+    virtual ~Impl();
+
+    void resetParent();
 
     void setInitialState(const StateID_t initialState);
-    bool initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
+    bool initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher);
     bool isInitialized() const;
     void release();
     void registerFailedTransitionCallback(const HsmTransitionFailedCallback_t& onFailedTransition);
@@ -184,6 +188,7 @@ public:
     void startTimer(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot);
     void restartTimer(const TimerID_t timerID);
     void stopTimer(const TimerID_t timerID);
+    bool isTimerRunning(const TimerID_t timerID);
     bool enableHsmDebugging();
     bool enableHsmDebugging(const std::string& dumpPath);
     void disableHsmDebugging();
@@ -257,9 +262,12 @@ private:
     void dumpActiveStates();
 #endif
 
+    std::string getStateName(const StateID_t state);
+    std::string getEventName(const EventID_t event);
+
 private:
-    HierarchicalStateMachine& mParent;
-    std::shared_ptr<IHsmEventDispatcher> mDispatcher;
+    HierarchicalStateMachine* mParent = nullptr;
+    std::weak_ptr<IHsmEventDispatcher> mDispatcher;  // protected by mParentSync
     HandlerID_t mEventsHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
     HandlerID_t mEnqueuedEventsHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
     HandlerID_t mTimerHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
@@ -274,7 +282,7 @@ private:
     std::map<StateID_t, EventID_t> mFinalStates;
     std::multimap<StateID_t, StateID_t> mSubstates;
     std::multimap<StateID_t, StateEntryPoint> mSubstateEntryPoints;
-    std::list<PendingEventInfo> mPendingEvents;
+    std::list<PendingEventInfo> mPendingEvents;  // protected by mEventsSync
     std::map<TimerID_t, EventID_t> mTimers;
 
     // parent state, history state
@@ -286,10 +294,13 @@ private:
 
 #ifdef HSM_ENABLE_SAFE_STRUCTURE
     std::list<StateID_t> mTopLevelStates;  // list of states which are not substates and dont have substates of their own
-#endif                                     // HSM_ENABLE_SAFE_STRUCTURE
+#endif
 
 #ifndef HSM_DISABLE_THREADSAFETY
     Mutex mEventsSync;
+  #if !defined(HSM_DISABLE_DEBUG_TRACES)
+    Mutex mParentSync;
+  #endif
 #endif  // HSM_DISABLE_THREADSAFETY
 
 #ifdef HSMBUILD_DEBUGGING

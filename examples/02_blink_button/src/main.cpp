@@ -81,7 +81,7 @@ void setup() {
   // created dynamically to use heap memory instead of stack.
   gHSM = new BlinkHSM();
   // Create event dispatcher
-  gDispatcher = std::make_shared<hsmcpp::HsmEventDispatcherArduino>();
+  gDispatcher = hsmcpp::HsmEventDispatcherArduino::create();
   // initialize state machine
   gHSM->initialize(gDispatcher);
 }

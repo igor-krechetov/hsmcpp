@@ -4,7 +4,10 @@
 #ifndef HSMCPP_HSM_HPP
 #define HSMCPP_HSM_HPP
 
+#include <list>
+#include <string>
 #include <memory>
+#include <functional>
 
 #include "HsmTypes.hpp"
 #include "variant.hpp"
@@ -109,13 +112,15 @@ public:
      * @remark In case initial state has registered callbacks or actions, then will be executed synchronously during
      * initialize() call.
      *
+     * @warning HSM does not take ownership of the dispatcher. User is responsible for keeping dispatcher instance alive as long as HSM object exists or until call to release().
+     *
      * @param dispatcher An event dispatcher that can be used to receive events and dispatch them to the HSM.
      * @return true if initialization succeeds, false otherwise.
      *
      * @notthreadsafe{Uses IHsmEventDispatcher::registerEventHandler() and IHsmEventDispatcher::start(). Usually must be called
      * from the same thread where dispatcher was created.}
      */
-    virtual bool initialize(const std::shared_ptr<IHsmEventDispatcher>& dispatcher);
+    virtual bool initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher);
 
     /**
      * @brief Checks initialization status of HSM.
@@ -607,8 +612,9 @@ public:
 
     /**
      * @brief Restart running timer.
-     * @details Restarts running timer with the same arguments which were provided to startTimer(). Does nothing if timer is not
-     * running.
+     * @details Timer is restarted with the same arguments which were provided to startTimer(). Only currently running or
+     * expired timers (with isSingleShot set to true) will be restarted. Has no effect if called for a timer which was not
+     * started.
      *
      * @param timerID       id of running timer
      *
@@ -617,14 +623,29 @@ public:
     void restartTimer(const TimerID_t timerID);
 
     /**
-     * @brief Stop running timer.
-     * @details Does nothing if timer is not running.
+     * @brief Stop active timer.
+     * @details Function stops an active timer without triggering any notifications and unregisters it. Further calls to
+     * restartTimer() will have no effects untill it's started again with startTimer().
      *
-     * @param timerID       id of running timer
+     * @remark For expired timers (which have isSingleShot property set to true), funtion simply unregisters them.
+     *
+     * @param timerID id of running or expired timer
      *
      * @threadsafe{ }
      */
     void stopTimer(const TimerID_t timerID);
+
+    /**
+     * @brief Check if timer is currently running.
+     *
+     * @param timerID id of the timer to check
+     *
+     * @retval true timer is running
+     * @retval false timer is not running
+     *
+     * @threadsafe{ }
+     */
+    bool isTimerRunning(const TimerID_t timerID);
 
     /**
      * @brief Enable debugging for HSM instance.
@@ -708,7 +729,7 @@ private:
 
 private:
     class Impl;
-    std::unique_ptr<Impl> mImpl;
+    std::shared_ptr<Impl> mImpl;
 };
 
 // =================================================================================================================

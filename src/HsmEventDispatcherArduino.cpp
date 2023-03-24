@@ -26,18 +26,22 @@ HsmEventDispatcherArduino::~HsmEventDispatcherArduino() {
     unregisterAllEventHandlers();
 }
 
+std::shared_ptr<HsmEventDispatcherArduino> HsmEventDispatcherArduino::create(const size_t eventsCacheSize) {
+    return std::shared_ptr<HsmEventDispatcherArduino>(new HsmEventDispatcherArduino(eventsCacheSize),
+                                                      &HsmEventDispatcherBase::handleDelete);
+}
+
+bool HsmEventDispatcherArduino::deleteSafe() {
+    // NOTE: just delete the instance. Calling destructor from any thread is safe
+    return true;
+}
+
 bool HsmEventDispatcherArduino::start() {
     HSM_TRACE_CALL();
 
     mStopDispatcher = false;
 
     return true;
-}
-
-void HsmEventDispatcherArduino::stop() {
-    HSM_TRACE_CALL();
-
-    mStopDispatcher = true;
 }
 
 void HsmEventDispatcherArduino::emitEvent(const HandlerID_t handlerID) {
@@ -109,6 +113,7 @@ void HsmEventDispatcherArduino::handleTimers() {
                     it->second.elapseAfter += it->second.startedAt;
                     ++it;
                 } else {
+                    InterruptsFreeSection lck;
                     it = mRunningTimers.erase(it);
                 }
             } else {

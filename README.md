@@ -1,8 +1,12 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v0.31.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-v0.33.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
+
+# Releases
 [![Latest Release](https://img.shields.io/github/v/tag/igor-krechetov/hsmcpp?label=latest%20release)](https://github.com/igor-krechetov/hsmcpp/tags)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
-[![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
+[![arduino-library-badge](https://www.ardu-badge.com/badge/hsmcpp.svg?)](https://www.ardu-badge.com/hsmcpp)
+
 
 # Quality Status
 
@@ -41,7 +45,7 @@ If you are not familiar with HSM/FSM and which problems they can solve in your c
 - asynchronous / synchronous execution
 - thread safety
 - supported platforms:
-  - POSIX compliant
+  - POSIX compliant systems
   - Windows
   - Arduino
   - FreeRTOS
@@ -143,7 +147,7 @@ enum class Events
 
 int main(const int argc, const char**argv)
 {
-    std::shared_ptr<hsmcpp::HsmEventDispatcherSTD> dispatcher = std::make_shared<hsmcpp::HsmEventDispatcherSTD>();
+    std::shared_ptr<hsmcpp::HsmEventDispatcherSTD> dispatcher = hsmcpp::HsmEventDispatcherSTD::create();
     hsmcpp::HierarchicalStateMachine<States, Events> hsm(States::OFF);
 
     hsm.initialize(dispatcher);
@@ -178,6 +182,7 @@ For other examples see [Getting Started guide](https://hsmcpp.readthedocs.io/en/
 
 
 ## Notable FSM/HSM libraries
+There is no one-for-all library, so if hsmcpp doesn't fully suit your needs you can check out one of these alternatives:
 - [Qt](https://github.com/qt/qtscxml) (using QStateMachine or QScxmlStateMachine)
 - [QP/C++](https://github.com/QuantumLeaps/qpcpp)
 - [TinyFSM](https://github.com/digint/tinyfsm)

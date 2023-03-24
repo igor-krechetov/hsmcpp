@@ -1,6 +1,22 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.33.0] - 2023-03-23
+### Addded
+- isTimerRunning API
+
+### Fixed
+- added thread safety for Dispatcher timer API
+
+## [0.32.0] - 2023-03-22
+### Fixed
+- Deleting HSM before dispatcher was able to process all pending events resulted in a crash
+- Deleting dispatcher resulted in undefined behavior
+
+### Updated
+- Enabled arduino-lint in CI
+- HSM now does not take ownership of dispatcher instance
+
 ## [0.31.0] - 2023-03-16
 ### Added
 - ArduinoIDE support

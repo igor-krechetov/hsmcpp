@@ -1,116 +1,87 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/ABCHsm.hpp"
-#include "hsm/AsyncHsm.hpp"
 #ifndef WIN32
   #include <signal.h>
 #endif
 
-TEST_F(AsyncHsm, multithreaded_entrypoint_cancelation) {
+TEST_F(ABCHsm, multithreaded_entrypoint_cancelation) {
     TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be canceled");
     /*
     @startuml
-    left to right direction
     title multithreaded_entrypoint_cancelation
 
-    state A #orange: onExit
-
-    A -[#green,bold]-> P1: NEXT_STATE
-    P1 -[#red,bold]-> C: EXIT_SUBSTATE
-    C --> A: NEXT_STATE
+    state A #orange: onAExit
     state P1 {
-        [*] --> B
+        [*] -> B
     }
-    P1 --> A : E3
+
+    A -[#green,bold]> P1: **E1**
+    P1 -[#red,bold]> C: **E2**
     @enduml
     */
 
     //-------------------------------------------
     // PRECONDITIONS
-    registerState<AsyncHsm>(AsyncHsmState::A, this, nullptr, nullptr, &AsyncHsm::onExit);
-    registerState<AsyncHsm>(AsyncHsmState::B, this, &AsyncHsm::onStateChanged);
-    registerState<AsyncHsm>(AsyncHsmState::C, this, &AsyncHsm::onStateChanged);
+    registerState<ABCHsm>(AbcState::A, this, nullptr, nullptr, &ABCHsm::onSyncAExit);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onSyncB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onSyncC);
 
-    ASSERT_TRUE(registerSubstateEntryPoint(AsyncHsmState::P1, AsyncHsmState::B));
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B));
 
-    registerTransition(AsyncHsmState::A, AsyncHsmState::P1, AsyncHsmEvent::NEXT_STATE);
-    registerTransition(AsyncHsmState::P1, AsyncHsmState::C, AsyncHsmEvent::EXIT_SUBSTATE);
-    registerTransition(AsyncHsmState::C, AsyncHsmState::A, AsyncHsmEvent::NEXT_STATE);
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::P1, AbcState::C, AbcEvent::E2);
+    registerTransition(AbcState::C, AbcState::A, AbcEvent::E1);
 
     initializeHsm();
 
-    ASSERT_EQ(getLastActiveState(), AsyncHsmState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
     // this should trigger A -> [P1 -> B]
-    transition(AsyncHsmEvent::NEXT_STATE);
-    waitAsyncOperation(200, false);  // wait for A::onExit
+    transition(AbcEvent::E1);
+    ASSERT_TRUE(waitAsyncOperation(false));  // wait for A::onExit
 
     // send new event with clearQueue=TRUE
-    transitionWithQueueClear(AsyncHsmEvent::EXIT_SUBSTATE);
+    transitionWithQueueClear(AbcEvent::E2);
 
     unblockNextStep();               // allow A::onExit to continue
-    waitAsyncOperation(200, false);  // wait for B::onStateChanged
+    ASSERT_TRUE(waitAsyncOperation(false));  // wait for B state to activate
 
     // NOTE: this is the main validation point. In case of an error state would be C since we would never go into B
-    ASSERT_EQ(getLastActiveState(), AsyncHsmState::B);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
     unblockNextStep();  // allow B::onStateChanged to continue
 
-    waitAsyncOperation(200, false);  // wait for C::onStateChanged
-    ASSERT_EQ(getLastActiveState(), AsyncHsmState::C);
-    unblockNextStep();  // allow C::onStateChanged to continue
+    ASSERT_TRUE(waitAsyncOperation()); // wait for C state to activate
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AsyncHsmState::C);
-}
-
-TEST_F(ABCHsm, multithreaded_deleting_running_dispatcher) {
-    TEST_DESCRIPTION("");
-
-    //-------------------------------------------
-    // PRECONDITIONS
-    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
-    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
-
-    registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
-    registerTransition(AbcState::B, AbcState::A, AbcEvent::E1);
-
-    initializeHsm();
-
-    //-------------------------------------------
-    // ACTIONS
-    for (int i = 0; i < 100; ++i) {
-        transition(AbcEvent::E1);
-    }
-
-    //-------------------------------------------
-    // VALIDATION
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
 }
 
 // NOTE: Disable tests because we don't have signals on Windows platfroms
 #ifndef WIN32
-AsyncHsm *gAsyncHsmInstance = nullptr;
+ABCHsm *gABCHsmInstance = nullptr;
 
 void sigHandler(int signo, siginfo_t *info, void *context) {
-    if (nullptr != gAsyncHsmInstance) {
-        gAsyncHsmInstance->transitionInterruptSafe(AsyncHsmEvent::NEXT_STATE);
+    if (nullptr != gABCHsmInstance) {
+        gABCHsmInstance->transitionInterruptSafe(AbcEvent::E1);
     }
 }
 
-TEST_F(AsyncHsm, multithreaded_transition_from_interrupt) {
+TEST_F(ABCHsm, multithreaded_transition_from_interrupt) {
     TEST_DESCRIPTION("Simple transition from interrupts");
 
     //-------------------------------------------
     // PRECONDITIONS
-    gAsyncHsmInstance = this;
+    gABCHsmInstance = this;
 
-    registerState(AsyncHsmState::A);
-    registerState<AsyncHsm>(AsyncHsmState::B, this, &AsyncHsm::onStateChanged);
+    registerState(AbcState::A);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onSyncB);
 
-    registerTransition(AsyncHsmState::A, AsyncHsmState::B, AsyncHsmEvent::NEXT_STATE);
-    registerTransition(AsyncHsmState::B, AsyncHsmState::A, AsyncHsmEvent::NEXT_STATE);
+    registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
+    registerTransition(AbcState::B, AbcState::A, AbcEvent::E1);
 
     initializeHsm();
 
@@ -123,10 +94,10 @@ TEST_F(AsyncHsm, multithreaded_transition_from_interrupt) {
     //-------------------------------------------
     // ACTIONS
     raise(SIGUSR1);
-    ASSERT_TRUE(waitAsyncOperation(1000, true));
+    ASSERT_TRUE(waitAsyncOperation());
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AsyncHsmState::B);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 }
 #endif  // !WIN32

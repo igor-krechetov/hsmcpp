@@ -1,7 +1,6 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/ABCHsm.hpp"
-#include "hsm/AsyncHsm.hpp"
 #include "hsm/TrafficLightHsm.hpp"
 
 TEST_F(ABCHsm, substate_entrypoint) {
@@ -35,7 +34,7 @@ TEST_F(ABCHsm, substate_entrypoint) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -78,13 +77,13 @@ TEST_F(ABCHsm, substate_entrypoints_multiple_behavioral) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E3, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E3, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::C}));
 
     //-------------------------------------------
@@ -143,13 +142,13 @@ TEST_F(ABCHsm, substate_entrypoints_multiple_various) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B, AbcState::C}));
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E3, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E3, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
 
     //-------------------------------------------
@@ -197,7 +196,7 @@ TEST_F(ABCHsm, substate_entrypoints_behavioral_with_conditions) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -245,7 +244,7 @@ TEST_F(ABCHsm, substate_entrypoints_conditional) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -314,10 +313,10 @@ TEST_F(ABCHsm, substate_entrypoints_block_conditional_transition) {
     //-------------------------------------------
     // ACTIONS
     // NOTE: transition should be blocked because P2's entry point is defined with E1 event
-    ASSERT_FALSE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_FALSE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P3, AbcState::C}));
 
     //-------------------------------------------
@@ -363,7 +362,7 @@ TEST_F(ABCHsm, substate_entrypoints_substate) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -404,13 +403,13 @@ TEST_F(ABCHsm, substate_exit_single) {
 
     initializeHsm();
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
-    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::C}));
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E3, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E3, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -486,16 +485,16 @@ TEST_F(ABCHsm, substate_exit_multiple_layers) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::C}));
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::P3, AbcState::D}));
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -572,14 +571,14 @@ TEST_F(ABCHsm, substate_error_no_entrypoint) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_FALSE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_FALSE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 }
 
-TEST_F(AsyncHsm, substate_parent_as_initial) {
+TEST_F(ABCHsm, substate_parent_as_initial) {
     TEST_DESCRIPTION("when parent state is set as initial it should automatically transition into substate on startup");
     /*
     @startuml
@@ -598,17 +597,17 @@ TEST_F(AsyncHsm, substate_parent_as_initial) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    setInitialState(AsyncHsmState::P1);
-    registerState<AsyncHsm>(AsyncHsmState::B, this, &AsyncHsm::onStateChanged);
-    ASSERT_TRUE(registerSubstateEntryPoint(AsyncHsmState::P1, AsyncHsmState::P2));
-    ASSERT_TRUE(registerSubstateEntryPoint(AsyncHsmState::P2, AsyncHsmState::B));
+    setInitialState(AbcState::P1);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onSyncB);
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::P2));
+    ASSERT_TRUE(registerSubstateEntryPoint(AbcState::P2, AbcState::B));
 
     //-------------------------------------------
     // ACTIONS
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation(200, true));
+    ASSERT_TRUE(waitAsyncOperation());
 
     //-------------------------------------------
     // VALIDATION
-    ASSERT_TRUE(compareStateLists(getActiveStates(), {AsyncHsmState::P1, AsyncHsmState::P2, AsyncHsmState::B}));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::B}));
 }

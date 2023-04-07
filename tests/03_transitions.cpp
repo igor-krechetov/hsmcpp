@@ -12,7 +12,7 @@ TEST_F(TrafficLightHsm, simple_transition) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -34,7 +34,7 @@ TEST_F(TrafficLightHsm, transition_check) {
     EXPECT_FALSE(isTransitionPossible(TrafficLightEvent::TURN_OFF));
     EXPECT_FALSE(isTransitionPossible(TrafficLightEvent::NEXT_STATE));
 
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -58,7 +58,7 @@ TEST_F(TrafficLightHsm, transition_with_args) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, 12, "string", 12.75, false));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION, 12, "string", 12.75, false));
 
     //-------------------------------------------
     // VALIDATION
@@ -91,7 +91,7 @@ TEST_F(TrafficLightHsm, transition_failed_notification) {
     // ACTIONS
     hsmcpp::StateID_t prevState = getLastActiveState();
 
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY, 123));
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, TIMEOUT_SYNC_TRANSITION, 123));
 
     //-------------------------------------------
     // VALIDATION
@@ -114,7 +114,7 @@ TEST_F(TrafficLightHsm, transition_non_existent) {
     // ACTIONS
     hsmcpp::StateID_t prevState = getLastActiveState();
 
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -142,7 +142,7 @@ TEST_F(TrafficLightHsm, transition_cancel_on_exit) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -176,7 +176,7 @@ TEST_F(TrafficLightHsm, transition_cancel_on_enter) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -213,12 +213,12 @@ TEST_F(TrafficLightHsm, transition_self_internal) {
                                             this,
                                             &TrafficLightHsm::onNextStateTransition);
 
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::NEXT_STATE, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -250,12 +250,12 @@ TEST_F(TrafficLightHsm, transition_self_external) {
                                             this,
                                             &TrafficLightHsm::onNextStateTransition);
 
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::NEXT_STATE, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -292,14 +292,14 @@ TEST_F(ABCHsm, transition_self_external_deep) {
     initializeHsm();
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::B}));
 
     ASSERT_EQ(mStateCounterB, 1);
     ASSERT_EQ(mStateCounterBEnter, 1);
     ASSERT_EQ(mStateCounterBExit, 0);
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::C}));
 
     ASSERT_EQ(mStateCounterC, 1);
@@ -316,7 +316,7 @@ TEST_F(ABCHsm, transition_self_external_deep) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -353,7 +353,7 @@ TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition) {
     // ACTIONS
     hsmcpp::StateID_t prevState = getLastActiveState();
 
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, HSM_WAIT_INDEFINITELY));
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::NEXT_STATE, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -387,7 +387,7 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_true) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn on"));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION, "turn on"));
 
     //-------------------------------------------
     // VALIDATION
@@ -420,9 +420,9 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_false) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "ignore"));
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION, "ignore"));
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION, "turn off"));
 
     //-------------------------------------------
     // VALIDATION
@@ -467,11 +467,11 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));              // fail
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "ignore"));    // fail
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));   // ok: off->off
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn on"));    // ok: off->starting
-    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "turn off"));  // fail
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));              // fail
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION, "ignore"));    // fail
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION, "turn off"));   // ok: off->off
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION, "turn on"));    // ok: off->starting
+    ASSERT_FALSE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION, "turn off"));  // fail
 
     //-------------------------------------------
     // VALIDATION
@@ -504,7 +504,7 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple) {
 //     //-------------------------------------------
 //     // ACTIONS
 //     // OFF -> STARTING will be used because it was registered first and doesnt have condition
-//     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, "any"));
+//     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION, "any"));
 
 //     //-------------------------------------------
 //     // VALIDATION
@@ -531,7 +531,7 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple) {
 //     //-------------------------------------------
 //     // ACTIONS
 //     // OFF -> STARTING will be used because it was registered first
-//     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+//     ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
 
 //     //-------------------------------------------
 //     // VALIDATION

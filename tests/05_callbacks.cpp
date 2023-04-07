@@ -1,9 +1,23 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/ABCHsm.hpp"
+#include <chrono>
+#include <thread>
 
 TEST_F(ABCHsm, callbacks_class_pointers) {
     TEST_DESCRIPTION("test that all callbacks work when specified as class members");
+    /*
+    @startuml
+    title callbacks_class_pointers
+
+    state A #Orange: onExit
+    state B #LightGreen: onBEnter\nonB
+
+    [*] -> A
+    A -> B: <<conditionTrue>>\nE1\nonE1Transition
+
+    @enduml
+    */
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -16,7 +30,7 @@ TEST_F(ABCHsm, callbacks_class_pointers) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY, "test", 7));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION, "test", 7));
 
     //-------------------------------------------
     // VALIDATION
@@ -89,7 +103,7 @@ TEST_F(ABCHsm, callbacks_lambdas) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY, "test", 7));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION, "test", 7));
 
     //-------------------------------------------
     // VALIDATION
@@ -130,7 +144,7 @@ TEST_F(ABCHsm, callbacks_entering_substates) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION
@@ -159,7 +173,7 @@ TEST_F(ABCHsm, callbacks_exiting_substates) {
 
     initializeHsm();
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
 
     ASSERT_EQ(mStateCounterP1, 1);
@@ -172,7 +186,7 @@ TEST_F(ABCHsm, callbacks_exiting_substates) {
     //-------------------------------------------
     // ACTIONS
     mStateCounterP1Exit = 0;
-    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
 
     //-------------------------------------------
     // VALIDATION

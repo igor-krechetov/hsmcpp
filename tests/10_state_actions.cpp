@@ -30,7 +30,7 @@ TEST_F(ABCHsm, state_actions_simple) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     // wait a bit for second transition to finish
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -64,7 +64,7 @@ TEST_F(ABCHsm, state_actions_multiple) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     // wait a bit for second transition to finish
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -95,7 +95,7 @@ TEST_F(ABCHsm, state_actions_args) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     // wait a bit for second transition to finish
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 

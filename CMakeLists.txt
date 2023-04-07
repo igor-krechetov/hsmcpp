@@ -3,9 +3,15 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.33.0")
+set(PROJECT_VERSION "0.34.0")
 set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
+
+# break version into components
+string(REPLACE "." ";" VERSION_LIST ${PROJECT_VERSION})
+list(GET VERSION_LIST 0 PROJECT_VERSION_MAJOR)
+list(GET VERSION_LIST 1 PROJECT_VERSION_MINOR)
+list(GET VERSION_LIST 2 PROJECT_VERSION_MICRO)
 
 # HSMCPP requires at least C++11 support
 set(CMAKE_CXX_STANDARD 11)
@@ -26,7 +32,7 @@ option(HSMBUILD_TESTS "Build unittests" ON)
 option(HSMBUILD_EXAMPLES "Build examples" ON)
 option(HSMBUILD_CODECOVERAGE "Build with code coverage" OFF)
 
-set(HSMBUILD_PLATFORM "posix" CACHE STRING "Specifies platform")# Possible values: posix, windows, freertos, arduino
+set(HSMBUILD_PLATFORM "posix" CACHE STRING "Specifies target platform. Possible values: posix, windows, freertos, arduino")
 set(HSMBUILD_FREERTOS_ROOT "" CACHE STRING "FreeRTOS sources root folder")
 set(HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/os/freertos" CACHE STRING "Path to folder with FreeRTOSConfig.h")
 option(HSMBUILD_DISPATCHER_FREERTOS "Enable FreeRTOS based dispatcher" OFF)
@@ -71,6 +77,8 @@ endif()
 set(HSM_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 set(HSM_INCLUDES_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/")
 
+configure_file(./include/hsmcpp/version.hpp.in version.hpp @ONLY)
+
 set (LIBRARY_SRC ${HSM_SRC_ROOT}/hsm.cpp
                  ${HSM_SRC_ROOT}/HsmImpl.cpp
                  ${HSM_SRC_ROOT}/variant.cpp
@@ -96,7 +104,8 @@ set (LIBRARY_HEADERS ${HSM_INCLUDES_ROOT}/hsm.hpp
                      ${HSM_INCLUDES_ROOT}/os/common/LockGuard.hpp
                      ${HSM_INCLUDES_ROOT}/os/common/UniqueLock.hpp
                      ${HSM_INCLUDES_ROOT}/os/common/CriticalSection.hpp
-                     ${HSM_INCLUDES_ROOT}/os/common/InterruptsFreeSection.hpp)
+                     ${HSM_INCLUDES_ROOT}/os/common/InterruptsFreeSection.hpp
+                     ${CMAKE_BINARY_DIR}/version.hpp)
 
 set(FILES_SCXML2GEN ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/scxml2gen.py
                     ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/template.cpp

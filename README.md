@@ -1,5 +1,5 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v0.33.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-v0.34.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 
 # Releases
@@ -29,7 +29,7 @@
 
 
 # Overview
-HSMCPP is a C++ library providing an easy way (hopefully) to add hierarchical (HSM) or finite state machine (FSM) to your project. Main motivation behind making it was lack of suitable alternatives which do not involve large frameworks (often commercial). And even they couldn't satisfy projects needs that I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multithreading or event driven applications.
+HSMCPP is a C++ library providing an easy way to add hierarchical (HSM) or finite state machine (FSM) to your project. Main motivation behind making it was lack of suitable alternatives which do not involve large frameworks (often commercial). And even they couldn't satisfy project needs that I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multithreading or event driven applications.
 
 It's also applicable for single threaded and synchronous applications, but it might not be the most efficient option.
 

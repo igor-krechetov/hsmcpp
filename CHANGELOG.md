@@ -1,8 +1,22 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.34.0] - 2023-04-07
+### Added
+- added version.hpp with library version
+
+### Updated
+- improved behavior of Final States when working with Parallel states
+- unit-tests refactoring (added BaseAsyncHsm class and removed AsyncHsm)
+- improved async logic in unit-tests (multithreaded, parallel)
+
+### Fixed
+- Coverity issue in HierarchicalStateMachine::Impl::initialize (unhandled exception when calling shared_from_this(), but it was not possible due to Impl always being created as a shared pointer)
+- rare dead-lock in HsmEventDispatcherSTD destructor
+- wait_for() in std based ConditionVariable was not working correctly without stopWaiting callback
+
 ## [0.33.0] - 2023-03-23
-### Addded
+### Added
 - isTimerRunning API
 
 ### Fixed

@@ -39,7 +39,7 @@ using namespace hsmcpp;
 void configureGTest(const std::string& name);
 
 template <typename HsmStateEnum>
-bool compareStateLists(const std::list<HsmStateEnum> l1, const std::list<HsmStateEnum> l2) {
+bool compareStateLists(const std::list<HsmStateEnum>& l1, const std::list<HsmStateEnum>& l2) {
     bool equalLists = false;
 
     if (l1.size() == l2.size()) {
@@ -54,17 +54,18 @@ bool compareStateLists(const std::list<HsmStateEnum> l1, const std::list<HsmStat
     }
 
     if (false == equalLists) {
-        HSM_TRACE_CALL_DEBUG_ARGS("states are different");
+        printf("States are different (l1=%zu, l2=%zu)\n", l1.size(), l2.size());
 
-        HSM_TRACE_DEBUG("Expected:");
+        printf("Expected: ");
         for (auto it = l2.begin(); it != l2.end(); ++it) {
-            HSM_TRACE_DEBUG("%d", SC2INT(*it));
+            printf("%d, ", SC2INT(*it));
         }
 
-        HSM_TRACE_DEBUG("Was:");
+        printf("\nWas: ");
         for (auto it = l1.begin(); it != l1.end(); ++it) {
-            HSM_TRACE_DEBUG("%d", SC2INT(*it));
+            printf("%d, ", SC2INT(*it));
         }
+        printf("\n");
     }
 
     return equalLists;
@@ -83,6 +84,8 @@ bool compareStateLists(const std::list<HsmStateEnum> l1, const std::list<HsmStat
 
 #define EXPECT_CALL_ACTION_ONCE(_obj_, _call_, ...) \
   EXPECT_CALL(_obj_, _call_).WillOnce(DoAll(_obj_.getDefaultAsyncAction(), __VA_ARGS__))
+
+#define TIMEOUT_SYNC_TRANSITION                   (1000)
 
 // ======================================================
 // HSM initialization
@@ -139,38 +142,59 @@ return true;                              \
     ++mStateCounter##_state;                      \
     HSM_TRACE_CALL_ARGS("----> on" #_state "\n"); \
     return (_ret);                                \
-  }
-
-#define DEF_ENTER_ACTION_IMPL(_state, _ret)       \
-  int mStateCounter##_state = 0;                  \
-  VariantVector_t mArgs##_state;                  \
-  bool on##_state(const VariantVector_t& args) {  \
+  }                                               \
+  bool onSync##_state() {                         \
     ++mStateCounter##_state;                      \
-    HSM_TRACE_CALL_ARGS("----> on" #_state "\n"); \
-    mArgs##_state = args;                         \
+    blockExecution("----> on" #_state ": wait");  \
     return (_ret);                                \
   }
 
-#define DEF_TRANSITION_IMPL(_name)                          \
-  int mTransitionCounter##_name = 0;                        \
-  VariantVector_t mTransitionArgs##_name;                   \
-  void on##_name##Transition(const VariantVector_t& args) { \
-    ++mTransitionCounter##_name;                            \
-    HSM_TRACE_CALL_ARGS("----> on" #_name "Transition\n");  \
-    mTransitionArgs##_name = args;                          \
+#define DEF_ENTER_ACTION_IMPL(_state, _ret)           \
+  int mStateCounter##_state = 0;                      \
+  VariantVector_t mArgs##_state;                      \
+  bool on##_state(const VariantVector_t& args) {      \
+    ++mStateCounter##_state;                          \
+    HSM_TRACE_CALL_ARGS("----> on" #_state "\n");     \
+    mArgs##_state = args;                             \
+    return (_ret);                                    \
+  }                                                   \
+  bool onSync##_state(const VariantVector_t& args) {  \
+    ++mStateCounter##_state;                          \
+    mArgs##_state = args;                             \
+    blockExecution(#_state);                          \
+    return (_ret);                                    \
   }
 
-#define DEF_STATE_ACTION_IMPL(_state)             \
-  int mStateCounter##_state = 0;                  \
-  VariantVector_t mArgs##_state;                  \
-  void on##_state(const VariantVector_t& args) {  \
-    ++mStateCounter##_state;                      \
-    HSM_TRACE_CALL_ARGS("----> on" #_state "\n"); \
-    mArgs##_state = args;                         \
-  }                                               \
-  DEF_EXIT_ACTION_IMPL(_state##Exit, true)        \
-  DEF_EXIT_ACTION_IMPL(_state##ExitCancel, false) \
-  DEF_ENTER_ACTION_IMPL(_state##Enter, true)      \
+#define DEF_TRANSITION_IMPL(_name)                                \
+  int mTransitionCounter##_name = 0;                              \
+  VariantVector_t mTransitionArgs##_name;                         \
+  void on##_name##Transition(const VariantVector_t& args) {       \
+    ++mTransitionCounter##_name;                                  \
+    HSM_TRACE_CALL_ARGS("----> on" #_name "Transition\n");        \
+    mTransitionArgs##_name = args;                                \
+  }                                                               \
+  void onSync##_name##Transition(const VariantVector_t& args) {   \
+    ++mTransitionCounter##_name;                                  \
+    mTransitionArgs##_name = args;                                \
+    blockExecution(#_name " transition");                         \
+  }
+
+#define DEF_STATE_ACTION_IMPL(_state)                 \
+  int mStateCounter##_state = 0;                      \
+  VariantVector_t mArgs##_state;                      \
+  void on##_state(const VariantVector_t& args) {      \
+    ++mStateCounter##_state;                          \
+    HSM_TRACE_CALL_ARGS("----> on" #_state "\n");     \
+    mArgs##_state = args;                             \
+  }                                                   \
+  void onSync##_state(const VariantVector_t& args) {  \
+    ++mStateCounter##_state;                          \
+    mArgs##_state = args;                             \
+    blockExecution(#_state);                          \
+  }                                                   \
+  DEF_EXIT_ACTION_IMPL(_state##Exit, true)            \
+  DEF_EXIT_ACTION_IMPL(_state##ExitCancel, false)     \
+  DEF_ENTER_ACTION_IMPL(_state##Enter, true)          \
   DEF_ENTER_ACTION_IMPL(_state##EnterCancel, false)
 
 #endif  // HSMCPP_TESTS_TESTSCOMMON_HPP

@@ -17,8 +17,7 @@ void ConditionVariable::wait(UniqueLock& sync, std::function<bool()> stopWaiting
         lck = std::unique_lock<std::mutex>(sync.mutex()->nativeHandle(), std::adopt_lock);
     }
 
-    // NOTE: false-positive. std::function has bool() operator
-    // cppcheck-suppress misra-c2012-14.4
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::function has bool() operator
     if (stopWaiting) {
         mVariable.wait(lck, stopWaiting);
     } else {
@@ -41,7 +40,14 @@ bool ConditionVariable::wait_for(UniqueLock& sync, const int timeoutMs, std::fun
         lck = std::unique_lock<std::mutex>(sync.mutex()->nativeHandle(), std::adopt_lock);
     }
 
-    const bool res = mVariable.wait_for(lck, std::chrono::milliseconds(timeoutMs), stopWaiting);
+    bool res;
+
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::function has bool() operator
+    if (stopWaiting) {
+        res = mVariable.wait_for(lck, std::chrono::milliseconds(timeoutMs), stopWaiting);
+    } else {
+        res = (std::cv_status::timeout != mVariable.wait_for(lck, std::chrono::milliseconds(timeoutMs)));
+    }
 
     // no need to unlock on exit if lock already belonged to UniqueLock object
     if (true == sync.owns_lock()) {

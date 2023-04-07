@@ -33,7 +33,7 @@ TEST_F(TrafficLightHsm, register_states) {
 
     //-------------------------------------------
     // VALIDATION
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 1);
@@ -54,7 +54,7 @@ TEST_F(TrafficLightHsm, register_state_without_action) {
 
     //-------------------------------------------
     // VALIDATION
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mStateCounterStarting, 0);
 }
@@ -74,7 +74,7 @@ TEST_F(TrafficLightHsm, register_same_state_twice) {
 
     //-------------------------------------------
     // VALIDATION
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
     EXPECT_EQ(mStateCounterDummy, 1);
     EXPECT_EQ(mStateCounterStarting, 0);
 }
@@ -93,7 +93,7 @@ TEST_F(TrafficLightHsm, err_register_without_handler) {
 
     //-------------------------------------------
     // VALIDATION
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION));
     EXPECT_EQ(mStateCounterDummy, 0);
     EXPECT_EQ(mStateCounterStarting, 0);
 }
@@ -113,7 +113,7 @@ TEST_F(TrafficLightHsm, state_args_test) {
 
     //-------------------------------------------
     // VALIDATION
-    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, HSM_WAIT_INDEFINITELY, 12, "string", 12.75, false));
+    ASSERT_TRUE(transitionSync(TrafficLightEvent::TURN_ON, TIMEOUT_SYNC_TRANSITION, 12, "string", 12.75, false));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mStateCounterStarting, 1);
 

@@ -5,6 +5,7 @@
 
 #include "TestsCommon.hpp"
 #include "hsmcpp/hsm.hpp"
+#include "BaseAsyncHsm.hpp"
 
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "ABCHsm"
@@ -31,13 +32,14 @@ namespace AbcEvent {
     const hsmcpp::EventID_t E1 = 0;
     const hsmcpp::EventID_t E2 = 1;
     const hsmcpp::EventID_t E3 = 2;
+    const hsmcpp::EventID_t E4 = 3;
     const hsmcpp::EventID_t EXIT1 = 3;
     const hsmcpp::EventID_t EXIT2 = 4;
 
     const hsmcpp::EventID_t INVALID = INVALID_ID;
 }
 
-class ABCHsm : public testing::Test, public HierarchicalStateMachine {
+class ABCHsm : public testing::Test, public BaseAsyncHsm, public HierarchicalStateMachine {
 public:
     ABCHsm();
     virtual ~ABCHsm();
@@ -49,6 +51,10 @@ public:
     DEF_STATE_ACTION_IMPL(E)
     DEF_STATE_ACTION_IMPL(F)
 
+    DEF_STATE_ACTION_IMPL(F1)
+    DEF_STATE_ACTION_IMPL(F2)
+    DEF_STATE_ACTION_IMPL(F3)
+
     DEF_STATE_ACTION_IMPL(P1)
     DEF_STATE_ACTION_IMPL(P2)
     DEF_STATE_ACTION_IMPL(P3)
@@ -59,13 +65,12 @@ public:
     DEF_TRANSITION_IMPL(E1)
     DEF_TRANSITION_IMPL(E2)
     DEF_TRANSITION_IMPL(E3)
+    DEF_TRANSITION_IMPL(E4)
     DEF_TRANSITION_IMPL(Self)
 
     bool conditionTrue(const VariantVector_t& args);
 
-    inline void initializeHsm() {
-        INITIALIZE_HSM();
-    }
+    void initializeHsm();
 
     std::string getStateName(const hsmcpp::StateID_t state) const override;
     std::string getEventName(const hsmcpp::EventID_t event) const override;

@@ -5,6 +5,7 @@
 
 #include <algorithm>
 
+#include "hsmcpp/os/os.hpp"
 #include "hsmcpp/IHsmEventDispatcher.hpp"
 #include "hsmcpp/logging.hpp"
 
@@ -103,73 +104,81 @@ bool HierarchicalStateMachine::Impl::initialize(const std::weak_ptr<IHsmEventDis
         // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
         if (dispatcherPtr) {
             if (true == dispatcherPtr->start()) {
-                std::weak_ptr<Impl> ptrInstance(shared_from_this());
+                std::weak_ptr<Impl> ptrInstance;
 
-                mDispatcher = dispatcher;
+                HSM_TRY {
+                    ptrInstance = shared_from_this();
+                } HSM_CATCH (const std::bad_weak_ptr& e) {
+                    HSM_TRACE_ERROR("Impl instance must be created as shared_ptr");
+                }
 
-                // cppcheck-suppress misra-c2012-13.1 ; false-positive. this is a functor, not initializer list
-                mEventsHandlerId = dispatcherPtr->registerEventHandler([ptrInstance]() {
-                    bool handlerIsValid = false;
-                    auto pThis = ptrInstance.lock();
+                if (false == ptrInstance.expired()) {
+                    mDispatcher = dispatcher;
 
-                    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
-                    if (pThis) {
-                        pThis->dispatchEvents();
-                        handlerIsValid = true;
+                    // cppcheck-suppress misra-c2012-13.1 ; false-positive. this is a functor, not initializer list
+                    mEventsHandlerId = dispatcherPtr->registerEventHandler([ptrInstance]() {
+                        bool handlerIsValid = false;
+                        auto pThis = ptrInstance.lock();
+
+                        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+                        if (pThis && (false == pThis->mStopDispatching)) {
+                            pThis->dispatchEvents();
+                            handlerIsValid = true;
+                        }
+
+                        // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
+                        // cppcheck-suppress misra-c2012-15.5
+                        return handlerIsValid;
+                    });
+
+                    // cppcheck-suppress misra-c2012-13.1 ; false-positive. this is a functor, not initializer list
+                    mTimerHandlerId = dispatcherPtr->registerTimerHandler([ptrInstance](const TimerID_t timerId) {
+                        bool handlerIsValid = false;
+                        auto pThis = ptrInstance.lock();
+
+                        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+                        if (pThis && (false == pThis->mStopDispatching)) {
+                            pThis->dispatchTimerEvent(timerId);
+                            handlerIsValid = true;
+                        }
+
+                        // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
+                        // cppcheck-suppress misra-c2012-15.5
+                        return handlerIsValid;
+                    });
+
+                    // cppcheck-suppress misra-c2012-13.1 ; false-positive. this is a functor, not initializer list
+                    mEnqueuedEventsHandlerId = dispatcherPtr->registerEnqueuedEventHandler([ptrInstance](const EventID_t event) {
+                        bool handlerIsValid = false;
+                        auto pThis = ptrInstance.lock();
+
+                        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+                        if (pThis && (false == pThis->mStopDispatching)) {
+                            pThis->transitionSimple(event);
+                            handlerIsValid = true;
+                        }
+
+                        // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
+                        // cppcheck-suppress misra-c2012-15.5
+                        return handlerIsValid;
+                    });
+
+                    if ((INVALID_HSM_DISPATCHER_HANDLER_ID != mEventsHandlerId) &&
+                        (INVALID_HSM_DISPATCHER_HANDLER_ID != mTimerHandlerId)) {
+                        logHsmAction(HsmLogAction::IDLE,
+                                    INVALID_HSM_STATE_ID,
+                                    INVALID_HSM_STATE_ID,
+                                    INVALID_HSM_EVENT_ID,
+                                    false,
+                                    VariantVector_t());
+                        handleStartup();
+                        result = true;
+                    } else {
+                        HSM_TRACE_ERROR("failed to register event handlers");
+                        dispatcherPtr->unregisterEventHandler(mEventsHandlerId);
+                        dispatcherPtr->unregisterEnqueuedEventHandler(mEnqueuedEventsHandlerId);
+                        dispatcherPtr->unregisterTimerHandler(mTimerHandlerId);
                     }
-
-                    // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
-                    // cppcheck-suppress misra-c2012-15.5
-                    return handlerIsValid;
-                });
-
-                // cppcheck-suppress misra-c2012-13.1 ; false-positive. this is a functor, not initializer list
-                mTimerHandlerId = dispatcherPtr->registerTimerHandler([ptrInstance](const TimerID_t timerId) {
-                    bool handlerIsValid = false;
-                    auto pThis = ptrInstance.lock();
-
-                    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
-                    if (pThis) {
-                        pThis->dispatchTimerEvent(timerId);
-                        handlerIsValid = true;
-                    }
-
-                    // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
-                    // cppcheck-suppress misra-c2012-15.5
-                    return handlerIsValid;
-                });
-
-                // cppcheck-suppress misra-c2012-13.1 ; false-positive. this is a functor, not initializer list
-                mEnqueuedEventsHandlerId = dispatcherPtr->registerEnqueuedEventHandler([ptrInstance](const EventID_t event) {
-                    bool handlerIsValid = false;
-                    auto pThis = ptrInstance.lock();
-
-                    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
-                    if (pThis) {
-                        pThis->transitionSimple(event);
-                        handlerIsValid = true;
-                    }
-
-                    // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
-                    // cppcheck-suppress misra-c2012-15.5
-                    return handlerIsValid;
-                });
-
-                if ((INVALID_HSM_DISPATCHER_HANDLER_ID != mEventsHandlerId) &&
-                    (INVALID_HSM_DISPATCHER_HANDLER_ID != mTimerHandlerId)) {
-                    logHsmAction(HsmLogAction::IDLE,
-                                 INVALID_HSM_STATE_ID,
-                                 INVALID_HSM_STATE_ID,
-                                 INVALID_HSM_EVENT_ID,
-                                 false,
-                                 VariantVector_t());
-                    handleStartup();
-                    result = true;
-                } else {
-                    HSM_TRACE_ERROR("failed to register event handlers");
-                    dispatcherPtr->unregisterEventHandler(mEventsHandlerId);
-                    dispatcherPtr->unregisterEnqueuedEventHandler(mEnqueuedEventsHandlerId);
-                    dispatcherPtr->unregisterTimerHandler(mTimerHandlerId);
                 }
             } else {
                 HSM_TRACE_ERROR("failed to start dispatcher");
@@ -753,13 +762,39 @@ bool HierarchicalStateMachine::Impl::isSubstateOf(const StateID_t parent, const 
     HSM_TRACE_CALL_DEBUG_ARGS("parent=<%s>, child=<%s>", getStateName(parent).c_str(), getStateName(child).c_str());
     StateID_t curState = child;
 
-    do {
-        if (false == getParentState(curState, curState)) {
-            break;
-        }
-    } while (parent != curState);
+    if (parent != child) {
+        // TODO: can be optimized by checking siblings on each level
 
-    return (parent == curState);
+        do {
+            if (false == getParentState(curState, curState)) {
+                break;
+            }
+        } while (parent != curState);
+    }
+
+    return (parent != child) && (parent == curState);
+}
+
+bool HierarchicalStateMachine::Impl::isFinalState(const StateID_t state) const {
+    return (mFinalStates.end() != mFinalStates.find(state));
+}
+
+bool HierarchicalStateMachine::Impl::hasActiveChildren(const StateID_t parent, const bool includeFinal) {
+    HSM_TRACE_CALL_DEBUG_ARGS("parent=<%s>", getStateName(parent).c_str());
+    bool res = false;
+
+    for (const StateID_t activeStateId: mActiveStates) {
+        if ((true == includeFinal) || (false == isFinalState(activeStateId))) {
+            if (isSubstateOf(parent, activeStateId)) {
+                HSM_TRACE_DEBUG("parent=<%s> has <%s> active", getStateName(parent).c_str(), getStateName(activeStateId).c_str());
+                res = true;
+                break;
+            }
+        }
+    }
+
+    HSM_TRACE_CALL_RESULT("res=%d", BOOL2INT(res));
+    return res;
 }
 
 bool HierarchicalStateMachine::Impl::getHistoryParent(const StateID_t historyState, StateID_t& outParent) {
@@ -1182,20 +1217,24 @@ typename HsmEventStatus_t HierarchicalStateMachine::Impl::handleSingleTransition
 
                             // don't generate events for top level final states since no one can process them
                             if (true == getParentState(it->destinationState, parentState)) {
-                                PendingEventInfo finalStateEvent;
+                                // check if there are any other active siblings in this parent state
+                                // only generate final state event when all siblings got deactivated
+                                if (false == hasActiveChildren(parentState, false)) {
+                                    PendingEventInfo finalStateEvent;
 
-                                finalStateEvent.transitionType = TransitionBehavior::REGULAR;
-                                finalStateEvent.args = event.args;
+                                    finalStateEvent.transitionType = TransitionBehavior::REGULAR;
+                                    finalStateEvent.args = event.args;
 
-                                if (INVALID_HSM_EVENT_ID != itFinalStateEvent->second) {
-                                    finalStateEvent.type = itFinalStateEvent->second;
-                                } else {
-                                    finalStateEvent.type = event.type;
-                                }
+                                    if (INVALID_HSM_EVENT_ID != itFinalStateEvent->second) {
+                                        finalStateEvent.type = itFinalStateEvent->second;
+                                    } else {
+                                        finalStateEvent.type = event.type;
+                                    }
 
-                                {
-                                    HSM_SYNC_EVENTS_QUEUE();
-                                    mPendingEvents.push_front(finalStateEvent);
+                                    {
+                                        HSM_SYNC_EVENTS_QUEUE();
+                                        mPendingEvents.push_front(finalStateEvent);
+                                    }
                                 }
                             }
 

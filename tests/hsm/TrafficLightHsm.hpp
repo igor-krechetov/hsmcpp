@@ -5,6 +5,7 @@
 
 #include "TestsCommon.hpp"
 #include "hsmcpp/hsm.hpp"
+#include "BaseAsyncHsm.hpp"
 
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "TrafficLightHsm"
@@ -26,7 +27,7 @@ namespace TrafficLightEvent {
     const hsmcpp::EventID_t NEXT_STATE = 2;
 }
 
-class TrafficLightHsm : public testing::Test, public HierarchicalStateMachine {
+class TrafficLightHsm : public testing::Test, public BaseAsyncHsm, public HierarchicalStateMachine {
 public:
     TrafficLightHsm();
     virtual ~TrafficLightHsm();

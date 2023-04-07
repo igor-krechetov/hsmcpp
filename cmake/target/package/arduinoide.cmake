@@ -16,6 +16,7 @@ foreach(ITEM ${DEPLOY_FILES})
     string(REPLACE ${CMAKE_CURRENT_SOURCE_DIR} "" ITEM_PATH_RELATIVE ${ITEM_PATH})
     if (ITEM_PATH_RELATIVE)
         string(REPLACE "/include/" "/src/" ITEM_PATH_RELATIVE ${ITEM_PATH_RELATIVE})
+        string(REPLACE "/build" "/src/hsmcpp" ITEM_PATH_RELATIVE ${ITEM_PATH_RELATIVE})
     endif()
 
     install(FILES ${ITEM} DESTINATION ${DEPLOY_DIR}/${ITEM_PATH_RELATIVE}/)

@@ -25,12 +25,12 @@ TEST_F(ABCHsm, finalstate_simple_exitpoint) {
 
     initializeHsm();
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     ASSERT_EQ(getLastActiveState(), AbcState::C);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
     // wait a bit since exit transition will be async
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
@@ -61,12 +61,12 @@ TEST_F(ABCHsm, finalstate_forward_event) {
 
     initializeHsm();
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     ASSERT_EQ(getLastActiveState(), AbcState::C);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
     // wait a bit since exit transition will be async
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
@@ -119,7 +119,7 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_final) {
     //-------------------------------------------
     // ACTIONS
     for (auto curEvent : argEvents) {
-        ASSERT_TRUE(transitionSync(curEvent, HSM_WAIT_INDEFINITELY));
+        ASSERT_TRUE(transitionSync(curEvent, TIMEOUT_SYNC_TRANSITION));
         // wait a bit since exit transition will be async
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
@@ -167,7 +167,7 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_exitpoints) {
     //-------------------------------------------
     // ACTIONS
     for (auto curEvent : argEvents) {
-        ASSERT_TRUE(transitionSync(curEvent, HSM_WAIT_INDEFINITELY));
+        ASSERT_TRUE(transitionSync(curEvent, TIMEOUT_SYNC_TRANSITION));
         // wait a bit since exit transition will be async
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
@@ -203,7 +203,7 @@ TEST_F(ABCHsm, finalstate_blocked_final) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     // wait a bit since exit transition will be async
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
@@ -238,7 +238,7 @@ TEST_F(ABCHsm, finalstate_blocked_exitpoint) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     // wait a bit since exit transition will be async
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
@@ -268,12 +268,12 @@ TEST_F(ABCHsm, finalstate_transition_args) {
 
     const int testArg = 17;
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     ASSERT_EQ(getLastActiveState(), AbcState::C);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY, testArg));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION, testArg));
     // wait a bit since exit transition will be async
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
@@ -309,12 +309,12 @@ TEST_F(ABCHsm, finalstate_no_transition) {
 
     initializeHsm();
 
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     ASSERT_EQ(getLastActiveState(), AbcState::C);
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E2, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
     // wait a bit since exit transition will be async
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
@@ -347,7 +347,7 @@ TEST_F(ABCHsm, finalstate_toplevel) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(transitionSync(AbcEvent::E1, HSM_WAIT_INDEFINITELY));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
     // wait a bit since exit transition will be async
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
@@ -400,7 +400,7 @@ TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path) {
     //-------------------------------------------
     // ACTIONS
     for (auto curEvent : argEvents) {
-        ASSERT_TRUE(transitionSync(curEvent, HSM_WAIT_INDEFINITELY));
+        ASSERT_TRUE(transitionSync(curEvent, TIMEOUT_SYNC_TRANSITION));
         // wait a bit since exit transition will be async
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
@@ -457,7 +457,7 @@ TEST_P(ParamFixtureFinalState3, finalstate_both_types) {
     //-------------------------------------------
     // ACTIONS
     for (const auto& curEvent : argEvents) {
-        ASSERT_TRUE(transitionSync(curEvent, HSM_WAIT_INDEFINITELY));
+        ASSERT_TRUE(transitionSync(curEvent, TIMEOUT_SYNC_TRANSITION));
         // wait a bit since exit transition will be async
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }

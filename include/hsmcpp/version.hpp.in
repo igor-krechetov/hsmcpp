@@ -1,0 +1,11 @@
+// Copyright (C) 2023 Igor Krechetov
+// Distributed under MIT license. See file LICENSE for details
+
+#ifndef HSMCPP_VERSION_HPP
+#define HSMCPP_VERSION_HPP
+
+#define HSMCPP_MAJOR_VERSION    (@PROJECT_VERSION_MAJOR@)
+#define HSMCPP_MINOR_VERSION    (@PROJECT_VERSION_MINOR@)
+#define HSMCPP_MICRO_VERSION    (@PROJECT_VERSION_MICRO@)
+
+#endif // HSMCPP_VERSION_HPP

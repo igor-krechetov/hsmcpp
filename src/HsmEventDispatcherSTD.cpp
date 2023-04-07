@@ -60,6 +60,7 @@ bool HsmEventDispatcherSTD::start() {
 
 void HsmEventDispatcherSTD::stop() {
     HSM_TRACE_CALL_DEBUG();
+    UniqueLock lck(mEmitSync);
 
     HsmEventDispatcherBase::stop();
     unregisterAllEventHandlers();

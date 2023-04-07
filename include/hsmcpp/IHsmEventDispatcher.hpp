@@ -106,7 +106,7 @@ public:
 
     /**
      * @brief Unregister events handler.
-     * @param handler handler ID received from registerEventHandler()
+     * @param handlerID handler ID received from registerEventHandler()
      */
     virtual void unregisterEventHandler(const HandlerID_t handlerID) = 0;
 
@@ -125,7 +125,7 @@ public:
 
     /**
      * @brief Unregister events handler.
-     * @param handler handler ID received from registerEnqueuedEventHandler()
+     * @param handlerID handler ID received from registerEnqueuedEventHandler()
      */
     virtual void unregisterEnqueuedEventHandler(const HandlerID_t handlerID) = 0;
 

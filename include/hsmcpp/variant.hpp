@@ -463,13 +463,13 @@ public:
 
     /**
      * @brief Returns the variant value represented as uint64
-     * @copydetail toInt64()
+     * @copydetails toInt64()
      */
     uint64_t toUInt64() const;
 
     /**
      * @brief Returns the variant value represented as double
-     * @copydetail toInt64()
+     * @copydetails toInt64()
      */
     double toDouble() const;
 

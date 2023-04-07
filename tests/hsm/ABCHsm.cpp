@@ -2,6 +2,8 @@
 // Distributed under MIT license. See file LICENSE for details
 #include "ABCHsm.hpp"
 
+#include "hsmcpp/os/UniqueLock.hpp"
+
 ABCHsm::ABCHsm()
     : HierarchicalStateMachine(AbcState::A) {}
 
@@ -99,6 +101,8 @@ std::string ABCHsm::getEventName(const hsmcpp::EventID_t event) const {
 
 void ABCHsm::SetUp() {}
 
-void ABCHsm::TearDown() {
-    RELEASE_HSM();
+void ABCHsm::TearDown() {}
+
+void ABCHsm::initializeHsm() {
+    INITIALIZE_HSM();
 }

@@ -27,7 +27,7 @@ set(SRC_UNITTESTS_COMMON ${CMAKE_CURRENT_SOURCE_DIR}/01_states.cpp
 
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/ABCHsm.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/hsm/AsyncHsm.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/hsm/BaseAsyncHsm.cpp
 
                          ${CMAKE_CURRENT_SOURCE_DIR}/utils/gtestbadge/Badge.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/utils/gtestbadge/BadgeEventListener.cpp

@@ -197,6 +197,7 @@ gboolean HsmEventDispatcherGLib::onTimerEvent(const TimerData_t* timerData) {
                 g_source_unref(itTimer->second);
                 timerData->first->mNativeTimerHandlers.erase(itTimer);
             } else {
+                HSM_TRACE_DEF();
                 HSM_TRACE_ERROR("unexpected error. timer not found");
             }
         }

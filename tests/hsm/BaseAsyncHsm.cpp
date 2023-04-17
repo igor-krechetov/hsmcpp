@@ -11,14 +11,16 @@ BaseAsyncHsm::BaseAsyncHsm() {
 }
 
 void BaseAsyncHsm::blockExecution(const std::string& msg) {
-    UniqueLock lck(mSyncLock);
+    if (true == mEnableSyncMode) {
+        UniqueLock lck(mSyncLock);
 
-    // printf("----> on%s: wait\n", msg.c_str());
-    mSyncVariableCheck = true;
-    mSyncVariable.notify();
-    ASSERT_TRUE(mBlockNextStep.wait_for(lck, 5000, [&]() { return (false == mSyncVariableCheck.load()); }));
-    mSyncVariableCheck = false;
-    // printf("----> on%s: done\n", msg.c_str());
+        // printf("----> on%s: wait\n", msg.c_str());
+        mSyncVariableCheck = true;
+        mSyncVariable.notify();
+        ASSERT_TRUE(mBlockNextStep.wait_for(lck, 5000, [&]() { return (false == mSyncVariableCheck.load()); }));
+        mSyncVariableCheck = false;
+        // printf("----> on%s: done\n", msg.c_str());
+    }
 }
 
 bool BaseAsyncHsm::waitAsyncOperation() {
@@ -52,4 +54,8 @@ void BaseAsyncHsm::unblockNextStep() {
     // printf("-----> notify\n");
     mBlockNextStep.notify();
     // printf("-----> notify done\n");
+}
+
+void BaseAsyncHsm::setSyncMode(const bool enable) {
+    mEnableSyncMode = enable;
 }

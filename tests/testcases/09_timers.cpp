@@ -30,7 +30,7 @@ TEST_F(ABCHsm, timers_onentry) {
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
-    ASSERT_EQ(getLastActiveState(), AbcState::B);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 
     //-------------------------------------------
     // ACTIONS
@@ -38,7 +38,7 @@ TEST_F(ABCHsm, timers_onentry) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AbcState::C);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
     EXPECT_EQ(mStateCounterC, 1);
 }
 
@@ -187,7 +187,7 @@ TEST_F(ABCHsm, timers_singleshot) {
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
-    ASSERT_EQ(getLastActiveState(), AbcState::B);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 
     //-------------------------------------------
     // ACTIONS
@@ -195,7 +195,7 @@ TEST_F(ABCHsm, timers_singleshot) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AbcState::C);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
     EXPECT_EQ(mStateCounterC, 1);
 }
 
@@ -226,7 +226,7 @@ TEST_F(ABCHsm, timers_repeating) {
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
-    ASSERT_EQ(getLastActiveState(), AbcState::B);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 
     //-------------------------------------------
     // ACTIONS
@@ -234,7 +234,7 @@ TEST_F(ABCHsm, timers_repeating) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AbcState::D);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::D}));
     EXPECT_EQ(mStateCounterC, 1);
     EXPECT_EQ(mStateCounterD, 1);
 }
@@ -285,7 +285,7 @@ TEST_F(ABCHsm, timers_stop) {
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
-    ASSERT_EQ(getLastActiveState(), AbcState::B);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 
     //-------------------------------------------
     // ACTIONS
@@ -294,7 +294,7 @@ TEST_F(ABCHsm, timers_stop) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AbcState::C);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
     EXPECT_EQ(mStateCounterC, 1);
     EXPECT_EQ(mStateCounterD, 0);
 }
@@ -397,11 +397,11 @@ TEST_F(ABCHsm, timers_delete_running) {
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
-    ASSERT_EQ(getLastActiveState(), AbcState::B);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 
     //-------------------------------------------
     // ACTIONS
-    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration + 20));
 
     //-------------------------------------------
     // VALIDATION
@@ -423,7 +423,7 @@ TEST_F(ABCHsm, timers_start_from_code) {
 
     registerTimer(timer1, AbcEvent::E1);
     initializeHsm();
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -432,7 +432,7 @@ TEST_F(ABCHsm, timers_start_from_code) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AbcState::B);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
     EXPECT_EQ(mStateCounterB, 1);
 }
 
@@ -451,7 +451,7 @@ TEST_F(ABCHsm, timers_stop_from_code) {
 
     registerTimer(timer1, AbcEvent::E1);
     initializeHsm();
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -462,7 +462,7 @@ TEST_F(ABCHsm, timers_stop_from_code) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AbcState::A);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
     EXPECT_EQ(mStateCounterB, 0);
 }
 
@@ -481,7 +481,7 @@ TEST_F(ABCHsm, timers_restart_from_code) {
 
     registerTimer(timer1, AbcEvent::E1);
     initializeHsm();
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
@@ -489,12 +489,12 @@ TEST_F(ABCHsm, timers_restart_from_code) {
     std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2));
     restartTimer(timer1);
     std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2 + 10));
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
     std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2));
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AbcState::B);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
     EXPECT_EQ(mStateCounterB, 1);
 }
 
@@ -513,7 +513,7 @@ TEST_F(ABCHsm, timers_is_running) {
 
     registerTimer(timer1, AbcEvent::E1);
     initializeHsm();
-    ASSERT_EQ(getLastActiveState(), AbcState::A);
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
     ASSERT_FALSE(isTimerRunning(timer1));
 
     //-------------------------------------------
@@ -526,7 +526,7 @@ TEST_F(ABCHsm, timers_is_running) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), AbcState::A);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
 }
 
 // TODO: start already running timer

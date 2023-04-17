@@ -11,18 +11,18 @@ PRIVATE
 
 # ================================================
 # COMMON SOURCE CODE
-set(SRC_UNITTESTS_COMMON ${CMAKE_CURRENT_SOURCE_DIR}/01_states.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/02_substates.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/03_transitions.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/04_multithreaded.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/05_callbacks.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/06_dispatchers.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/07_parallel.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/08_history.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/09_timers.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/10_state_actions.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/11_finalstate.cpp
-                         ${CMAKE_CURRENT_SOURCE_DIR}/20_variant.cpp
+set(SRC_UNITTESTS_COMMON ${CMAKE_CURRENT_SOURCE_DIR}/testcases/01_states.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/02_substates.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/03_transitions.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/04_multithreaded.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/05_callbacks.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/06_dispatchers.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/07_parallel.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/08_history.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/09_timers.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/10_state_actions.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/11_finalstate.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/20_variant.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/TestsCommon.cpp
 
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp

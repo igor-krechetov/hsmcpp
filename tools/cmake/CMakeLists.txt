@@ -30,16 +30,27 @@ function(deployQtApp _target)
     endif()
 endfunction()
 
+# NOTE: installing gtest without submodules
+# function(installGoogleTest)
+#     include(FetchContent)
+#     set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+#     FetchContent_Declare(googletest
+#                          GIT_REPOSITORY https://github.com/google/googletest.git
+#                          GIT_TAG b796f7d44681514f58a683a3a71ff17c94edb0c1 # release-1.13.0
+#     )
+#     if (WIN32)
+#         # Prevent overriding the parent project's compiler/linker settings
+#         set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+#     endif()
+#     FetchContent_MakeAvailable(googletest)
+# endfunction()
+
 function(installGoogleTest)
-    include(FetchContent)
     set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-    FetchContent_Declare(googletest
-                         GIT_REPOSITORY https://github.com/google/googletest.git
-                         GIT_TAG b796f7d44681514f58a683a3a71ff17c94edb0c1 # release-1.13.0
-    )
+    add_subdirectory( ${HSM_PROJECT_ROOT}/thirdparty/googletest ${CMAKE_BINARY_DIR}/thirdparty/googletest)
+
     if (WIN32)
         # Prevent overriding the parent project's compiler/linker settings
         set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     endif()
-    FetchContent_MakeAvailable(googletest)
 endfunction()

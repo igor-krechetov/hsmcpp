@@ -43,7 +43,7 @@ TEST(dispatchers, stresstest_create_destroy_hsm) {
     }
 
     // need to wait to make sure we don't delete dispatcher before HSM is deleted using executeOnMainThread
-    std::this_thread::sleep_for(std::chrono::microseconds(500000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     //-------------------------------------------
     // VALIDATION
@@ -163,7 +163,7 @@ TEST(dispatchers, stop) {
     ASSERT_TRUE(dispatcher->start());
 
     dispatcher->emitEvent(handler);
-    std::this_thread::sleep_for(std::chrono::microseconds(500000));  // sleep to aloow dispatcher to process event
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));  // sleep to allow dispatcher to process event
     ASSERT_EQ(dispatchedEventsCount, 1);
 
     //-------------------------------------------
@@ -205,7 +205,7 @@ TEST(dispatchers, create_hsm_from_callback) {
 
     //-------------------------------------------
     // ACTIONS
-    hsm->transitionSync(AbcEvent::E1, 500);
+    ASSERT_TRUE(hsm->transitionSync(AbcEvent::E1, 500));
 
     //-------------------------------------------
     // VALIDATION

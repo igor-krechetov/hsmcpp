@@ -20,12 +20,16 @@ public:
     bool waitAsyncOperation(const int timeoutMs, const bool unblockNext);
     void unblockNextStep();
 
+    void setSyncMode(const bool enable);
+
 protected:
     hsmcpp::Mutex mSyncLock;
     hsmcpp::ConditionVariable mSyncVariable;
     std::atomic<bool> mSyncVariableCheck;
     hsmcpp::Mutex mSyncBlockNextStep;
     hsmcpp::ConditionVariable mBlockNextStep;
+
+    bool mEnableSyncMode = true;
 };
 
 #endif  // HSMCPP_TESTS_HSM_BASEASYNCHSM_HPP

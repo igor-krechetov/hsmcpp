@@ -74,6 +74,7 @@ endif()
 
 # ================================================================================================
 # Common source code
+set(HSM_PROJECT_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 set(HSM_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 set(HSM_INCLUDES_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/")
 

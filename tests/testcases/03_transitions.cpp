@@ -16,7 +16,7 @@ TEST_F(TrafficLightHsm, simple_transition) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 1);
 }
@@ -62,7 +62,7 @@ TEST_F(TrafficLightHsm, transition_with_args) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mTransitionCounterNextState, 1);
 
     ASSERT_EQ(mTransitionArgsNextState.size(), 4);
@@ -95,6 +95,7 @@ TEST_F(TrafficLightHsm, transition_failed_notification) {
 
     //-------------------------------------------
     // VALIDATION
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {prevState}));
     EXPECT_EQ(mFailedTransitionCounter, 1);
     EXPECT_EQ(mLastFailedTransition, TrafficLightEvent::NEXT_STATE);
 
@@ -118,7 +119,7 @@ TEST_F(TrafficLightHsm, transition_non_existent) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), prevState);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {prevState}));
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 0);
 
@@ -146,7 +147,7 @@ TEST_F(TrafficLightHsm, transition_cancel_on_exit) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::OFF}));
     EXPECT_EQ(mStateCounterExitCancel, 1);
     EXPECT_EQ(mStateCounterExit, 0);
     EXPECT_EQ(mStateCounterEnter, 0);
@@ -181,7 +182,7 @@ TEST_F(TrafficLightHsm, transition_cancel_on_enter) {
     //-------------------------------------------
     // VALIDATION
 
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::OFF}));
     EXPECT_EQ(mStateCounterExit, 1);
     EXPECT_EQ(mStateCounterEnter, 1);
     EXPECT_EQ(mStateCounterEnterCancel, 1);
@@ -222,7 +223,7 @@ TEST_F(TrafficLightHsm, transition_self_internal) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mStateCounterExit, 0);
     EXPECT_EQ(mStateCounterEnter, 1);
     EXPECT_EQ(mStateCounterStarting, 1);
@@ -259,7 +260,7 @@ TEST_F(TrafficLightHsm, transition_self_external) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mStateCounterExit, 1);
     EXPECT_EQ(mStateCounterEnter, 2);
     EXPECT_EQ(mStateCounterStarting, 2);
@@ -357,7 +358,7 @@ TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), prevState);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {prevState}));
     EXPECT_EQ(mStateCounterOff, 0);
     EXPECT_EQ(mStateCounterStarting, 0);
 }
@@ -391,7 +392,7 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_true) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mTransitionCounterNextState, 1);
 }
 
@@ -426,7 +427,7 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_false) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::OFF}));
     EXPECT_EQ(mTransitionCounterNextState, 0);
 
     EXPECT_EQ(mFailedTransitionCounter, 3);
@@ -475,7 +476,7 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple) {
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_EQ(getLastActiveState(), TrafficLightState::STARTING);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::STARTING}));
     EXPECT_EQ(mTransitionCounterNextState, 2);
 
     EXPECT_EQ(mFailedTransitionCounter, 3);
@@ -508,7 +509,7 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple) {
 
 //     //-------------------------------------------
 //     // VALIDATION
-//     EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
+//     EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::OFF}));
 //     EXPECT_EQ(mTransitionCounterNextState, 1);
 // }
 
@@ -535,6 +536,6 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple) {
 
 //     //-------------------------------------------
 //     // VALIDATION
-//     EXPECT_EQ(getLastActiveState(), TrafficLightState::OFF);
+//     EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::OFF}));
 //     EXPECT_EQ(mTransitionCounterNextState, 1);
 // }

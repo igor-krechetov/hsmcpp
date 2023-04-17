@@ -29,11 +29,12 @@
 
 
 # Overview
-HSMCPP is a C++ library providing an easy way to add hierarchical (HSM) or finite state machine (FSM) to your project. Main motivation behind making it was lack of suitable alternatives which do not involve large frameworks (often commercial). And even they couldn't satisfy project needs that I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multithreading or event driven applications.
+HSMCPP is a C++ library providing implementation of state machine design pattern. It allows you to easily add hierarchical (HSM) or finite state machine (FSM) to your project. Main motivation behind creating it was lack of suitable alternatives which do not require usage of large frameworks (often commercial). And even they couldn't satisfy project needs that I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multi-threading or event driven applications.
 
 It's also applicable for single threaded and synchronous applications, but it might not be the most efficient option.
 
 If you are not familiar with HSM/FSM and which problems they can solve in your code, I recommend reading:
+- [Welcome to the world of Statecharts](https://statecharts.dev)
 - [Introduction to Hierarchical State Machines](https://barrgroup.com/embedded-systems/how-to/introduction-hierarchical-state-machines)
 - [Hierarchical Finite State Machine for AI Acting Engine](https://towardsdatascience.com/hierarchical-finite-state-machine-for-ai-acting-engine-9b24efc66f2)
 

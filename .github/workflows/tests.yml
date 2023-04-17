@@ -43,6 +43,7 @@ jobs:
       # checkout repositories
       - uses: actions/checkout@v3
         with:
+          submodules: 'recursive'
           ref: ${{ github.ref }}
 
       # build tests

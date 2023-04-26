@@ -5,67 +5,60 @@
 
 #include <cstring>
 
+#include "hsmcpp/os/os.hpp"
+
+// cppcheck-suppress misra-c2012-20.7 ; parentheses are not needed
+#define IMPL_CONSTRUCTOR(_val_type, _internal_type) \
+  Variant::Variant(const _val_type v) {             \
+    assign(v, _internal_type);                      \
+  }
+
+// cppcheck-suppress misra-c2012-20.7 ; parentheses are not needed
+#define IMPL_OPERATOR_ASSIGN(_val_type, _internal_type) \
+  Variant& Variant::operator=(const _val_type v) {      \
+    assign(v, _internal_type);                          \
+    return *this;                                       \
+  }
+
+// cppcheck-suppress misra-c2012-20.7 ; parentheses are not needed
+#define IMPL_MAKE(_val_type)                 \
+  Variant Variant::make(const _val_type v) { \
+    return Variant(v);                       \
+  }
+
 namespace hsmcpp {
 
-Variant Variant::make(const int8_t v) {
-    return Variant(new int8_t(v), Type::BYTE_1);
-}
-Variant Variant::make(const int16_t v) {
-    return Variant(new int16_t(v), Type::BYTE_2);
-}
-Variant Variant::make(const int32_t v) {
-    return Variant(new int32_t(v), Type::BYTE_4);
-}
-Variant Variant::make(const int64_t v) {
-    return Variant(new int64_t(v), Type::BYTE_8);
-}
-Variant Variant::make(const uint8_t v) {
-    return Variant(new uint8_t(v), Type::UBYTE_1);
-}
-Variant Variant::make(const uint16_t v) {
-    return Variant(new uint16_t(v), Type::UBYTE_2);
-}
-Variant Variant::make(const uint32_t v) {
-    return Variant(new uint32_t(v), Type::UBYTE_4);
-}
-Variant Variant::make(const uint64_t v) {
-    return Variant(new uint64_t(v), Type::UBYTE_8);
-}
-Variant Variant::make(const double v) {
-    return Variant(new double(v), Type::DOUBLE);
-}
-Variant Variant::make(const bool v) {
-    return Variant(new bool(v), Type::BOOL);
-}
-Variant Variant::make(const std::string& v) {
-    return Variant(new std::string(v), Type::STRING);
-}
+// =================================================================================================================
+// make()
+IMPL_MAKE(int8_t)
+IMPL_MAKE(int16_t)
+IMPL_MAKE(int32_t)
+IMPL_MAKE(int64_t)
+IMPL_MAKE(uint8_t)
+IMPL_MAKE(uint16_t)
+IMPL_MAKE(uint32_t)
+IMPL_MAKE(uint64_t)
+IMPL_MAKE(double)
+IMPL_MAKE(bool)
+IMPL_MAKE(std::string&)
+IMPL_MAKE(ByteArray_t&)
+IMPL_MAKE(VariantVector_t&)
+IMPL_MAKE(VariantList_t&)
+IMPL_MAKE(VariantMap_t&)
+IMPL_MAKE(VariantPair_t&)
+IMPL_MAKE(Variant&)
+
 Variant Variant::make(const char* v) {
-    return make(std::string(v));
-}
-Variant Variant::make(const std::vector<char>& v) {
-    return Variant(new std::vector<char>(v), Type::BYTEARRAY);
-}
-Variant Variant::make(const char* binaryData, const size_t bytesCount) {
-    return Variant(new std::vector<char>(binaryData, &binaryData[bytesCount]), Type::BYTEARRAY);
-}
-Variant Variant::make(const VariantVector_t& v) {
-    return Variant(new std::vector<Variant>(v), Type::VECTOR);
-}
-Variant Variant::make(const VariantList_t& v) {
-    return Variant(new std::list<Variant>(v), Type::LIST);
-}
-Variant Variant::make(const VariantDict_t& v) {
-    return Variant(new VariantDict_t(v), Type::DICTIONARY);
-}
-Variant Variant::make(const Variant& first, const Variant& second) {
-    return Variant(new VariantPair_t(first, second), Type::PAIR);
-}
-Variant Variant::make(const Variant& v) {
-    return v;
+    return Variant(v);
 }
 
-Variant::Variant(void* d, const Type t)
+Variant Variant::make(const char* binaryData, const size_t bytesCount) {
+    return Variant(binaryData, bytesCount);
+}
+
+// =================================================================================================================
+// Constructors
+Variant::Variant(const std::shared_ptr<void>& d, const Type t)
     : data(d)
     , type(t) {}
 
@@ -77,87 +70,75 @@ Variant::Variant(const Variant& v) {
     *this = v;
 }
 
-Variant::Variant(Variant&& v) {
-    data = v.data;
-    type = v.type;
-
-    v.data = nullptr;
+Variant::Variant(Variant&& v)
+    : data(v.data)
+    , type(v.type)
+    , memoryAllocator(v.memoryAllocator)
+    , compareOperator(v.compareOperator) {
+    v.data.reset();
     v.type = Type::UNKNOWN;
+    v.memoryAllocator = nullptr;
+    v.compareOperator = nullptr;
 }
 
+IMPL_CONSTRUCTOR(int8_t, Type::BYTE_1)
+IMPL_CONSTRUCTOR(int16_t, Type::BYTE_2)
+IMPL_CONSTRUCTOR(int32_t, Type::BYTE_4)
+IMPL_CONSTRUCTOR(int64_t, Type::BYTE_8)
+IMPL_CONSTRUCTOR(uint8_t, Type::UBYTE_1)
+IMPL_CONSTRUCTOR(uint16_t, Type::UBYTE_2)
+IMPL_CONSTRUCTOR(uint32_t, Type::UBYTE_4)
+IMPL_CONSTRUCTOR(uint64_t, Type::UBYTE_8)
+IMPL_CONSTRUCTOR(double, Type::DOUBLE)
+IMPL_CONSTRUCTOR(bool, Type::BOOL)
+IMPL_CONSTRUCTOR(std::string&, Type::STRING)
+IMPL_CONSTRUCTOR(ByteArray_t&, Type::BYTEARRAY)
+IMPL_CONSTRUCTOR(VariantVector_t&, Type::VECTOR)
+IMPL_CONSTRUCTOR(VariantList_t&, Type::LIST)
+IMPL_CONSTRUCTOR(VariantMap_t&, Type::MAP)
+IMPL_CONSTRUCTOR(VariantPair_t&, Type::PAIR)
+
 Variant::Variant(const char* v)
-// NOTE: false-positive. thinks that ':' is arithmetic operation
-// cppcheck-suppress misra-c2012-10.4
+    // cppcheck-suppress misra-c2012-10.4 : false-positive. thinks that ':' is arithmetic operation
     : Variant(std::string(v)) {}
 
 Variant::Variant(const char* binaryData, const size_t bytesCount)
-// NOTE: false-positive. thinks that ':' is arithmetic operation
-// cppcheck-suppress misra-c2012-10.4
-    : Variant(std::vector<char>(binaryData, &binaryData[bytesCount])) {}
+    // cppcheck-suppress misra-c2012-10.4 : false-positive. thinks that ':' is arithmetic operation
+    : Variant(ByteArray_t(binaryData, &binaryData[bytesCount])) {}
+
+// =================================================================================================================
+// Assign operators
+IMPL_OPERATOR_ASSIGN(int8_t, Type::BYTE_1)
+IMPL_OPERATOR_ASSIGN(int16_t, Type::BYTE_2)
+IMPL_OPERATOR_ASSIGN(int32_t, Type::BYTE_4)
+IMPL_OPERATOR_ASSIGN(int64_t, Type::BYTE_8)
+IMPL_OPERATOR_ASSIGN(uint8_t, Type::UBYTE_1)
+IMPL_OPERATOR_ASSIGN(uint16_t, Type::UBYTE_2)
+IMPL_OPERATOR_ASSIGN(uint32_t, Type::UBYTE_4)
+IMPL_OPERATOR_ASSIGN(uint64_t, Type::UBYTE_8)
+IMPL_OPERATOR_ASSIGN(double, Type::DOUBLE)
+IMPL_OPERATOR_ASSIGN(bool, Type::BOOL)
+IMPL_OPERATOR_ASSIGN(std::string&, Type::STRING)
+IMPL_OPERATOR_ASSIGN(ByteArray_t&, Type::BYTEARRAY)
+IMPL_OPERATOR_ASSIGN(VariantVector_t&, Type::VECTOR)
+IMPL_OPERATOR_ASSIGN(VariantList_t&, Type::LIST)
+IMPL_OPERATOR_ASSIGN(VariantMap_t&, Type::MAP)
+IMPL_OPERATOR_ASSIGN(VariantPair_t&, Type::PAIR)
+
+Variant& Variant::operator=(const char* v) {
+    assign(std::string(v), Type::STRING);
+    return *this;
+}
 
 Variant& Variant::operator=(const Variant& v) {
     if (false == isSameObject(v)) {
-        switch (v.type) {
-            case Type::BYTE_1:
-                *this = *v.value<int8_t>();
-                break;
-            case Type::BYTE_2:
-                *this = *v.value<int16_t>();
-                break;
-            case Type::BYTE_4:
-                *this = *v.value<int32_t>();
-                break;
-            case Type::BYTE_8:
-                *this = *v.value<int64_t>();
-                break;
-
-            case Type::UBYTE_1:
-                *this = *v.value<uint8_t>();
-                break;
-            case Type::UBYTE_2:
-                *this = *v.value<uint16_t>();
-                break;
-            case Type::UBYTE_4:
-                *this = *v.value<uint32_t>();
-                break;
-            case Type::UBYTE_8:
-                *this = *v.value<uint64_t>();
-                break;
-
-            case Type::DOUBLE:
-                *this = *v.value<double>();
-                break;
-            case Type::BOOL:
-                *this = *v.value<bool>();
-                break;
-
-            case Type::STRING:
-                *this = *v.value<std::string>();
-                break;
-
-            case Type::BYTEARRAY:
-                *this = *v.value<std::vector<char>>();
-                break;
-
-            case Type::VECTOR:
-                *this = *v.value<std::vector<Variant>>();
-                break;
-
-            case Type::LIST:
-                *this = *v.value<std::list<Variant>>();
-                break;
-
-            case Type::DICTIONARY:
-                *this = *v.value<VariantDict_t>();
-                break;
-
-            case Type::PAIR:
-                *this = *v.value<VariantPair_t>();
-                break;
-
-            default:
-                freeMemory();
-                break;
+        if ((Type::UNKNOWN != v.type) && (v.memoryAllocator)) {
+            data = v.memoryAllocator(v.data.get());
+            type = v.type;
+            memoryAllocator = v.memoryAllocator;
+            compareOperator = v.compareOperator;
+        } else {
+            freeMemory();
         }
     }
 
@@ -165,17 +146,24 @@ Variant& Variant::operator=(const Variant& v) {
 }
 
 Variant& Variant::operator=(Variant&& v) {
-    data = v.data;
-    type = v.type;
+    if (false == isSameObject(v)) {
+        data = v.data;
+        type = v.type;
+        memoryAllocator = v.memoryAllocator;
+        compareOperator = v.compareOperator;
 
-    v.data = nullptr;
-    v.type = Type::UNKNOWN;
+        v.data.reset();
+        v.type = Type::UNKNOWN;
+        v.memoryAllocator = nullptr;
+        v.compareOperator = nullptr;
+    }
 
     return *this;
 }
 
+// =================================================================================================================
 Variant::operator bool() const {
-    return ((nullptr != data) && (Type::UNKNOWN != type));
+    return (data && (Type::UNKNOWN != type));
 }
 
 bool Variant::operator!=(const Variant& val) const {
@@ -185,35 +173,20 @@ bool Variant::operator!=(const Variant& val) const {
 bool Variant::operator>(const Variant& val) const {
     bool isGreater = false;
 
-    if (isNumeric() && val.isNumeric()) {
-        if ((Type::DOUBLE == type) || (Type::DOUBLE == val.type)) {
-            isGreater = toDouble() > val.toDouble();
-        } else if (isUnsignedNumeric() || val.isUnsignedNumeric()) {
-            isGreater = toUInt64() > val.toUInt64();
+    if ((data != val.data) && (data) && (val.data)) {
+        if (isNumeric() && val.isNumeric()) {
+            if ((Type::DOUBLE == type) || (Type::DOUBLE == val.type)) {
+                isGreater = toDouble() > val.toDouble();
+            } else if (isUnsignedNumeric() || val.isUnsignedNumeric()) {
+                isGreater = toUInt64() > val.toUInt64();
+            } else {
+                isGreater = toInt64() > val.toInt64();
+            }
+        } else if (type == val.type) {
+            isGreater = (1 == compareOperator(data.get(), val.data.get()));
         } else {
-            isGreater = toInt64() > val.toInt64();
+            // do nothing
         }
-    } else if ((Type::STRING == type) || (Type::STRING == val.type)) {
-        isGreater = (*value<std::string>() > *(val.value<std::string>()));
-    } else if ((Type::BYTEARRAY == type) || (Type::BYTEARRAY == val.type)) {
-        std::vector<char>* left = value<std::vector<char>>();
-        std::vector<char>* right = val.value<std::vector<char>>();
-
-        isGreater = (left->size() > right->size());
-    } else if (Type::VECTOR == val.type) {
-        std::vector<Variant>* left = value<std::vector<Variant>>();
-        std::vector<Variant>* right = val.value<std::vector<Variant>>();
-
-        isGreater = (left->size() > right->size());
-    } else if (Type::LIST == val.type) {
-        std::list<Variant>* left = value<std::list<Variant>>();
-        std::list<Variant>* right = val.value<std::list<Variant>>();
-
-        isGreater = (left->size() > right->size());
-    } else if ((Type::BOOL == type) || (Type::BOOL == val.type)) {
-        isGreater = (*value<bool>() > *(val.value<bool>()));
-    } else {
-        // NOTE: ignore
     }
 
     return isGreater;
@@ -234,95 +207,36 @@ bool Variant::operator<=(const Variant& val) const {
 bool Variant::operator==(const Variant& val) const {
     bool equal = false;
 
-    if (val.type == type) {
-        switch (type) {
-            case Type::BYTE_1:
-                equal = (*value<int8_t>() == *val.value<int8_t>());
-                break;
-            case Type::BYTE_2:
-                equal = (*value<int16_t>() == *val.value<int16_t>());
-                break;
-            case Type::BYTE_4:
-                equal = (*value<int32_t>() == *val.value<int32_t>());
-                break;
-            case Type::BYTE_8:
-                equal = (*value<int64_t>() == *val.value<int64_t>());
-                break;
-
-            case Type::UBYTE_1:
-                equal = (*value<uint8_t>() == *val.value<uint8_t>());
-                break;
-            case Type::UBYTE_2:
-                equal = (*value<uint16_t>() == *val.value<uint16_t>());
-                break;
-            case Type::UBYTE_4:
-                equal = (*value<uint32_t>() == *val.value<uint32_t>());
-                break;
-            case Type::UBYTE_8:
-                equal = (*value<uint64_t>() == *val.value<uint64_t>());
-                break;
-
-            case Type::DOUBLE:
-                equal = (*value<double>() == *val.value<double>());
-                break;
-            case Type::BOOL:
-                equal = (*value<bool>() == *val.value<bool>());
-                break;
-
-            case Type::STRING:
-                equal = (*value<std::string>() == *val.value<std::string>());
-                break;
-
-            case Type::BYTEARRAY:
-                equal = (*value<std::vector<char>>() == *val.value<std::vector<char>>());
-                break;
-
-            case Type::VECTOR:
-                equal = (*value<std::vector<Variant>>() == *val.value<std::vector<Variant>>());
-                break;
-
-            case Type::LIST:
-                equal = (*value<std::list<Variant>>() == *val.value<std::list<Variant>>());
-                break;
-
-            case Type::DICTIONARY: {
-                VariantDict_t* left = value<VariantDict_t>();
-                VariantDict_t* right = val.value<VariantDict_t>();
-
-                if (left->size() == right->size()) {
-                    equal = true;
-
-                    for (auto itLeft = left->begin(); (itLeft != left->end()) && (true == equal); ++itLeft) {
-                        auto itRight = right->find(itLeft->first);
-
-                        if (right->end() != itRight) {
-                            equal = (itLeft->second == itRight->second);
-                        } else {
-                            equal = false;
-                        }
-                    }
+    if (data != val.data) {
+        if ((data) && (val.data)) {
+            if (isNumeric() && val.isNumeric()) {
+                if ((Type::DOUBLE == type) || (Type::DOUBLE == val.type)) {
+                    // compare with precision for double
+                    equal = (std::abs(toDouble() - val.toDouble()) < 0.00000001);
+                } else if (isUnsignedNumeric() || val.isUnsignedNumeric()) {
+                    equal = (toUInt64() == val.toUInt64());
+                } else {
+                    equal = (toInt64() == val.toInt64());
                 }
-                break;
+            } else if (val.type == type) {
+                equal = (0 == compareOperator(data.get(), val.data.get()));
+            } else {
+                // do nothing
             }
-
-            case Type::PAIR: {
-                VariantPair_t* left = value<VariantPair_t>();
-                VariantPair_t* right = val.value<VariantPair_t>();
-
-                equal = ((left->first == right->first) && (left->second == right->second));
-                break;
-            }
-
-            case Type::UNKNOWN:
-                equal = true;
-                break;
-
-            default:
-                break;
         }
+    } else {
+        equal = true;
     }
 
     return equal;
+}
+
+void Variant::clear() {
+    freeMemory();
+}
+
+bool Variant::isEmpty() const {
+    return (type == Type::UNKNOWN);
 }
 
 bool Variant::isString() const {
@@ -341,12 +255,16 @@ bool Variant::isList() const {
     return (type == Type::LIST);
 }
 
-bool Variant::isDictionary() const {
-    return (type == Type::DICTIONARY);
+bool Variant::isMap() const {
+    return (type == Type::MAP);
 }
 
 bool Variant::isPair() const {
     return (type == Type::PAIR);
+}
+
+bool Variant::isCustomType() const {
+    return (type == Type::CUSTOM);
 }
 
 bool Variant::isNumeric() const {
@@ -370,7 +288,7 @@ bool Variant::isNumeric() const {
         case Type::BYTEARRAY:
         case Type::VECTOR:
         case Type::LIST:
-        case Type::DICTIONARY:
+        case Type::MAP:
         case Type::PAIR:
         default:
             numeric = false;
@@ -420,7 +338,7 @@ bool Variant::isUnsignedNumeric() const {
 }
 
 bool Variant::isBool() const {
-    return (type == Type::BOOL) || (true == isNumeric());
+    return (type == Type::BOOL);
 }
 
 std::string Variant::toString() const {
@@ -461,40 +379,52 @@ std::string Variant::toString() const {
             result = *(value<std::string>());
             break;
         case Type::BYTEARRAY: {
-            std::vector<char>* val = value<std::vector<char>>();
+            std::shared_ptr<ByteArray_t> val = value<ByteArray_t>();
 
-            result.assign(val->data(), val->size());
+            result.assign(reinterpret_cast<char*>(val->data()), val->size());
             break;
         }
         case Type::VECTOR: {
-            std::vector<Variant>* val = value<std::vector<Variant>>();
+            std::shared_ptr<VariantVector_t> val = value<VariantVector_t>();
 
-            for (auto it = val->begin(); it != val->end(); ++it) {
-                if (false == result.empty()) {
-                    result.append(", ");
+            // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
+            if (val) {
+                for (auto it = val->begin(); it != val->end(); ++it) {
+                    if (false == result.empty()) {
+                        result.append(", ");
+                    }
+
+                    result += it->toString();
                 }
-
-                result += it->toString();
             }
             break;
         }
         case Type::LIST: {
-            std::list<Variant>* val = value<std::list<Variant>>();
+            std::shared_ptr<VariantList_t> val = value<VariantList_t>();
 
-            for (auto it = val->begin(); it != val->end(); ++it) {
-                if (false == result.empty()) {
-                    result.append(", ");
+            // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
+            if (val) {
+                for (auto it = val->begin(); it != val->end(); ++it) {
+                    if (false == result.empty()) {
+                        result.append(", ");
+                    }
+
+                    result += it->toString();
                 }
-
-                result += it->toString();
             }
             break;
         }
-        case Type::DICTIONARY: {
-            VariantDict_t* dict = value<VariantDict_t>();
+        case Type::MAP: {
+            std::shared_ptr<VariantMap_t> val = value<VariantMap_t>();
 
-            for (auto it = dict->begin(); it != dict->end(); ++it) {
-                result += it->first.toString().append("=[").append(it->second.toString()).append("], ");
+            // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
+            if (val) {
+                for (auto it = val->begin(); it != val->end(); ++it) {
+                    if (false == result.empty()) {
+                        result.append(", ");
+                    }
+                    result += it->first.toString().append("=[").append(it->second.toString()).append("]");
+                }
             }
             break;
         }
@@ -502,76 +432,6 @@ std::string Variant::toString() const {
             result = std::string("(") + value<VariantPair_t>()->first.toString() + std::string(", ") +
                      value<VariantPair_t>()->second.toString() + std::string(")");
             break;
-        default:
-            break;
-    }
-
-    return result;
-}
-
-std::vector<char> Variant::toByteArray() const {
-    std::vector<char> result;
-
-    switch (getType()) {
-        case Type::BYTE_1:
-        case Type::UBYTE_1:
-            result.resize(sizeof(int8_t));
-            static_cast<void>(std::memcpy(result.data(), data, sizeof(int8_t)));
-            break;
-        case Type::BYTE_2:
-        case Type::UBYTE_2:
-            result.resize(sizeof(int16_t));
-            static_cast<void>(memcpy(result.data(), data, sizeof(int16_t)));
-            break;
-        case Type::BYTE_4:
-        case Type::UBYTE_4:
-            result.resize(sizeof(int32_t));
-            static_cast<void>(memcpy(result.data(), data, sizeof(int32_t)));
-            break;
-        case Type::BYTE_8:
-        case Type::UBYTE_8:
-            result.resize(sizeof(int64_t));
-            static_cast<void>(memcpy(result.data(), data, sizeof(int64_t)));
-            break;
-        case Type::DOUBLE:
-            result.resize(sizeof(double));
-            static_cast<void>(memcpy(result.data(), data, sizeof(double)));
-            break;
-        case Type::BOOL:
-            result.push_back((*(value<bool>()) == true) ? 1 : 0);
-            break;
-        case Type::STRING: {
-            std::string* val = value<std::string>();
-
-            result.assign(val->begin(), val->end());
-            break;
-        }
-        case Type::BYTEARRAY:
-            result = *(value<std::vector<char>>());
-            break;
-        case Type::VECTOR:
-            // TODO
-            break;
-        case Type::LIST:
-            // TODO
-            break;
-        case Type::DICTIONARY: {
-            VariantDict_t* dict = value<VariantDict_t>();
-
-            for (auto it = dict->begin(); it != dict->end(); ++it) {
-                std::vector<char> curValue = it->second.toByteArray();
-
-                (void)result.insert(result.end(), curValue.begin(), curValue.end());
-            }
-            break;
-        }
-        case Type::PAIR: {
-            std::vector<char> secondValue = value<VariantPair_t>()->second.toByteArray();
-
-            result = value<VariantPair_t>()->first.toByteArray();
-            (void)result.insert(result.end(), secondValue.begin(), secondValue.end());
-            break;
-        }
         default:
             break;
     }
@@ -614,11 +474,22 @@ int64_t Variant::toInt64() const {
             break;
 
         case Type::BOOL:
+            result = static_cast<int64_t>(*value<bool>());
+            break;
+
         case Type::STRING:
+            HSM_TRY {
+                result = std::stoll(toString());
+            }
+            HSM_CATCH(...) {
+                // return empty value
+            }
+            break;
+
         case Type::BYTEARRAY:
         case Type::VECTOR:
         case Type::LIST:
-        case Type::DICTIONARY:
+        case Type::MAP:
         case Type::PAIR:
         default:
             break;
@@ -662,11 +533,22 @@ uint64_t Variant::toUInt64() const {
             break;
 
         case Type::BOOL:
+            result = static_cast<int64_t>(*value<bool>());
+            break;
+
         case Type::STRING:
+            HSM_TRY {
+                result = std::stoull(toString());
+            }
+            HSM_CATCH(...) {
+                // return empty value
+            }
+            break;
+
         case Type::BYTEARRAY:
         case Type::VECTOR:
         case Type::LIST:
-        case Type::DICTIONARY:
+        case Type::MAP:
         case Type::PAIR:
         default:
             break;
@@ -710,11 +592,22 @@ double Variant::toDouble() const {
             break;
 
         case Type::BOOL:
+            result = static_cast<double>(toBool());
+            break;
+
         case Type::STRING:
+            HSM_TRY {
+                result = std::stod(toString());
+            }
+            HSM_CATCH(...) {
+                // return empty value
+            }
+            break;
+
         case Type::BYTEARRAY:
         case Type::VECTOR:
         case Type::LIST:
-        case Type::DICTIONARY:
+        case Type::MAP:
         case Type::PAIR:
         default:
             break;
@@ -728,6 +621,19 @@ bool Variant::toBool() const {
 
     if (Type::BOOL == type) {
         result = *value<bool>();
+    } else if (Type::STRING == type) {
+        const std::string strValue = toString();
+
+        if (strValue != "true") {
+            HSM_TRY {
+                result = (0 != std::stoll(strValue));
+            }
+            HSM_CATCH(...) {
+                // return empty value
+            }
+        } else {
+            result = true;
+        }
     } else {
         result = (0 != toInt64());
     }
@@ -735,75 +641,151 @@ bool Variant::toBool() const {
     return result;
 }
 
-bool Variant::isSameObject(const Variant& val) const {
-    return (val.data == data) && (nullptr != data);
-}
+ByteArray_t Variant::toByteArray() const {
+    ByteArray_t result;
 
-void Variant::freeMemory() {
-    switch (type) {
+    switch (getType()) {
         case Type::BYTE_1:
-            delete static_cast<int8_t*>(data);
+        case Type::UBYTE_1:
+            result.resize(sizeof(int8_t));
+            static_cast<void>(std::memcpy(result.data(), data.get(), sizeof(int8_t)));
             break;
         case Type::BYTE_2:
-            delete static_cast<int16_t*>(data);
+        case Type::UBYTE_2:
+            result.resize(sizeof(int16_t));
+            static_cast<void>(memcpy(result.data(), data.get(), sizeof(int16_t)));
             break;
         case Type::BYTE_4:
-            delete static_cast<int32_t*>(data);
+        case Type::UBYTE_4:
+            result.resize(sizeof(int32_t));
+            static_cast<void>(memcpy(result.data(), data.get(), sizeof(int32_t)));
             break;
         case Type::BYTE_8:
-            delete static_cast<int64_t*>(data);
-            break;
-
-        case Type::UBYTE_1:
-            delete static_cast<uint8_t*>(data);
-            break;
-        case Type::UBYTE_2:
-            delete static_cast<uint16_t*>(data);
-            break;
-        case Type::UBYTE_4:
-            delete static_cast<uint32_t*>(data);
-            break;
         case Type::UBYTE_8:
-            delete static_cast<uint64_t*>(data);
+            result.resize(sizeof(int64_t));
+            static_cast<void>(memcpy(result.data(), data.get(), sizeof(int64_t)));
             break;
-
         case Type::DOUBLE:
-            delete static_cast<double*>(data);
+            result.resize(sizeof(double));
+            static_cast<void>(memcpy(result.data(), data.get(), sizeof(double)));
             break;
         case Type::BOOL:
-            delete static_cast<bool*>(data);
+            result.push_back((toBool() == true) ? 0x01 : 0x00);
             break;
+        case Type::STRING: {
+            std::shared_ptr<std::string> val = value<std::string>();
 
-        case Type::STRING:
-            delete static_cast<std::string*>(data);
+            // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
+            if (val) {
+                result.assign(val->begin(), val->end());
+            }
             break;
-
+        }
         case Type::BYTEARRAY:
-            delete static_cast<std::vector<char>*>(data);
+            result = *(value<ByteArray_t>());
             break;
+        case Type::VECTOR: {
+            std::shared_ptr<VariantVector_t> data = value<VariantVector_t>();
 
-        case Type::VECTOR:
-            delete static_cast<std::vector<Variant>*>(data);
+            // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
+            if (data) {
+                for (auto it = data->begin(); it != data->end(); ++it) {
+                    const ByteArray_t curValue = it->toByteArray();
+
+                    (void)result.insert(result.end(), curValue.begin(), curValue.end());
+                }
+            }
             break;
+        }
+        case Type::LIST: {
+            std::shared_ptr<VariantList_t> data = value<VariantList_t>();
 
-        case Type::LIST:
-            delete static_cast<std::list<Variant>*>(data);
+            // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
+            if (data) {
+                for (auto it = data->begin(); it != data->end(); ++it) {
+                    const ByteArray_t curValue = it->toByteArray();
+
+                    (void)result.insert(result.end(), curValue.begin(), curValue.end());
+                }
+            }
             break;
+        }
+        case Type::PAIR: {
+            // TODO: is this even needed?
+            ByteArray_t secondValue = value<VariantPair_t>()->second.toByteArray();
 
-        case Type::DICTIONARY:
-            delete static_cast<VariantDict_t*>(data);
+            result = value<VariantPair_t>()->first.toByteArray();
+            (void)result.insert(result.end(), secondValue.begin(), secondValue.end());
             break;
+        }
 
-        case Type::PAIR:
-            delete static_cast<VariantPair_t*>(data);
-            break;
-
-        default:  // Type::UNKNOWN
+        case Type::MAP:
+        default:
             break;
     }
 
-    data = nullptr;
+    return result;
+}
+
+std::shared_ptr<ByteArray_t> Variant::getByteArray() const {
+    std::shared_ptr<ByteArray_t> result;
+
+    if (true == isByteArray()) {
+        result = value<ByteArray_t>();
+    }
+
+    return result;
+}
+
+std::shared_ptr<VariantVector_t> Variant::getVector() const {
+    std::shared_ptr<VariantVector_t> result;
+
+    if (true == isVector()) {
+        result = value<VariantVector_t>();
+    }
+
+    return result;
+}
+
+std::shared_ptr<VariantList_t> Variant::getList() const {
+    std::shared_ptr<VariantList_t> result;
+
+    if (true == isList()) {
+        result = value<VariantList_t>();
+    }
+
+    return result;
+}
+
+std::shared_ptr<VariantMap_t> Variant::getMap() const {
+    std::shared_ptr<VariantMap_t> result;
+
+    if (true == isMap()) {
+        result = value<VariantMap_t>();
+    }
+
+    return result;
+}
+
+std::shared_ptr<VariantPair_t> Variant::getPair() const {
+    std::shared_ptr<VariantPair_t> result;
+
+    if (true == isPair()) {
+        result = value<VariantPair_t>();
+    }
+
+    return result;
+}
+
+bool Variant::isSameObject(const Variant& val) const {
+    return ((val.data.get() == data.get()) && data);
+}
+
+void Variant::freeMemory() {
+    data.reset();
     type = Type::UNKNOWN;
+    memoryAllocator = nullptr;
+    compareOperator = nullptr;
 }
 
 }  // namespace hsmcpp

@@ -101,7 +101,7 @@ bool HierarchicalStateMachine::Impl::initialize(const std::weak_ptr<IHsmEventDis
     if (true == mDispatcher.expired()) {
         auto dispatcherPtr = dispatcher.lock();
 
-        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
         if (dispatcherPtr) {
             if (true == dispatcherPtr->start()) {
                 std::weak_ptr<Impl> ptrInstance;
@@ -120,7 +120,7 @@ bool HierarchicalStateMachine::Impl::initialize(const std::weak_ptr<IHsmEventDis
                         bool handlerIsValid = false;
                         auto pThis = ptrInstance.lock();
 
-                        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+                        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
                         if (pThis && (false == pThis->mStopDispatching)) {
                             pThis->dispatchEvents();
                             handlerIsValid = true;
@@ -136,7 +136,7 @@ bool HierarchicalStateMachine::Impl::initialize(const std::weak_ptr<IHsmEventDis
                         bool handlerIsValid = false;
                         auto pThis = ptrInstance.lock();
 
-                        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+                        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
                         if (pThis && (false == pThis->mStopDispatching)) {
                             pThis->dispatchTimerEvent(timerId);
                             handlerIsValid = true;
@@ -152,7 +152,7 @@ bool HierarchicalStateMachine::Impl::initialize(const std::weak_ptr<IHsmEventDis
                         bool handlerIsValid = false;
                         auto pThis = ptrInstance.lock();
 
-                        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+                        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
                         if (pThis && (false == pThis->mStopDispatching)) {
                             pThis->transitionSimple(event);
                             handlerIsValid = true;
@@ -205,7 +205,7 @@ void HierarchicalStateMachine::Impl::release() {
 
     auto dispatcherPtr = mDispatcher.lock();
 
-    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         dispatcherPtr->unregisterEventHandler(mEventsHandlerId);
         dispatcherPtr->unregisterEnqueuedEventHandler(mEnqueuedEventsHandlerId);
@@ -447,7 +447,7 @@ bool HierarchicalStateMachine::Impl::transitionExWithArgsArray(const EventID_t e
     bool status = false;
     auto dispatcherPtr = mDispatcher.lock();
 
-    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         PendingEventInfo eventInfo;
 
@@ -491,7 +491,7 @@ bool HierarchicalStateMachine::Impl::transitionInterruptSafe(const EventID_t eve
     // TODO: this part needs testing with real interrupts. Not sure if it's safe to use weak_ptr.lock()
     auto dispatcherPtr = mDispatcher.lock();
 
-    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         res = dispatcherPtr->enqueueEvent(mEnqueuedEventsHandlerId, event);
     }
@@ -520,7 +520,7 @@ void HierarchicalStateMachine::Impl::startTimer(const TimerID_t timerID,
                                                 const bool isSingleShot) {
     auto dispatcherPtr = mDispatcher.lock();
 
-    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         dispatcherPtr->startTimer(mTimerHandlerId, timerID, intervalMs, isSingleShot);
     }
@@ -529,7 +529,7 @@ void HierarchicalStateMachine::Impl::startTimer(const TimerID_t timerID,
 void HierarchicalStateMachine::Impl::restartTimer(const TimerID_t timerID) {
     auto dispatcherPtr = mDispatcher.lock();
 
-    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         dispatcherPtr->restartTimer(timerID);
     }
@@ -538,7 +538,7 @@ void HierarchicalStateMachine::Impl::restartTimer(const TimerID_t timerID) {
 void HierarchicalStateMachine::Impl::stopTimer(const TimerID_t timerID) {
     auto dispatcherPtr = mDispatcher.lock();
 
-    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         dispatcherPtr->stopTimer(timerID);
     }
@@ -548,7 +548,7 @@ bool HierarchicalStateMachine::Impl::isTimerRunning(const TimerID_t timerID) {
     bool running = false;
     auto dispatcherPtr = mDispatcher.lock();
 
-    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         running = dispatcherPtr->isTimerRunning(timerID);
     }
@@ -563,7 +563,7 @@ void HierarchicalStateMachine::Impl::handleStartup() {
     HSM_TRACE_CALL_DEBUG_ARGS("mActiveStates.size=%ld", mActiveStates.size());
     auto dispatcherPtr = mDispatcher.lock();
 
-    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         HSM_TRACE_DEBUG("state=<%s>", getStateName(mInitialState).c_str());
         std::list<StateID_t> entryPoints;
@@ -598,7 +598,7 @@ void HierarchicalStateMachine::Impl::dispatchEvents() {
     HSM_TRACE_CALL_DEBUG_ARGS("mPendingEvents.size=%ld", mPendingEvents.size());
     auto dispatcherPtr = mDispatcher.lock();
 
-    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         if (false == mStopDispatching) {
             if (false == mPendingEvents.empty()) {
@@ -694,7 +694,7 @@ void HierarchicalStateMachine::Impl::executeStateAction(const StateID_t state, c
     HSM_TRACE_CALL_DEBUG_ARGS("state=<%s>, actionTrigger=%d", getStateName(state).c_str(), SC2INT(actionTrigger));
     auto dispatcherPtr = mDispatcher.lock();
 
-    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shated_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         auto key = std::make_pair(state, actionTrigger);
         auto itRange = mRegisteredActions.equal_range(key);
@@ -1196,7 +1196,7 @@ typename HsmEventStatus_t HierarchicalStateMachine::Impl::handleSingleTransition
                         false,
                         event.args);
 
-                    // NOTE: false-positive. std::shated_ptr has a bool() operator
+                    // NOTE: false-positive. std::shared_ptr has a bool() operator
                     // cppcheck-suppress misra-c2012-14.4
                     if (it->onTransition) {
                         it->onTransition(event.args);

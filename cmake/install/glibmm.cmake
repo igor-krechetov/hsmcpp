@@ -4,4 +4,6 @@ if (HSMBUILD_DISPATCHER_GLIBMM)
     install(TARGETS ${HSM_LIBRARY_NAME}_glibmm DESTINATION ${CMAKE_INSTALL_LIBDIR})
     install(FILES ${HSM_INCLUDES_ROOT}/HsmEventDispatcherGLibmm.hpp
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/pkgconfig/cmake/hsmcpp-glibmm.cmake
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${HSM_LIBRARY_NAME}/)
 endif()

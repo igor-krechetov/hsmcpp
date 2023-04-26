@@ -39,6 +39,13 @@ then
     ./tests/hsmUnitTestsQt
     lcov -c -d . -o ./coverage_qt.info
 
+    # valgrind --leak-check=full \
+    #      --show-leak-kinds=all \
+    #      --track-origins=yes \
+    #      --verbose \
+    #      --log-file=valgrind-out.txt \
+    #      ./tests/hsmUnitTestsSTD
+
     # disable tests to save time
     cmake -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DHSMBUILD_TESTS=OFF -DHSMBUILD_VERBOSE=OFF \
@@ -68,6 +75,7 @@ then
     lcov -r ./coverage.info \*/build/\* . -o ./coverage.info
     lcov -r ./coverage.info \*/tests/\* . -o ./coverage.info
     lcov -r ./coverage.info \*/gcc_64/include/QtCore/\* . -o ./coverage.info
+    lcov -r ./coverage.info \*/thirdparty/\* . -o ./coverage.info
 
     genhtml ./coverage.info --output-directory out
 fi

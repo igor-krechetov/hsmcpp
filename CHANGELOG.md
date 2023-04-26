@@ -1,6 +1,30 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.35.0] - 2023-04-26
+### Added
+- Support for custom types in Variant container
+- New Variant::clear() method
+- New Variant::isEmpty() method
+- Implemented bool,string to number conversion in toInt64(), toUInt64(), toDouble()
+- Implemented string to bool conversion in toBool()
+- Implemented vector,list to bytearray conversion in toByteArray()
+- New Variant's methods getByteArray(), getVector(), getList(), getMap(), getPair() for type-safe fast access to internal data
+
+### Updated
+- scxml2gen now generates timers if it finds events with "ON_TIMER_" prefix (before it generated timers only if they were used in state actions)
+- Removed unsafe memory management in Variant class
+- Variant's toByteArray(), toVector(), toList(), toMap(), toPair() methods replaced with type-safe versions
+- Removed unsafe Variant::value() method
+- Refactoring and coverage increase of unit tests for Variant class.
+- VariantDict_t renamed to VariantMap_t
+- Variant::Type::DICTIONARY renamed to Variant::Type::MAP
+- Varaint::make() and constructor for PAIR type replaced with a template version
+
+### Fixed
+- Variant's logic for comparing double values
+- Variant's logic for comparing numeric values of different types
+
 ## [0.34.0] - 2023-04-07
 ### Added
 - added version.hpp with library version
@@ -237,7 +261,7 @@ All notable changes to project will be documented in this file.
 ## [0.18.1] - 2021-08-20
 ### Added
 - Variant::toMap()
-- Variant::isDictionary()
+- Variant::isMap()
 
 ### Updated
 - improved dispatcher emit logic when used with multiple HSM instances
@@ -254,10 +278,10 @@ All notable changes to project will be documented in this file.
 
 ## [0.17.1] - 2021-08-19
 ### Added
-- Variant::make to convert std::map to VariantDict_t
+- Variant::make to convert std::map to VariantMap_t
 
 ### Updated
-- improve VariantDict_t to accept Variant as a key
+- improve VariantMap_t to accept Variant as a key
 
 ## [0.17.0] - 2021-08-18
 ### Added

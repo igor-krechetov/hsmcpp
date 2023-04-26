@@ -230,6 +230,44 @@ TEST_F(TrafficLightHsm, transition_self_internal) {
     EXPECT_EQ(mTransitionCounterNextState, 1);
 }
 
+
+TEST_F(ABCHsm, transition_self_internal_multiple) {
+    TEST_DESCRIPTION("If both parent and child have same self-transition defined then only child's transition should be executed");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    setInitialState(AbcState::P1);
+
+    registerState<ABCHsm>(AbcState::P1, this, &ABCHsm::onP1, &ABCHsm::onP1Enter, &ABCHsm::onP1Exit);
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onSyncA, &ABCHsm::onAEnter, &ABCHsm::onAExit);
+
+    registerSubstateEntryPoint(AbcState::P1, AbcState::A);
+    registerSelfTransition<ABCHsm>(AbcState::P1, AbcEvent::E1, TrafficLightHsm::TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE2Transition);
+    registerSelfTransition<ABCHsm>(AbcState::A, AbcEvent::E1, TrafficLightHsm::TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE1Transition);
+
+    initializeHsm();
+    ASSERT_TRUE(waitAsyncOperation());// wait for state A to activate
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
+
+    //-------------------------------------------
+    // VALIDATION
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
+    EXPECT_EQ(mStateCounterP1, 1);
+    EXPECT_EQ(mStateCounterP1Enter, 1);
+    EXPECT_EQ(mStateCounterP1Exit, 0);
+
+    EXPECT_EQ(mStateCounterA, 1);
+    EXPECT_EQ(mStateCounterAEnter, 1);
+    EXPECT_EQ(mStateCounterAExit, 0);
+
+    EXPECT_EQ(mTransitionCounterE1, 1);
+    EXPECT_EQ(mTransitionCounterE2, 0);
+}
+
 TEST_F(TrafficLightHsm, transition_self_external) {
     TEST_DESCRIPTION(
         "External self transition should result in exiting an reentering current state with all state callbacks correctly "

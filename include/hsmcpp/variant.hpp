@@ -4,8 +4,10 @@
 #ifndef HSMCPP_VARIANT_HPP
 #define HSMCPP_VARIANT_HPP
 
+#include <functional>
 #include <list>
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -13,26 +15,34 @@
 namespace hsmcpp {
 
 class Variant;
-typedef std::vector<Variant> VariantVector_t;
-typedef std::list<Variant> VariantList_t;
-typedef std::map<Variant, Variant> VariantDict_t;
-///< Provides a way to store two values as a single unit.
-typedef std::pair<Variant, Variant> VariantPair_t;
 
-// cppcheck-suppress misra-c2012-20.7
+using ByteArray_t = std::vector<unsigned char>;
+using VariantVector_t = std::vector<Variant>;
+using VariantList_t = std::list<Variant>;
+using VariantMap_t = std::map<Variant, Variant>;
+using VariantPair_t = std::pair<Variant, Variant>;  ///< Provides a way to store two values as a single unit.
+
+// cppcheck-suppress misra-c2012-20.7 ; parentheses are not needed
 #define DEF_CONSTRUCTOR(_val_type, _internal_type)               \
   /** @brief Constructs a new variant with an _val_type value */ \
-  explicit Variant(const _val_type& v) {                         \
-    assign<_val_type>(v, _internal_type);                        \
-  }
+  explicit Variant(const _val_type v);
 
-// cppcheck-suppress misra-c2012-20.7
-#define DEF_OPERATOR_ASSIGN(_val_type, _internal_type)                                    \
-  /** @brief Assigns _val_type value to current variant object and changing it's type. */ \
-  Variant& operator=(const _val_type& v) {                                                \
-    assign<_val_type>(v, _internal_type);                                                 \
-    return *this;                                                                         \
-  }
+// cppcheck-suppress misra-c2012-20.7 ; parentheses are not needed
+#define DEF_OPERATOR_ASSIGN(_val_type, _internal_type)                                                      \
+  /** @brief Assigns _val_type value to current variant object and changing it's type to _internal_type. */ \
+  Variant& operator=(const _val_type v);
+
+#define DEF_MAKE_DOC(_internal_type)                                      \
+  /**                                                                     \
+   * @brief Creates a Variant object with a value of type _internal_type. \
+   * @param v The value to assign to the Variant object.                  \
+   * @return Newly constructed Variant object.                            \
+   */
+
+// cppcheck-suppress misra-c2012-20.7 ; parentheses are not needed
+#define DEF_MAKE(_val_type, _internal_type) \
+  DEF_MAKE_DOC(_internal_type)              \
+  static Variant make(const _val_type v);
 
 /**
  * @brief Variant class represents a type-safe union.
@@ -41,7 +51,7 @@ typedef std::pair<Variant, Variant> VariantPair_t;
  * The Variant class is a generic container that can hold various types of data (similar to union). It is designed to be
  * flexible and efficient by allowing the user to store data of different types and sizes, and retrieve them in a type-safe
  * manner. The class definition provides an Variant::Type enumeration of different data types that the Variant object can hold,
- * including numeric types, boolean values, strings, and more complex types like vectors, lists, dictionaries and pairs.
+ * including numeric types, boolean values, strings, and more complex types like vectors, lists, maps and pairs.
  *
  * A Variant object holds a single value of a single type at a time or none if it's empty. Value can be retrieved as a copy
  * using toX() methods (for example toString(), toInt64(), etc.). When asked for a type that can be generated from the stored
@@ -71,6 +81,18 @@ typedef std::pair<Variant, Variant> VariantPair_t;
  * \endcode
  */
 class Variant {
+private:
+    /**
+     * @brief Handles memory allocation/deallocation for custom types.
+     *
+     * @param void* memory pointer
+     * @param bool true - release memory; false - copy memory
+     * @return new memory pointer if copy was requested or nullptr
+     */
+    // using MemoryHandlerFunc_t = std::function<void*(void*, const bool)>;
+    using MemoryAllocatorFunc_t = std::function<std::shared_ptr<void>(const void*)>;
+    using CompareFunc_t = std::function<int(const void*, const void*)>;
+
 public:
     /**
      * @brief Describes types that can be stored inside Variant container.
@@ -92,94 +114,31 @@ public:
         BOOL,    ///< A boolean value
 
         STRING,     ///< std::string
-        BYTEARRAY,  ///< std::vector<char>
+        BYTEARRAY,  ///< ByteArray_t
 
         LIST,    ///< VariantList_t
         VECTOR,  ///< VariantVector_t
 
-        DICTIONARY,  ///< VariantDict_t
-        PAIR,        ///< VariantPair_t
+        MAP,   ///< VariantMap_t
+        PAIR,  ///< VariantPair_t
+
+        CUSTOM  ///< any type
     };
 
 public:
-    /**
-     * @brief Creates a Variant object with a value of type Type::BYTE_1.
-     * @param v The value to assign to the Variant object.
-     * @return Newly constructed Variant object.
-     */
-    static Variant make(const int8_t v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::BYTE_2.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const int16_t v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::BYTE_4.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const int32_t v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::BYTE_8.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const int64_t v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::UBYTE_1.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const uint8_t v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::UBYTE_2.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const uint16_t v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::UBYTE_4.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const uint32_t v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::UBYTE_8.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const uint64_t v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::DOUBLE.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const double v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::BOOL.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const bool v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::STRING.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const std::string& v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::STRING.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const char* v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::VECTOR.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const std::vector<char>& v);
+    DEF_MAKE(int8_t, Type::BYTE_1);
+    DEF_MAKE(int16_t, Type::BYTE_2);
+    DEF_MAKE(int32_t, Type::BYTE_4);
+    DEF_MAKE(int64_t, Type::BYTE_8);
+    DEF_MAKE(uint8_t, Type::UBYTE_1);
+    DEF_MAKE(uint16_t, Type::UBYTE_2);
+    DEF_MAKE(uint32_t, Type::UBYTE_4);
+    DEF_MAKE(uint64_t, Type::UBYTE_8);
+    DEF_MAKE(double, Type::DOUBLE);
+    DEF_MAKE(bool, Type::BOOL);
+    DEF_MAKE(std::string&, Type::STRING);
+    DEF_MAKE(char*, Type::STRING);
+    DEF_MAKE(ByteArray_t&, Type::VECTOR);
 
     /**
      * @brief Creates a Variant object with a value of type Type::VECTOR.
@@ -189,52 +148,32 @@ public:
      */
     static Variant make(const char* binaryData, const size_t bytesCount);
 
-    /**
-     * @brief Creates a Variant object with a value of type Type::VECTOR.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const VariantVector_t& v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::VECTOR.
-     * @copydetails make(const int8_t v)
-     */
+    DEF_MAKE(VariantVector_t&, Type::VECTOR);
     template <typename T>
-    static Variant make(const std::vector<T>& v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::LIST.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const VariantList_t& v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::LIST.
-     * @copydetails make(const int8_t v)
-     */
+    DEF_MAKE(std::vector<T>&, Type::VECTOR);
+    DEF_MAKE(VariantList_t&, Type::LIST);
     template <typename T>
-    static Variant make(const std::list<T>& v);
+    DEF_MAKE(std::list<T>&, Type::LIST);
+    DEF_MAKE(VariantMap_t&, Type::MAP);
 
-    /**
-     * @brief Creates a Variant object with a value of type Type::DICTIONARY.
-     * @copydetails make(const int8_t v)
-     */
-    static Variant make(const VariantDict_t& v);
-
-    /**
-     * @brief Creates a Variant object with a value of type Type::DICTIONARY.
-     * @copydetails make(const int8_t v)
-     */
+    DEF_MAKE_DOC(Type::MAP)
     template <typename K, typename V>
     static Variant make(const std::map<K, V>& v);
 
+    DEF_MAKE(VariantPair_t&, Type::PAIR);
+
     /**
-     * @brief Creates a Variant object with a value of type Type::DICTIONARY.
+     * @brief Creates a Variant object with a value of type Type::PAIR.
      * @param first stored as first value of a pair
      * @param second stored as second value of a pair
      * @return Newly constructed Variant object.
      */
-    static Variant make(const Variant& first, const Variant& second);
+    template <typename TFirst, typename TSecond>
+    static Variant make(const TFirst& first, const TSecond& second);
+
+    DEF_MAKE_DOC(Type::CUSTOM)
+    template <typename T>
+    static Variant make(const T& v);
 
     /**
      * @brief Create a new Variant object from an existing Variant object.
@@ -277,18 +216,30 @@ public:
     DEF_CONSTRUCTOR(uint64_t, Type::UBYTE_8)
     DEF_CONSTRUCTOR(double, Type::DOUBLE)
     DEF_CONSTRUCTOR(bool, Type::BOOL)
-    DEF_CONSTRUCTOR(std::string, Type::STRING)
-    /** @brief Constructs a new variant with an const char* value */
+    DEF_CONSTRUCTOR(std::string&, Type::STRING)
+    /** @brief Constructs a new variant object of type Type::STRING with an const char* value. */
     explicit Variant(const char* v);
 
-    DEF_CONSTRUCTOR(std::vector<char>, Type::BYTEARRAY)
+    DEF_CONSTRUCTOR(ByteArray_t&, Type::BYTEARRAY)
     /** @brief Constructs a new variant of type Type::BYTEARRAY. Copies bytesCount bytes from binaryData buffer. */
     explicit Variant(const char* binaryData, const size_t bytesCount);
 
-    DEF_CONSTRUCTOR(VariantVector_t, Type::VECTOR)
-    DEF_CONSTRUCTOR(VariantList_t, Type::LIST)
-    DEF_CONSTRUCTOR(VariantDict_t, Type::DICTIONARY)
-    DEF_CONSTRUCTOR(VariantPair_t, Type::PAIR)
+    DEF_CONSTRUCTOR(VariantVector_t&, Type::VECTOR)
+    DEF_CONSTRUCTOR(VariantList_t&, Type::LIST)
+    DEF_CONSTRUCTOR(VariantMap_t&, Type::MAP)
+    DEF_CONSTRUCTOR(VariantPair_t&, Type::PAIR)
+
+    /**
+     * @brief Constructs a new variant object of type Type::PAIR.
+     * @param first stored as first value of a pair
+     * @param second stored as second value of a pair
+     */
+    template <typename TFirst, typename TSecond>
+    explicit Variant(const TFirst& first, const TSecond& second);
+
+    /** @brief Constructs a new variant object of type Type::CUSTOM using custom types. */
+    template <typename T>
+    explicit Variant(const T& v);
 
     /** @brief Assigns the value of the \c v to this variant. */
     Variant& operator=(const Variant& v);
@@ -305,20 +256,41 @@ public:
     DEF_OPERATOR_ASSIGN(uint64_t, Type::UBYTE_8)
     DEF_OPERATOR_ASSIGN(double, Type::DOUBLE)
     DEF_OPERATOR_ASSIGN(bool, Type::BOOL)
-    DEF_OPERATOR_ASSIGN(std::string, Type::STRING)
-    DEF_OPERATOR_ASSIGN(std::vector<char>, Type::BYTEARRAY)
-    DEF_OPERATOR_ASSIGN(std::vector<Variant>, Type::VECTOR)
-    DEF_OPERATOR_ASSIGN(std::list<Variant>, Type::LIST)
-    DEF_OPERATOR_ASSIGN(VariantDict_t, Type::DICTIONARY)
-    DEF_OPERATOR_ASSIGN(VariantPair_t, Type::PAIR)
+    DEF_OPERATOR_ASSIGN(std::string&, Type::STRING)
+    DEF_OPERATOR_ASSIGN(char*, Type::STRING)
+    DEF_OPERATOR_ASSIGN(ByteArray_t&, Type::BYTEARRAY)
+    DEF_OPERATOR_ASSIGN(VariantVector_t&, Type::VECTOR)
+    DEF_OPERATOR_ASSIGN(VariantList_t&, Type::LIST)
+    DEF_OPERATOR_ASSIGN(VariantMap_t&, Type::MAP)
+    DEF_OPERATOR_ASSIGN(VariantPair_t&, Type::PAIR)
+
+    template <typename T>
+    DEF_OPERATOR_ASSIGN(T&, Type::CUSTOM)
 
     /**
-     * @brief Get the type of values stored in the Variant object
-     * @return type of the stored value
+     * @brief Resets value of the Varaint object and frees all allocated memory.
+     * After calling this method internal type will become Type::UNKNOWN.
      */
-    inline Type getType() const {
-        return type;
-    }
+    void clear();
+
+    /**
+     * @brief Gets the type of data stored in the Variant object
+     * @return type of the stored data
+     */
+    inline Type getType() const;
+
+    /**
+     * @brief Checks if variant contains value or not
+     * @retval true variant was initialzied with a value and it's type is not Type::UNKNOWN
+     * @retval false no value was set for the variant and it's type is Type::UNKNOWN
+     */
+    operator bool() const;
+
+    /**
+     * @brief Check if the Variant object doesn't contain any value
+     * @return true if the Variant object doesn't contain any value, false otherwise
+     */
+    bool isEmpty() const;
 
     /**
      * @brief Check if the Variant object contains a numeric value
@@ -368,10 +340,10 @@ public:
     bool isList() const;
 
     /**
-     * @brief Check if the Variant object contains a dictionary
-     * @return true if the Variant object contains a dictionary, false otherwise
+     * @brief Check if the Variant object contains a map
+     * @return true if the Variant object contains a map, false otherwise
      */
-    bool isDictionary() const;
+    bool isMap() const;
 
     /**
      * @brief Check if the Variant object contains a pair
@@ -380,67 +352,10 @@ public:
     bool isPair() const;
 
     /**
-     * @brief Returns pointer to internal data.
-     *
-     * @warning This function is not type-safe and simply does static_cast to requested type. Always prefer using toX() methods
-     * instead. This method was added only for situations when performance is critical and we are trying to avoid additional
-     * memory allocation or copy. When using this API make sure to call getType() and check which type of data is contained
-     * inside variant object.
+     * @brief Check if the Variant object contains a custom type
+     * @return true if the Variant object contains a custom type, false otherwise
      */
-    template <typename T>
-    inline T* value() const {
-        return (static_cast<T*>(data));
-    }
-
-    /**
-     * @brief Returns the variant value represented as string
-     * @details If stored value is not a string, method will try to convert it. Supported data types are:
-     *  \li Type::BYTE_1
-     *  \li Type::BYTE_2
-     *  \li Type::BYTE_4
-     *  \li Type::BYTE_8
-     *  \li Type::UBYTE_1
-     *  \li Type::UBYTE_2
-     *  \li Type::UBYTE_4
-     *  \li Type::UBYTE_8
-     *  \li Type::DOUBLE
-     *  \li Type::BOOL
-     *  \li Type::STRING
-     *  \li Type::BYTEARRAY
-     *  \li Type::LIST
-     *  \li Type::VECTOR
-     *  \li Type::DICTIONARY
-     *  \li Type::PAIR
-     *
-     * @return string representation of the Variant object (calling this method on an unsupported variant type returns an empty
-     * string).
-     */
-    std::string toString() const;
-
-    /**
-     * @brief Returns the variant value represented as byte array
-     * @details If stored value is not a byte array, method will try to convert it. Supported data types are:
-     *  \li Type::BYTE_1
-     *  \li Type::BYTE_2
-     *  \li Type::BYTE_4
-     *  \li Type::BYTE_8
-     *  \li Type::UBYTE_1
-     *  \li Type::UBYTE_2
-     *  \li Type::UBYTE_4
-     *  \li Type::UBYTE_8
-     *  \li Type::DOUBLE
-     *  \li Type::BOOL
-     *  \li Type::STRING
-     *  \li Type::BYTEARRAY
-     *  \li Type::DICTIONARY
-     *  \li Type::PAIR
-     *
-     * @todo add support for VECTOR and LIST
-     *
-     * @return byte array representation of the Variant object (calling this method on an unsupported variant type returns an
-     * empty vector).
-     */
-    std::vector<char> toByteArray() const;
+    bool isCustomType() const;
 
     /**
      * @brief Returns the variant value represented as int64
@@ -454,8 +369,8 @@ public:
      *  \li Type::UBYTE_4
      *  \li Type::UBYTE_8
      *  \li Type::DOUBLE
-     *
-     * @todo add support for BOOL and STRING
+     *  \li Type::BOOL - returns 0 if the value is false and 1 if it's true
+     *  \li Type::STRING - tries to convert string to number or returns 0
      *
      * @return numeric representation of the Variant object (calling this method on an unsupported variant type returns 0).
      */
@@ -485,59 +400,186 @@ public:
      *  \li Type::UBYTE_4
      *  \li Type::UBYTE_8
      *  \li Type::DOUBLE
-     *
-     * @todo add support for BOOL and STRING
+     *  \li Type::BOOL
+     *  \li Type::STRING - returns true if string value is "true" or it represents a number different from 0
      *
      * @return boolean representation of the Variant object (calling this method on an unsupported variant type returns false).
      */
     bool toBool() const;
 
     /**
-     * @brief Returns the variant value represented as vector.
-     * @details Only supports Type::VECTOR. Method converts item values to the type T specified as a template. For supported
-     * conversions see corresponsing toX() functions.
+     * @brief Returns the variant value represented as string
+     * @details If stored value is not a string, method will try to convert it. Supported data types are:
+     *  \li Type::BYTE_1
+     *  \li Type::BYTE_2
+     *  \li Type::BYTE_4
+     *  \li Type::BYTE_8
+     *  \li Type::UBYTE_1
+     *  \li Type::UBYTE_2
+     *  \li Type::UBYTE_4
+     *  \li Type::UBYTE_8
+     *  \li Type::DOUBLE
+     *  \li Type::BOOL
+     *  \li Type::STRING
+     *  \li Type::BYTEARRAY
+     *  \li Type::LIST
+     *  \li Type::VECTOR
+     *  \li Type::MAP
+     *  \li Type::PAIR
      *
-     * @return vector representation of the Variant object
+     * @return string representation of the Variant object (calling this method on an unsupported variant type returns an empty
+     * string).
      */
-    template <typename T>
-    std::vector<T> toVector() const;
+    std::string toString() const;
 
     /**
-     * @brief Returns the variant value represented as vector.
-     * @details Only supports Type::LIST. Method converts item values to the type T specified as a template. For supported
-     * conversions see corresponsing toX() functions.
+     * @brief Returns the variant value represented as byte array
+     * @details If stored value is not a byte array, method will try to convert it. Supported data types are:
+     *  \li Type::BYTE_1
+     *  \li Type::BYTE_2
+     *  \li Type::BYTE_4
+     *  \li Type::BYTE_8
+     *  \li Type::UBYTE_1
+     *  \li Type::UBYTE_2
+     *  \li Type::UBYTE_4
+     *  \li Type::UBYTE_8
+     *  \li Type::DOUBLE
+     *  \li Type::BOOL
+     *  \li Type::STRING
+     *  \li Type::BYTEARRAY
+     *  \li Type::MAP
+     *  \li Type::PAIR
      *
-     * @return list representation of the Variant object
+     * @remark This function always returns a copy of data. If you know that internal type is Type::BYTEARRAY and just want to
+     * access data it's better to use toByteArrayPtr() method.
+     *
+     * @return byte array representation of the Variant object (calling this method on an unsupported variant type returns an
+     * empty vector).
      */
-    template <typename T>
-    std::list<T> toList() const;
+    ByteArray_t toByteArray() const;
 
     /**
-     * @brief Returns the variant value represented as map.
-     * @details Only supports Type::DICTIONARY. Method converts item values to the type T specified as a template. For supported
-     * conversions see corresponsing toX() functions.
+     * @brief Returns pointer to internal byte array data.
+     * @return pointer to internal data or nullptr if data type is not Type::BYTEARRAY
+     */
+    std::shared_ptr<ByteArray_t> getByteArray() const;
+
+    /**
+     * @brief Returns pointer to internal vector data.
+     * @return pointer to internal data or nullptr if data type is not Type::VECTOR
+     */
+    std::shared_ptr<VariantVector_t> getVector() const;
+
+    /**
+     * @brief Copies internal data to a requested std::vector type.
+     * Usage example:
      *
-     * @return map representation of the Variant object
+     * \code{.cpp}
+     * std::vector<int> intData = {1, 2, 3};
+     * Variant v(intData);
+     *
+     * std::vector<int> intDataConverted = v.toVector<int>([](const Variant& v){ return v.toInt64(); }));
+     * // intDataConverted = {1, 2, 3}
+     *
+     * std::vector<std::string> strDataConverted = v.toVector<std::string>([](const Variant& v){ return v.toString(); }));
+     * // strDataConverted = {"1", "2", "3"}
+     * \endcode
+     *
+     * @param converter functor which will be called for each vector item to convert it from Variant to requested type
+     * @return std::vector filled with data (empty container if data type is not Type::VECTOR)
+     */
+    template <typename T>
+    std::vector<T> toVector(const std::function<T(const Variant&)>& converter) const;
+
+    /**
+     * @brief Returns pointer to internal list data.
+     * @return pointer to internal data or nullptr if data type is not Type::LIST
+     */
+    std::shared_ptr<VariantList_t> getList() const;
+
+    /**
+     * @brief Copies internal data to a requested std::list type.
+     * Usage example:
+     *
+     * \code{.cpp}
+     * std::list<int> intData = {1, 2, 3};
+     * Variant v(intData);
+     *
+     * std::list<int> intDataConverted = v.toList<int>([](const Variant& v){ return v.toInt64(); }));
+     * // intDataConverted = {1, 2, 3}
+     *
+     * std::list<std::string> strDataConverted = v.toList<std::string>([](const Variant& v){ return v.toString(); }));
+     * // strDataConverted = {"1", "2", "3"}
+     * \endcode
+     *
+     * @param converter functor which will be called for each list item to convert it from Variant to requested type
+     * @return std::list filled with data (empty container if data type is not Type::LIST)
+     */
+    template <typename T>
+    std::list<T> toList(const std::function<T(const Variant&)>& converter) const;
+
+    /**
+     * @brief Returns pointer to internal map data.
+     * @return pointer to internal data or nullptr if data type is not Type::MAP
+     */
+    std::shared_ptr<VariantMap_t> getMap() const;
+
+    /**
+     * @brief Copies internal data to a requested std::map type.
+     * Usage example:
+     *
+     * \code{.cpp}
+     * std::map<int, std::string> intStrData = {{1, "aa"}, {2, "bb"}, {3, "cc"}};
+     * Variant v = Variant::make(intStrData);
+     *
+     * std::map<int, std::string> intStrDataConverted = v.toMap<int, std::string>([](const Variant& key){ return key.toInt64(); },
+     *                                                                            [](const Variant& value){ return value.toString(); }));
+     * \endcode
+     *
+     * @param converterKey functor which will be called for each map key to convert it from Variant to requested type
+     * @param converterValue functor which will be called for each map value to convert it from Variant to requested type
+     * @return std::map filled with data (empty container if data type is not Type::MAP)
      */
     template <typename K, typename V>
-    std::map<K, V> toMap() const;
+    std::map<K, V> toMap(const std::function<K(const Variant&)>& converterKey,
+                         const std::function<V(const Variant&)>& converterValue) const;
 
     /**
-     * @brief Returns the variant value represented as a pair.
-     * @details Only supports Type::PAIR. Method converts item values to the type T specified as a template. For supported
-     * conversions see corresponsing toX() functions.
+     * @brief Returns pointer to internal pair data.
+     * @return pointer to internal data or nullptr if data type is not Type::PAIR
+     */
+    std::shared_ptr<VariantPair_t> getPair() const;
+
+    /**
+     * @brief Copies internal data to a requested std::pair type.
+     * Usage example:
      *
-     * @return std::pair representation of the Variant object
+     * \code{.cpp}
+     * std::pair<int, std::string> intStrData = {1, "aa"};
+     * Variant v = Variant::make(intStrData);
+     *
+     * std::pair<int, std::string> intStrDataConverted = v.toPair<int, std::string>([](const Variant& first){ return first.toInt64(); },
+     *                                                                              [](const Variant& second){ return second.toString(); }));
+     * \endcode
+     *
+     * @param converterFirst functor which will be called for first pair element to convert it from Variant to requested type
+     * @param converterSecond functor which will be called for second pair element to convert it from Variant to requested type
+     * @return std::pair filled with data (empty container if data type is not Type::PAIR)
      */
-    template <typename F, typename S>
-    std::pair<F, S> toPair() const;
+    template <typename TFirst, typename TSecond>
+    std::pair<TFirst, TSecond> toPair(const std::function<TFirst(const Variant&)>& converterFirst,
+                                      const std::function<TSecond(const Variant&)>& converterSecond) const;
 
     /**
-     * @brief Checks if variant contains value or not
-     * @retval true variant was initialzied with a value and it's type is not Type::UNKNOWN
-     * @retval false no value was set for the variant and it's type is Type::UNKNOWN
+     * @brief Returns pointer to custom type data.
+     *
+     * @warning This function is not type-safe and simply does static_cast to requested type. User is responsible for specifying
+     *          same type that was used for initialization of a variant object.
+     *
+     * @return pointer to internal data or nullptr if data type is not Type::CUSTOM
      */
-    operator bool() const;
+    template <typename T>
+    std::shared_ptr<T> getCustomType() const;
 
     /**
      * @brief Compares this Variant object to another Variant object for equality.
@@ -596,126 +638,236 @@ public:
     bool operator<=(const Variant& val) const;
 
 private:
-    Variant(void* d, const Type t);
+    Variant(const std::shared_ptr<void>& d, const Type t);
 
     bool isSameObject(const Variant& val) const;
 
     template <typename T>
-    void assign(const T& v, const Type t) {
-        freeMemory();
-        data = new T(v);
-        type = t;
-    }
+    void assign(const T& v, const Type t);
+
+    template <typename T>
+    inline std::shared_ptr<T> value() const;
+
+    template <typename T>
+    void createMemoryAllocator();
 
     void freeMemory();
 
 private:
-    void* data = nullptr;
     Type type = Type::UNKNOWN;
+    std::shared_ptr<void> data;
+    MemoryAllocatorFunc_t memoryAllocator;
+    CompareFunc_t compareOperator;
 };
 
 template <typename T>
 Variant Variant::make(const std::vector<T>& v) {
-    VariantVector_t* dest = new VariantVector_t();
+    std::shared_ptr<VariantVector_t> dest = std::shared_ptr<VariantVector_t>(new VariantVector_t(), [](void* ptr) {
+        delete reinterpret_cast<VariantVector_t*>(ptr);
+    });
 
     for (auto it = v.begin(); it != v.end(); ++it) {
         dest->push_back(make(*it));
     }
 
-    return Variant(dest, Type::VECTOR);
+    Variant res(std::static_pointer_cast<void>(dest), Type::VECTOR);
+
+    res.createMemoryAllocator<VariantVector_t>();
+
+    return res;
 }
 
 template <typename T>
 Variant Variant::make(const std::list<T>& v) {
-    VariantList_t* dest = new VariantList_t();
+    std::shared_ptr<VariantList_t> dest =
+        std::shared_ptr<VariantList_t>(new VariantList_t(), [](void* ptr) { delete reinterpret_cast<VariantList_t*>(ptr); });
 
     for (auto it = v.begin(); it != v.end(); ++it) {
         dest->push_back(make(*it));
     }
 
-    return Variant(dest, Type::LIST);
+    Variant res(std::static_pointer_cast<void>(dest), Type::LIST);
+
+    res.createMemoryAllocator<VariantList_t>();
+
+    return res;
 }
 
 template <typename K, typename V>
 Variant Variant::make(const std::map<K, V>& v) {
-    VariantDict_t* dict = new VariantDict_t();
+    std::shared_ptr<VariantMap_t> dest =
+        std::shared_ptr<VariantMap_t>(new VariantMap_t(), [](void* ptr) { delete reinterpret_cast<VariantMap_t*>(ptr); });
 
     for (auto it = v.begin(); it != v.end(); ++it) {
-        dict->emplace(make(it->first), make(it->second));
+        dest->emplace(make(it->first), make(it->second));
     }
 
-    return Variant(dict, Type::DICTIONARY);
+    Variant res(std::static_pointer_cast<void>(dest), Type::MAP);
+
+    res.createMemoryAllocator<VariantMap_t>();
+
+    return res;
+}
+
+template <typename TFirst, typename TSecond>
+Variant Variant::make(const TFirst& first, const TSecond& second) {
+    return Variant(first, second);
 }
 
 template <typename T>
-std::vector<T> Variant::toVector() const {
-    std::vector<T> result;
+Variant Variant::make(const T& v) {
+    Variant res;
 
-    if (true == isVector()) {
-        VariantVector_t* data = value<VariantVector_t>();
+    res.assign(v, Type::CUSTOM);
 
-        if (nullptr != data) {
-            for (auto it = data->begin(); it != data->end(); ++it) {
-                result.push_back(*(it->value<T>()));
-            }
-        }
+    return res;
+}
+
+template <typename TFirst, typename TSecond>
+Variant::Variant(const TFirst& first, const TSecond& second)
+    // cppcheck-suppress misra-c2012-10.4 : false-positive. thinks that ':' is arithmetic operation
+    : Variant(std::make_pair(Variant(first), Variant(second))) {}
+
+template <typename T>
+Variant::Variant(const T& v) {
+    assign(v, Type::CUSTOM);
+}
+
+template <typename T>
+Variant& Variant::operator=(const T& v) {
+    assign(v, Type::CUSTOM);
+    return *this;
+}
+
+Variant::Type Variant::getType() const {
+    return type;
+}
+
+template <typename T>
+std::shared_ptr<T> Variant::getCustomType() const {
+    std::shared_ptr<T> result;
+
+    if (true == isCustomType()) {
+        result = value<T>();
     }
 
     return result;
 }
 
 template <typename T>
-std::list<T> Variant::toList() const {
-    std::list<T> result;
+std::vector<T> Variant::toVector(const std::function<T(const Variant&)>& converter) const {
+    std::vector<T> res;
 
-    if (true == isList()) {
-        VariantList_t* data = value<VariantList_t>();
+    if (isVector()) {
+        std::shared_ptr<VariantVector_t> vectorData = getVector();
 
-        if (nullptr != data) {
-            for (auto it = data->begin(); it != data->end(); ++it) {
-                result.push_back(*(it->value<T>()));
+        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
+        if (vectorData) {
+            res.reserve(vectorData->size());
+
+            for (const Variant& curItem : *vectorData) {
+                res.push_back(converter(curItem));
             }
         }
     }
 
-    return result;
+    return res;
+}
+
+template <typename T>
+std::list<T> Variant::toList(const std::function<T(const Variant&)>& converter) const {
+    std::list<T> res;
+
+    if (isList()) {
+        std::shared_ptr<VariantList_t> listData = getList();
+
+        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
+        if (listData) {
+            for (const Variant& curItem : *listData) {
+                res.push_back(converter(curItem));
+            }
+        }
+    }
+
+    return res;
 }
 
 template <typename K, typename V>
-std::map<K, V> Variant::toMap() const {
-    std::map<K, V> result;
+std::map<K, V> Variant::toMap(const std::function<K(const Variant&)>& converterKey,
+                              const std::function<V(const Variant&)>& converterValue) const {
+    std::map<K, V> res;
 
-    if (true == isDictionary()) {
-        VariantDict_t* dict = value<VariantDict_t>();
+    if (isMap()) {
+        std::shared_ptr<VariantMap_t> mapData = getMap();
 
-        if (nullptr != dict) {
-            for (auto it = dict->begin(); it != dict->end(); ++it) {
-                result.emplace(*(it->first.value<K>()), *(it->second.value<V>()));
+        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
+        if (mapData) {
+            for (const auto& curItem : *mapData) {
+                res.insert(std::make_pair(converterKey(curItem.first), converterValue(curItem.second)));
             }
         }
     }
 
-    return result;
+    return res;
 }
 
-template <typename F, typename S>
-std::pair<F, S> Variant::toPair() const {
-    std::pair<F, S> result;
+template <typename TFirst, typename TSecond>
+std::pair<TFirst, TSecond> Variant::toPair(const std::function<TFirst(const Variant&)>& converterFirst,
+                                           const std::function<TSecond(const Variant&)>& converterSecond) const {
+    std::pair<TFirst, TSecond> res;
 
-    if (true == isPair()) {
-        VariantPair_t* p = value<VariantPair_t>();
+    if (isPair()) {
+        std::shared_ptr<VariantPair_t> pairData = getPair();
 
-        if (nullptr != p) {
-            result.first = *(p->first.value<F>());
-            result.second = *(p->second.value<S>());
+        // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
+        if (pairData) {
+            res = std::make_pair(converterFirst(pairData->first), converterSecond(pairData->second));
         }
     }
 
-    return result;
+    return res;
+}
+
+template <typename T>
+void Variant::assign(const T& v, const Type t) {
+    freeMemory();
+    createMemoryAllocator<T>();
+    type = t;
+    data = memoryAllocator(&v);
+}
+
+template <typename T>
+inline std::shared_ptr<T> Variant::value() const {
+    return std::static_pointer_cast<T>(data);
+}
+
+template <typename T>
+void Variant::createMemoryAllocator() {
+    memoryAllocator = [](const void* ptr) {
+        // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
+        // cppcheck-suppress misra-c2012-15.5
+        return ((nullptr != ptr) ? (std::shared_ptr<void>(new T(*reinterpret_cast<const T*>(ptr)),
+                                                          [](void* ptr) { delete reinterpret_cast<const T*>(ptr); }))
+                                 : nullptr);
+    };
+
+    // cppcheck-suppress misra-c2012-13.1 ; false-positive. this is a functor, not initializer list
+    compareOperator = [](const void* left, const void* right) {
+        int res = -1;
+        if (*reinterpret_cast<const T*>(left) == *reinterpret_cast<const T*>(right)) {
+            res = 0;
+        } else if (*reinterpret_cast<const T*>(left) > *reinterpret_cast<const T*>(right)) {
+            res = 1;
+        } else {
+            // do nothing
+        }
+
+        // NOTE: false-positive. "return" statement belongs to lambda function, not parent function
+        // cppcheck-suppress misra-c2012-15.5
+        return res;
+    };
 }
 
 }  // namespace hsmcpp
-
-template struct std::pair<hsmcpp::Variant, hsmcpp::Variant>;
 
 #endif  // HSMCPP_VARIANT_HPP

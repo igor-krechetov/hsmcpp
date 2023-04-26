@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.34.0")
+set(PROJECT_VERSION "0.35.0")
 set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -241,22 +241,7 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
 
     # =============================================
     # Installation
-    set(CMAKE_INSTALL_INCLUDEDIR "include/hsmcpp")
-    set(CMAKE_INSTALL_LIBDIR "lib")
-
-    configure_file(./pkgconfig/hsmcpp.pc.in hsmcpp.pc @ONLY)
-    install(FILES "${PROJECT_BINARY_DIR}/hsmcpp.pc" DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-    install(TARGETS ${HSM_LIBRARY_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    install(FILES ${LIBRARY_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-    install(DIRECTORY ${HSM_INCLUDES_ROOT}/os DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/pkgconfig/cmake/
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${HSM_LIBRARY_NAME})
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/CMakeLists.txt
-                  ${FILES_SCXML2GEN}
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${HSM_LIBRARY_NAME}/scxml2gen)
-
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/install.cmake)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/target/library/library.cmake)
 # ================================================================================================
 else()
     message(FATAL_ERROR "Unsupported HSMBUILD_TARGET=${HSMBUILD_TARGET} NEW")

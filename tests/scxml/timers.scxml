@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" name="timers" qt:editorversion="9.0.1" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" initial="State_1">
+    <qt:editorinfo initialGeometry="445.48;75.61;-20;-20;40;40"/>
+    <state id="State_1">
+        <qt:editorinfo geometry="445.48;203.32;-60;-50;120;100" scenegeometry="445.48;203.32;385.48;153.32;120;100"/>
+        <transition type="external" event="ON_TIMER_T1" target="State_2"/>
+        <onentry>
+            <script>start_timer(T1, 1000, true)</script>
+        </onentry>
+    </state>
+    <state id="State_2">
+        <qt:editorinfo geometry="445.48;414.83;-60;-50;120;100" scenegeometry="445.48;414.83;385.48;364.83;120;100"/>
+        <transition type="external" event="ON_TIMER_T2" target="State_1">
+            <qt:editorinfo localGeometry="165.52;0;165.52;-210.15" movePoint="64.37;7.15"/>
+        </transition>
+    </state>
+</scxml>

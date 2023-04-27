@@ -12,6 +12,8 @@ STATETYPE_FINAL = "final"
 STATETYPE_HISTORY = "history"
 STATETYPE_REGULAR = "regular"
 
+TIMER_EVENT_PREFIX = "ON_TIMER_"
+
 # ==========================================================================================================
 # FUNCTIONS
 def isStateActionDefinition(identifier):
@@ -469,7 +471,7 @@ def prepareHsmcppStateExitCallbackDeclaration(funcName):
 
 
 def prepareRegisterTimerFunc(eventsEnum, timersEnum, timerName):
-    return f"registerTimer(static_cast<hsmcpp::TimerID_t>({timersEnum}::{timerName}), {eventsEnum}::ON_TIMER_{timerName});"
+    return f"registerTimer(static_cast<hsmcpp::TimerID_t>({timersEnum}::{timerName}), {eventsEnum}::{TIMER_EVENT_PREFIX}{timerName});"
 
 
 def prepareRegisterActionFunction(state, eventsEnum, timersEnum, trigger, actionInfo):
@@ -601,7 +603,7 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
                                                 genVars["ENUM_EVENTS_ITEM"].add(curTransition['event'])
                                                 currentCondition = f", {getEventEnumValue(genVars, curTransition['event'])}"
                                             elif transitionHasCallback is True:
-                                                currentCondition = f", INVALID_HSM_EVENT_ID"
+                                                currentCondition = f", hsmcpp::INVALID_HSM_EVENT_ID"
 
                                             if transitionHasCallback is True:
                                                 genVars["HSM_TRANSITION_CONDITIONS"].add(prepareHsmcppConditionCallbackDeclaration(curTransition['condition'][0]))
@@ -669,7 +671,7 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
                     if "final_event" in curState:
                         finalEventID = f"{getEventEnumValue(genVars, curState['final_event'])}"
                     else:
-                        finalEventID = "INVALID_HSM_EVENT_ID"
+                        finalEventID = "hsmcpp::INVALID_HSM_EVENT_ID"
                     genVars["REGISTER_STATES"].append(f"registerFinalState<{genVars['CLASS_NAME']}>({getStateEnumValue(genVars, curState['id'])}, {finalEventID}{registerCallbacks});")
                 else:
                     genVars["REGISTER_STATES"].append(f"registerState<{genVars['CLASS_NAME']}>({getStateEnumValue(genVars, curState['id'])}{registerCallbacks});")
@@ -719,9 +721,15 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
     # at this point we can be sure that all timers were identified
     genVars["ENUM_TIMERS_ITEM"] = set(sorted(genVars["ENUM_TIMERS_ITEM"]))
 
+    # register timers which don't have corresponding actions, but have defined events (such timers are usually started from code)
+    for curEventName in genVars["ENUM_EVENTS_ITEM"]:
+        if curEventName.startswith(TIMER_EVENT_PREFIX):
+            newTimerName = curEventName[len(TIMER_EVENT_PREFIX):]
+            genVars["ENUM_TIMERS_ITEM"].add(newTimerName)
+
     for curTimerName in genVars["ENUM_TIMERS_ITEM"]:
         # generate 1 event per timer (most of them are probably already available since they were used somewhere in the HSM)
-        genVars["ENUM_EVENTS_ITEM"].add(f"ON_TIMER_{curTimerName}")
+        genVars["ENUM_EVENTS_ITEM"].add(f"{TIMER_EVENT_PREFIX}{curTimerName}")
         genVars["REGISTER_TIMERS"].append(prepareRegisterTimerFunc(genVars["ENUM_EVENTS"], genVars["ENUM_TIMERS"], curTimerName))
 
     genVars["ENUM_STATES_ITEM"] = sorted(genVars["ENUM_STATES_ITEM"])

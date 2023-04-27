@@ -16,22 +16,20 @@ using TimerID_t = int32_t;
 using EventID_t = int32_t;  ///< Type representing HSM event ID. Used when working with HierarchicalStateMachine class.
 using StateID_t = int32_t;  ///< Type representing HSM state ID. Used when working with HierarchicalStateMachine class.
 
-/**
- * This macro can be used to indicate to sync API of HierarchicalStateMachine to wait indefinitely for an operation to finish.
- */
-#define HSM_WAIT_INDEFINITELY (0)
+/** This macro can be used to indicate to sync API of HierarchicalStateMachine to wait indefinitely for an operation to finish. */
+constexpr int HSM_WAIT_INDEFINITELY = 0;
 
 /** Generic value for an invalid ID. Not supposed to be used directly. */
-#define INVALID_ID (-1000)
+constexpr int INVALID_ID = -1000;
 /** Invalid ID for HSM event. Used in relation with EventID_t type. */
-#define INVALID_HSM_EVENT_ID static_cast<hsmcpp::EventID_t>(INVALID_ID)
+constexpr hsmcpp::EventID_t INVALID_HSM_EVENT_ID = static_cast<hsmcpp::EventID_t>(INVALID_ID);
 /** Invalid ID for HSM state. Used in relation with StateID_t type. */
-#define INVALID_HSM_STATE_ID static_cast<hsmcpp::StateID_t>(INVALID_ID)
+constexpr hsmcpp::StateID_t INVALID_HSM_STATE_ID = static_cast<hsmcpp::StateID_t>(INVALID_ID);
 /** Invalid ID for HSM timer. Used in relation with TimerID_t type. */
-#define INVALID_HSM_TIMER_ID static_cast<hsmcpp::TimerID_t>(INVALID_ID)
+constexpr hsmcpp::TimerID_t INVALID_HSM_TIMER_ID = static_cast<hsmcpp::TimerID_t>(INVALID_ID);
 
 /** Invalid dispatcher handler ID. Used in relation with HandlerID_t type. */
-#define INVALID_HSM_DISPATCHER_HANDLER_ID (static_cast<HandlerID_t>(0))
+constexpr hsmcpp::HandlerID_t INVALID_HSM_DISPATCHER_HANDLER_ID = 0;
 
 /**
  * Function type for HierarchicalStateMachine transition callbacks.

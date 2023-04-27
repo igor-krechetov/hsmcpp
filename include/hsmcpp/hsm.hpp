@@ -190,10 +190,9 @@ public:
     /**
      * @brief Registers a new state and optional state callbacks (using class members).
      * @copydetails registerState()
+     * @tparam handler Pointer to an object whose class members will be used as callbacks.
      *
      * @warning If handler object is destroyed while HSM instance is still running it will result in a crash.
-     *
-     * @tparam handler Pointer to an object whose class members will be used as callbacks.
      */
     template <class HsmHandlerClass>
     void registerState(const StateID_t state,

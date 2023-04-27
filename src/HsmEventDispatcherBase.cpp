@@ -46,9 +46,15 @@ HandlerID_t HsmEventDispatcherBase::registerEventHandler(const EventHandlerFunc_
 
 void HsmEventDispatcherBase::unregisterEventHandler(const HandlerID_t handlerID) {
     HSM_TRACE_CALL_DEBUG_ARGS("handlerID=%d", handlerID);
-    LockGuard lck(mHandlersSync);
 
-    mEventHandlers.erase(handlerID);
+    {
+        LockGuard lck(mEmitSync);
+        mPendingEvents.remove(handlerID);
+    }
+    {
+        LockGuard lck(mHandlersSync);
+        mEventHandlers.erase(handlerID);
+    }
 }
 
 void HsmEventDispatcherBase::emitEvent(const HandlerID_t handlerID) {

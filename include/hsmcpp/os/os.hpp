@@ -15,4 +15,17 @@
  #define PLATFORM_ARDUINO   (1)
 #endif
 
+#if defined(__cpp_exceptions) || defined(_CPPUNWIND) || defined(__EXCEPTIONS)
+  #define EXCEPTIONS_ENABLED    (1)
+#endif
+
+// NOTE: needed for embedded platforms where exceptions are disabled
+#ifdef EXCEPTIONS_ENABLED
+  #define HSM_TRY           try
+  #define HSM_CATCH(_x)     catch(_x)
+#else
+  #define HSM_TRY           if(true)
+  #define HSM_CATCH(_x)     if(false)
+#endif
+
 #endif // HSMCPP_OS_OS_HPP

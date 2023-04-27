@@ -217,6 +217,8 @@ private:
 
     bool getParentState(const StateID_t child, StateID_t& outParent);
     bool isSubstateOf(const StateID_t parent, const StateID_t child);
+    bool isFinalState(const StateID_t state) const;
+    bool hasActiveChildren(const StateID_t parent, const bool includeFinal);
 
     bool getHistoryParent(const StateID_t historyState, StateID_t& outParent);
     void updateHistory(const StateID_t topLevelState, const std::list<StateID_t>& exitedStates);

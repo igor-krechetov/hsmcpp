@@ -1,4 +1,4 @@
-[==========] Running 110 tests from 8 test suites.
+[==========] Running 270 tests from 13 test suites.
 [----------] Global test environment set-up.
 [----------] 19 tests from TrafficLightHsm
 [ RUN      ] TrafficLightHsm.initial_state
@@ -39,9 +39,9 @@
 [       OK ] TrafficLightHsm.transition_conditional_simple_false (0 ms)
 [ RUN      ] TrafficLightHsm.transition_conditional_multiple
 [       OK ] TrafficLightHsm.transition_conditional_multiple (0 ms)
-[----------] 19 tests from TrafficLightHsm (1 ms total)
+[----------] 19 tests from TrafficLightHsm (2 ms total)
 
-[----------] 65 tests from ABCHsm
+[----------] 68 tests from ABCHsm
 [ RUN      ] ABCHsm.substate_entrypoint
 [       OK ] ABCHsm.substate_entrypoint (0 ms)
 [ RUN      ] ABCHsm.substate_entrypoints_multiple_behavioral
@@ -64,10 +64,16 @@
 [       OK ] ABCHsm.substate_safe_registration (0 ms)
 [ RUN      ] ABCHsm.substate_error_no_entrypoint
 [       OK ] ABCHsm.substate_error_no_entrypoint (0 ms)
+[ RUN      ] ABCHsm.substate_parent_as_initial
+[       OK ] ABCHsm.substate_parent_as_initial (0 ms)
+[ RUN      ] ABCHsm.transition_self_internal_multiple
+[       OK ] ABCHsm.transition_self_internal_multiple (0 ms)
 [ RUN      ] ABCHsm.transition_self_external_deep
 [       OK ] ABCHsm.transition_self_external_deep (0 ms)
-[ RUN      ] ABCHsm.multithreaded_deleting_running_dispatcher
-[       OK ] ABCHsm.multithreaded_deleting_running_dispatcher (1 ms)
+[ RUN      ] ABCHsm.multithreaded_entrypoint_cancelation
+[       OK ] ABCHsm.multithreaded_entrypoint_cancelation (0 ms)
+[ RUN      ] ABCHsm.multithreaded_transition_from_interrupt
+[       OK ] ABCHsm.multithreaded_transition_from_interrupt (0 ms)
 [ RUN      ] ABCHsm.callbacks_class_pointers
 [       OK ] ABCHsm.callbacks_class_pointers (0 ms)
 [ RUN      ] ABCHsm.callbacks_lambdas
@@ -86,8 +92,10 @@
 [       OK ] ABCHsm.parallel_transition_05 (0 ms)
 [ RUN      ] ABCHsm.parallel_transition_03
 [       OK ] ABCHsm.parallel_transition_03 (0 ms)
-[ RUN      ] ABCHsm.parallel_transition_11
-[       OK ] ABCHsm.parallel_transition_11 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_04
+[       OK ] ABCHsm.parallel_transition_04 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_outer
+[       OK ] ABCHsm.parallel_transition_outer (0 ms)
 [ RUN      ] ABCHsm.parallel_transition_06
 [       OK ] ABCHsm.parallel_transition_06 (0 ms)
 [ RUN      ] ABCHsm.parallel_transition_07
@@ -96,6 +104,8 @@
 [       OK ] ABCHsm.parallel_transition_08 (0 ms)
 [ RUN      ] ABCHsm.parallel_transition_09
 [       OK ] ABCHsm.parallel_transition_09 (0 ms)
+[ RUN      ] ABCHsm.parallel_transition_10_internal_priority
+[       OK ] ABCHsm.parallel_transition_10_internal_priority (0 ms)
 [ RUN      ] ABCHsm.parallel_transition_canceled_01
 [       OK ] ABCHsm.parallel_transition_canceled_01 (0 ms)
 [ RUN      ] ABCHsm.parallel_transition_canceled_02
@@ -131,19 +141,19 @@
 [ RUN      ] ABCHsm.timers_onentry
 [       OK ] ABCHsm.timers_onentry (150 ms)
 [ RUN      ] ABCHsm.timers_onexit
-[       OK ] ABCHsm.timers_onexit (150 ms)
+[       OK ] ABCHsm.timers_onexit (550 ms)
 [ RUN      ] ABCHsm.timers_multiple_actions
-[       OK ] ABCHsm.timers_multiple_actions (250 ms)
+[       OK ] ABCHsm.timers_multiple_actions (200 ms)
 [ RUN      ] ABCHsm.timers_singleshot
 [       OK ] ABCHsm.timers_singleshot (150 ms)
 [ RUN      ] ABCHsm.timers_repeating
 [       OK ] ABCHsm.timers_repeating (250 ms)
 [ RUN      ] ABCHsm.timers_stop
-[       OK ] ABCHsm.timers_stop (300 ms)
+[       OK ] ABCHsm.timers_stop (100 ms)
 [ RUN      ] ABCHsm.timers_restart
 [       OK ] ABCHsm.timers_restart (900 ms)
 [ RUN      ] ABCHsm.timers_delete_running
-[       OK ] ABCHsm.timers_delete_running (150 ms)
+[       OK ] ABCHsm.timers_delete_running (120 ms)
 [ RUN      ] ABCHsm.timers_start_from_code
 [       OK ] ABCHsm.timers_start_from_code (150 ms)
 [ RUN      ] ABCHsm.timers_stop_from_code
@@ -152,46 +162,29 @@
 [       OK ] ABCHsm.timers_restart_from_code (160 ms)
 [ RUN      ] ABCHsm.timers_is_running
 [       OK ] ABCHsm.timers_is_running (0 ms)
-[ RUN      ] ABCHsm.state_actions_simple
-[       OK ] ABCHsm.state_actions_simple (100 ms)
-[ RUN      ] ABCHsm.state_actions_multiple
-[       OK ] ABCHsm.state_actions_multiple (100 ms)
 [ RUN      ] ABCHsm.state_actions_args
-[       OK ] ABCHsm.state_actions_args (100 ms)
+[       OK ] ABCHsm.state_actions_args (0 ms)
 [ RUN      ] ABCHsm.finalstate_simple_exitpoint
-[       OK ] ABCHsm.finalstate_simple_exitpoint (50 ms)
+[       OK ] ABCHsm.finalstate_simple_exitpoint (0 ms)
 [ RUN      ] ABCHsm.finalstate_forward_event
-[       OK ] ABCHsm.finalstate_forward_event (50 ms)
+[       OK ] ABCHsm.finalstate_forward_event (0 ms)
 [ RUN      ] ABCHsm.finalstate_blocked_final
-[       OK ] ABCHsm.finalstate_blocked_final (100 ms)
+[       OK ] ABCHsm.finalstate_blocked_final (50 ms)
 [ RUN      ] ABCHsm.finalstate_blocked_exitpoint
-[       OK ] ABCHsm.finalstate_blocked_exitpoint (100 ms)
+[       OK ] ABCHsm.finalstate_blocked_exitpoint (50 ms)
 [ RUN      ] ABCHsm.finalstate_transition_args
-[       OK ] ABCHsm.finalstate_transition_args (50 ms)
+[       OK ] ABCHsm.finalstate_transition_args (0 ms)
 [ RUN      ] ABCHsm.finalstate_no_transition
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 65 tests from ABCHsm (3528 ms total)
-
-[----------] 5 tests from AsyncHsm
-[ RUN      ] AsyncHsm.substate_parent_as_initial
-[       OK ] AsyncHsm.substate_parent_as_initial (0 ms)
-[ RUN      ] AsyncHsm.multithreaded_entrypoint_cancelation
-[       OK ] AsyncHsm.multithreaded_entrypoint_cancelation (0 ms)
-[ RUN      ] AsyncHsm.multithreaded_transition_from_interrupt
-[       OK ] AsyncHsm.multithreaded_transition_from_interrupt (0 ms)
-[ RUN      ] AsyncHsm.parallel_transition_04
-[       OK ] AsyncHsm.parallel_transition_04 (300 ms)
-[ RUN      ] AsyncHsm.parallel_transition_10_internal_priority
-[       OK ] AsyncHsm.parallel_transition_10_internal_priority (300 ms)
-[----------] 5 tests from AsyncHsm (601 ms total)
+[----------] 68 tests from ABCHsm (3090 ms total)
 
 [----------] 6 tests from dispatchers
 [ RUN      ] dispatchers.stresstest_create_destroy_hsm
-[       OK ] dispatchers.stresstest_create_destroy_hsm (1635 ms)
+[       OK ] dispatchers.stresstest_create_destroy_hsm (1685 ms)
 [ RUN      ] dispatchers.stresstest_create_destroy_dispatcher
-[       OK ] dispatchers.stresstest_create_destroy_dispatcher (2005 ms)
+[       OK ] dispatchers.stresstest_create_destroy_dispatcher (2003 ms)
 [ RUN      ] dispatchers.destroy_without_starting
 [       OK ] dispatchers.destroy_without_starting (0 ms)
 [ RUN      ] dispatchers.stop
@@ -200,50 +193,392 @@
 [       OK ] dispatchers.create_hsm_from_callback (0 ms)
 [ RUN      ] dispatchers.instance_ownership
 [       OK ] dispatchers.instance_ownership (0 ms)
-[----------] 6 tests from dispatchers (4141 ms total)
+[----------] 6 tests from dispatchers (4190 ms total)
 
-[----------] 7 tests from variant
+[----------] 16 tests from variant
+[ RUN      ] variant.copy_constructor
+[       OK ] variant.copy_constructor (0 ms)
+[ RUN      ] variant.move_ownership
+[       OK ] variant.move_ownership (0 ms)
+[ RUN      ] variant.compare_different_types
+[       OK ] variant.compare_different_types (0 ms)
+[ RUN      ] variant.variadic_arguments
+[       OK ] variant.variadic_arguments (0 ms)
+[ RUN      ] variant.empty
+[       OK ] variant.empty (0 ms)
+[ RUN      ] variant.copy_unknown
+[       OK ] variant.copy_unknown (0 ms)
+[ RUN      ] variant.compare_self
+[       OK ] variant.compare_self (0 ms)
+[ RUN      ] variant.bytearray
+[       OK ] variant.bytearray (0 ms)
 [ RUN      ] variant.vector
 [       OK ] variant.vector (0 ms)
 [ RUN      ] variant.list
 [       OK ] variant.list (0 ms)
 [ RUN      ] variant.map
 [       OK ] variant.map (0 ms)
-[ RUN      ] variant.constructors
-[       OK ] variant.constructors (0 ms)
-[ RUN      ] variant.make
-[       OK ] variant.make (0 ms)
-[ RUN      ] variant.type_boolean
-[       OK ] variant.type_boolean (0 ms)
-[ RUN      ] variant.variadic_arguments
-[       OK ] variant.variadic_arguments (0 ms)
-[----------] 7 tests from variant (0 ms total)
+[ RUN      ] variant.pair_conversion
+[       OK ] variant.pair_conversion (0 ms)
+[ RUN      ] variant.pair_constructors
+[       OK ] variant.pair_constructors (0 ms)
+[ RUN      ] variant.customtype_copy
+[       OK ] variant.customtype_copy (0 ms)
+[ RUN      ] variant.customtype_memory_management
+[       OK ] variant.customtype_memory_management (0 ms)
+[ RUN      ] variant.customtype_move
+[       OK ] variant.customtype_move (0 ms)
+[----------] 16 tests from variant (0 ms total)
+
+[----------] 2 tests from parallel/ParamFixtureParallel1
+[ RUN      ] parallel/ParamFixtureParallel1.parallel_substate_final/0
+[       OK ] parallel/ParamFixtureParallel1.parallel_substate_final/0 (0 ms)
+[ RUN      ] parallel/ParamFixtureParallel1.parallel_substate_final/1
+[       OK ] parallel/ParamFixtureParallel1.parallel_substate_final/1 (0 ms)
+[----------] 2 tests from parallel/ParamFixtureParallel1 (0 ms total)
+
+[----------] 3 tests from parallel/ParamFixtureParallel2
+[ RUN      ] parallel/ParamFixtureParallel2.parallel_substate_final_multiple/0
+[       OK ] parallel/ParamFixtureParallel2.parallel_substate_final_multiple/0 (0 ms)
+[ RUN      ] parallel/ParamFixtureParallel2.parallel_substate_final_multiple/1
+[       OK ] parallel/ParamFixtureParallel2.parallel_substate_final_multiple/1 (0 ms)
+[ RUN      ] parallel/ParamFixtureParallel2.parallel_substate_final_multiple/2
+[       OK ] parallel/ParamFixtureParallel2.parallel_substate_final_multiple/2 (0 ms)
+[----------] 3 tests from parallel/ParamFixtureParallel2 (1 ms total)
+
+[----------] 3 tests from state_actions/ParamFixtureStateActions1
+[ RUN      ] state_actions/ParamFixtureStateActions1.state_actions_simple/0
+[       OK ] state_actions/ParamFixtureStateActions1.state_actions_simple/0 (0 ms)
+[ RUN      ] state_actions/ParamFixtureStateActions1.state_actions_simple/1
+[       OK ] state_actions/ParamFixtureStateActions1.state_actions_simple/1 (0 ms)
+[ RUN      ] state_actions/ParamFixtureStateActions1.state_actions_simple/2
+[       OK ] state_actions/ParamFixtureStateActions1.state_actions_simple/2 (0 ms)
+[----------] 3 tests from state_actions/ParamFixtureStateActions1 (0 ms total)
 
 [----------] 4 tests from finalstate/ParamFixtureFinalState1
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0 (100 ms)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0 (0 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (151 ms)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/1 (0 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (100 ms)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/0 (0 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1
-[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (151 ms)
-[----------] 4 tests from finalstate/ParamFixtureFinalState1 (503 ms total)
+[       OK ] finalstate/ParamFixtureFinalState1.finalstate_multiple_exitpoints/1 (0 ms)
+[----------] 4 tests from finalstate/ParamFixtureFinalState1 (0 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState2
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0
-[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0 (100 ms)
+[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/0 (0 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1
-[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1 (151 ms)
-[----------] 2 tests from finalstate/ParamFixtureFinalState2 (251 ms total)
+[       OK ] finalstate/ParamFixtureFinalState2.finalstate_exitpoint_multiple_path/1 (0 ms)
+[----------] 2 tests from finalstate/ParamFixtureFinalState2 (0 ms total)
 
 [----------] 2 tests from finalstate/ParamFixtureFinalState3
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0
-[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0 (100 ms)
+[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/0 (0 ms)
 [ RUN      ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1
-[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (151 ms)
-[----------] 2 tests from finalstate/ParamFixtureFinalState3 (251 ms total)
+[       OK ] finalstate/ParamFixtureFinalState3.finalstate_both_types/1 (0 ms)
+[----------] 2 tests from finalstate/ParamFixtureFinalState3 (0 ms total)
+
+[----------] 114 tests from variant/FixtureVariantAllTypes
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/int8_t
+[       OK ] variant/FixtureVariantAllTypes.constructors/int8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/int16_t
+[       OK ] variant/FixtureVariantAllTypes.constructors/int16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/int32_t
+[       OK ] variant/FixtureVariantAllTypes.constructors/int32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/int64_t
+[       OK ] variant/FixtureVariantAllTypes.constructors/int64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/uint8_t
+[       OK ] variant/FixtureVariantAllTypes.constructors/uint8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/uint16_t
+[       OK ] variant/FixtureVariantAllTypes.constructors/uint16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/uint32_t
+[       OK ] variant/FixtureVariantAllTypes.constructors/uint32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/uint64_t
+[       OK ] variant/FixtureVariantAllTypes.constructors/uint64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/double
+[       OK ] variant/FixtureVariantAllTypes.constructors/double (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/bool
+[       OK ] variant/FixtureVariantAllTypes.constructors/bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/std_string
+[       OK ] variant/FixtureVariantAllTypes.constructors/std_string (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/char_ptr
+[       OK ] variant/FixtureVariantAllTypes.constructors/char_ptr (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/std_vector__char
+[       OK ] variant/FixtureVariantAllTypes.constructors/std_vector__char (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/VariantList_t__int
+[       OK ] variant/FixtureVariantAllTypes.constructors/VariantList_t__int (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/VariantList_t__str
+[       OK ] variant/FixtureVariantAllTypes.constructors/VariantList_t__str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/VariantVector_t__bool
+[       OK ] variant/FixtureVariantAllTypes.constructors/VariantVector_t__bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/VariantMap_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.constructors/VariantMap_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/VariantPair_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.constructors/VariantPair_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.constructors/CustomType
+[       OK ] variant/FixtureVariantAllTypes.constructors/CustomType (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/int8_t
+[       OK ] variant/FixtureVariantAllTypes.make/int8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/int16_t
+[       OK ] variant/FixtureVariantAllTypes.make/int16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/int32_t
+[       OK ] variant/FixtureVariantAllTypes.make/int32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/int64_t
+[       OK ] variant/FixtureVariantAllTypes.make/int64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/uint8_t
+[       OK ] variant/FixtureVariantAllTypes.make/uint8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/uint16_t
+[       OK ] variant/FixtureVariantAllTypes.make/uint16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/uint32_t
+[       OK ] variant/FixtureVariantAllTypes.make/uint32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/uint64_t
+[       OK ] variant/FixtureVariantAllTypes.make/uint64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/double
+[       OK ] variant/FixtureVariantAllTypes.make/double (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/bool
+[       OK ] variant/FixtureVariantAllTypes.make/bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/std_string
+[       OK ] variant/FixtureVariantAllTypes.make/std_string (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/char_ptr
+[       OK ] variant/FixtureVariantAllTypes.make/char_ptr (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/std_vector__char
+[       OK ] variant/FixtureVariantAllTypes.make/std_vector__char (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/VariantList_t__int
+[       OK ] variant/FixtureVariantAllTypes.make/VariantList_t__int (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/VariantList_t__str
+[       OK ] variant/FixtureVariantAllTypes.make/VariantList_t__str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/VariantVector_t__bool
+[       OK ] variant/FixtureVariantAllTypes.make/VariantVector_t__bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/VariantMap_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.make/VariantMap_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/VariantPair_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.make/VariantPair_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.make/CustomType
+[       OK ] variant/FixtureVariantAllTypes.make/CustomType (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/int8_t
+[       OK ] variant/FixtureVariantAllTypes.copy/int8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/int16_t
+[       OK ] variant/FixtureVariantAllTypes.copy/int16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/int32_t
+[       OK ] variant/FixtureVariantAllTypes.copy/int32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/int64_t
+[       OK ] variant/FixtureVariantAllTypes.copy/int64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/uint8_t
+[       OK ] variant/FixtureVariantAllTypes.copy/uint8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/uint16_t
+[       OK ] variant/FixtureVariantAllTypes.copy/uint16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/uint32_t
+[       OK ] variant/FixtureVariantAllTypes.copy/uint32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/uint64_t
+[       OK ] variant/FixtureVariantAllTypes.copy/uint64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/double
+[       OK ] variant/FixtureVariantAllTypes.copy/double (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/bool
+[       OK ] variant/FixtureVariantAllTypes.copy/bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/std_string
+[       OK ] variant/FixtureVariantAllTypes.copy/std_string (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/char_ptr
+[       OK ] variant/FixtureVariantAllTypes.copy/char_ptr (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/std_vector__char
+[       OK ] variant/FixtureVariantAllTypes.copy/std_vector__char (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/VariantList_t__int
+[       OK ] variant/FixtureVariantAllTypes.copy/VariantList_t__int (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/VariantList_t__str
+[       OK ] variant/FixtureVariantAllTypes.copy/VariantList_t__str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/VariantVector_t__bool
+[       OK ] variant/FixtureVariantAllTypes.copy/VariantVector_t__bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/VariantMap_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.copy/VariantMap_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/VariantPair_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.copy/VariantPair_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.copy/CustomType
+[       OK ] variant/FixtureVariantAllTypes.copy/CustomType (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/int8_t
+[       OK ] variant/FixtureVariantAllTypes.move/int8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/int16_t
+[       OK ] variant/FixtureVariantAllTypes.move/int16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/int32_t
+[       OK ] variant/FixtureVariantAllTypes.move/int32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/int64_t
+[       OK ] variant/FixtureVariantAllTypes.move/int64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/uint8_t
+[       OK ] variant/FixtureVariantAllTypes.move/uint8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/uint16_t
+[       OK ] variant/FixtureVariantAllTypes.move/uint16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/uint32_t
+[       OK ] variant/FixtureVariantAllTypes.move/uint32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/uint64_t
+[       OK ] variant/FixtureVariantAllTypes.move/uint64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/double
+[       OK ] variant/FixtureVariantAllTypes.move/double (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/bool
+[       OK ] variant/FixtureVariantAllTypes.move/bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/std_string
+[       OK ] variant/FixtureVariantAllTypes.move/std_string (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/char_ptr
+[       OK ] variant/FixtureVariantAllTypes.move/char_ptr (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/std_vector__char
+[       OK ] variant/FixtureVariantAllTypes.move/std_vector__char (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/VariantList_t__int
+[       OK ] variant/FixtureVariantAllTypes.move/VariantList_t__int (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/VariantList_t__str
+[       OK ] variant/FixtureVariantAllTypes.move/VariantList_t__str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/VariantVector_t__bool
+[       OK ] variant/FixtureVariantAllTypes.move/VariantVector_t__bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/VariantMap_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.move/VariantMap_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/VariantPair_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.move/VariantPair_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.move/CustomType
+[       OK ] variant/FixtureVariantAllTypes.move/CustomType (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/int8_t
+[       OK ] variant/FixtureVariantAllTypes.assign/int8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/int16_t
+[       OK ] variant/FixtureVariantAllTypes.assign/int16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/int32_t
+[       OK ] variant/FixtureVariantAllTypes.assign/int32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/int64_t
+[       OK ] variant/FixtureVariantAllTypes.assign/int64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/uint8_t
+[       OK ] variant/FixtureVariantAllTypes.assign/uint8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/uint16_t
+[       OK ] variant/FixtureVariantAllTypes.assign/uint16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/uint32_t
+[       OK ] variant/FixtureVariantAllTypes.assign/uint32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/uint64_t
+[       OK ] variant/FixtureVariantAllTypes.assign/uint64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/double
+[       OK ] variant/FixtureVariantAllTypes.assign/double (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/bool
+[       OK ] variant/FixtureVariantAllTypes.assign/bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/std_string
+[       OK ] variant/FixtureVariantAllTypes.assign/std_string (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/char_ptr
+[       OK ] variant/FixtureVariantAllTypes.assign/char_ptr (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/std_vector__char
+[       OK ] variant/FixtureVariantAllTypes.assign/std_vector__char (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/VariantList_t__int
+[       OK ] variant/FixtureVariantAllTypes.assign/VariantList_t__int (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/VariantList_t__str
+[       OK ] variant/FixtureVariantAllTypes.assign/VariantList_t__str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/VariantVector_t__bool
+[       OK ] variant/FixtureVariantAllTypes.assign/VariantVector_t__bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/VariantMap_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.assign/VariantMap_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/VariantPair_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.assign/VariantPair_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.assign/CustomType
+[       OK ] variant/FixtureVariantAllTypes.assign/CustomType (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/int8_t
+[       OK ] variant/FixtureVariantAllTypes.compare/int8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/int16_t
+[       OK ] variant/FixtureVariantAllTypes.compare/int16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/int32_t
+[       OK ] variant/FixtureVariantAllTypes.compare/int32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/int64_t
+[       OK ] variant/FixtureVariantAllTypes.compare/int64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/uint8_t
+[       OK ] variant/FixtureVariantAllTypes.compare/uint8_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/uint16_t
+[       OK ] variant/FixtureVariantAllTypes.compare/uint16_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/uint32_t
+[       OK ] variant/FixtureVariantAllTypes.compare/uint32_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/uint64_t
+[       OK ] variant/FixtureVariantAllTypes.compare/uint64_t (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/double
+[       OK ] variant/FixtureVariantAllTypes.compare/double (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/bool
+[       OK ] variant/FixtureVariantAllTypes.compare/bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/std_string
+[       OK ] variant/FixtureVariantAllTypes.compare/std_string (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/char_ptr
+[       OK ] variant/FixtureVariantAllTypes.compare/char_ptr (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/std_vector__char
+[       OK ] variant/FixtureVariantAllTypes.compare/std_vector__char (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/VariantList_t__int
+[       OK ] variant/FixtureVariantAllTypes.compare/VariantList_t__int (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/VariantList_t__str
+[       OK ] variant/FixtureVariantAllTypes.compare/VariantList_t__str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/VariantVector_t__bool
+[       OK ] variant/FixtureVariantAllTypes.compare/VariantVector_t__bool (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/VariantMap_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.compare/VariantMap_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/VariantPair_t__int_str
+[       OK ] variant/FixtureVariantAllTypes.compare/VariantPair_t__int_str (0 ms)
+[ RUN      ] variant/FixtureVariantAllTypes.compare/CustomType
+[       OK ] variant/FixtureVariantAllTypes.compare/CustomType (0 ms)
+[----------] 114 tests from variant/FixtureVariantAllTypes (1 ms total)
+
+[----------] 11 tests from variant/FixtureVariantTypeCheck
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isNumeric
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isNumeric (0 ms)
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isSignedNumeric
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isSignedNumeric (0 ms)
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isUnsignedNumeric
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isUnsignedNumeric (0 ms)
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isBool
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isBool (0 ms)
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isString
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isString (0 ms)
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isByteArray
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isByteArray (0 ms)
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isVector
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isVector (0 ms)
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isList
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isList (0 ms)
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isMap
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isMap (0 ms)
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isPair
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isPair (0 ms)
+[ RUN      ] variant/FixtureVariantTypeCheck.isXXX/isCustomType
+[       OK ] variant/FixtureVariantTypeCheck.isXXX/isCustomType (0 ms)
+[----------] 11 tests from variant/FixtureVariantTypeCheck (0 ms total)
+
+[----------] 20 tests from variant/FixtureVariantTypeConversion
+[ RUN      ] variant/FixtureVariantTypeConversion.convert/toInt64
+[       OK ] variant/FixtureVariantTypeConversion.convert/toInt64 (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert/toUInt64
+[       OK ] variant/FixtureVariantTypeConversion.convert/toUInt64 (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert/toDouble
+[       OK ] variant/FixtureVariantTypeConversion.convert/toDouble (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert/toBool
+[       OK ] variant/FixtureVariantTypeConversion.convert/toBool (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert/toString
+[       OK ] variant/FixtureVariantTypeConversion.convert/toString (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert/toByteArray
+[       OK ] variant/FixtureVariantTypeConversion.convert/toByteArray (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert/getVector
+[       OK ] variant/FixtureVariantTypeConversion.convert/getVector (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert/getList
+[       OK ] variant/FixtureVariantTypeConversion.convert/getList (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert/getMap
+[       OK ] variant/FixtureVariantTypeConversion.convert/getMap (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert/getPair
+[       OK ] variant/FixtureVariantTypeConversion.convert/getPair (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/toInt64
+[       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/toInt64 (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/toUInt64
+[       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/toUInt64 (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/toDouble
+[       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/toDouble (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/toBool
+[       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/toBool (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/toString
+[       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/toString (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/toByteArray
+[       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/toByteArray (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/getVector
+[       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/getVector (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/getList
+[       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/getList (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/getMap
+[       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/getMap (0 ms)
+[ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/getPair
+[       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/getPair (0 ms)
+[----------] 20 tests from variant/FixtureVariantTypeConversion (0 ms total)
 
 [----------] Global test environment tear-down
-[==========] 110 tests from 8 test suites ran. (9281 ms total)
-[  PASSED  ] 110 tests.
+[==========] 270 tests from 13 test suites ran. (7287 ms total)
+[  PASSED  ] 270 tests.

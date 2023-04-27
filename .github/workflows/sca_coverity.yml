@@ -24,6 +24,8 @@ jobs:
 
   sca-coverity:
     needs: check-hsmcpp-version
+    # only run when if there is a version change
+    if: ${{ (needs.check-hsmcpp-version.outputs.commit_version != '') }}
     runs-on: ubuntu-latest
 
     env:

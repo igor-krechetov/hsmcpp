@@ -11,45 +11,53 @@ if (Is main or dev branch?) then (yes)
         end note
 
         if (Is main branch?) then (yes)
-            fork
-                :Update Documentation;
-            fork again
-                :Deploy PlatformIO;
-                note right: Publish code to github
-                if (Is release commit?) then (yes)
-                    :Deploy library;
-                    note right
-                        Publish library
-                        to PlatformIO
-                    end note
-                else (no)
-                    ' skip
-                endif
-            fork again
-                if (Is release commit?) then (yes)
-                    :Deploy ArduinoIDE;
+            if (New version?) then (yes)
+                fork
+                    :Update Documentation;
+                fork again
+                    :Deploy PlatformIO;
                     note right: Publish code to github
-                else (no)
-                    ' skip
-                endif
-            fork again
-                if (Is release commit?) then (yes)
-                    :Create Tags;
-                else (no)
-                    ' skip
-                endif
-            end fork
+                    if (Is release commit?) then (yes)
+                        :Deploy library;
+                        note right
+                            Publish library
+                            to PlatformIO
+                        end note
+                    else (no)
+                        ' skip
+                    endif
+                fork again
+                    if (Is release commit?) then (yes)
+                        :Deploy ArduinoIDE;
+                        note right: Publish code to github
+                    else (no)
+                        ' skip
+                    endif
+                fork again
+                    if (Is release commit?) then (yes)
+                        :Create Tags;
+                    else (no)
+                        ' skip
+                    endif
+                end fork
+            else (no)
+                ' skip
+            endif
         else (no)
             ' skip
         endif
     fork again
         if (Is main branch?) then (yes)
-            fork
-                :Unit Tests;
-                note right: Ubuntu
-            fork again
-                :SCA: Coverity;
-            end fork
+            if (New version or Started manually?) then (yes)
+                fork
+                    :Unit Tests;
+                    note right: Ubuntu
+                fork again
+                    :SCA: Coverity;
+                end fork
+            else (no)
+                ' skip
+            endif
         else (no)
             ' skip
         endif

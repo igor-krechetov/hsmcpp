@@ -26,7 +26,8 @@ jobs:
 
   run-tests:
     needs: check-hsmcpp-version
-    if: ${{ (needs.check-hsmcpp-version.outputs.commit_version != '') }}
+    # only run when started manually or if there is a version change
+    if: ${{ (needs.check-hsmcpp-version.outputs.commit_version != '') || (github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
 
     env:
@@ -89,6 +90,7 @@ jobs:
           lcov -r ./coverage.info \*/build/\* . -o ./coverage.info
           lcov -r ./coverage.info \*/tests/\* . -o ./coverage.info
           lcov -r ./coverage.info \*/gcc_64/include/QtCore/\* . -o ./coverage.info
+          lcov -r ./coverage.info \*/thirdparty/\* . -o ./coverage.info
 
       - name: Push test coverage to Coveralls
         uses: coverallsapp/github-action@master

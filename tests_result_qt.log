@@ -149,7 +149,7 @@
 [ RUN      ] ABCHsm.timers_repeating
 [       OK ] ABCHsm.timers_repeating (250 ms)
 [ RUN      ] ABCHsm.timers_stop
-[       OK ] ABCHsm.timers_stop (99 ms)
+[       OK ] ABCHsm.timers_stop (105 ms)
 [ RUN      ] ABCHsm.timers_restart
 [       OK ] ABCHsm.timers_restart (900 ms)
 [ RUN      ] ABCHsm.timers_delete_running
@@ -178,13 +178,13 @@
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 68 tests from ABCHsm (3100 ms total)
+[----------] 68 tests from ABCHsm (3109 ms total)
 
 [----------] 6 tests from dispatchers
 [ RUN      ] dispatchers.stresstest_create_destroy_hsm
-[       OK ] dispatchers.stresstest_create_destroy_hsm (811 ms)
+[       OK ] dispatchers.stresstest_create_destroy_hsm (950 ms)
 [ RUN      ] dispatchers.stresstest_create_destroy_dispatcher
-[       OK ] dispatchers.stresstest_create_destroy_dispatcher (2003 ms)
+[       OK ] dispatchers.stresstest_create_destroy_dispatcher (2005 ms)
 [ RUN      ] dispatchers.destroy_without_starting
 [       OK ] dispatchers.destroy_without_starting (0 ms)
 [ RUN      ] dispatchers.stop
@@ -193,7 +193,7 @@
 [       OK ] dispatchers.create_hsm_from_callback (0 ms)
 [ RUN      ] dispatchers.instance_ownership
 [       OK ] dispatchers.instance_ownership (0 ms)
-[----------] 6 tests from dispatchers (3315 ms total)
+[----------] 6 tests from dispatchers (3456 ms total)
 
 [----------] 16 tests from variant
 [ RUN      ] variant.copy_constructor
@@ -244,7 +244,7 @@
 [       OK ] parallel/ParamFixtureParallel2.parallel_substate_final_multiple/1 (0 ms)
 [ RUN      ] parallel/ParamFixtureParallel2.parallel_substate_final_multiple/2
 [       OK ] parallel/ParamFixtureParallel2.parallel_substate_final_multiple/2 (0 ms)
-[----------] 3 tests from parallel/ParamFixtureParallel2 (0 ms total)
+[----------] 3 tests from parallel/ParamFixtureParallel2 (1 ms total)
 
 [----------] 3 tests from state_actions/ParamFixtureStateActions1
 [ RUN      ] state_actions/ParamFixtureStateActions1.state_actions_simple/0
@@ -253,7 +253,7 @@
 [       OK ] state_actions/ParamFixtureStateActions1.state_actions_simple/1 (0 ms)
 [ RUN      ] state_actions/ParamFixtureStateActions1.state_actions_simple/2
 [       OK ] state_actions/ParamFixtureStateActions1.state_actions_simple/2 (0 ms)
-[----------] 3 tests from state_actions/ParamFixtureStateActions1 (0 ms total)
+[----------] 3 tests from state_actions/ParamFixtureStateActions1 (1 ms total)
 
 [----------] 4 tests from finalstate/ParamFixtureFinalState1
 [ RUN      ] finalstate/ParamFixtureFinalState1.finalstate_multiple_final/0
@@ -542,7 +542,7 @@
 [ RUN      ] variant/FixtureVariantTypeConversion.convert/toUInt64
 [       OK ] variant/FixtureVariantTypeConversion.convert/toUInt64 (0 ms)
 [ RUN      ] variant/FixtureVariantTypeConversion.convert/toDouble
-[       OK ] variant/FixtureVariantTypeConversion.convert/toDouble (0 ms)
+[       OK ] variant/FixtureVariantTypeConversion.convert/toDouble (2 ms)
 [ RUN      ] variant/FixtureVariantTypeConversion.convert/toBool
 [       OK ] variant/FixtureVariantTypeConversion.convert/toBool (0 ms)
 [ RUN      ] variant/FixtureVariantTypeConversion.convert/toString
@@ -577,8 +577,8 @@
 [       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/getMap (0 ms)
 [ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/getPair
 [       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/getPair (0 ms)
-[----------] 20 tests from variant/FixtureVariantTypeConversion (0 ms total)
+[----------] 20 tests from variant/FixtureVariantTypeConversion (3 ms total)
 
 [----------] Global test environment tear-down
-[==========] 270 tests from 13 test suites ran. (6422 ms total)
+[==========] 270 tests from 13 test suites ran. (6578 ms total)
 [  PASSED  ] 270 tests.

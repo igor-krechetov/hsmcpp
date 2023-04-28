@@ -113,7 +113,7 @@ See [detailed instructions in documentation](https://hsmcpp.readthedocs.io/en/la
   - glibmm (optional, for dispatcher)
   - Qt (optional, for dispatcher)
 - For build:
-  - cmake 3.14+
+  - cmake 3.16+
   - Visual Studio 2015+ (for Windows build)
 - For code generator:
   - Python 3

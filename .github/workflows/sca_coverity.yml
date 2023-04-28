@@ -2,6 +2,9 @@ name: "SCA: Coverity"
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        type: string
   push:
     branches: [ main ]
 
@@ -12,7 +15,7 @@ jobs:
   check-hsmcpp-version:
     runs-on: ubuntu-latest
     outputs:
-      commit_version: ${{ steps.get_version.outputs.commit_version }}
+      commit_version: ${{ steps.finalize_version.outputs.commit_version }}
 
     steps:
       - uses: actions/checkout@v3
@@ -22,10 +25,27 @@ jobs:
           repo_dir: ${{ env.GITHUB_WORKSPACE }}
           commit_sha: ${{ github.event.workflow_run.head_sha }}
 
+      - name: Check user input
+        if: ${{ github.event.inputs.version != '' }}"
+        id: check_user_input
+        run: |
+          echo "TEMP_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+
+      - name: Check commit version
+        id: check_commit
+        if: ${{ github.event.inputs.version == '' }}
+        run: |
+          echo "TEMP_VERSION=${{ steps.get_version.outputs.commit_version }}" >> $GITHUB_ENV
+
+      - name: Final
+        id: finalize_version
+        run: |
+          echo "commit_version=$TEMP_VERSION" >> $GITHUB_OUTPUT
+
   sca-coverity:
     needs: check-hsmcpp-version
-    # only run when if there is a version change
-    if: ${{ (needs.check-hsmcpp-version.outputs.commit_version != '') }}
+    # only run when started manually or if there is a version change
+    if: ${{ needs.check-hsmcpp-version.outputs.commit_version != '' }}
     runs-on: ubuntu-latest
 
     env:
@@ -74,5 +94,5 @@ jobs:
       - name: Coverity Full Scan
         run: |
           export PATH=$PATH:~/coverity/$COVERITY_VERSION/bin/
-          cov-configure --config ./coverity.xml --template --compiler c++ --comptype gcc --xml-option=skip_file:"/usr/include/.*" --xml-option=skip_file:".*/build/hsmcpp_qt_autogen/.*" --xml-option=skip_file:".*/build/include/hsmcpp/.*"
+          cov-configure --config ./coverity.xml --template --compiler c++ --comptype gcc --xml-option=skip_file:"/usr/include/.*" --xml-option=skip_file:".*/build/hsmcpp_qt_autogen/.*" --xml-option=skip_file:".*/build/include/hsmcpp/.*" --xml-option=skip_file:".*/thirdparty/.*"
           python3 ./scripts/coverity/coverity-submit.py -u "$COVERITY_NAME" -b ${{ needs.check-hsmcpp-version.outputs.commit_version }} -config ./coverity.xml -t "$COVERITY_PROJECT_DESCRIPTION" -p "$COVERITY_PROJECT" -pu "$COVERITY_PROJECT_URL" -token "${{ secrets.COVERITY_TOKEN }}" -email "${{ secrets.COVERITY_EMAIL }}" -build "$BUILDCMD"

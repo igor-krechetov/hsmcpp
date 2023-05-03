@@ -210,7 +210,7 @@ TEST_F(TrafficLightHsm, transition_self_internal) {
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON);
     registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING,
                                             TrafficLightEvent::NEXT_STATE,
-                                            TrafficLightHsm::TransitionType::INTERNAL_TRANSITION,
+                                            TransitionType::INTERNAL_TRANSITION,
                                             this,
                                             &TrafficLightHsm::onNextStateTransition);
 
@@ -242,8 +242,8 @@ TEST_F(ABCHsm, transition_self_internal_multiple) {
     registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onSyncA, &ABCHsm::onAEnter, &ABCHsm::onAExit);
 
     registerSubstateEntryPoint(AbcState::P1, AbcState::A);
-    registerSelfTransition<ABCHsm>(AbcState::P1, AbcEvent::E1, TrafficLightHsm::TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE2Transition);
-    registerSelfTransition<ABCHsm>(AbcState::A, AbcEvent::E1, TrafficLightHsm::TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE1Transition);
+    registerSelfTransition<ABCHsm>(AbcState::P1, AbcEvent::E1, TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE2Transition);
+    registerSelfTransition<ABCHsm>(AbcState::A, AbcEvent::E1, TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE1Transition);
 
     initializeHsm();
     ASSERT_TRUE(waitAsyncOperation());// wait for state A to activate
@@ -285,7 +285,7 @@ TEST_F(TrafficLightHsm, transition_self_external) {
     registerTransition(TrafficLightState::OFF, TrafficLightState::STARTING, TrafficLightEvent::TURN_ON);
     registerSelfTransition<TrafficLightHsm>(TrafficLightState::STARTING,
                                             TrafficLightEvent::NEXT_STATE,
-                                            TrafficLightHsm::TransitionType::EXTERNAL_TRANSITION,
+                                            TransitionType::EXTERNAL_TRANSITION,
                                             this,
                                             &TrafficLightHsm::onNextStateTransition);
 
@@ -324,7 +324,7 @@ TEST_F(ABCHsm, transition_self_external_deep) {
     registerTransition(AbcState::B, AbcState::C, AbcEvent::E1);
     registerSelfTransition<ABCHsm>(AbcState::P1,
                                    AbcEvent::E2,
-                                   ABCHsm::TransitionType::EXTERNAL_TRANSITION,
+                                   TransitionType::EXTERNAL_TRANSITION,
                                    this,
                                    &ABCHsm::onE2Transition);
 
@@ -522,6 +522,8 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple) {
     ASSERT_EQ(mLastFailedTransitionArgs.size(), 1);
     EXPECT_EQ(mLastFailedTransitionArgs[0].toString(), "turn off");
 }
+
+// TODO: test multiple transitions when one of the transitions blocks execution
 
 // NOTE: test is obsolete with introduction of parallel feature
 // TEST_F(TrafficLightHsm, transition_conditional_multiple_valid)

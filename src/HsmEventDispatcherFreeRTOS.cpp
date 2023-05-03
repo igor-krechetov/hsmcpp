@@ -24,8 +24,7 @@
 
 namespace hsmcpp {
 
-#undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS "HsmEventDispatcherFreeRTOS"
+constexpr const char* HSM_TRACE_CLASS = "HsmEventDispatcherFreeRTOS";
 
 HsmEventDispatcherFreeRTOS::HsmEventDispatcherFreeRTOS(const configSTACK_DEPTH_TYPE stackDepth,
                                                        const UBaseType_t priority,

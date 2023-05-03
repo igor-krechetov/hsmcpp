@@ -7,7 +7,6 @@
 #include <list>
 #include <string>
 #include <memory>
-#include <functional>
 
 #include "HsmTypes.hpp"
 #include "variant.hpp"
@@ -32,50 +31,6 @@ class IHsmEventDispatcher;
  *      \li interact with HSM timers
  */
 class HierarchicalStateMachine {
-public:
-    /**
-     * @enum HistoryType
-     * @brief Defines the type of history state.
-     * @details The history state can be shallow or deep (see @rstref{features-history} for details).
-     */
-    enum class HistoryType {
-        SHALLOW,  ///< remember only the immediate substate of the parent state
-        DEEP      ///< remember the last active state of the substate hierarchy
-    };
-
-    /**
-     * @enum TransitionType
-     * Defines the type of a self transition (see @rstref{features-transitions-selftransitions} for
-     * details).
-     */
-    enum class TransitionType {
-        INTERNAL_TRANSITION,  ///< do not cause a state change during self transition
-        EXTERNAL_TRANSITION   ///< exit current state during self transition
-    };
-
-    /**
-     * @enum StateActionTrigger
-     * Defines the trigger for a state action (see @rstref{features-states-actions} for details).
-     */
-    enum class StateActionTrigger {
-        ON_STATE_ENTRY,  ///< trigger action on state entry
-        ON_STATE_EXIT    ///< trigger action on state exit
-    };
-
-    /**
-     * @enum StateAction
-     * @brief Defines the type of state action (see @rstref{features-states-actions} for details).
-     *
-     * @details The state action can start, stop, or restart a timer, or cause a transition to another state.
-     * Depending on the action type, you need to provide specific arguments when calling registerStateAction()
-     */
-    enum class StateAction {
-        START_TIMER,    ///< **Arguments**: TimerID_t timerID, int32_t intervalMs, bool singleshot
-        STOP_TIMER,     ///< **Arguments**: TimerID_t timerID
-        RESTART_TIMER,  ///< **Arguments**: TimerID_t timerID
-        TRANSITION,     ///< **Arguments**: EventID_t eventID
-    };
-
 public:
     /**
      * @brief Constructor that sets the initial state of the HSM.
@@ -109,7 +64,7 @@ public:
      * structure must be registered **BEFORE** calling it. Changing structure after this call can result in undefined behavior
      * and is not advised.
      *
-     * @remark In case initial state has registered callbacks or actions, then will be executed synchronously during
+     * @remark If initial state has registered callbacks or actions they will be executed synchronously during
      * initialize() call.
      *
      * @warning HSM does not take ownership of the dispatcher. User is responsible for keeping dispatcher instance alive as long as HSM object exists or until call to release().
@@ -117,7 +72,7 @@ public:
      * @param dispatcher An event dispatcher that can be used to receive events and dispatch them to the HSM.
      * @return true if initialization succeeds, false otherwise.
      *
-     * @notthreadsafe{Uses IHsmEventDispatcher::registerEventHandler() and IHsmEventDispatcher::start(). Usually must be called
+     * @notthreadsafe{Internally uses IHsmEventDispatcher::registerEventHandler() and IHsmEventDispatcher::start(). Usually must be called
      * from the same thread where dispatcher was created.}
      */
     virtual bool initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher);
@@ -160,7 +115,7 @@ public:
      *
      * @concurrencysafe{ }
      */
-    void registerFailedTransitionCallback(const HsmTransitionFailedCallback_t& onFailedTransition);
+    void registerFailedTransitionCallback(HsmTransitionFailedCallback_t onFailedTransition);
 
     /**
      * @brief Registers a class member as a callback function to be called when a transition fails.
@@ -315,7 +270,7 @@ public:
     bool registerSubstateEntryPoint(const StateID_t parent,
                                     const StateID_t substate,
                                     const EventID_t onEvent = INVALID_HSM_EVENT_ID,
-                                    const HsmTransitionConditionCallback_t& conditionCallback = nullptr,
+                                    HsmTransitionConditionCallback_t conditionCallback = nullptr,
                                     const bool expectedConditionValue = true);
 
     /**
@@ -381,8 +336,8 @@ public:
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
      */
-    void registerTransition(const StateID_t from,
-                            const StateID_t to,
+    void registerTransition(const StateID_t fromState,
+                            const StateID_t toState,
                             const EventID_t onEvent,
                             HsmTransitionCallback_t transitionCallback = nullptr,
                             HsmTransitionConditionCallback_t conditionCallback = nullptr,
@@ -397,8 +352,8 @@ public:
      * @param handler Pointer to an object whose class members will be used as callbacks.
      */
     template <class HsmHandlerClass>
-    void registerTransition(const StateID_t from,
-                            const StateID_t to,
+    void registerTransition(const StateID_t fromState,
+                            const StateID_t toState,
                             const EventID_t onEvent,
                             HsmHandlerClass* handler = nullptr,
                             HsmTransitionCallbackPtr_t(HsmHandlerClass, transitionCallback) = nullptr,
@@ -843,8 +798,8 @@ bool HierarchicalStateMachine::registerStateAction(const StateID_t state,
 }
 
 template <class HsmHandlerClass>
-void HierarchicalStateMachine::registerTransition(const StateID_t from,
-                                                  const StateID_t to,
+void HierarchicalStateMachine::registerTransition(const StateID_t fromState,
+                                                  const StateID_t toState,
                                                   const EventID_t onEvent,
                                                   HsmHandlerClass* handler,
                                                   HsmTransitionCallbackPtr_t(HsmHandlerClass, transitionCallback),
@@ -863,7 +818,7 @@ void HierarchicalStateMachine::registerTransition(const StateID_t from,
         }
     }
 
-    registerTransition(from, to, onEvent, funcTransitionCallback, funcConditionCallback, expectedConditionValue);
+    registerTransition(fromState, toState, onEvent, funcTransitionCallback, funcConditionCallback, expectedConditionValue);
 }
 
 template <class HsmHandlerClass>

@@ -127,7 +127,7 @@ protected:
     /**
      * Destructor.
      */
-    virtual ~HsmEventDispatcherBase();
+    virtual ~HsmEventDispatcherBase() = default;
 
     static void handleDelete(HsmEventDispatcherBase* dispatcher);
 

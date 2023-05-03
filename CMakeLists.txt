@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.35.0")
+set(PROJECT_VERSION "0.36.0")
 set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -31,6 +31,7 @@ option(HSMBUILD_DISPATCHER_QT "Enable Qt based dispatcher" OFF)
 option(HSMBUILD_TESTS "Build unittests" ON)
 option(HSMBUILD_EXAMPLES "Build examples" ON)
 option(HSMBUILD_CODECOVERAGE "Build with code coverage" OFF)
+option(HSMBUILD_CLANGTIDY "Enable validation with clang-tidy-15 (if available)" OFF)
 
 set(HSMBUILD_PLATFORM "posix" CACHE STRING "Specifies target platform. Possible values: posix, windows, freertos, arduino")
 set(HSMBUILD_FREERTOS_ROOT "" CACHE STRING "FreeRTOS sources root folder")
@@ -82,6 +83,7 @@ configure_file(./include/hsmcpp/version.hpp.in version.hpp @ONLY)
 
 set (LIBRARY_SRC ${HSM_SRC_ROOT}/hsm.cpp
                  ${HSM_SRC_ROOT}/HsmImpl.cpp
+                 ${HSM_SRC_ROOT}/HsmImplTypes.cpp
                  ${HSM_SRC_ROOT}/variant.cpp
                  ${HSM_SRC_ROOT}/logging.cpp
                  ${HSM_SRC_ROOT}/HsmEventDispatcherBase.cpp
@@ -204,7 +206,7 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
         target_compile_options(${HSM_LIBRARY_NAME} PUBLIC "-fPIC")
     endif()
 
-        # =============================================
+    # =============================================
     # Platform Environment
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/platforms/${HSMBUILD_PLATFORM}.cmake)
 
@@ -242,6 +244,31 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
     # =============================================
     # Installation
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/target/library/library.cmake)
+
+    # =============================================
+    # Run clang-tidy
+    if (HSMBUILD_CLANGTIDY)
+        find_program(CLANG_TIDY_EXE NAMES "clang-tidy-15")
+
+        if (CLANG_TIDY_EXE)
+            string(CONCAT CLANG_TIDY_ARGS "-checks=-*,"
+                                            "clang-analyzer-*,"
+                                            "concurrency-*,"
+                                            "cppcoreguidelines-*,"
+                                            "performance-*,"
+                                            "readability-*,"
+                                            "modernize-*,"
+                                            "-modernize-use-trailing-return-type,"
+                                            "-readability-simplify-boolean-expr,"
+                                            "-readability-identifier-length")
+
+            # setup clang-tidy command
+            set(CLANG_TIDY_COMMAND ${CLANG_TIDY_EXE} ${CLANG_TIDY_ARGS})
+
+            # set CXX_CLANG_TIDY property after defining the target
+            set_target_properties(${HSM_LIBRARY_NAME} PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+        endif()
+    endif()
 # ================================================================================================
 else()
     message(FATAL_ERROR "Unsupported HSMBUILD_TARGET=${HSMBUILD_TARGET} NEW")

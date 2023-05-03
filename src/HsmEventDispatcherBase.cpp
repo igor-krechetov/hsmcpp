@@ -9,20 +9,18 @@
 
 namespace hsmcpp {
 
-#undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS "HsmEventDispatcherBase"
+constexpr const char* HSM_TRACE_CLASS = "HsmEventDispatcherBase";
 
 HsmEventDispatcherBase::HsmEventDispatcherBase(const size_t eventsCacheSize) {
     mEnqueuedEvents.reserve(eventsCacheSize);
 }
-
-HsmEventDispatcherBase::~HsmEventDispatcherBase() {}
 
 void HsmEventDispatcherBase::handleDelete(HsmEventDispatcherBase* dispatcher) {
     if (nullptr != dispatcher) {
         dispatcher->stop();
 
         if (true == dispatcher->deleteSafe()) {
+            // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): this method is only used as deleter callback for std::shared_ptr
             delete dispatcher;
         }
     }
@@ -74,7 +72,7 @@ bool HsmEventDispatcherBase::enqueueEvent(const HandlerID_t handlerID, const Eve
     bool wasAdded = false;
 
     if (mEnqueuedEvents.size() < mEnqueuedEvents.capacity()) {
-        EnqueuedEventInfo newEvent;
+        EnqueuedEventInfo newEvent = {0};
 
         newEvent.handlerID = handlerID;
         newEvent.eventID = event;

@@ -14,6 +14,8 @@ export Qt6_DIR=~/qt/6.4.2/gcc_64/lib/cmake/Qt6
 
 if [ ${PWD##*/} = "build" ]
 then
+    set -e
+    
     rm -Rvf ./*
     cmake -DCMAKE_BUILD_TYPE=Debug \
         -DHSMBUILD_VERBOSE=OFF \
@@ -26,6 +28,7 @@ then
         -DHSMBUILD_DEBUGGING=ON \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         -DHSMBUILD_CODECOVERAGE=ON \
+        -DHSMBUILD_CLANGTIDY=OFF \
         -DCMAKE_TOOLCHAIN_FILE=~/qt/6.4.2/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake \
         ..
     make -j5
@@ -57,6 +60,7 @@ then
           -DHSMBUILD_EXAMPLES=ON \
           -DHSMBUILD_DEBUGGING=ON \
           -DHSMBUILD_CODECOVERAGE=ON \
+          -DHSMBUILD_CLANGTIDY=OFF \
           ..
 
     cppcheck --addon=../scripts/cppcheck/misra.json \

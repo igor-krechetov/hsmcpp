@@ -22,8 +22,8 @@ TEST_F(ABCHsm, timers_onentry) {
 
     registerTimer(timer1, AbcEvent::E2);
     registerStateAction(AbcState::B,
-                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::START_TIMER,
+                        StateActionTrigger::ON_STATE_ENTRY,
+                        StateAction::START_TIMER,
                         timer1,
                         timer1Duration,
                         true);
@@ -69,8 +69,8 @@ TEST_F(ABCHsm, timers_onexit) {
 
     registerTimer(timer1, AbcEvent::E2);
     registerStateAction(AbcState::A,
-                        ABCHsm::StateActionTrigger::ON_STATE_EXIT,
-                        ABCHsm::StateAction::START_TIMER,
+                        StateActionTrigger::ON_STATE_EXIT,
+                        StateAction::START_TIMER,
                         timer1,
                         timer1Duration,
                         true);
@@ -127,14 +127,14 @@ TEST_F(ABCHsm, timers_multiple_actions) {
     registerTimer(timer2, AbcEvent::E3);
 
     registerStateAction(AbcState::B,
-                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::START_TIMER,
+                        StateActionTrigger::ON_STATE_ENTRY,
+                        StateAction::START_TIMER,
                         timer1,
                         timer1Duration,
                         true);
     registerStateAction(AbcState::B,
-                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::START_TIMER,
+                        StateActionTrigger::ON_STATE_ENTRY,
+                        StateAction::START_TIMER,
                         timer2,
                         timer2Duration,
                         true);
@@ -179,8 +179,8 @@ TEST_F(ABCHsm, timers_singleshot) {
 
     registerTimer(timer1, AbcEvent::E2);
     registerStateAction(AbcState::B,
-                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::START_TIMER,
+                        StateActionTrigger::ON_STATE_ENTRY,
+                        StateAction::START_TIMER,
                         timer1,
                         timer1Duration,
                         true);
@@ -218,8 +218,8 @@ TEST_F(ABCHsm, timers_repeating) {
 
     registerTimer(timer1, AbcEvent::E2);
     registerStateAction(AbcState::B,
-                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::START_TIMER,
+                        StateActionTrigger::ON_STATE_ENTRY,
+                        StateAction::START_TIMER,
                         timer1,
                         timer1Duration,
                         false);
@@ -276,12 +276,12 @@ TEST_F(ABCHsm, timers_stop) {
 
     registerTimer(timer1, AbcEvent::E2);
     registerStateAction(AbcState::B,
-                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::START_TIMER,
+                        StateActionTrigger::ON_STATE_ENTRY,
+                        StateAction::START_TIMER,
                         timer1,
                         timer1Duration,
                         false);
-    registerStateAction(AbcState::C, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::STOP_TIMER, timer1);
+    registerStateAction(AbcState::C, StateActionTrigger::ON_STATE_ENTRY, StateAction::STOP_TIMER, timer1);
     initializeHsm();
 
     ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
@@ -335,18 +335,18 @@ TEST_F(ABCHsm, timers_restart) {
     registerTimer(timer2, AbcEvent::E2);
 
     registerStateAction(AbcState::A,
-                        ABCHsm::StateActionTrigger::ON_STATE_EXIT,
-                        ABCHsm::StateAction::START_TIMER,
+                        StateActionTrigger::ON_STATE_EXIT,
+                        StateAction::START_TIMER,
                         timer1,
                         timer1Duration,
                         true);
     registerStateAction(AbcState::B,
-                        ABCHsm::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::START_TIMER,
+                        StateActionTrigger::ON_STATE_ENTRY,
+                        StateAction::START_TIMER,
                         timer2,
                         timer2Duration,
                         true);
-    registerStateAction(AbcState::C, ABCHsm::StateActionTrigger::ON_STATE_ENTRY, ABCHsm::StateAction::RESTART_TIMER, timer1);
+    registerStateAction(AbcState::C, StateActionTrigger::ON_STATE_ENTRY, StateAction::RESTART_TIMER, timer1);
 
     initializeHsm();
 
@@ -389,8 +389,8 @@ TEST_F(ABCHsm, timers_delete_running) {
 
     registerTimer(timer1, AbcEvent::E2);
     registerStateAction(AbcState::A,
-                        ABCHsm::StateActionTrigger::ON_STATE_EXIT,
-                        ABCHsm::StateAction::START_TIMER,
+                        StateActionTrigger::ON_STATE_EXIT,
+                        StateAction::START_TIMER,
                         timer1,
                         timer1Duration,
                         false);

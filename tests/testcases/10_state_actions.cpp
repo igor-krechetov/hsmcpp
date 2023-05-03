@@ -6,17 +6,17 @@
 #include "hsm/ABCHsm.hpp"
 
 class ParamFixtureStateActions1 : public ABCHsm,
-                                  public ::testing::WithParamInterface<std::tuple<hsmcpp::HierarchicalStateMachine::StateActionTrigger,
-                                                                                  hsmcpp::HierarchicalStateMachine::StateActionTrigger>> {};
+                                  public ::testing::WithParamInterface<std::tuple<hsmcpp::StateActionTrigger,
+                                                                                  hsmcpp::StateActionTrigger>> {};
 
 INSTANTIATE_TEST_CASE_P(state_actions,
                         ParamFixtureStateActions1,
-                        ::testing::Values(std::make_tuple(hsmcpp::HierarchicalStateMachine::StateActionTrigger::ON_STATE_ENTRY,
-                                                          hsmcpp::HierarchicalStateMachine::StateActionTrigger::ON_STATE_EXIT),
-                                          std::make_tuple(hsmcpp::HierarchicalStateMachine::StateActionTrigger::ON_STATE_ENTRY,
-                                                          hsmcpp::HierarchicalStateMachine::StateActionTrigger::ON_STATE_ENTRY),
-                                          std::make_tuple(hsmcpp::HierarchicalStateMachine::StateActionTrigger::ON_STATE_EXIT,
-                                                          hsmcpp::HierarchicalStateMachine::StateActionTrigger::ON_STATE_EXIT)));
+                        ::testing::Values(std::make_tuple(hsmcpp::StateActionTrigger::ON_STATE_ENTRY,
+                                                          hsmcpp::StateActionTrigger::ON_STATE_EXIT),
+                                          std::make_tuple(hsmcpp::StateActionTrigger::ON_STATE_ENTRY,
+                                                          hsmcpp::StateActionTrigger::ON_STATE_ENTRY),
+                                          std::make_tuple(hsmcpp::StateActionTrigger::ON_STATE_EXIT,
+                                                          hsmcpp::StateActionTrigger::ON_STATE_EXIT)));
 
 TEST_P(ParamFixtureStateActions1, state_actions_simple) {
     TEST_DESCRIPTION("Validate that one or multiple state actions can be executed on state entry and exit");
@@ -40,8 +40,8 @@ TEST_P(ParamFixtureStateActions1, state_actions_simple) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const hsmcpp::HierarchicalStateMachine::StateActionTrigger trigger1 = std::get<0>(GetParam());
-    const hsmcpp::HierarchicalStateMachine::StateActionTrigger trigger2 = std::get<1>(GetParam());
+    const hsmcpp::StateActionTrigger trigger1 = std::get<0>(GetParam());
+    const hsmcpp::StateActionTrigger trigger2 = std::get<1>(GetParam());
 
     registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onSyncA);
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onSyncB);
@@ -55,16 +55,16 @@ TEST_P(ParamFixtureStateActions1, state_actions_simple) {
     registerTransition<ABCHsm>(AbcState::D, AbcState::E, AbcEvent::E4);
 
     registerStateAction(AbcState::B,
-                        hsmcpp::HierarchicalStateMachine::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::TRANSITION,
+                        hsmcpp::StateActionTrigger::ON_STATE_ENTRY,
+                        StateAction::TRANSITION,
                         static_cast<int>(AbcEvent::E2));
     registerStateAction(AbcState::B,
                         trigger1,
-                        ABCHsm::StateAction::TRANSITION,
+                        StateAction::TRANSITION,
                         static_cast<int>(AbcEvent::E3));
     registerStateAction(AbcState::B,
                         trigger2,
-                        ABCHsm::StateAction::TRANSITION,
+                        StateAction::TRANSITION,
                         static_cast<int>(AbcEvent::E4));
     setSyncMode(false);// to avoid being blocked in A state
     initializeHsm();
@@ -118,8 +118,8 @@ TEST_F(ABCHsm, state_actions_args) {
     registerTransition<ABCHsm>(AbcState::B, AbcState::C, AbcEvent::E2);
 
     registerStateAction(AbcState::B,
-                        hsmcpp::HierarchicalStateMachine::StateActionTrigger::ON_STATE_ENTRY,
-                        ABCHsm::StateAction::TRANSITION,
+                        hsmcpp::StateActionTrigger::ON_STATE_ENTRY,
+                        StateAction::TRANSITION,
                         static_cast<int>(AbcEvent::E2),
                         123,
                         "string arg");

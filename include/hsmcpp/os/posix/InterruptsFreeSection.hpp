@@ -23,7 +23,7 @@ private:
     InterruptsFreeSection& operator=(InterruptsFreeSection&&) = delete;
 
 private:
-    sigset_t mOriginalSigMask;
+    sigset_t mOriginalSigMask = {0};
 };
 
 } // namespace hsmcpp

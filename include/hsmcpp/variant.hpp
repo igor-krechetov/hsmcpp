@@ -199,7 +199,7 @@ public:
      * @brief Move constructor for Variant object.
      * @param v Another Variant object to move from.
      */
-    Variant(Variant&& v);
+    Variant(Variant&& v) noexcept;
 
     /**
      * @brief Destructor for Variant object.
@@ -244,7 +244,7 @@ public:
     /** @brief Assigns the value of the \c v to this variant. */
     Variant& operator=(const Variant& v);
     /** @brief Move-assigns the value of the \c v to this variant. */
-    Variant& operator=(Variant&& v);
+    Variant& operator=(Variant&& v) noexcept;
 
     DEF_OPERATOR_ASSIGN(int8_t, Type::BYTE_1)
     DEF_OPERATOR_ASSIGN(int16_t, Type::BYTE_2)
@@ -638,7 +638,7 @@ public:
     bool operator<=(const Variant& val) const;
 
 private:
-    Variant(const std::shared_ptr<void>& d, const Type t);
+    Variant(std::shared_ptr<void> d, const Type t);
 
     bool isSameObject(const Variant& val) const;
 

@@ -62,7 +62,7 @@ TEST_F(ABCHsm, history_default_shallow) {
     registerSubstateEntryPoint(AbcState::P1, AbcState::A);
     registerSubstate(AbcState::P1, AbcState::P2);
     registerSubstateEntryPoint(AbcState::P2, AbcState::B);
-    registerHistory(AbcState::P1, AbcState::H, ABCHsm::HistoryType::SHALLOW, AbcState::P2);
+    registerHistory(AbcState::P1, AbcState::H, HistoryType::SHALLOW, AbcState::P2);
 
     registerTransition(AbcState::F, AbcState::H, AbcEvent::E1);
 
@@ -96,7 +96,7 @@ TEST_F(ABCHsm, history_default_deep) {
     registerSubstateEntryPoint(AbcState::P1, AbcState::A);
     registerSubstate(AbcState::P1, AbcState::P2);
     registerSubstateEntryPoint(AbcState::P2, AbcState::B);
-    registerHistory(AbcState::P1, AbcState::H, ABCHsm::HistoryType::DEEP, AbcState::P2);
+    registerHistory(AbcState::P1, AbcState::H, HistoryType::DEEP, AbcState::P2);
 
     registerTransition(AbcState::F, AbcState::H, AbcEvent::E1);
 
@@ -165,7 +165,7 @@ TEST_F(ABCHsm, history_deep) {
     registerSubstateEntryPoint(AbcState::P3, AbcState::A);
     registerSubstate(AbcState::P3, AbcState::B);
     registerSubstate(AbcState::P3, AbcState::D);
-    registerHistory(AbcState::P1, AbcState::H, ABCHsm::HistoryType::DEEP);
+    registerHistory(AbcState::P1, AbcState::H, HistoryType::DEEP);
 
     registerTransition(AbcState::F, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
@@ -214,7 +214,7 @@ TEST_F(ABCHsm, history_shallow) {
     registerSubstateEntryPoint(AbcState::P2, AbcState::A);
     registerSubstate(AbcState::P2, AbcState::B);
     registerSubstate(AbcState::P2, AbcState::D);
-    registerHistory(AbcState::P1, AbcState::H, ABCHsm::HistoryType::SHALLOW);
+    registerHistory(AbcState::P1, AbcState::H, HistoryType::SHALLOW);
 
     registerTransition(AbcState::F, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
@@ -263,8 +263,8 @@ TEST_F(ABCHsm, history_multiple) {
     registerSubstateEntryPoint(AbcState::P3, AbcState::A);
     registerSubstate(AbcState::P3, AbcState::B);
     registerSubstate(AbcState::P3, AbcState::D);
-    registerHistory(AbcState::P1, AbcState::H, ABCHsm::HistoryType::DEEP);
-    registerHistory(AbcState::P2, AbcState::H2, ABCHsm::HistoryType::SHALLOW);
+    registerHistory(AbcState::P1, AbcState::H, HistoryType::DEEP);
+    registerHistory(AbcState::P2, AbcState::H2, HistoryType::SHALLOW);
 
     registerTransition(AbcState::F, AbcState::P1, AbcEvent::E1);
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
@@ -318,7 +318,7 @@ TEST_F(ABCHsm, history_callbacks) {
     registerSubstate(AbcState::P3, AbcState::D);
     registerHistory<ABCHsm>(AbcState::P1,
                             AbcState::H,
-                            ABCHsm::HistoryType::DEEP,
+                            HistoryType::DEEP,
                             AbcState::P2,
                             this,
                             &ABCHsm::onRestoreHistoryTransition);

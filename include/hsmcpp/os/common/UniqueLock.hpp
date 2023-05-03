@@ -11,7 +11,7 @@ class Mutex;
 class UniqueLock
 {
 public:
-    UniqueLock(void) = default;
+    UniqueLock() = default;
     explicit UniqueLock(Mutex& sync);
     ~UniqueLock();
 
@@ -19,21 +19,21 @@ public:
 
     UniqueLock& operator=(UniqueLock&& src) noexcept;
 
-    void lock(void);
-    void unlock(void);
+    void lock();
+    void unlock();
 
-    inline bool owns_lock(void) const noexcept
+    inline bool owns_lock() const noexcept
     {
         return mOwnsLock;
     }
 
-    inline explicit operator bool(void) const noexcept
+    inline explicit operator bool() const noexcept
     {
         return owns_lock();
     }
 
-    Mutex* release(void) noexcept;
-    inline Mutex* mutex(void) const noexcept
+    Mutex* release() noexcept;
+    inline Mutex* mutex() const noexcept
     {
         return mSync;
     }

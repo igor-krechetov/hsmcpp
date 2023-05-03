@@ -10,8 +10,7 @@
 
 namespace hsmcpp {
 
-#undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS "HsmEventDispatcherGLib"
+constexpr const char* HSM_TRACE_CLASS = "HsmEventDispatcherGLib";
 
 HsmEventDispatcherGLib::HsmEventDispatcherGLib(const size_t eventsCacheSize)
     // NOTE: false-positive. thinks that ':' is arithmetic operation

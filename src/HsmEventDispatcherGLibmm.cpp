@@ -10,8 +10,7 @@
 
 namespace hsmcpp {
 
-#undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS "HsmEventDispatcherGLibmm"
+constexpr const char* HSM_TRACE_CLASS = "HsmEventDispatcherGLibmm";
 
 HsmEventDispatcherGLibmm::HsmEventDispatcherGLibmm(const size_t eventsCacheSize)
     : HsmEventDispatcherBase(eventsCacheSize)

@@ -321,7 +321,7 @@ TEST_F(ABCHsm, parallel_transition_09) {
     registerTransition<ABCHsm>(AbcState::P1, AbcState::D, AbcEvent::E2, this, &ABCHsm::onE2Transition);
     registerSelfTransition<ABCHsm>(AbcState::P1,
                                    AbcEvent::E2,
-                                   ABCHsm::TransitionType::INTERNAL_TRANSITION,
+                                   TransitionType::INTERNAL_TRANSITION,
                                    this,
                                    &ABCHsm::onSelfTransition);
 
@@ -938,7 +938,7 @@ TEST_F(ABCHsm, parallel_selftransition) {
 
     registerSelfTransition<ABCHsm>(AbcState::A,
                                    AbcEvent::E1,
-                                   ABCHsm::TransitionType::INTERNAL_TRANSITION,
+                                   TransitionType::INTERNAL_TRANSITION,
                                    this,
                                    &ABCHsm::onE1Transition);
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1, this, &ABCHsm::onE1Transition);
@@ -982,12 +982,12 @@ TEST_F(ABCHsm, parallel_selftransition_multiple) {
 
     registerSelfTransition<ABCHsm>(AbcState::A,
                                    AbcEvent::E1,
-                                   ABCHsm::TransitionType::INTERNAL_TRANSITION,
+                                   TransitionType::INTERNAL_TRANSITION,
                                    this,
                                    &ABCHsm::onE1Transition);
     registerSelfTransition<ABCHsm>(AbcState::A,
                                    AbcEvent::E1,
-                                   ABCHsm::TransitionType::INTERNAL_TRANSITION,
+                                   TransitionType::INTERNAL_TRANSITION,
                                    this,
                                    &ABCHsm::onE2Transition);
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E3, this, &ABCHsm::onE3Transition);

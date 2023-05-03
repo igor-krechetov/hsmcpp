@@ -16,8 +16,8 @@ public:
     ConditionVariable() = default;
     ~ConditionVariable();
 
-    void wait(UniqueLock& sync, std::function<bool()> stopWaiting = nullptr);
-    bool wait_for(UniqueLock& sync, const int timeoutMs, std::function<bool()> stopWaiting);
+    void wait(UniqueLock& sync, const std::function<bool()>& stopWaiting = nullptr);
+    bool wait_for(UniqueLock& sync, const int timeoutMs, const std::function<bool()>& stopWaiting);
     inline void notify();
 
 private:

@@ -3,14 +3,14 @@
 #ifndef HSMCPP_OS_COMMON_CRITICALSECTION_HPP
 #define HSMCPP_OS_COMMON_CRITICALSECTION_HPP
 
-namespace hsmcpp
-{
+#include <memory>
+
+namespace hsmcpp {
 
 class Mutex;
 class InterruptsFreeSection;
 
-class CriticalSection
-{
+class CriticalSection {
 public:
     explicit CriticalSection(Mutex& sync);
     ~CriticalSection();
@@ -23,9 +23,9 @@ private:
 
 private:
     Mutex& mSync;
-    InterruptsFreeSection* mInterruptsBlock = nullptr;
+    std::unique_ptr<InterruptsFreeSection> mInterruptsBlock;
 };
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_OS_COMMON_CRITICALSECTION_HPP
+#endif  // HSMCPP_OS_COMMON_CRITICALSECTION_HPP

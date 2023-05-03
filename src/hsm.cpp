@@ -8,8 +8,7 @@
 namespace hsmcpp {
 
 HierarchicalStateMachine::HierarchicalStateMachine(const StateID_t initialState)
-    : mImpl(new HierarchicalStateMachine::Impl(this, initialState)) {
-}
+    : mImpl(new HierarchicalStateMachine::Impl(this, initialState)) {}
 
 HierarchicalStateMachine::~HierarchicalStateMachine() {
     mImpl->release();
@@ -32,15 +31,15 @@ void HierarchicalStateMachine::release() {
     mImpl->release();
 }
 
-void HierarchicalStateMachine::registerFailedTransitionCallback(const HsmTransitionFailedCallback_t& onFailedTransition) {
-    mImpl->registerFailedTransitionCallback(onFailedTransition);
+void HierarchicalStateMachine::registerFailedTransitionCallback(HsmTransitionFailedCallback_t onFailedTransition) {
+    mImpl->registerFailedTransitionCallback(std::move(onFailedTransition));
 }
 
 void HierarchicalStateMachine::registerState(const StateID_t state,
                                              HsmStateChangedCallback_t onStateChanged,
                                              HsmStateEnterCallback_t onEntering,
                                              HsmStateExitCallback_t onExiting) {
-    mImpl->registerState(state, onStateChanged, onEntering, onExiting);
+    mImpl->registerState(state, std::move(onStateChanged), std::move(onEntering), std::move(onExiting));
 }
 
 void HierarchicalStateMachine::registerFinalState(const StateID_t state,
@@ -48,7 +47,7 @@ void HierarchicalStateMachine::registerFinalState(const StateID_t state,
                                                   HsmStateChangedCallback_t onStateChanged,
                                                   HsmStateEnterCallback_t onEntering,
                                                   HsmStateExitCallback_t onExiting) {
-    mImpl->registerFinalState(state, event, onStateChanged, onEntering, onExiting);
+    mImpl->registerFinalState(state, event, std::move(onStateChanged), std::move(onEntering), std::move(onExiting));
 }
 
 void HierarchicalStateMachine::registerHistory(const StateID_t parent,
@@ -56,7 +55,7 @@ void HierarchicalStateMachine::registerHistory(const StateID_t parent,
                                                const HistoryType type,
                                                const StateID_t defaultTarget,
                                                HsmTransitionCallback_t transitionCallback) {
-    mImpl->registerHistory(parent, historyState, type, defaultTarget, transitionCallback);
+    mImpl->registerHistory(parent, historyState, type, defaultTarget, std::move(transitionCallback));
 }
 
 bool HierarchicalStateMachine::registerSubstate(const StateID_t parent, const StateID_t substate) {
@@ -66,22 +65,27 @@ bool HierarchicalStateMachine::registerSubstate(const StateID_t parent, const St
 bool HierarchicalStateMachine::registerSubstateEntryPoint(const StateID_t parent,
                                                           const StateID_t substate,
                                                           const EventID_t onEvent,
-                                                          const HsmTransitionConditionCallback_t& conditionCallback,
+                                                          HsmTransitionConditionCallback_t conditionCallback,
                                                           const bool expectedConditionValue) {
-    return mImpl->registerSubstateEntryPoint(parent, substate, onEvent, conditionCallback, expectedConditionValue);
+    return mImpl->registerSubstateEntryPoint(parent, substate, onEvent, std::move(conditionCallback), expectedConditionValue);
 }
 
 void HierarchicalStateMachine::registerTimer(const TimerID_t timerID, const EventID_t event) {
     mImpl->registerTimer(timerID, event);
 }
 
-void HierarchicalStateMachine::registerTransition(const StateID_t from,
-                                                  const StateID_t to,
+void HierarchicalStateMachine::registerTransition(const StateID_t fromState,
+                                                  const StateID_t toState,
                                                   const EventID_t onEvent,
                                                   HsmTransitionCallback_t transitionCallback,
                                                   HsmTransitionConditionCallback_t conditionCallback,
                                                   const bool expectedConditionValue) {
-    mImpl->registerTransition(from, to, onEvent, transitionCallback, conditionCallback, expectedConditionValue);
+    mImpl->registerTransition(fromState,
+                              toState,
+                              onEvent,
+                              std::move(transitionCallback),
+                              std::move(conditionCallback),
+                              expectedConditionValue);
 }
 
 void HierarchicalStateMachine::registerSelfTransition(const StateID_t state,
@@ -90,7 +94,12 @@ void HierarchicalStateMachine::registerSelfTransition(const StateID_t state,
                                                       HsmTransitionCallback_t transitionCallback,
                                                       HsmTransitionConditionCallback_t conditionCallback,
                                                       const bool expectedConditionValue) {
-    mImpl->registerSelfTransition(state, onEvent, type, transitionCallback, conditionCallback, expectedConditionValue);
+    mImpl->registerSelfTransition(state,
+                                  onEvent,
+                                  type,
+                                  std::move(transitionCallback),
+                                  std::move(conditionCallback),
+                                  expectedConditionValue);
 }
 
 StateID_t HierarchicalStateMachine::getLastActiveState() const {

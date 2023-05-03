@@ -4,6 +4,7 @@ set (DEPLOY_DIR ${DEPLOY_DIR_ROOT}/platformio)
 set (DEPLOY_FILES ${LIBRARY_SRC}
                   ${LIBRARY_HEADERS}
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmImpl.hpp
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/HsmImplTypes.hpp
                   ${FILES_SCXML2GEN}
                   ${CMAKE_CURRENT_SOURCE_DIR}/README.md
                   ${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG.md

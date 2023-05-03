@@ -478,13 +478,13 @@ def prepareRegisterActionFunction(state, eventsEnum, timersEnum, trigger, action
     func = ""
     if len(actionInfo['args']) > 0:
         actionTrigger = ""
-        action = f"StateAction::{actionInfo['action'].upper()}"
+        action = f"hsmcpp::StateAction::{actionInfo['action'].upper()}"
         args = ""
 
         if trigger == "onentry_actions":
-            actionTrigger = "StateActionTrigger::ON_STATE_ENTRY"
+            actionTrigger = "hsmcpp::StateActionTrigger::ON_STATE_ENTRY"
         elif trigger == "onexit_actions":
-            actionTrigger = "StateActionTrigger::ON_STATE_EXIT"
+            actionTrigger = "hsmcpp::StateActionTrigger::ON_STATE_EXIT"
 
         for i in range(1, len(actionInfo['args'])):
             args += f", {actionInfo['args'][i]}"
@@ -568,9 +568,9 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
 
                             if "history_type" in curSubstate:
                                 if curSubstate["history_type"] == "deep":
-                                    historyType = "HistoryType::DEEP"
+                                    historyType = "hsmcpp::HistoryType::DEEP"
                                 else:
-                                    historyType = "HistoryType::SHALLOW"
+                                    historyType = "hsmcpp::HistoryType::SHALLOW"
 
                             if ('transitions' in curSubstate) and (len(curSubstate['transitions']) > 0):
                                 defaultTransition = curSubstate['transitions'][0]
@@ -701,7 +701,7 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
                     if curState["id"] == curTransition["target"]:
                         registerFunction = "registerSelfTransition"
                         transitionStates = f"{getStateEnumValue(genVars, curState['id'])}"
-                        transitionType = f", TransitionType::{curTransition['type'].upper()}_TRANSITION"
+                        transitionType = f", hsmcpp::TransitionType::{curTransition['type'].upper()}_TRANSITION"
                     else:
                         registerFunction = "registerTransition"
                         transitionStates = f"{getStateEnumValue(genVars, curState['id'])}, {getStateEnumValue(genVars, curTransition['target'])}"

@@ -13,8 +13,7 @@
 
 namespace hsmcpp {
 
-#undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS "HsmEventDispatcherQt"
+constexpr const char* HSM_TRACE_CLASS = "HsmEventDispatcherQt";
 
 #define QT_DISPATCH_EVENT (777)
 

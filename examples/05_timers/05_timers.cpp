@@ -37,8 +37,8 @@ int main(const int argc, const char** argv) {
     hsm.registerTimer(Timers::TIMER1, Events::ON_TIMER1);
 
     hsm.registerStateAction(States::IDLE,
-                            TimersHSM_t::StateActionTrigger::ON_STATE_EXIT,
-                            TimersHSM_t::StateAction::START_TIMER,
+                            hsmcpp::StateActionTrigger::ON_STATE_EXIT,
+                            hsmcpp::StateAction::START_TIMER,
                             Timers::TIMER1,
                             1000,
                             false);

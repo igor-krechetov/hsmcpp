@@ -10,8 +10,7 @@
 
 namespace hsmcpp {
 
-#undef HSM_TRACE_CLASS
-#define HSM_TRACE_CLASS "HsmEventDispatcherArduino"
+constexpr const char* HSM_TRACE_CLASS = "HsmEventDispatcherArduino";
 
 // TODO: this dispatcher needs testing with interrupts (events, timers)
 

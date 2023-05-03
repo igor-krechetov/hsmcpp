@@ -8,7 +8,7 @@ ConditionVariable::~ConditionVariable() {
     mVariable.notify_all();
 }
 
-void ConditionVariable::wait(UniqueLock& sync, std::function<bool()> stopWaiting) {
+void ConditionVariable::wait(UniqueLock& sync, const std::function<bool()>& stopWaiting) {
     std::unique_lock<std::mutex> lck;
 
     if (false == sync.owns_lock()) {
@@ -31,7 +31,7 @@ void ConditionVariable::wait(UniqueLock& sync, std::function<bool()> stopWaiting
     }
 }
 
-bool ConditionVariable::wait_for(UniqueLock& sync, const int timeoutMs, std::function<bool()> stopWaiting) {
+bool ConditionVariable::wait_for(UniqueLock& sync, const int timeoutMs, const std::function<bool()>& stopWaiting) {
     std::unique_lock<std::mutex> lck;
 
     if (false == sync.owns_lock()) {
@@ -40,7 +40,7 @@ bool ConditionVariable::wait_for(UniqueLock& sync, const int timeoutMs, std::fun
         lck = std::unique_lock<std::mutex>(sync.mutex()->nativeHandle(), std::adopt_lock);
     }
 
-    bool res;
+    bool res = false;
 
     // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::function has bool() operator
     if (stopWaiting) {

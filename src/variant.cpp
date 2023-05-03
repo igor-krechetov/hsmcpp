@@ -7,6 +7,9 @@
 
 #include "hsmcpp/os/os.hpp"
 
+// These macroses can't be converted to 'constexpr' template functions
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
+
 // cppcheck-suppress misra-c2012-20.7 ; parentheses are not needed
 #define IMPL_CONSTRUCTOR(_val_type, _internal_type) \
   Variant::Variant(const _val_type v) {             \
@@ -25,6 +28,8 @@
   Variant Variant::make(const _val_type v) { \
     return Variant(v);                       \
   }
+
+// NOLINTEND(cppcoreguidelines-macro-usage)
 
 namespace hsmcpp {
 
@@ -58,8 +63,8 @@ Variant Variant::make(const char* binaryData, const size_t bytesCount) {
 
 // =================================================================================================================
 // Constructors
-Variant::Variant(const std::shared_ptr<void>& d, const Type t)
-    : data(d)
+Variant::Variant(std::shared_ptr<void> d, const Type t)
+    : data(std::move(d))
     , type(t) {}
 
 Variant::~Variant() {
@@ -70,15 +75,12 @@ Variant::Variant(const Variant& v) {
     *this = v;
 }
 
-Variant::Variant(Variant&& v)
-    : data(v.data)
+Variant::Variant(Variant&& v) noexcept
+    : data(std::move(v.data))
     , type(v.type)
-    , memoryAllocator(v.memoryAllocator)
-    , compareOperator(v.compareOperator) {
-    v.data.reset();
+    , memoryAllocator(std::move(v.memoryAllocator))
+    , compareOperator(std::move(v.compareOperator)) {
     v.type = Type::UNKNOWN;
-    v.memoryAllocator = nullptr;
-    v.compareOperator = nullptr;
 }
 
 IMPL_CONSTRUCTOR(int8_t, Type::BYTE_1)
@@ -104,7 +106,7 @@ Variant::Variant(const char* v)
 
 Variant::Variant(const char* binaryData, const size_t bytesCount)
     // cppcheck-suppress misra-c2012-10.4 : false-positive. thinks that ':' is arithmetic operation
-    : Variant(ByteArray_t(binaryData, &binaryData[bytesCount])) {}
+    : Variant(ByteArray_t(binaryData, &binaryData[bytesCount])) {} // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
 // =================================================================================================================
 // Assign operators
@@ -145,17 +147,14 @@ Variant& Variant::operator=(const Variant& v) {
     return *this;
 }
 
-Variant& Variant::operator=(Variant&& v) {
+Variant& Variant::operator=(Variant&& v) noexcept {
     if (false == isSameObject(v)) {
-        data = v.data;
+        data = std::move(v.data);
         type = v.type;
-        memoryAllocator = v.memoryAllocator;
-        compareOperator = v.compareOperator;
+        memoryAllocator = std::move(v.memoryAllocator);
+        compareOperator = std::move(v.compareOperator);
 
-        v.data.reset();
         v.type = Type::UNKNOWN;
-        v.memoryAllocator = nullptr;
-        v.compareOperator = nullptr;
     }
 
     return *this;
@@ -205,6 +204,7 @@ bool Variant::operator<=(const Variant& val) const {
 }
 
 bool Variant::operator==(const Variant& val) const {
+    constexpr double comparePrecision = 0.00000001;
     bool equal = false;
 
     if (data != val.data) {
@@ -212,7 +212,8 @@ bool Variant::operator==(const Variant& val) const {
             if (isNumeric() && val.isNumeric()) {
                 if ((Type::DOUBLE == type) || (Type::DOUBLE == val.type)) {
                     // compare with precision for double
-                    equal = (std::abs(toDouble() - val.toDouble()) < 0.00000001);
+                    // cppcheck-suppress misra-c2012-10.4 : false positive. both operands have type double
+                    equal = (std::abs(toDouble() - val.toDouble()) < comparePrecision);
                 } else if (isUnsignedNumeric() || val.isUnsignedNumeric()) {
                     equal = (toUInt64() == val.toUInt64());
                 } else {
@@ -381,7 +382,7 @@ std::string Variant::toString() const {
         case Type::BYTEARRAY: {
             std::shared_ptr<ByteArray_t> val = value<ByteArray_t>();
 
-            result.assign(reinterpret_cast<char*>(val->data()), val->size());
+            result.assign(val->begin(), val->end());
             break;
         }
         case Type::VECTOR: {
@@ -389,12 +390,12 @@ std::string Variant::toString() const {
 
             // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
             if (val) {
-                for (auto it = val->begin(); it != val->end(); ++it) {
+                for (const Variant& item: *val) {
                     if (false == result.empty()) {
                         result.append(", ");
                     }
 
-                    result += it->toString();
+                    result += item.toString();
                 }
             }
             break;
@@ -404,12 +405,12 @@ std::string Variant::toString() const {
 
             // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
             if (val) {
-                for (auto it = val->begin(); it != val->end(); ++it) {
+                for (const Variant& item: *val) {
                     if (false == result.empty()) {
                         result.append(", ");
                     }
 
-                    result += it->toString();
+                    result += item.toString();
                 }
             }
             break;
@@ -419,11 +420,11 @@ std::string Variant::toString() const {
 
             // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
             if (val) {
-                for (auto it = val->begin(); it != val->end(); ++it) {
+                for (const auto& item: *val) {
                     if (false == result.empty()) {
                         result.append(", ");
                     }
-                    result += it->first.toString().append("=[").append(it->second.toString()).append("]");
+                    result += item.first.toString().append("=[").append(item.second.toString()).append("]");
                 }
             }
             break;
@@ -689,8 +690,8 @@ ByteArray_t Variant::toByteArray() const {
 
             // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
             if (data) {
-                for (auto it = data->begin(); it != data->end(); ++it) {
-                    const ByteArray_t curValue = it->toByteArray();
+                for (const Variant& item: *data) {
+                    const ByteArray_t curValue = item.toByteArray();
 
                     (void)result.insert(result.end(), curValue.begin(), curValue.end());
                 }
@@ -702,8 +703,8 @@ ByteArray_t Variant::toByteArray() const {
 
             // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
             if (data) {
-                for (auto it = data->begin(); it != data->end(); ++it) {
-                    const ByteArray_t curValue = it->toByteArray();
+                for (const Variant& item: *data) {
+                    const ByteArray_t curValue = item.toByteArray();
 
                     (void)result.insert(result.end(), curValue.begin(), curValue.end());
                 }

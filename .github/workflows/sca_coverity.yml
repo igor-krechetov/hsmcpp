@@ -50,7 +50,7 @@ jobs:
 
     env:
       COVERITY_NAME: 'Igor Krechetov'
-      COVERITY_VERSION: 'cov-analysis-linux64-2022.6.0'
+      COVERITY_VERSION: 'cov-analysis-linux64-2022.12.2'
       COVERITY_PROJECT_DESCRIPTION: 'C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.'
       COVERITY_PROJECT: 'igor-krechetov/hsmcpp'
       COVERITY_PROJECT_URL: 'igor-krechetov%2Fhsmcpp'

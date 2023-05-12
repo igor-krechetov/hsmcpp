@@ -5,8 +5,8 @@
 #define HSMCPP_HSM_HPP
 
 #include <list>
-#include <string>
 #include <memory>
+#include <string>
 
 #include "HsmTypes.hpp"
 #include "variant.hpp"
@@ -67,15 +67,25 @@ public:
      * @remark If initial state has registered callbacks or actions they will be executed synchronously during
      * initialize() call.
      *
-     * @warning HSM does not take ownership of the dispatcher. User is responsible for keeping dispatcher instance alive as long as HSM object exists or until call to release().
+     * @warning HSM does not take ownership of the dispatcher. User is responsible for keeping dispatcher instance alive as long
+     * as HSM object exists or until call to release().
      *
      * @param dispatcher An event dispatcher that can be used to receive events and dispatch them to the HSM.
      * @return true if initialization succeeds, false otherwise.
      *
-     * @notthreadsafe{Internally uses IHsmEventDispatcher::registerEventHandler() and IHsmEventDispatcher::start(). Usually must be called
-     * from the same thread where dispatcher was created.}
+     * @notthreadsafe{Internally uses IHsmEventDispatcher::registerEventHandler() and IHsmEventDispatcher::start(). Usually must
+     * be called from the same thread where dispatcher was created.}
      */
     virtual bool initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher);
+
+    /**
+     * @brief Returns dispatcher that was passed to initialize() method.
+     *
+     * @return dispatcher used by HSM or nullptr (if HSM was not initialized or release() was called).
+     *
+     * @threadsafe{ }
+     */
+    std::weak_ptr<IHsmEventDispatcher> dispatcher() const;
 
     /**
      * @brief Checks initialization status of HSM.
@@ -446,18 +456,21 @@ public:
      * @details This is an extended version of transition() function. It also allows to sends an event to HSM to trigger a
      * potential transition, but provides a bit more capabilities.
      *
-     * @warning setting sync=true when calling this function from HSM callback will result in a deadlock.
+     * @warning setting sync=true when calling this function from HSM callback will result in blocking HSM events processing and
+     * will result in a deadlock if timeoutMs is set to HSM_WAIT_INDEFINITELY.
      *
      * @param event ID of event to send to HSM
      * @param clearQueue indicates whether to clear the pending events queue before adding a new event
-     * @param sync indicates whether to wait for the transition to complete before returning
+     * @param sync indicates whether to wait for the transition to complete before returning. Keep in mind that this **does not
+     * cancel** transition if it couldn't finish before timeoutMs. If you need to guarantee that transition was fully processed
+     * make sure to set timeoutMs to HSM_WAIT_INDEFINITELY.
      * @param timeoutMs maximum time in milliseconds to wait for the transition to complete if sync is true. Use
      * HSM_WAIT_INDEFINITELY to wait indefinitely.
      * @param args (optional) arguments to pass to the callbacks
      *
      * @return always returns true if sync=false.
      * @retval true (if sync=true) event was accepted and transition successfully finished
-     * @retval false (if sync=true) no matching transitions were found or transition was canceled
+     * @retval false (if sync=true) no matching transitions were found, transition was canceled or timeoutMs expired
      *
      * @threadsafe{ }
      */
@@ -482,9 +495,10 @@ public:
 
     /**
      * @brief Trigger a transition in the HSM and process it synchronously.
-     * @details Convenience wrapper for transitionEx() which tries to execute transition synchronously.
+     * @details Convenience wrapper for transitionEx() which tries to execute transition synchronously. Please see
+     * transitionEx() for detailed description.
      *
-     * @warning calling this function from HSM callback will result in a deadlock.
+     * @warning calling this function from HSM callback might result in a deadlock (see transitionEx() for details).
      *
      * @param event ID of event to send to HSM
      * @param timeoutMs maximum time in milliseconds to wait for the transition to complete if sync is true. Use
@@ -492,7 +506,7 @@ public:
      * @param args (optional) arguments to pass to the callbacks
      *
      * @retval true event was accepted and transition successfully finished
-     * @retval false no matching transitions were found or transition was canceled
+     * @retval false no matching transitions were found, transition was canceled or timeoutMs expired
      *
      * @threadsafe{ }
      */

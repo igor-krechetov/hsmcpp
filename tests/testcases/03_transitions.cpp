@@ -1,5 +1,7 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
+#include <thread>
+
 #include "hsm/ABCHsm.hpp"
 #include "hsm/TrafficLightHsm.hpp"
 
@@ -229,7 +231,6 @@ TEST_F(TrafficLightHsm, transition_self_internal) {
     EXPECT_EQ(mStateCounterStarting, 1);
     EXPECT_EQ(mTransitionCounterNextState, 1);
 }
-
 
 TEST_F(ABCHsm, transition_self_internal_multiple) {
     TEST_DESCRIPTION("If both parent and child have same self-transition defined then only child's transition should be executed");
@@ -524,6 +525,37 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple) {
 }
 
 // TODO: test multiple transitions when one of the transitions blocks execution
+
+TEST_F(ABCHsm, transition_sync_deadlock) {
+    TEST_DESCRIPTION("It's not allowed to do sync transitions from inside callbacks");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    bool bTransitionResult = true;
+
+    registerState(AbcState::A);
+    registerState(AbcState::B, [&](const hsmcpp::VariantVector_t& args){
+        bTransitionResult = transitionSync(AbcEvent::E2, 100);
+    });
+    registerState(AbcState::C);
+
+    registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
+    registerTransition(AbcState::B, AbcState::C, AbcEvent::E2);
+
+    initializeHsm();
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+
+    //-------------------------------------------
+    // ACTIONS
+    transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION);
+    ASSERT_FALSE(bTransitionResult);
+
+    //-------------------------------------------
+    // VALIDATION
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
+}
+
 
 // NOTE: test is obsolete with introduction of parallel feature
 // TEST_F(TrafficLightHsm, transition_conditional_multiple_valid)

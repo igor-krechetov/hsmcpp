@@ -4,6 +4,7 @@
 
 #include "hsmcpp/logging.hpp"
 #include "hsmcpp/os/InterruptsFreeSection.hpp"
+#include "hsmcpp/os/ConditionVariable.hpp"
 #include "hsmcpp/os/freertos/FreeRtosPort.hpp"
 
 #if (INCLUDE_xTaskGetCurrentTaskHandle != 1)
@@ -229,6 +230,8 @@ void HsmEventDispatcherFreeRTOS::doDispatching(void* pvParameters) {
     if (nullptr != pThis) {
         while (false == pThis->mStopDispatcher) {
             std::list<HandlerID_t> events;
+
+            pThis->dispatchPendingActions();
 
             {
                 // NOTE: this will work only on a single core implementation of FreeRTOS

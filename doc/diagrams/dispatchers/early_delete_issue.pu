@@ -1,0 +1,51 @@
+@startuml
+
+participant OtherCode
+participant UserClass
+participant HierarchicalStateMachine as HSM
+participant HsmImpl
+participant Dispatcher
+
+activate Dispatcher #Salmon
+
+OtherCode -> UserClass++ #LightGreen: transition
+    UserClass -> HSM++ #LightGreen
+        HSM -> HsmImpl++ #LightGreen
+            HsmImpl --> Dispatcher
+        return
+    return
+return
+
+...
+
+Dispatcher -> HsmImpl: dispatchEvents
+activate HsmImpl #Salmon
+HsmImpl -> UserClass: onStateCallback
+activate UserClass #Salmon
+
+...
+
+OtherCode -> UserClass++ #LightGreen: delete
+    UserClass -> HSM++ #LightGreen: delete
+        HSM -> HsmImpl++ #LightGreen: release
+            HsmImpl -> Dispatcher: unregisterEventHandler
+            HsmImpl -> Dispatcher: unregisterEnqueuedEventHandler
+            HsmImpl -> Dispatcher: unregisterTimerHandler
+            HsmImpl -> HsmImpl: dispatcher.reset()
+        return
+        HSM -> HSM !!
+    return
+    ' UserClass -> UserClass !!
+return
+
+note over UserClass
+    **CRASH**
+    because onStateCallback
+    still didn't finish, but
+    UserClass object is
+    already destroyed
+end note
+
+UserClass --> HsmImpl
+
+@enduml

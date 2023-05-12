@@ -1,0 +1,70 @@
+@startuml
+
+participant OtherCode
+participant GeneratedHSM as UserClass
+participant HierarchicalStateMachine as HSM
+participant HsmImpl
+participant Dispatcher
+
+activate Dispatcher #Salmon
+
+OtherCode -> UserClass++ #LightGreen: transition
+    UserClass -> HSM++ #LightGreen
+        HSM -> HsmImpl++ #LightGreen
+            HsmImpl --> Dispatcher
+        return
+    return
+return
+
+...
+
+Dispatcher -> HsmImpl: dispatchEvents
+activate HsmImpl #Salmon
+HsmImpl -> UserClass: onStateCallback
+activate UserClass #Salmon
+
+...
+
+' OtherCode -> HSM++ #LightGreen: release
+'     HSM -> HsmImpl++ #LightGreen: release
+'         HsmImpl -> Dispatcher: unregisterEventHandler
+'         HsmImpl -> Dispatcher: unregisterEnqueuedEventHandler
+'         HsmImpl -> Dispatcher: unregisterTimerHandler
+'         HsmImpl -> HsmImpl: dispatcher.reset()
+'     return
+' return
+
+' OtherCode -> Dispatcher #LightGreen: enqueueAction([](){ delete HierarchicalStateMachine; } )
+OtherCode -> OtherCode++ #LightGreen
+    OtherCode --> Dispatcher #LightGreen: enqueueAction([](){ delete UserClass; })
+    note over OtherCode
+        At this point we should
+        not use pointer to UserClass
+        object anymore.
+    end note
+return
+
+...
+
+UserClass -> HsmImpl
+deactivate UserClass
+HsmImpl --> Dispatcher
+deactivate HsmImpl
+
+Dispatcher -> UserClass++ #Salmon: delete
+
+    UserClass -> HSM++ #Salmon: delete
+        HSM -> HsmImpl++ #Salmon: release
+            HsmImpl -> Dispatcher: unregisterEventHandler
+            HsmImpl -> Dispatcher: unregisterEnqueuedEventHandler
+            HsmImpl -> Dispatcher: unregisterTimerHandler
+            HsmImpl -> HsmImpl: dispatcher.reset()
+        return
+        HSM -> HSM !!: delete
+    return
+
+UserClass -> UserClass !!: delete
+UserClass --> Dispatcher
+
+
+@enduml

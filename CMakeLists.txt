@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "0.36.0")
+set(PROJECT_VERSION "0.37.0")
 set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -102,6 +102,7 @@ set (LIBRARY_HEADERS ${HSM_INCLUDES_ROOT}/hsm.hpp
                      ${HSM_INCLUDES_ROOT}/os/InterruptsFreeSection.hpp
                      ${HSM_INCLUDES_ROOT}/os/LockGuard.hpp
                      ${HSM_INCLUDES_ROOT}/os/Mutex.hpp
+                     ${HSM_INCLUDES_ROOT}/os/AtomicFlag.hpp
                      ${HSM_INCLUDES_ROOT}/os/os.hpp
                      ${HSM_INCLUDES_ROOT}/os/UniqueLock.hpp
                      ${HSM_INCLUDES_ROOT}/os/common/LockGuard.hpp
@@ -120,10 +121,12 @@ set(FILES_SCXML2GEN ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/scxml2gen.py
 if (HSMBUILD_PLATFORM STREQUAL "freertos")
     set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/freertos/Mutex.cpp
                                     ${HSM_SRC_ROOT}/os/freertos/ConditionVariable.cpp
+                                    ${HSM_SRC_ROOT}/os/freertos/AtomicFlag.cpp
                                     ${HSM_SRC_ROOT}/os/freertos/InterruptsFreeSection.cpp
                                     ${HSM_SRC_ROOT}/os/freertos/FreeRtosPort.cpp
                                     ${HSM_SRC_ROOT}/HsmEventDispatcherFreeRTOS.cpp)
     set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/freertos/ConditionVariable.hpp
+                                            ${HSM_INCLUDES_ROOT}/os/freertos/AtomicFlag.hpp
                                             ${HSM_INCLUDES_ROOT}/os/freertos/InterruptsFreeSection.hpp
                                             ${HSM_INCLUDES_ROOT}/os/freertos/FreeRTOSConfig.h
                                             ${HSM_INCLUDES_ROOT}/os/freertos/FreeRtosPort.hpp
@@ -132,20 +135,26 @@ if (HSMBUILD_PLATFORM STREQUAL "freertos")
 elseif (HSMBUILD_PLATFORM STREQUAL "arduino")
     set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/arduino/ConditionVariable.cpp
                                     ${HSM_SRC_ROOT}/os/arduino/InterruptsFreeSection.cpp
+                                    ${HSM_SRC_ROOT}/os/arduino/AtomicFlag.cpp
                                     ${HSM_SRC_ROOT}/HsmEventDispatcherArduino.cpp)
     set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/arduino/ConditionVariable.hpp
+                                            ${HSM_INCLUDES_ROOT}/os/arduino/AtomicFlag.hpp
                                             ${HSM_INCLUDES_ROOT}/os/arduino/Mutex.hpp
                                             ${HSM_INCLUDES_ROOT}/HsmEventDispatcherArduino.hpp)
 elseif (HSMBUILD_PLATFORM STREQUAL "posix")
     set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/posix/InterruptsFreeSection.cpp
-                                    ${HSM_SRC_ROOT}/os/stl/ConditionVariable.cpp)
+                                    ${HSM_SRC_ROOT}/os/stl/ConditionVariable.cpp
+                                    ${HSM_SRC_ROOT}/os/stl/AtomicFlag.cpp)
     set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/posix/InterruptsFreeSection.hpp
                                             ${HSM_INCLUDES_ROOT}/os/stl/ConditionVariable.hpp
+                                            ${HSM_INCLUDES_ROOT}/os/stl/AtomicFlag.hpp
                                             ${HSM_INCLUDES_ROOT}/os/stl/Mutex.hpp)
 elseif (HSMBUILD_PLATFORM STREQUAL "windows")
     set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/windows/InterruptsFreeSection.cpp
-                                    ${HSM_SRC_ROOT}/os/stl/ConditionVariable.cpp)
+                                    ${HSM_SRC_ROOT}/os/stl/ConditionVariable.cpp
+                                    ${HSM_SRC_ROOT}/os/stl/AtomicFlag.cpp)
     set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/stl/ConditionVariable.hpp
+                                            ${HSM_INCLUDES_ROOT}/os/stl/AtomicFlag.hpp
                                             ${HSM_INCLUDES_ROOT}/os/stl/Mutex.hpp)
 else()
     message(FATAL_ERROR "Unsupported HSMBUILD_PLATFORM=${HSMBUILD_PLATFORM}")

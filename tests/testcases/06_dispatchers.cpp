@@ -6,20 +6,153 @@
 #include "TestsCommon.hpp"
 #include "hsm/ABCHsm.hpp"
 
-TEST(dispatchers, stresstest_create_destroy_hsm) {
-    TEST_DESCRIPTION("check that it's possible to destroy HSM and disconnect from dispatcher when there are pending events");
+class TestHsm: public HierarchicalStateMachine {
+public:
+    TestHsm(const hsmcpp::StateID_t initialState, const std::string& data)
+        : HierarchicalStateMachine(initialState)
+    {
+        mData.push_back(data);
+    }
+
+    virtual ~TestHsm() = default;
+
+    void onState(const VariantVector_t& args) {
+        auto ptr = mStateCounter.lock();
+
+        if (ptr) {
+            *ptr += 1;
+        }
+
+        // artificial delay to block HSM execution
+        auto ptrM = mSyncState.lock();
+        auto ptrW = mWaitState.lock();
+
+        if (ptrM && ptrW) {
+            std::unique_lock<std::mutex> lk(*ptrM);
+
+            ptr = mPendingStateCounter.lock();
+
+            if (ptr) {
+                *ptr += 1;
+            }
+
+            ptrW->notify_all();
+            ptrW->wait_for(lk, std::chrono::milliseconds(1000));
+        }
+
+        mData.push_back(mData.front() + "a");
+    }
+
+    void onStateDelayed(const VariantVector_t& args) {
+        auto ptr = mStateCounter.lock();
+
+        if (ptr) {
+            *ptr += 1;
+        }
+
+        // artificial delay to block HSM execution
+        std::this_thread::sleep_for(std::chrono::milliseconds(args[0].toInt64()));
+
+        mData.push_back(mData.front() + "a");
+    }
+
+public:
+    std::weak_ptr<int> mStateCounter;
+    std::weak_ptr<int> mPendingStateCounter;
+    std::weak_ptr<std::mutex> mSyncState;
+    std::weak_ptr<std::condition_variable> mWaitState;
+    std::list<std::string> mData;
+};
+
+struct TestStruct {
+    char a[100] = {0};
+};
+
+
+TEST(dispatchers, release_sync) {
+    TEST_DESCRIPTION("HSM should wait for ongoing events dispatching to stop before finishing release()");
 
     //-------------------------------------------
     // PRECONDITIONS
     std::shared_ptr<hsmcpp::IHsmEventDispatcher> dispatcher;
+    std::shared_ptr<int> callbackCounter = std::make_shared<int>(0);
+    TestHsm hsm(AbcState::A, "test");
+    constexpr int eventsCount = 10;
+    constexpr int callbackDelayMs = 600;
+
+    hsm.registerState(AbcState::A);
+    hsm.registerState(AbcState::B, &hsm, &TestHsm::onStateDelayed);
+    hsm.registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
+    hsm.registerTransition(AbcState::B, AbcState::A, AbcEvent::E1);
+
+    hsm.mStateCounter = callbackCounter;
+
+    ASSERT_TRUE(executeOnMainThread([&]() {
+        // NOTE: dispatcher creation and hsm initialization must be done on the same thread
+        dispatcher = CREATE_DISPATCHER();
+        return hsm.initialize(dispatcher);
+    }));
 
     //-------------------------------------------
     // ACTIONS
-    for (int i = 0; i < 100; ++i) {
-        HierarchicalStateMachine* hsm = new HierarchicalStateMachine(AbcState::A);
+    hsm.transition(AbcEvent::E1, callbackDelayMs);
+    // wait for HSM to enter state callback
+    std::this_thread::sleep_for(std::chrono::milliseconds(callbackDelayMs / 3));
 
-        hsm->registerState(AbcState::A, [](const VariantVector_t& args) {});
-        hsm->registerState(AbcState::B, [](const VariantVector_t& args) {});
+    // add more events to queue
+    for (int i = 0; i < eventsCount; ++i) {
+        hsm.transition(AbcEvent::E1, callbackDelayMs);
+    }
+
+    // this should block until HSM has finished dispatching ongoing event
+    hsm.release();
+
+    //-------------------------------------------
+    // VALIDATION
+    // NOTE: if we got here without a crash or exception then test was successful
+
+    // need to delete dispatcher from main thread
+    executeOnMainThread([&]() {
+        dispatcher.reset();
+        return true;
+    });
+
+    EXPECT_LT(*callbackCounter, eventsCount);
+}
+
+TEST(dispatchers, stresstest_create_destroy_hsm_later) {
+    TEST_DESCRIPTION("check that it's possible to destroy HSM and disconnect from dispatcher when there are pending events");
+    // The idea behild this test is to make sure that HSM is not deleted while being inside one of it's callbacks
+    // To prevent such situation an enqueueAction() method of dispatcher is used to delay HSM destruction
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    std::shared_ptr<hsmcpp::IHsmEventDispatcher> dispatcher;
+    std::shared_ptr<int> callbackCounter = std::make_shared<int>(0);
+    std::shared_ptr<int> pendingCallbackCounter = std::make_shared<int>(0);
+    constexpr int iterationsCount = 10;
+    constexpr int eventsCount = 5;
+    constexpr int tempSize = 15;
+    TestStruct* temp = new TestStruct();
+    int objectsDeleted = 0;
+    std::mutex sync;
+    std::condition_variable waitCleanup;
+    std::shared_ptr<std::mutex> syncState = std::make_shared<std::mutex>();
+    std::shared_ptr<std::condition_variable> waitState = std::make_shared<std::condition_variable>();
+
+    //-------------------------------------------
+    // ACTIONS
+    for (int i = 0; i < iterationsCount; ++i) {
+        delete temp;
+        TestHsm* hsm = new TestHsm(AbcState::A, "test");
+
+        hsm->mStateCounter = callbackCounter;
+        hsm->mPendingStateCounter = pendingCallbackCounter;
+        hsm->mSyncState = syncState;
+        hsm->mWaitState = waitState;
+
+        hsm->registerState<TestHsm>(AbcState::A);
+        hsm->registerState<TestHsm>(AbcState::B, hsm, &TestHsm::onState);
         hsm->registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
         hsm->registerTransition(AbcState::B, AbcState::A, AbcEvent::E1);
 
@@ -32,28 +165,58 @@ TEST(dispatchers, stresstest_create_destroy_hsm) {
             return hsm->initialize(dispatcher);
         }));
 
-        for (int j = 0; j < 1000; ++j) {
+        hsm->transition(AbcEvent::E1);
+
+        // wait for HSM to enter state callback
+        {
+            std::unique_lock<std::mutex> lk(*syncState);
+            waitState->wait_for(lk, std::chrono::milliseconds(1000));
+        }
+
+        dispatcher->enqueueAction([hsm, iterationsCount, &objectsDeleted, &waitCleanup](){
+            ++objectsDeleted;
+
+            if (objectsDeleted == iterationsCount) {
+                waitCleanup.notify_all();
+            }
+            delete hsm;
+        });
+
+        for (int j = 0; j < eventsCount; ++j) {
             hsm->transition(AbcEvent::E1);
         }
 
-        executeOnMainThread([hsm]() {
-            delete hsm;
-            return true;
-        });
+        hsm = nullptr;
+        // allocated memory should have same address as deleted hsm object.
+        temp = new TestStruct();
+        memset(temp, 0, sizeof(TestStruct));
+
+        // resume HSM callback
+        waitState->notify_all();
     }
 
-    // need to wait to make sure we don't delete dispatcher before HSM is deleted using executeOnMainThread
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    // could have some data-races, but good enough for the test
+    if (objectsDeleted != iterationsCount) {
+        // wait for all HSM objects to be deleted
+        std::unique_lock<std::mutex> lk(sync);
+        waitCleanup.wait_for(lk, std::chrono::milliseconds(5000));
+    }
 
     //-------------------------------------------
     // VALIDATION
     // NOTE: if we got here without a crash or exception then test was successful
+
+    // need to wait to make sure we don't delete dispatcher before HSM is deleted using executeOnMainThread
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // need to delete dispatcher from main thread
     executeOnMainThread([&]() {
         dispatcher.reset();
         return true;
     });
+
+    EXPECT_LT(*callbackCounter, iterationsCount * eventsCount);
+    EXPECT_EQ(objectsDeleted, iterationsCount);
 }
 
 TEST(dispatchers, stresstest_create_destroy_dispatcher) {

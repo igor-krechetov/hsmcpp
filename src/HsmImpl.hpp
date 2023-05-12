@@ -14,6 +14,8 @@
 
 #include "hsmcpp/hsm.hpp"
 #include "hsmcpp/os/Mutex.hpp"
+#include "hsmcpp/os/ConditionVariable.hpp"
+#include "hsmcpp/os/AtomicFlag.hpp"
 #include "hsmcpp/variant.hpp"
 #include "HsmImplTypes.hpp"
 
@@ -30,6 +32,8 @@ public:
 
     void setInitialState(const StateID_t initialState);
     bool initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher);
+    std::weak_ptr<IHsmEventDispatcher> dispatcher() const;
+
     bool isInitialized() const;
     void release();
     void registerFailedTransitionCallback(HsmTransitionFailedCallback_t onFailedTransition);
@@ -220,6 +224,7 @@ private:
 #endif
 
 #ifndef HSM_DISABLE_THREADSAFETY
+    AtomicFlag mIsDispatching;
     Mutex mEventsSync;
   #if !defined(HSM_DISABLE_DEBUG_TRACES)
     Mutex mParentSync;

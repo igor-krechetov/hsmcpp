@@ -23,6 +23,10 @@ bool HierarchicalStateMachine::initialize(const std::weak_ptr<IHsmEventDispatche
     return mImpl->initialize(dispatcher);
 }
 
+std::weak_ptr<IHsmEventDispatcher> HierarchicalStateMachine::dispatcher() const {
+    return mImpl->dispatcher();
+}
+
 bool HierarchicalStateMachine::isInitialized() const {
     return mImpl->isInitialized();
 }

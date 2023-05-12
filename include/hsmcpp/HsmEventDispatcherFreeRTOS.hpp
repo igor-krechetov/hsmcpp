@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "HsmEventDispatcherBase.hpp"
-#include "os/ConditionVariable.hpp"
 
 namespace hsmcpp {
 

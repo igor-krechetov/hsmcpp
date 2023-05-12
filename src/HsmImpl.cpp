@@ -7,9 +7,9 @@
 
 #include "hsmcpp/IHsmEventDispatcher.hpp"
 #include "hsmcpp/logging.hpp"
-#include "hsmcpp/os/os.hpp"
-#include "hsmcpp/os/LockGuard.hpp"
 #include "hsmcpp/os/ConditionVariable.hpp"
+#include "hsmcpp/os/LockGuard.hpp"
+#include "hsmcpp/os/os.hpp"
 
 #if !defined(HSM_DISABLE_THREADSAFETY) && defined(FREERTOS_AVAILABLE)
   #include "hsmcpp/os/InterruptsFreeSection.hpp"
@@ -19,6 +19,7 @@
   #include <chrono>
   #include <cstdlib>
   #include <cstring>
+  #include <array>
 
 // WIN, access
   #ifdef WIN32
@@ -26,7 +27,7 @@
     #define F_OK 0
   #else
     #include <unistd.h>
-    // cppcheck-suppress misra-c2012-21.10
+        // cppcheck-suppress misra-c2012-21.10
     #include <ctime>
   #endif
 #endif
@@ -153,6 +154,10 @@ bool HierarchicalStateMachine::Impl::initialize(const std::weak_ptr<IHsmEventDis
     return result;
 }
 
+std::weak_ptr<IHsmEventDispatcher> HierarchicalStateMachine::Impl::dispatcher() const {
+    return mDispatcher;
+}
+
 bool HierarchicalStateMachine::Impl::isInitialized() const {
     return (false == mDispatcher.expired());
 }
@@ -172,6 +177,9 @@ void HierarchicalStateMachine::Impl::release() {
         dispatcherPtr->unregisterTimerHandler(mTimerHandlerId);
         mDispatcher.reset();
         mEventsHandlerId = INVALID_HSM_DISPATCHER_HANDLER_ID;
+
+        // wait for current dispatching to finish if it's ongoing
+        mIsDispatching.wait(true);
     }
 }
 
@@ -364,9 +372,13 @@ void HierarchicalStateMachine::Impl::registerSelfTransition(const StateID_t stat
                                                             HsmTransitionCallback_t transitionCallback,
                                                             HsmTransitionConditionCallback_t conditionCallback,
                                                             const bool expectedConditionValue) {
-    (void)mTransitionsByEvent.emplace(
-        std::make_pair(state, onEvent),
-        TransitionInfo(state, state, type, std::move(transitionCallback), std::move(conditionCallback), expectedConditionValue));
+    (void)mTransitionsByEvent.emplace(std::make_pair(state, onEvent),
+                                      TransitionInfo(state,
+                                                     state,
+                                                     type,
+                                                     std::move(transitionCallback),
+                                                     std::move(conditionCallback),
+                                                     expectedConditionValue));
 }
 
 StateID_t HierarchicalStateMachine::Impl::getLastActiveState() const {
@@ -443,6 +455,7 @@ bool HierarchicalStateMachine::Impl::transitionExWithArgsArray(const EventID_t e
         HSM_TRACE_ERROR("HSM is not initialized");
     }
 
+    HSM_TRACE_CALL_RESULT("%d", SC2INT(status));
     return status;
 }
 
@@ -617,7 +630,9 @@ void HierarchicalStateMachine::Impl::dispatchEvents() {
     auto dispatcherPtr = mDispatcher.lock();
 
     // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
-    if (dispatcherPtr) {
+    if (dispatcherPtr && (false == mIsDispatching.test_and_set())) {
+        UniqueLock lk = mIsDispatching.lock();
+
         if (false == mStopDispatching) {
             if (false == mPendingEvents.empty()) {
                 PendingEventInfo pendingEvent;
@@ -638,6 +653,9 @@ void HierarchicalStateMachine::Impl::dispatchEvents() {
                 dispatcherPtr->emitEvent(mEventsHandlerId);
             }
         }
+
+        mIsDispatching.clear();
+        mIsDispatching.notify();
     }
 }
 
@@ -1055,6 +1073,12 @@ HsmEventStatus HierarchicalStateMachine::Impl::doTransition(const PendingEventIn
                 }
             }
         }
+
+        // stop processing other events if HSM was released
+        if (true == mDispatcher.expired()) {
+            res = HsmEventStatus::DONE_FAILED;
+            break;
+        }
     }
 
     if (mFailedTransitionCallback && ((HsmEventStatus::DONE_FAILED == res) || (HsmEventStatus::CANCELED == res))) {
@@ -1066,9 +1090,10 @@ HsmEventStatus HierarchicalStateMachine::Impl::doTransition(const PendingEventIn
 }
 
 HsmEventStatus HierarchicalStateMachine::Impl::processExternalTransition(const PendingEventInfo& event,
-                                                                           const StateID_t fromState,
-                                                                           const TransitionInfo& curTransition,
-                                                                           const std::list<StateID_t>& exitedStates) {
+                                                                         const StateID_t fromState,
+                                                                         const TransitionInfo& curTransition,
+                                                                         const std::list<StateID_t>& exitedStates) {
+    HSM_TRACE_CALL_DEBUG();
     HsmEventStatus res = HsmEventStatus::DONE_FAILED;
 
     // NOTE: Decide if we need functionality to cancel ongoing transition
@@ -1139,6 +1164,7 @@ HsmEventStatus HierarchicalStateMachine::Impl::processExternalTransition(const P
 bool HierarchicalStateMachine::Impl::determineTargetState(const PendingEventInfo& event,
                                                           const StateID_t fromState,
                                                           std::list<TransitionInfo>& outMatchingTransitions) {
+    HSM_TRACE_CALL_DEBUG();
     bool isCorrectTransition = false;
 
     if (TransitionBehavior::REGULAR == event.transitionType) {
@@ -1230,15 +1256,15 @@ bool HierarchicalStateMachine::Impl::executeSelfTransitions(const PendingEventIn
 bool HierarchicalStateMachine::Impl::executeExitTransition(const PendingEventInfo& event,
                                                            const std::list<TransitionInfo>& matchingTransitions,
                                                            std::list<StateID_t>& outExitedStates) {
+    HSM_TRACE_CALL_DEBUG();
     bool isExitAllowed = true;
 
     for (const auto& curTransition : matchingTransitions) {
-        if (// process everything except internal self-transitions
+        if (  // process everything except internal self-transitions
             ((curTransition.fromState != curTransition.destinationState) ||
-            (TransitionType::EXTERNAL_TRANSITION == curTransition.transitionType)) &&
+             (TransitionType::EXTERNAL_TRANSITION == curTransition.transitionType)) &&
             // exit active states only during regular transitions
             (TransitionBehavior::REGULAR == event.transitionType)) {
-
             // it's an outer transition from parent state. we need to find and exit all active substates
             for (auto itActiveState = mActiveStates.rbegin(); itActiveState != mActiveStates.rend(); ++itActiveState) {
                 HSM_TRACE_DEBUG("OUTER EXIT: FROM=%s, ACTIVE=%s",
@@ -1282,6 +1308,7 @@ bool HierarchicalStateMachine::Impl::executeExitTransition(const PendingEventInf
 }
 
 bool HierarchicalStateMachine::Impl::processHistoryTransition(const PendingEventInfo& event, const StateID_t destinationState) {
+    HSM_TRACE_CALL_DEBUG();
     auto itHistoryData = mHistoryData.find(destinationState);
 
     // check if we transitioned into a history state
@@ -1361,6 +1388,7 @@ void HierarchicalStateMachine::Impl::transitionToDefaultHistoryState(
     const HsmTransitionCallback_t& defaultTargetTransitionCallback,
     const PendingEventInfo& event,
     const StateID_t destinationState) {
+    HSM_TRACE_CALL_DEBUG();
     std::list<StateID_t> historyTargets;
     StateID_t historyParent = INVALID_HSM_STATE_ID;
 
@@ -1440,7 +1468,7 @@ bool HierarchicalStateMachine::Impl::processFinalStateTransition(const PendingEv
 }
 
 HsmEventStatus HierarchicalStateMachine::Impl::handleSingleTransition(const StateID_t fromState,
-                                                                                 const PendingEventInfo& event) {
+                                                                      const PendingEventInfo& event) {
     HSM_TRACE_CALL_DEBUG_ARGS("fromState=<%s>, event=<%s>, transitionType=%d",
                               getStateName(fromState).c_str(),
                               getEventName(event.type).c_str(),

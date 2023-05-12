@@ -504,7 +504,7 @@ TEST_F(ABCHsm, timers_is_running) {
     //-------------------------------------------
     // PRECONDITIONS
     const TimerID_t timer1 = 1;
-    const int timer1Duration = 2000;
+    const int timer1Duration2 = 2000;
 
     registerState<ABCHsm>(AbcState::A);
     registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
@@ -518,7 +518,7 @@ TEST_F(ABCHsm, timers_is_running) {
 
     //-------------------------------------------
     // ACTIONS
-    startTimer(timer1, timer1Duration, true);
+    startTimer(timer1, timer1Duration2, true);
     ASSERT_TRUE(isTimerRunning(timer1));
 
     stopTimer(timer1);
@@ -527,6 +527,36 @@ TEST_F(ABCHsm, timers_is_running) {
     //-------------------------------------------
     // VALIDATION
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+}
+
+TEST_F(ABCHsm, timers_singleshot_is_running) {
+    TEST_DESCRIPTION("single shot timers should become inactive after they expire");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    const TimerID_t timer1 = 1;
+    const int timer1Duration1 = 50;
+
+    registerState<ABCHsm>(AbcState::A);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+
+    registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
+
+    registerTimer(timer1, AbcEvent::E1);
+    initializeHsm();
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+    ASSERT_FALSE(isTimerRunning(timer1));
+
+    //-------------------------------------------
+    // ACTIONS
+    startTimer(timer1, timer1Duration1, true);
+    ASSERT_TRUE(isTimerRunning(timer1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration1 + 50));
+    ASSERT_FALSE(isTimerRunning(timer1));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 }
 
 // TODO: start already running timer

@@ -49,6 +49,13 @@ then
     #      --log-file=valgrind-out.txt \
     #      ./tests/hsmUnitTestsSTD
 
+    # valgrind --tool=callgrind \
+    #      --verbose \
+    #      --log-file=callgrind-out.txt \
+    #      ./tests/hsmUnitTestsSTD
+
+    # kcachegrind
+
     # disable tests to save time
     cmake -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DHSMBUILD_TESTS=OFF -DHSMBUILD_VERBOSE=OFF \

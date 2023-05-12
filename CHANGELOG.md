@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.37.0] - 2023-05-12
+### Added
+- HierarchicalStateMachine::dispatcher() method
+- support for enqued actions in dispatcher (see IHsmEventDispatcher::enqueueAction())
+
+### Fixed
+fix: deleting HSM instance while it still had pending events sometimes cased crash
+
 ## [0.36.0] - 2023-05-03
 ### Updated
 - Fixed clang-tidy warnings

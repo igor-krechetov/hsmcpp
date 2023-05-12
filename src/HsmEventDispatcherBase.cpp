@@ -89,6 +89,17 @@ bool HsmEventDispatcherBase::enqueueEvent(const HandlerID_t handlerID, const Eve
     return wasAdded;
 }
 
+void HsmEventDispatcherBase::enqueueAction(ActionHandlerFunc_t actionCallback) {
+    HSM_TRACE_CALL_DEBUG();
+
+    {
+        LockGuard lck(mEmitSync);
+        mPendingActions.emplace_back(std::move(actionCallback));
+    }
+
+    notifyDispatcherAboutEvent();
+}
+
 HandlerID_t HsmEventDispatcherBase::registerEnqueuedEventHandler(const EnqueuedEventHandlerFunc_t& handler) {
     HSM_TRACE_CALL_DEBUG();
     HandlerID_t id = getNextHandlerID();
@@ -217,17 +228,6 @@ EnqueuedEventHandlerFunc_t HsmEventDispatcherBase::getEnqueuedEventHandlerFunc(c
     return func;
 }
 
-HsmEventDispatcherBase::TimerInfo HsmEventDispatcherBase::getTimerInfo(const TimerID_t timerID) const {
-    TimerInfo result;
-    auto it = mActiveTimers.find(timerID);
-
-    if (mActiveTimers.end() != it) {
-        result = it->second;
-    }
-
-    return result;
-}
-
 TimerHandlerFunc_t HsmEventDispatcherBase::getTimerHandlerFunc(const HandlerID_t handlerID) const {
     // cppcheck-suppress misra-c2012-17.7 ; false-positive. This a function pointer, not function call.
     TimerHandlerFunc_t func;
@@ -255,16 +255,24 @@ bool HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID) {
     if (INVALID_HSM_TIMER_ID != timerID) {
         // NOTE: should lock the whole block to prevent situation when timer handler is unregistered during handler execution
         LockGuard lck(mHandlersSync);
-        TimerInfo curTimer = getTimerInfo(timerID);
 
-        HSM_TRACE_DEBUG("curTimer.handlerID=%d", curTimer.handlerID);
+        auto itTimer = mActiveTimers.find(timerID);
 
-        if (INVALID_HSM_DISPATCHER_HANDLER_ID != curTimer.handlerID) {
-            TimerHandlerFunc_t timerHandler = getTimerHandlerFunc(curTimer.handlerID);
+        if (mActiveTimers.end() != itTimer) {
+            HSM_TRACE_DEBUG("curTimer.handlerID=%d", itTimer->second.handlerID);
 
-            timerHandler(timerID);
+            if (INVALID_HSM_DISPATCHER_HANDLER_ID != itTimer->second.handlerID) {
+                TimerHandlerFunc_t timerHandler = getTimerHandlerFunc(itTimer->second.handlerID);
 
-            restartTimer = ((true == curTimer.isSingleShot) ? false : true);
+                restartTimer = ((true == itTimer->second.isSingleShot) ? false : true);
+
+                // Remove singleshot timer from active list
+                if (false == restartTimer) {
+                    mActiveTimers.erase(itTimer);
+                }
+
+                timerHandler(timerID);
+            }
         }
     }
 
@@ -297,10 +305,27 @@ void HsmEventDispatcherBase::dispatchEnqueuedEvents() {
     }
 }
 
+void HsmEventDispatcherBase::dispatchPendingActions() {
+    if (false == mPendingActions.empty()) {
+        std::list<ActionHandlerFunc_t> actionsSnapshot;
+
+        {
+            LockGuard lck(mEmitSync);
+            actionsSnapshot = std::move(mPendingActions);
+        }
+
+        for (const ActionHandlerFunc_t& actionCallback: actionsSnapshot) {
+            actionCallback();
+        }
+    }
+}
+
 void HsmEventDispatcherBase::dispatchPendingEvents() {
     std::list<HandlerID_t> events;
 
-    {
+    dispatchPendingActions();
+
+    if (false == mPendingEvents.empty()) {
         LockGuard lck(mEmitSync);
         events = std::move(mPendingEvents);
     }

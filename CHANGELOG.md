@@ -311,25 +311,25 @@ fix: deleting HSM instance while it still had pending events sometimes cased cra
 - scxml2gen: improve state description format when generating plantuml diagram
 - hsmdebugger: support of timers
 
-## [0.15.0] 2021-08-06
+## [0.15.0] - 2021-08-06
 
 ### Fixed
 - added namespace for hsmcpp
 
-## [0.14.4] 2021-08-04
+## [0.14.4] - 2021-08-04
 ### Added
 - BYTEARRAY type to Variant
 
 ### Fixed
 - fix build issue related with no default constructor for TransitionInfo
 
-## [0.14.3] 2021-08-03
+## [0.14.3] - 2021-08-03
 
 ### Fixed
 - fix build warnings
 - renamed trace macroses to avoid potential name conflicts
 
-## [0.14.1] 2021-06-13
+## [0.14.1] - 2021-06-13
 
 ### Updated
 - memory footprint test

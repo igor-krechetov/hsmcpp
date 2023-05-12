@@ -2,6 +2,9 @@ name: "Deploy PlatformIO library"
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        type: string
   # Start only after Build was finished
   workflow_run:
     workflows: [Build]
@@ -16,7 +19,7 @@ jobs:
 
     runs-on: ubuntu-latest
     outputs:
-      commit_version: ${{ steps.get_version.outputs.commit_version }}
+      commit_version: ${{ steps.finalize_version.outputs.commit_version }}
       commit_action: ${{ steps.get_version.outputs.commit_action }}
 
     steps:
@@ -26,6 +29,23 @@ jobs:
         with:
           repo_dir: ${{ env.GITHUB_WORKSPACE }}
           commit_sha: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Check user input
+        if: ${{ github.event.inputs.version != '' }}"
+        id: check_user_input
+        run: |
+          echo "TEMP_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+
+      - name: Check commit version
+        id: check_commit
+        if: ${{ github.event.inputs.version == '' }}
+        run: |
+          echo "TEMP_VERSION=${{ steps.get_version.outputs.commit_version }}" >> $GITHUB_ENV
+
+      - name: Final
+        id: finalize_version
+        run: |
+          echo "commit_version=$TEMP_VERSION" >> $GITHUB_OUTPUT
 
   deploy-platformio:
     runs-on: ubuntu-latest
@@ -75,12 +95,14 @@ jobs:
         run: cp -Rv ./main/build/deploy/platformio/* "$target_dir"
 
       - name: Publish PlatformIO package
-        # only publish release versions
-        if: ${{ needs.check-hsmcpp-version.outputs.commit_action == 'r' }}
+        # only publish release versions or when started manually
+        if: ${{ (needs.check-hsmcpp-version.outputs.commit_action == 'r') || (github.event.inputs.version != '') }}
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_TOKEN }}
+        # $PWD is needed due to an issue in "pio pkg publish". It usese os.path.isdir() and sometimes it doesn't not
+        # recognize relative path as a directory
         run: |
-          pio pkg publish ./main/build/deploy/platformio --type library --no-interactive
+          pio pkg publish --type library --no-interactive $PWD/main/build/deploy/platformio/
 
       - name: Prepare commit message
         run: |

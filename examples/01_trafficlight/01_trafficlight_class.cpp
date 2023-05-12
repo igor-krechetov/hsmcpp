@@ -22,7 +22,7 @@ namespace TrafficLightEvent {
 
 class TrafficLight : public hsmcpp::HierarchicalStateMachine {
 public:
-    TrafficLight(const std::shared_ptr<hsmcpp::HsmEventDispatcherGLibmm>& dispatcher, Glib::RefPtr<Glib::MainLoop> loop)
+    TrafficLight(const std::shared_ptr<hsmcpp::HsmEventDispatcherGLibmm>& dispatcher, const Glib::RefPtr<Glib::MainLoop>& loop)
         : hsmcpp::HierarchicalStateMachine(TrafficLightState::OFF)
         , mLoop(loop) {
         registerState(TrafficLightState::OFF, this, &TrafficLight::onOff);

@@ -56,10 +56,10 @@
     void serialPrintf(const char* fmt, ...);
 
     #define HSM_TRACE_CONSOLE_FORCE(msg, ...) \
-        serialPrintf((const char*)F("[HSM] " HSM_TRACE_CLASS "::%s: " msg), __func__,## __VA_ARGS__)
+        serialPrintf((const char*)F("[HSM] %s::%s: " msg), HSM_TRACE_CLASS, __func__,## __VA_ARGS__)
   #else
   #define HSM_TRACE_CONSOLE_FORCE(msg, ...) \
-      printf("[PID:%d, TID:%d] " HSM_TRACE_CLASS "::%s: " msg "\n", g_hsm_traces_pid, _tid, __func__,## __VA_ARGS__)
+      printf("[PID:%d, TID:%d] %s::%s: " msg "\n", g_hsm_traces_pid, _tid, HSM_TRACE_CLASS, __func__,## __VA_ARGS__)
   #endif
 
   #ifdef HSM_USE_CONSOLE_TRACES

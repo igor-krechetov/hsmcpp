@@ -1,5 +1,5 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v0.35.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-v0.37.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 
 # Releases
@@ -113,7 +113,7 @@ See [detailed instructions in documentation](https://hsmcpp.readthedocs.io/en/la
   - glibmm (optional, for dispatcher)
   - Qt (optional, for dispatcher)
 - For build:
-  - cmake 3.14+
+  - cmake 3.16+
   - Visual Studio 2015+ (for Windows build)
 - For code generator:
   - Python 3

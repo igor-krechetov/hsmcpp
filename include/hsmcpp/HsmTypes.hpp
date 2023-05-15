@@ -84,6 +84,49 @@ using HsmTransitionFailedCallback_t = std::function<void(const EventID_t, const 
 // cppcheck-suppress misra-c2012-20.7
 #define HsmTransitionFailedCallbackPtr_t(_class, _func) void (_class::*_func)(const EventID_t, const VariantVector_t&)
 
+/**
+ * @enum HistoryType
+ * @brief Defines the type of history state.
+ * @details The history state can be shallow or deep (see @rstref{features-history} for details).
+ */
+enum class HistoryType {
+    SHALLOW,  ///< remember only the immediate substate of the parent state
+    DEEP      ///< remember the last active state of the substate hierarchy
+};
+
+/**
+ * @enum TransitionType
+ * Defines the type of a self transition (see @rstref{features-transitions-selftransitions} for
+ * details).
+ */
+enum class TransitionType {
+    INTERNAL_TRANSITION,  ///< do not cause a state change during self transition
+    EXTERNAL_TRANSITION   ///< exit current state during self transition
+};
+
+/**
+ * @enum StateActionTrigger
+ * Defines the trigger for a state action (see @rstref{features-states-actions} for details).
+ */
+enum class StateActionTrigger {
+    ON_STATE_ENTRY,  ///< trigger action on state entry
+    ON_STATE_EXIT    ///< trigger action on state exit
+};
+
+/**
+ * @enum StateAction
+ * @brief Defines the type of state action (see @rstref{features-states-actions} for details).
+ *
+ * @details The state action can start, stop, or restart a timer, or cause a transition to another state.
+ * Depending on the action type, you need to provide specific arguments when calling registerStateAction()
+ */
+enum class StateAction {
+    START_TIMER,    ///< **Arguments**: TimerID_t timerID, int32_t intervalMs, bool singleshot
+    STOP_TIMER,     ///< **Arguments**: TimerID_t timerID
+    RESTART_TIMER,  ///< **Arguments**: TimerID_t timerID
+    TRANSITION,     ///< **Arguments**: EventID_t eventID
+};
+
 }  // namespace hsmcpp
 
 #endif  // HSMCPP_HSMTYPES_HPP

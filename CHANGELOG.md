@@ -1,6 +1,22 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [0.37.0] - 2023-05-12
+### Added
+- HierarchicalStateMachine::dispatcher() method
+- support for enqued actions in dispatcher (see IHsmEventDispatcher::enqueueAction())
+
+### Fixed
+fix: deleting HSM instance while it still had pending events sometimes cased crash
+
+## [0.36.0] - 2023-05-03
+### Updated
+- Fixed clang-tidy warnings
+- Reduced complexity of some large methods in HsmImpl
+- Moved private enums and structs from HsmImpl to a separate file
+- Moved HistoryType, TransitionType, StateActionTrigger, StateAction enums from HierarchicalStateMachine class to HsmTypes.hpp (breaks interface)
+- update Coverity tools to 2022.12.2
+
 ## [0.35.0] - 2023-04-26
 ### Added
 - Support for custom types in Variant container

@@ -4,7 +4,6 @@
 #ifndef HSMCPP_SRC_HSMIMPL_HPP
 #define HSMCPP_SRC_HSMIMPL_HPP
 
-#include <functional>
 #include <list>
 #include <map>
 #include <memory>
@@ -14,117 +13,17 @@
 #endif
 
 #include "hsmcpp/hsm.hpp"
-#include "hsmcpp/os/ConditionVariable.hpp"
-#include "hsmcpp/os/LockGuard.hpp"
 #include "hsmcpp/os/Mutex.hpp"
-// TODO: use logging.hpp from external repo
+#include "hsmcpp/os/ConditionVariable.hpp"
+#include "hsmcpp/os/AtomicFlag.hpp"
 #include "hsmcpp/variant.hpp"
+#include "HsmImplTypes.hpp"
 
 namespace hsmcpp {
 
 class IHsmEventDispatcher;
 
 class HierarchicalStateMachine::Impl : public std::enable_shared_from_this<HierarchicalStateMachine::Impl> {
-private:
-    enum class HsmLogAction {
-        IDLE,
-        TRANSITION,
-        TRANSITION_ENTRYPOINT,
-        CALLBACK_EXIT,
-        CALLBACK_ENTER,
-        CALLBACK_STATE,
-        ON_ENTER_ACTIONS,
-        ON_EXIT_ACTIONS,
-    };
-
-    enum class HsmEventStatus { PENDING, DONE_OK, DONE_FAILED, CANCELED };
-
-    enum class TransitionBehavior { REGULAR, ENTRYPOINT, FORCED };
-
-    struct StateCallbacks {
-        HsmStateChangedCallback_t onStateChanged = nullptr;
-        HsmStateEnterCallback_t onEntering = nullptr;
-        HsmStateExitCallback_t onExiting = nullptr;
-    };
-
-    struct StateEntryPoint {
-        StateID_t state = INVALID_HSM_STATE_ID;
-        EventID_t onEvent = INVALID_HSM_EVENT_ID;
-        HsmTransitionConditionCallback_t checkCondition = nullptr;
-        bool expectedConditionValue = true;
-    };
-
-    struct TransitionInfo {
-        StateID_t fromState = INVALID_HSM_STATE_ID;
-        StateID_t destinationState = INVALID_HSM_STATE_ID;
-        TransitionType transitionType = TransitionType::EXTERNAL_TRANSITION;
-        HsmTransitionCallback_t onTransition = nullptr;
-        HsmTransitionConditionCallback_t checkCondition = nullptr;
-        bool expectedConditionValue = true;
-
-        TransitionInfo() = default;
-
-        TransitionInfo(const StateID_t from,
-                       const StateID_t to,
-                       const TransitionType type,
-                       const HsmTransitionCallback_t& cbTransition,
-                       const HsmTransitionConditionCallback_t& cbCondition)
-            : fromState(from)
-            , destinationState(to)
-            , transitionType(type)
-            , onTransition(cbTransition)
-            , checkCondition(cbCondition)
-            , expectedConditionValue(true) {}
-
-        TransitionInfo(const StateID_t from,
-                       const StateID_t to,
-                       const TransitionType type,
-                       const HsmTransitionCallback_t& cbTransition,
-                       const HsmTransitionConditionCallback_t& cbCondition,
-                       const bool conditionValue)
-            : fromState(from)
-            , destinationState(to)
-            , transitionType(type)
-            , onTransition(cbTransition)
-            , checkCondition(cbCondition)
-            , expectedConditionValue(conditionValue) {}
-    };
-
-    struct PendingEventInfo {
-        TransitionBehavior transitionType = TransitionBehavior::REGULAR;
-        EventID_t type = INVALID_HSM_EVENT_ID;
-        VariantVector_t args;
-        std::shared_ptr<Mutex> cvLock;
-        std::shared_ptr<ConditionVariable> syncProcessed;
-        std::shared_ptr<HsmEventStatus> transitionStatus;
-        std::shared_ptr<std::list<TransitionInfo>> forcedTransitionsInfo;
-        bool ignoreEntryPoints = false;
-
-        ~PendingEventInfo();
-        void initLock();
-        void releaseLock();
-        bool isSync();
-        void wait(const int timeoutMs = HSM_WAIT_INDEFINITELY);
-        void unlock(const HsmEventStatus status);
-    };
-
-    struct HistoryInfo {
-        HistoryType type = HistoryType::SHALLOW;
-        StateID_t defaultTarget = INVALID_HSM_STATE_ID;
-        HsmTransitionCallback_t defaultTargetTransitionCallback = nullptr;
-        std::list<StateID_t> previousActiveStates;
-
-        HistoryInfo(const HistoryType newType, const StateID_t newDefaultTarget, HsmTransitionCallback_t newTransitionCallback)
-            : type(newType)
-            , defaultTarget(newDefaultTarget)
-            , defaultTargetTransitionCallback(newTransitionCallback) {}
-    };
-
-    struct StateActionInfo {
-        StateAction action;
-        VariantVector_t actionArgs;
-    };
-
 public:
     explicit Impl(HierarchicalStateMachine* parent, const StateID_t initialState);
     virtual ~Impl();
@@ -133,9 +32,11 @@ public:
 
     void setInitialState(const StateID_t initialState);
     bool initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher);
+    std::weak_ptr<IHsmEventDispatcher> dispatcher() const;
+
     bool isInitialized() const;
     void release();
-    void registerFailedTransitionCallback(const HsmTransitionFailedCallback_t& onFailedTransition);
+    void registerFailedTransitionCallback(HsmTransitionFailedCallback_t onFailedTransition);
     void registerState(const StateID_t state,
                        HsmStateChangedCallback_t onStateChanged = nullptr,
                        HsmStateEnterCallback_t onEntering = nullptr,
@@ -154,7 +55,7 @@ public:
     bool registerSubstateEntryPoint(const StateID_t parent,
                                     const StateID_t substate,
                                     const EventID_t onEvent = INVALID_HSM_EVENT_ID,
-                                    const HsmTransitionConditionCallback_t& conditionCallback = nullptr,
+                                    HsmTransitionConditionCallback_t conditionCallback = nullptr,
                                     const bool expectedConditionValue = true);
     void registerTimer(const TimerID_t timerID, const EventID_t event);
     bool registerStateAction(const StateID_t state,
@@ -194,6 +95,11 @@ public:
     void disableHsmDebugging();
 
 private:
+    void createEventHandler(const std::shared_ptr<IHsmEventDispatcher>& dispatcherPtr, const std::weak_ptr<Impl>& ptrInstance);
+    void createTimerHandler(const std::shared_ptr<IHsmEventDispatcher>& dispatcherPtr, const std::weak_ptr<Impl>& ptrInstance);
+    void createEnqueuedEventHandler(const std::shared_ptr<IHsmEventDispatcher>& dispatcherPtr,
+                                    const std::weak_ptr<Impl>& ptrInstance);
+
     // checks initial state and, if needed, process any automatic initial transitions
     void handleStartup();
 
@@ -203,7 +109,7 @@ private:
                           const StateID_t substate,
                           const bool isEntryPoint,
                           const EventID_t eventCondition = INVALID_HSM_EVENT_ID,
-                          const HsmTransitionConditionCallback_t& conditionCallback = nullptr,
+                          HsmTransitionConditionCallback_t conditionCallback = nullptr,
                           const bool expectedConditionValue = true);
 
     void dispatchEvents();
@@ -231,6 +137,25 @@ private:
                               const bool searchParents,
                               std::list<TransitionInfo>& outTransitions);
     HsmEventStatus doTransition(const PendingEventInfo& event);
+
+    HsmEventStatus processExternalTransition(const PendingEventInfo& event,
+                                             const StateID_t fromState,
+                                             const TransitionInfo& curTransition,
+                                             const std::list<StateID_t>& exitedStates);
+    bool determineTargetState(const PendingEventInfo& event,
+                              const StateID_t fromState,
+                              std::list<TransitionInfo>& outMatchingTransitions);
+    bool executeSelfTransitions(const PendingEventInfo& event, const std::list<TransitionInfo>& matchingTransitions);
+    bool executeExitTransition(const PendingEventInfo& event,
+                               const std::list<TransitionInfo>& matchingTransitions,
+                               std::list<StateID_t>& outExitedStates);
+
+    bool processHistoryTransition(const PendingEventInfo& event, const StateID_t destinationState);
+    void transitionToPreviousActiveStates(std::list<StateID_t>& previousActiveStates, const PendingEventInfo& event, const StateID_t destinationState);
+    void transitionToDefaultHistoryState(const StateID_t defaultTarget, const HsmTransitionCallback_t& defaultTargetTransitionCallback, const PendingEventInfo& event, const StateID_t destinationState);
+
+
+    bool processFinalStateTransition(const PendingEventInfo& event, const StateID_t destinationState);
     HsmEventStatus handleSingleTransition(const StateID_t fromState, const PendingEventInfo& event);
     void clearPendingEvents();
 
@@ -299,6 +224,7 @@ private:
 #endif
 
 #ifndef HSM_DISABLE_THREADSAFETY
+    AtomicFlag mIsDispatching;
     Mutex mEventsSync;
   #if !defined(HSM_DISABLE_DEBUG_TRACES)
     Mutex mParentSync;

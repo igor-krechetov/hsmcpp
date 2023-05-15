@@ -8,15 +8,13 @@
 namespace hsmcpp {
 
 CriticalSection::CriticalSection(Mutex& sync)
-    : mSync(sync) {
-    mInterruptsBlock = new InterruptsFreeSection();
+    : mSync(sync)
+    , mInterruptsBlock(new InterruptsFreeSection()) {
     mSync.lock();
 }
 
 CriticalSection::~CriticalSection() {
     mSync.unlock();
-    delete mInterruptsBlock;
-    mInterruptsBlock = nullptr;
 }
 
 }  // namespace hsmcpp

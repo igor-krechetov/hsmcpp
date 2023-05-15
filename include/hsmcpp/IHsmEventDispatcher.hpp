@@ -37,6 +37,12 @@ using TimerHandlerFunc_t = std::function<bool(const TimerID_t)>;
 using EnqueuedEventHandlerFunc_t = std::function<bool(const EventID_t)>;
 
 /**
+ * @brief Handler callback for enqueued actions.
+ * @details See IHsmEventDispatcher::enqueueAction() for details.
+ */
+using ActionHandlerFunc_t = std::function<void()>;
+
+/**
  * @brief IHsmEventDispatcher provides an interface for events dispatcher implementations.
  * @details The IHsmEventDispatcher class defines the standard dispatcher interface that HSM uses to process internal events. It
  * is not supposed to be instantiated directly. Instead, you should subclass it to create platform or framework specific
@@ -156,6 +162,15 @@ public:
      * @concurrencysafe{Dispatcher implementation **must guarantee** that this call is thread-safe and signals/interrupts safe.}
      */
     virtual bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) = 0;
+
+    /**
+     * @brief Enqueue action to be executed on dispatcher's thread.
+     * @details Enqueued actions have highest priority compared to events and will be executed as soon as possible. If there are
+     * any events being processed then dispatcher will first finish their execution.
+     *
+     * @param actionCallback  functor to be called by dispatcher
+     */
+    virtual void enqueueAction(ActionHandlerFunc_t actionCallback) = 0;
 
     /**
      * @brief Register a new handler for timers.

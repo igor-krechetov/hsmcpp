@@ -48,13 +48,34 @@ HistoryInfo::HistoryInfo(const HistoryType newType,
 // ============================================================================
 constexpr const char* HSM_TRACE_CLASS = "PendingEventInfo";
 
+PendingEventInfo::PendingEventInfo(PendingEventInfo&& src) {
+    *this = std::move(src);
+}
+
 PendingEventInfo::~PendingEventInfo() {
     if (true == cvLock.unique()) {
-        HSM_TRACE_CALL_DEBUG_ARGS("event=<%d> was deleted. releasing lock", SC2INT(type));
+        HSM_TRACE_CALL_DEBUG_ARGS("event=<%d> was deleted. releasing lock", SC2INT(id));
         unlock(HsmEventStatus::DONE_FAILED);
         cvLock.reset();
         syncProcessed.reset();
     }
+}
+
+PendingEventInfo& PendingEventInfo::operator=(PendingEventInfo&& src) {
+    if (this != &src) {
+        transitionType = src.transitionType;
+        id = src.id;
+        args = std::move(src.args);
+        cvLock = std::move(src.cvLock);
+        syncProcessed = std::move(src.syncProcessed);
+        transitionStatus = std::move(src.transitionStatus);
+        forcedTransitionsInfo = std::move(src.forcedTransitionsInfo);
+        ignoreEntryPoints = src.ignoreEntryPoints;
+
+        src.id = INVALID_HSM_EVENT_ID;
+    }
+
+    return *this;
 }
 
 void PendingEventInfo::initLock() {
@@ -114,6 +135,11 @@ void PendingEventInfo::unlock(const HsmEventStatus status) {
     } else {
         HSM_TRACE_DEBUG("ASYNC object");
     }
+}
+
+const VariantVector_t& PendingEventInfo::getArgs() const {
+    static VariantVector_t empty;
+    return (args ? *args : empty);
 }
 
 }  // namespace hsmcpp

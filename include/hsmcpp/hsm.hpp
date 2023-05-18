@@ -330,7 +330,7 @@ public:
     bool registerStateAction(const StateID_t state,
                              const StateActionTrigger actionTrigger,
                              const StateAction action,
-                             Args... args);
+                             Args&&... args);
 
     /**
      * @brief Registers a transition from one state to another.
@@ -449,7 +449,7 @@ public:
      * @threadsafe{ }
      */
     template <typename... Args>
-    void transition(const EventID_t event, Args... args);
+    void transition(const EventID_t event, Args&&... args);
 
     /**
      * @brief Trigger a transition in the HSM.
@@ -475,13 +475,13 @@ public:
      * @threadsafe{ }
      */
     template <typename... Args>
-    bool transitionEx(const EventID_t event, const bool clearQueue, const bool sync, const int timeoutMs, Args... args);
+    bool transitionEx(const EventID_t event, const bool clearQueue, const bool sync, const int timeoutMs, Args&&... args);
 
     /**
      * @brief Trigger a transition in the HSM with arguments passed as a vector.
      * @copydetails transition()
      */
-    void transitionWithArgsArray(const EventID_t event, const VariantVector_t& args);
+    void transitionWithArgsArray(const EventID_t event, VariantVector_t&& args);
 
     /**
      * @brief Trigger a transition in the HSM with arguments passed as a vector.
@@ -491,7 +491,7 @@ public:
                                    const bool clearQueue,
                                    const bool sync,
                                    const int timeoutMs,
-                                   const VariantVector_t& args);
+                                   VariantVector_t&& args);
 
     /**
      * @brief Trigger a transition in the HSM and process it synchronously.
@@ -511,7 +511,7 @@ public:
      * @threadsafe{ }
      */
     template <typename... Args>
-    bool transitionSync(const EventID_t event, const int timeoutMs, Args... args);
+    bool transitionSync(const EventID_t event, const int timeoutMs, Args&&... args);
 
     /**
      * @brief Trigger a transition in the HSM and clear all pending events.
@@ -524,7 +524,7 @@ public:
      * @threadsafe{ }
      */
     template <typename... Args>
-    void transitionWithQueueClear(const EventID_t event, Args... args);
+    void transitionWithQueueClear(const EventID_t event, Args&&... args);
 
     /**
      * @brief Interrupt/signal safe version of transition
@@ -563,7 +563,7 @@ public:
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
      */
     template <typename... Args>
-    bool isTransitionPossible(const EventID_t event, Args... args);
+    bool isTransitionPossible(const EventID_t event, Args&&... args);
 
     /**
      * @brief Start a timer.
@@ -804,10 +804,10 @@ template <typename... Args>
 bool HierarchicalStateMachine::registerStateAction(const StateID_t state,
                                                    const StateActionTrigger actionTrigger,
                                                    const StateAction action,
-                                                   Args... args) {
+                                                   Args&&... args) {
     VariantVector_t eventArgs;
 
-    makeVariantList(eventArgs, args...);
+    makeVariantList(eventArgs, std::forward<Args>(args)...);
     return registerStateActionImpl(state, actionTrigger, action, eventArgs);
 }
 
@@ -860,8 +860,8 @@ void HierarchicalStateMachine::registerSelfTransition(const StateID_t state,
 }
 
 template <typename... Args>
-void HierarchicalStateMachine::transition(const EventID_t event, Args... args) {
-    (void)transitionEx(event, false, false, 0, args...);
+void HierarchicalStateMachine::transition(const EventID_t event, Args&&... args) {
+    (void)transitionEx(event, false, false, 0, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
@@ -869,36 +869,36 @@ bool HierarchicalStateMachine::transitionEx(const EventID_t event,
                                             const bool clearQueue,
                                             const bool sync,
                                             const int timeoutMs,
-                                            Args... args) {
+                                            Args&&... args) {
     VariantVector_t eventArgs;
 
-    makeVariantList(eventArgs, args...);
-    return transitionExWithArgsArray(event, clearQueue, sync, timeoutMs, eventArgs);
+    makeVariantList(eventArgs, std::forward<Args>(args)...);
+    return transitionExWithArgsArray(event, clearQueue, sync, timeoutMs, std::move(eventArgs));
 }
 
 template <typename... Args>
-bool HierarchicalStateMachine::transitionSync(const EventID_t event, const int timeoutMs, Args... args) {
-    return transitionEx(event, false, true, timeoutMs, args...);
+bool HierarchicalStateMachine::transitionSync(const EventID_t event, const int timeoutMs, Args&&... args) {
+    return transitionEx(event, false, true, timeoutMs, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-void HierarchicalStateMachine::transitionWithQueueClear(const EventID_t event, Args... args) {
+void HierarchicalStateMachine::transitionWithQueueClear(const EventID_t event, Args&&... args) {
     // NOTE: async transitions always return true
-    (void)transitionEx(event, true, false, 0, args...);
+    (void)transitionEx(event, true, false, 0, std::forward<Args>(args)...);
 }
 
 template <typename... Args>
-bool HierarchicalStateMachine::isTransitionPossible(const EventID_t event, Args... args) {
+bool HierarchicalStateMachine::isTransitionPossible(const EventID_t event, Args&&... args) {
     VariantVector_t eventArgs;
 
-    makeVariantList(eventArgs, args...);
+    makeVariantList(eventArgs, std::forward<Args>(args)...);
 
     return isTransitionPossibleImpl(event, eventArgs);
 }
 
 template <typename... Args>
 void HierarchicalStateMachine::makeVariantList(VariantVector_t& vList, Args&&... args) {
-    volatile int make_variant[] = {0, (vList.push_back(Variant::make(std::forward<Args>(args))), 0)...};
+    volatile int make_variant[] = {0, (vList.emplace_back(std::forward<Args>(args)), 0)...};
     (void)make_variant;
 }
 

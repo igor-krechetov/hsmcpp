@@ -17,6 +17,7 @@
 #define HSM_EXIT_ON_FATAL
 #else // HSM_LOGGING_MODE_OFF
 #define HSM_DISABLE_TRACES
+#define HSM_DISABLE_DEBUG_TRACES
 #endif
 
 // ---------------------------------------------------------------------------------

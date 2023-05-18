@@ -6,8 +6,8 @@
 
 #include <list>
 #include <map>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "IHsmEventDispatcher.hpp"
 #include "os/Mutex.hpp"
@@ -34,8 +34,10 @@ protected:
     };
 
     struct EnqueuedEventInfo {
-        HandlerID_t handlerID;
-        EventID_t eventID;
+        HandlerID_t handlerID = INVALID_HSM_DISPATCHER_HANDLER_ID;
+        EventID_t eventID = INVALID_HSM_EVENT_ID;
+
+        EnqueuedEventInfo(const HandlerID_t newHandlerID, const EventID_t newEventID);
     };
 
 public:
@@ -147,7 +149,7 @@ protected:
      * @retval true instance can be deleted now
      *
      * @notthreadsafe{Should not be called multiple times}
-    */
+     */
     virtual bool deleteSafe() = 0;
 
     /**
@@ -262,13 +264,13 @@ protected:
 
 protected:
     HandlerID_t mNextHandlerId = 1;
-    std::map<TimerID_t, TimerInfo> mActiveTimers; // protected by mHandlersSync
-    std::map<HandlerID_t, EventHandlerFunc_t> mEventHandlers; // protected by mHandlersSync
-    std::map<HandlerID_t, EnqueuedEventHandlerFunc_t> mEnqueuedEventHandlers; // protected by mHandlersSync
-    std::map<HandlerID_t, TimerHandlerFunc_t> mTimerHandlers; // protected by mHandlersSync
-    std::list<ActionHandlerFunc_t> mPendingActions; // protected by mEmitSync
-    std::list<HandlerID_t> mPendingEvents; // protected by mEmitSync
-    std::vector<EnqueuedEventInfo> mEnqueuedEvents; // protected by mEnqueuedEventsSync
+    std::map<TimerID_t, TimerInfo> mActiveTimers;                              // protected by mHandlersSync
+    std::map<HandlerID_t, EventHandlerFunc_t> mEventHandlers;                  // protected by mHandlersSync
+    std::map<HandlerID_t, EnqueuedEventHandlerFunc_t> mEnqueuedEventHandlers;  // protected by mHandlersSync
+    std::map<HandlerID_t, TimerHandlerFunc_t> mTimerHandlers;                  // protected by mHandlersSync
+    std::list<ActionHandlerFunc_t> mPendingActions;                            // protected by mEmitSync
+    std::list<HandlerID_t> mPendingEvents;                                     // protected by mEmitSync
+    std::vector<EnqueuedEventInfo> mEnqueuedEvents;                            // protected by mEnqueuedEventsSync
     Mutex mEmitSync;
     Mutex mHandlersSync;
     Mutex mEnqueuedEventsSync;

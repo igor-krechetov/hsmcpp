@@ -75,12 +75,8 @@ Variant::Variant(const Variant& v) {
     *this = v;
 }
 
-Variant::Variant(Variant&& v) noexcept
-    : data(std::move(v.data))
-    , type(v.type)
-    , memoryAllocator(std::move(v.memoryAllocator))
-    , compareOperator(std::move(v.compareOperator)) {
-    v.type = Type::UNKNOWN;
+Variant::Variant(Variant&& v) noexcept {
+    *this = std::move(v);
 }
 
 IMPL_CONSTRUCTOR(int8_t, Type::BYTE_1)
@@ -671,7 +667,7 @@ ByteArray_t Variant::toByteArray() const {
             static_cast<void>(memcpy(result.data(), data.get(), sizeof(double)));
             break;
         case Type::BOOL:
-            result.push_back((toBool() == true) ? 0x01 : 0x00);
+            result.emplace_back((toBool() == true) ? 0x01 : 0x00);
             break;
         case Type::STRING: {
             std::shared_ptr<std::string> val = value<std::string>();

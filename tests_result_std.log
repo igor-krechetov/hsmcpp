@@ -182,15 +182,15 @@
 [       OK ] ABCHsm.finalstate_no_transition (50 ms)
 [ RUN      ] ABCHsm.finalstate_toplevel
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
-[----------] 70 tests from ABCHsm (3337 ms total)
+[----------] 70 tests from ABCHsm (3339 ms total)
 
 [----------] 7 tests from dispatchers
 [ RUN      ] dispatchers.release_sync
-[       OK ] dispatchers.release_sync (600 ms)
+[       OK ] dispatchers.release_sync (601 ms)
 [ RUN      ] dispatchers.stresstest_create_destroy_hsm_later
 [       OK ] dispatchers.stresstest_create_destroy_hsm_later (100 ms)
 [ RUN      ] dispatchers.stresstest_create_destroy_dispatcher
-[       OK ] dispatchers.stresstest_create_destroy_dispatcher (2002 ms)
+[       OK ] dispatchers.stresstest_create_destroy_dispatcher (2003 ms)
 [ RUN      ] dispatchers.destroy_without_starting
 [       OK ] dispatchers.destroy_without_starting (0 ms)
 [ RUN      ] dispatchers.stop
@@ -199,7 +199,7 @@
 [       OK ] dispatchers.create_hsm_from_callback (0 ms)
 [ RUN      ] dispatchers.instance_ownership
 [       OK ] dispatchers.instance_ownership (0 ms)
-[----------] 7 tests from dispatchers (3204 ms total)
+[----------] 7 tests from dispatchers (3206 ms total)
 
 [----------] 16 tests from variant
 [ RUN      ] variant.copy_constructor
@@ -544,7 +544,7 @@
 
 [----------] 20 tests from variant/FixtureVariantTypeConversion
 [ RUN      ] variant/FixtureVariantTypeConversion.convert/toInt64
-[       OK ] variant/FixtureVariantTypeConversion.convert/toInt64 (34 ms)
+[       OK ] variant/FixtureVariantTypeConversion.convert/toInt64 (42 ms)
 [ RUN      ] variant/FixtureVariantTypeConversion.convert/toUInt64
 [       OK ] variant/FixtureVariantTypeConversion.convert/toUInt64 (0 ms)
 [ RUN      ] variant/FixtureVariantTypeConversion.convert/toDouble
@@ -583,8 +583,8 @@
 [       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/getMap (0 ms)
 [ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/getPair
 [       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/getPair (0 ms)
-[----------] 20 tests from variant/FixtureVariantTypeConversion (35 ms total)
+[----------] 20 tests from variant/FixtureVariantTypeConversion (42 ms total)
 
 [----------] Global test environment tear-down
-[==========] 273 tests from 13 test suites ran. (6582 ms total)
+[==========] 273 tests from 13 test suites ran. (6596 ms total)
 [  PASSED  ] 273 tests.

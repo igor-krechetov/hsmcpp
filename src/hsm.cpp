@@ -118,16 +118,16 @@ bool HierarchicalStateMachine::isStateActive(const StateID_t state) const {
     return mImpl->isStateActive(state);
 }
 
-void HierarchicalStateMachine::transitionWithArgsArray(const EventID_t event, const VariantVector_t& args) {
-    return mImpl->transitionWithArgsArray(event, args);
+void HierarchicalStateMachine::transitionWithArgsArray(const EventID_t event, VariantVector_t&& args) {
+    return mImpl->transitionWithArgsArray(event, std::move(args));
 }
 
 bool HierarchicalStateMachine::transitionExWithArgsArray(const EventID_t event,
                                                          const bool clearQueue,
                                                          const bool sync,
                                                          const int timeoutMs,
-                                                         const VariantVector_t& args) {
-    return mImpl->transitionExWithArgsArray(event, clearQueue, sync, timeoutMs, args);
+                                                         VariantVector_t&& args) {
+    return mImpl->transitionExWithArgsArray(event, clearQueue, sync, timeoutMs, std::move(args));
 }
 
 bool HierarchicalStateMachine::transitionInterruptSafe(const EventID_t event) {

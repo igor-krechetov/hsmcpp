@@ -69,20 +69,28 @@ struct TransitionInfo {
 
 struct PendingEventInfo {
     TransitionBehavior transitionType = TransitionBehavior::REGULAR;
-    EventID_t type = INVALID_HSM_EVENT_ID;
-    VariantVector_t args;
+    EventID_t id = INVALID_HSM_EVENT_ID;
+    std::shared_ptr<VariantVector_t> args;
     std::shared_ptr<Mutex> cvLock;
     std::shared_ptr<ConditionVariable> syncProcessed;
     std::shared_ptr<HsmEventStatus> transitionStatus;
     std::shared_ptr<std::list<TransitionInfo>> forcedTransitionsInfo;
     bool ignoreEntryPoints = false;
 
+    PendingEventInfo() = default;
+    PendingEventInfo(const PendingEventInfo& src) = default;
+    PendingEventInfo(PendingEventInfo&& src);
     ~PendingEventInfo();
+
+    PendingEventInfo& operator=(const PendingEventInfo& src) = default;
+    PendingEventInfo& operator=(PendingEventInfo&& src);
+
     void initLock();
     void releaseLock();
     bool isSync() const;
     void wait(const int timeoutMs = HSM_WAIT_INDEFINITELY);
     void unlock(const HsmEventStatus status);
+    const VariantVector_t& getArgs() const;
 };
 
 struct HistoryInfo {

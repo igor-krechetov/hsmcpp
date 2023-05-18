@@ -11,6 +11,10 @@ namespace hsmcpp {
 
 constexpr const char* HSM_TRACE_CLASS = "HsmEventDispatcherBase";
 
+HsmEventDispatcherBase::EnqueuedEventInfo::EnqueuedEventInfo(const HandlerID_t newHandlerID, const EventID_t newEventID)
+    : handlerID(newHandlerID)
+    , eventID(newEventID) {}
+
 HsmEventDispatcherBase::HsmEventDispatcherBase(const size_t eventsCacheSize) {
     mEnqueuedEvents.reserve(eventsCacheSize);
 }
@@ -60,7 +64,7 @@ void HsmEventDispatcherBase::emitEvent(const HandlerID_t handlerID) {
 
     {
         LockGuard lck(mEmitSync);
-        mPendingEvents.push_back(handlerID);
+        mPendingEvents.emplace_back(handlerID);
     }
 
     notifyDispatcherAboutEvent();
@@ -72,14 +76,9 @@ bool HsmEventDispatcherBase::enqueueEvent(const HandlerID_t handlerID, const Eve
     bool wasAdded = false;
 
     if (mEnqueuedEvents.size() < mEnqueuedEvents.capacity()) {
-        EnqueuedEventInfo newEvent = {0};
-
-        newEvent.handlerID = handlerID;
-        newEvent.eventID = event;
-
         {
             CriticalSection cs(mEnqueuedEventsSync);
-            mEnqueuedEvents.push_back(newEvent);
+            mEnqueuedEvents.emplace_back(handlerID, event);
         }
 
         wasAdded = true;
@@ -294,7 +293,7 @@ void HsmEventDispatcherBase::dispatchEnqueuedEvents() {
         }
 
         // need to traverse events in reverse order
-        for (auto it = currentEvents.rbegin(); (it != currentEvents.rend()) && (false == mStopDispatcher) ; ++it) {
+        for (auto it = currentEvents.rbegin(); (it != currentEvents.rend()) && (false == mStopDispatcher); ++it) {
             if (prevHandlerID != it->handlerID) {
                 callback = getEnqueuedEventHandlerFunc(it->handlerID);
                 prevHandlerID = it->handlerID;
@@ -314,7 +313,7 @@ void HsmEventDispatcherBase::dispatchPendingActions() {
             actionsSnapshot = std::move(mPendingActions);
         }
 
-        for (const ActionHandlerFunc_t& actionCallback: actionsSnapshot) {
+        for (const ActionHandlerFunc_t& actionCallback : actionsSnapshot) {
             actionCallback();
         }
     }

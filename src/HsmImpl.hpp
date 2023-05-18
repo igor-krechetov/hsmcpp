@@ -78,12 +78,12 @@ public:
     const std::list<StateID_t>& getActiveStates() const;
     bool isStateActive(const StateID_t state) const;
 
-    void transitionWithArgsArray(const EventID_t event, const VariantVector_t& args);
+    void transitionWithArgsArray(const EventID_t event, VariantVector_t&& args);
     bool transitionExWithArgsArray(const EventID_t event,
                                    const bool clearQueue,
                                    const bool sync,
                                    const int timeoutMs,
-                                   const VariantVector_t& args);
+                                   VariantVector_t&& args);
     bool transitionInterruptSafe(const EventID_t event);
     bool isTransitionPossible(const EventID_t event, const VariantVector_t& args);
     void startTimer(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot);

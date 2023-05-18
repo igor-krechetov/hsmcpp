@@ -547,7 +547,7 @@ TEST_F(ABCHsm, substate_error_no_entrypoint) {
     /*
     @startuml
     left to right direction
-    title substate_parent_as_initial
+    title substate_error_no_entrypoint
 
     A -[#red,bold]-> P1: E1
     state P1 {

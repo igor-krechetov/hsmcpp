@@ -49,10 +49,7 @@ then
     #      --log-file=valgrind-out.txt \
     #      ./tests/hsmUnitTestsSTD
 
-    # valgrind --tool=callgrind \
-    #      --verbose \
-    #      --log-file=callgrind-out.txt \
-    #      ./tests/hsmUnitTestsSTD
+    # valgrind --tool=callgrind ./tests/hsmUnitTestsSTD
 
     # kcachegrind
 

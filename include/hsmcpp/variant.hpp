@@ -175,6 +175,11 @@ public:
     template <typename T>
     static Variant make(const T& v);
 
+    // DEF_MAKE_DOC(Type::CUSTOM)
+    // TODO: doc
+    template <typename T>
+    static Variant makeCustom(const T& v);
+
     /**
      * @brief Create a new Variant object from an existing Variant object.
      * @param v The Variant object to copy.
@@ -228,6 +233,13 @@ public:
     DEF_CONSTRUCTOR(VariantList_t&, Type::LIST)
     DEF_CONSTRUCTOR(VariantMap_t&, Type::MAP)
     DEF_CONSTRUCTOR(VariantPair_t&, Type::PAIR)
+
+    template <typename T>
+    DEF_CONSTRUCTOR(std::vector<T>&, Type::VECTOR);
+    template <typename T>
+    DEF_CONSTRUCTOR(std::list<T>&, Type::LIST);
+    template <typename K, typename V>
+    explicit Variant(const std::map<K, V>& v);
 
     /**
      * @brief Constructs a new variant object of type Type::PAIR.
@@ -640,6 +652,9 @@ public:
 private:
     Variant(std::shared_ptr<void> d, const Type t);
 
+    template <typename T>
+    Variant(const T& v, const Type t);
+
     bool isSameObject(const Variant& val) const;
 
     template <typename T>
@@ -662,51 +677,17 @@ private:
 
 template <typename T>
 Variant Variant::make(const std::vector<T>& v) {
-    std::shared_ptr<VariantVector_t> dest = std::shared_ptr<VariantVector_t>(new VariantVector_t(), [](void* ptr) {
-        delete reinterpret_cast<VariantVector_t*>(ptr);
-    });
-
-    for (auto it = v.begin(); it != v.end(); ++it) {
-        dest->push_back(make(*it));
-    }
-
-    Variant res(std::static_pointer_cast<void>(dest), Type::VECTOR);
-
-    res.createMemoryAllocator<VariantVector_t>();
-
-    return res;
+    return Variant(v);
 }
 
 template <typename T>
 Variant Variant::make(const std::list<T>& v) {
-    std::shared_ptr<VariantList_t> dest =
-        std::shared_ptr<VariantList_t>(new VariantList_t(), [](void* ptr) { delete reinterpret_cast<VariantList_t*>(ptr); });
-
-    for (auto it = v.begin(); it != v.end(); ++it) {
-        dest->push_back(make(*it));
-    }
-
-    Variant res(std::static_pointer_cast<void>(dest), Type::LIST);
-
-    res.createMemoryAllocator<VariantList_t>();
-
-    return res;
+    return Variant(v);
 }
 
 template <typename K, typename V>
 Variant Variant::make(const std::map<K, V>& v) {
-    std::shared_ptr<VariantMap_t> dest =
-        std::shared_ptr<VariantMap_t>(new VariantMap_t(), [](void* ptr) { delete reinterpret_cast<VariantMap_t*>(ptr); });
-
-    for (auto it = v.begin(); it != v.end(); ++it) {
-        dest->emplace(make(it->first), make(it->second));
-    }
-
-    Variant res(std::static_pointer_cast<void>(dest), Type::MAP);
-
-    res.createMemoryAllocator<VariantMap_t>();
-
-    return res;
+    return Variant(v);
 }
 
 template <typename TFirst, typename TSecond>
@@ -716,11 +697,57 @@ Variant Variant::make(const TFirst& first, const TSecond& second) {
 
 template <typename T>
 Variant Variant::make(const T& v) {
-    Variant res;
+    return makeCustom(v);
+}
 
-    res.assign(v, Type::CUSTOM);
+template <typename T>
+Variant Variant::makeCustom(const T& v) {
+    return Variant(v, Type::CUSTOM);
+}
 
-    return res;
+template <typename T>
+Variant::Variant(const std::vector<T>& v) {
+    std::shared_ptr<VariantVector_t> dest = std::shared_ptr<VariantVector_t>(new VariantVector_t(), [](void* ptr) {
+        delete reinterpret_cast<VariantVector_t*>(ptr);
+    });
+
+    dest->reserve(v.size());
+
+    for (auto it = v.begin(); it != v.end(); ++it) {
+        dest->emplace_back(*it);
+    }
+
+    data = std::static_pointer_cast<void>(dest);
+    type = Type::VECTOR;
+    createMemoryAllocator<VariantVector_t>();
+}
+
+template <typename T>
+Variant::Variant(const std::list<T>& v) {
+    std::shared_ptr<VariantList_t> dest =
+        std::shared_ptr<VariantList_t>(new VariantList_t(), [](void* ptr) { delete reinterpret_cast<VariantList_t*>(ptr); });
+
+    for (auto it = v.begin(); it != v.end(); ++it) {
+        dest->emplace_back(*it);
+    }
+
+    data = std::static_pointer_cast<void>(dest);
+    type = Type::LIST;
+    createMemoryAllocator<VariantList_t>();
+}
+
+template <typename K, typename V>
+Variant::Variant(const std::map<K, V>& v) {
+    std::shared_ptr<VariantMap_t> dest =
+        std::shared_ptr<VariantMap_t>(new VariantMap_t(), [](void* ptr) { delete reinterpret_cast<VariantMap_t*>(ptr); });
+
+    for (auto it = v.begin(); it != v.end(); ++it) {
+        dest->emplace(it->first, it->second);
+    }
+
+    data = std::static_pointer_cast<void>(dest);
+    type = Type::MAP;
+    createMemoryAllocator<VariantMap_t>();
 }
 
 template <typename TFirst, typename TSecond>
@@ -766,7 +793,7 @@ std::vector<T> Variant::toVector(const std::function<T(const Variant&)>& convert
             res.reserve(vectorData->size());
 
             for (const Variant& curItem : *vectorData) {
-                res.push_back(converter(curItem));
+                res.emplace_back(converter(curItem));
             }
         }
     }
@@ -784,7 +811,7 @@ std::list<T> Variant::toList(const std::function<T(const Variant&)>& converter) 
         // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
         if (listData) {
             for (const Variant& curItem : *listData) {
-                res.push_back(converter(curItem));
+                res.emplace_back(converter(curItem));
             }
         }
     }
@@ -826,6 +853,11 @@ std::pair<TFirst, TSecond> Variant::toPair(const std::function<TFirst(const Vari
     }
 
     return res;
+}
+
+template <typename T>
+Variant::Variant(const T& v, const Type t) {
+    assign(v, t);
 }
 
 template <typename T>

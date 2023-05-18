@@ -481,7 +481,7 @@ public:
      * @brief Trigger a transition in the HSM with arguments passed as a vector.
      * @copydetails transition()
      */
-    void transitionWithArgsArray(const EventID_t event, const VariantVector_t& args);
+    void transitionWithArgsArray(const EventID_t event, VariantVector_t&& args);
 
     /**
      * @brief Trigger a transition in the HSM with arguments passed as a vector.
@@ -491,7 +491,7 @@ public:
                                    const bool clearQueue,
                                    const bool sync,
                                    const int timeoutMs,
-                                   const VariantVector_t& args);
+                                   VariantVector_t&& args);
 
     /**
      * @brief Trigger a transition in the HSM and process it synchronously.
@@ -873,7 +873,7 @@ bool HierarchicalStateMachine::transitionEx(const EventID_t event,
     VariantVector_t eventArgs;
 
     makeVariantList(eventArgs, std::forward<Args>(args)...);
-    return transitionExWithArgsArray(event, clearQueue, sync, timeoutMs, eventArgs);
+    return transitionExWithArgsArray(event, clearQueue, sync, timeoutMs, std::move(eventArgs));
 }
 
 template <typename... Args>
@@ -898,7 +898,7 @@ bool HierarchicalStateMachine::isTransitionPossible(const EventID_t event, Args&
 
 template <typename... Args>
 void HierarchicalStateMachine::makeVariantList(VariantVector_t& vList, Args&&... args) {
-    volatile int make_variant[] = {0, (vList.push_back(Variant::make(std::forward<Args>(args))), 0)...};
+    volatile int make_variant[] = {0, (vList.emplace_back(std::forward<Args>(args)), 0)...};
     (void)make_variant;
 }
 

@@ -64,7 +64,7 @@ void HsmEventDispatcherFreeRTOS::emitEvent(const HandlerID_t handlerID) {
         {
             // TODO: this will work only for single-core FreeRTOS
             InterruptsFreeSection lck;
-            mPendingEvents.push_back(handlerID);
+            mPendingEvents.emplace_back(handlerID);
         }
 
         notifyDispatcherAboutEvent();

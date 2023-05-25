@@ -489,7 +489,6 @@ def prepareRegisterActionFunction(state, eventsEnum, timersEnum, trigger, action
         for i in range(1, len(actionInfo['args'])):
             args += f", {actionInfo['args'][i]}"
 
-        print(f"action=<{action}>, {'_TIMER' in action}")
         if "_TIMER" in action:
             timerName = f"{timersEnum}::{actionInfo['args'][0]}"
             func = f"(void)registerStateAction({state}, {actionTrigger}, {action}, static_cast<hsmcpp::TimerID_t>({timerName}){args});"
@@ -561,7 +560,7 @@ def generateCppCode(hsm, pathHpp, pathCpp, class_name, class_suffix, template_hp
                 for genEntryPoint in [True, False]:
                     for curSubstate in curState["states"]:
                         if (genEntryPoint is False) and (curSubstate["type"] == STATETYPE_HISTORY):
-                            print(f"FOUND HISTORY: {curSubstate}")
+                            # print(f"FOUND HISTORY: {curSubstate}")
                             historyType = ""
                             defaultTarget = ""
                             historyCallback = ""

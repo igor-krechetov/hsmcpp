@@ -62,7 +62,9 @@ protected:
 // HSM transition callbacks
 protected:
     // NOTE: override this method in child class if needed
-    virtual void onTransitionFailed(const hsmcpp::EventID_t event, const hsmcpp::VariantVector_t& args);
+    virtual void onTransitionFailed(const std::list<hsmcpp::StateID_t>& activeStates,
+                                    const hsmcpp::EventID_t event,
+                                    const hsmcpp::VariantVector_t& args);
 
     @HSM_TRANSITION_ACTIONS@
 

@@ -16,10 +16,13 @@
 #endif
 
 #ifdef HSMBUILD_DEBUGGING
+  #include <array>
   #include <chrono>
   #include <cstdlib>
   #include <cstring>
-  #include <array>
+
+  #include "hsmcpp/os/Mutex.hpp"
+  #include "hsmcpp/os/CriticalSection.hpp"
 
 // WIN, access
   #ifdef WIN32
@@ -27,7 +30,7 @@
     #define F_OK 0
   #else
     #include <unistd.h>
-        // cppcheck-suppress misra-c2012-21.10
+    // cppcheck-suppress misra-c2012-21.10
     #include <ctime>
   #endif
 #endif
@@ -197,16 +200,9 @@ void HierarchicalStateMachine::Impl::registerState(const StateID_t state,
     }
 #endif  // HSM_ENABLE_SAFE_STRUCTURE
 
-    if (onStateChanged || onEntering || onExiting) {
-        StateCallbacks cbState;
-
-        cbState.onStateChanged = std::move(onStateChanged);
-        cbState.onEntering = std::move(onEntering);
-        cbState.onExiting = std::move(onExiting);
-        mRegisteredStates[state] = cbState;
-
-        HSM_TRACE_CALL_DEBUG_ARGS("mRegisteredStates.size=%ld", mRegisteredStates.size());
-    }
+    mRegisteredStates[state] =
+        std::move(StateCallbacks(std::move(onStateChanged), std::move(onEntering), std::move(onExiting)));
+    HSM_TRACE_CALL_DEBUG_ARGS("mRegisteredStates.size=%ld", mRegisteredStates.size());
 }
 
 void HierarchicalStateMachine::Impl::registerFinalState(const StateID_t state,
@@ -214,7 +210,7 @@ void HierarchicalStateMachine::Impl::registerFinalState(const StateID_t state,
                                                         HsmStateChangedCallback_t onStateChanged,
                                                         HsmStateEnterCallback_t onEntering,
                                                         HsmStateExitCallback_t onExiting) {
-    mFinalStates.emplace(state, event);
+    mFinalStates[state] = event;
     registerState(state, std::move(onStateChanged), std::move(onEntering), std::move(onExiting));
 }
 
@@ -224,7 +220,7 @@ void HierarchicalStateMachine::Impl::registerHistory(const StateID_t parent,
                                                      const StateID_t defaultTarget,
                                                      HsmTransitionCallback_t transitionCallback) {
     (void)mHistoryStates.emplace(parent, historyState);
-    mHistoryData.emplace(historyState, HistoryInfo(type, defaultTarget, std::move(transitionCallback)));
+    mHistoryData[historyState] = std::move(HistoryInfo(type, defaultTarget, std::move(transitionCallback)));
 }
 
 bool HierarchicalStateMachine::Impl::registerSubstate(const StateID_t parent, const StateID_t substate) {
@@ -240,7 +236,7 @@ bool HierarchicalStateMachine::Impl::registerSubstateEntryPoint(const StateID_t 
 }
 
 void HierarchicalStateMachine::Impl::registerTimer(const TimerID_t timerID, const EventID_t event) {
-    mTimers.emplace(timerID, event);
+    mTimers[timerID] = event;
 }
 
 bool HierarchicalStateMachine::Impl::registerSubstate(const StateID_t parent,
@@ -794,15 +790,38 @@ bool HierarchicalStateMachine::Impl::getParentState(const StateID_t child, State
 bool HierarchicalStateMachine::Impl::isSubstateOf(const StateID_t parent, const StateID_t child) {
     HSM_TRACE_CALL_DEBUG_ARGS("parent=<%s>, child=<%s>", getStateName(parent).c_str(), getStateName(child).c_str());
     StateID_t curState = child;
+    bool stopSearch = false;
 
-    if (parent != child) {
-        // TODO: can be optimized by checking siblings on each level
+    while ((false == stopSearch) && (parent != curState)) {
+        stopSearch = true;
 
-        do {
-            if (false == getParentState(curState, curState)) {
+        for (auto itParent = mSubstates.begin(); itParent != mSubstates.end(); ++itParent) {
+            if (curState == itParent->second) {
+                // found next parent
+                curState = itParent->first;
+                stopSearch = false;
+
+                if (parent != curState) {
+                    // check left siblings
+                    for (auto itSibling = itParent; (itSibling != mSubstates.begin()) && (itSibling->first == itParent->first); --itSibling) {
+                        if (itSibling->second == parent) {
+                            stopSearch = true;
+                            break;
+                        }
+                    }
+
+                    // check right siblings
+                    for (auto itSibling = itParent; (itSibling != mSubstates.end()) && (itSibling->first == itParent->first); ++itSibling) {
+                        if (itSibling->second == parent) {
+                            stopSearch = true;
+                            break;
+                        }
+                    }
+                }
+
                 break;
             }
-        } while (parent != curState);
+        }
     }
 
     return (parent != child) && (parent == curState);
@@ -817,7 +836,7 @@ bool HierarchicalStateMachine::Impl::hasActiveChildren(const StateID_t parent, c
     bool res = false;
 
     for (const StateID_t& activeStateId : mActiveStates) {
-        if ((true == includeFinal) || (false == isFinalState(activeStateId))) {
+        if ((parent != activeStateId) && (true == includeFinal) || (false == isFinalState(activeStateId))) {
             if (isSubstateOf(parent, activeStateId)) {
                 HSM_TRACE_DEBUG("parent=<%s> has <%s> active",
                                 getStateName(parent).c_str(),
@@ -1083,7 +1102,7 @@ HsmEventStatus HierarchicalStateMachine::Impl::doTransition(const PendingEventIn
     }
 
     if (mFailedTransitionCallback && ((HsmEventStatus::DONE_FAILED == res) || (HsmEventStatus::CANCELED == res))) {
-        mFailedTransitionCallback(event.id, event.getArgs());
+        mFailedTransitionCallback(activeStatesSnapshot, event.id, event.getArgs());
     }
 
     HSM_TRACE_CALL_RESULT("%d", SC2INT(res));
@@ -1671,6 +1690,9 @@ void HierarchicalStateMachine::Impl::logHsmAction(const HsmLogAction action,
                                                   const VariantVector_t& args) {
 #ifdef HSMBUILD_DEBUGGING
     if (true == mHsmLogFile.is_open()) {
+        static Mutex logMutex;
+        CriticalSection logSync(logMutex);
+
         static const std::map<HsmLogAction, std::string> actionsMap = {
             std::make_pair(HsmLogAction::IDLE, "idle"),
             std::make_pair(HsmLogAction::TRANSITION, "transition"),
@@ -1694,7 +1716,7 @@ void HierarchicalStateMachine::Impl::logHsmAction(const HsmLogAction action,
             tmResult = &timeinfo;
         }
   #else
-        // TODO: function is not thread safe [concurrency-mt-unsafe]
+        // NOTE: function is not thread safe [concurrency-mt-unsafe]
         tmResult = localtime(&tt);
         if (nullptr != tmResult) {
             timeinfo = *tmResult;

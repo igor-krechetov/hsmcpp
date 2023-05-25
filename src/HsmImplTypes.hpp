@@ -34,6 +34,17 @@ struct StateCallbacks {
     HsmStateChangedCallback_t onStateChanged = nullptr;
     HsmStateEnterCallback_t onEntering = nullptr;
     HsmStateExitCallback_t onExiting = nullptr;
+
+    StateCallbacks() = default;
+    ~StateCallbacks() = default;
+    StateCallbacks(HsmStateChangedCallback_t&& cbStateChanged,
+                   HsmStateEnterCallback_t&& cbEntering,
+                   HsmStateExitCallback_t&& cbExiting);
+
+    StateCallbacks(const StateCallbacks& src) = default;
+    StateCallbacks(StateCallbacks&& src) noexcept;
+    StateCallbacks& operator=(const StateCallbacks& src) = default;
+    StateCallbacks& operator=(StateCallbacks&& src) noexcept;
 };
 
 struct StateEntryPoint {
@@ -79,11 +90,11 @@ struct PendingEventInfo {
 
     PendingEventInfo() = default;
     PendingEventInfo(const PendingEventInfo& src) = default;
-    PendingEventInfo(PendingEventInfo&& src);
+    PendingEventInfo(PendingEventInfo&& src) noexcept;
     ~PendingEventInfo();
 
     PendingEventInfo& operator=(const PendingEventInfo& src) = default;
-    PendingEventInfo& operator=(PendingEventInfo&& src);
+    PendingEventInfo& operator=(PendingEventInfo&& src) noexcept;
 
     void initLock();
     void releaseLock();
@@ -99,7 +110,15 @@ struct HistoryInfo {
     HsmTransitionCallback_t defaultTargetTransitionCallback = nullptr;
     std::list<StateID_t> previousActiveStates;
 
+    HistoryInfo() = default;
+    ~HistoryInfo() = default;
     HistoryInfo(const HistoryType newType, const StateID_t newDefaultTarget, HsmTransitionCallback_t newTransitionCallback);
+
+    HistoryInfo(const HistoryInfo& src) = default;
+    HistoryInfo(HistoryInfo&& src) noexcept;
+    HistoryInfo& operator=(const HistoryInfo& src) = default;
+    HistoryInfo& operator=(HistoryInfo&& src) noexcept;
+
 };
 
 struct StateActionInfo {

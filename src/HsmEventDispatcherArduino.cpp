@@ -80,7 +80,7 @@ void HsmEventDispatcherArduino::startTimerImpl(const TimerID_t timerID,
 
         {
             InterruptsFreeSection lck;
-            mRunningTimers.emplace(timerID, newTimer);
+            mRunningTimers[timerID] = newTimer;
         }
     } else  // restart timer
     {

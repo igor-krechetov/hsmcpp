@@ -6,6 +6,31 @@
 #include "hsmcpp/logging.hpp"
 
 namespace hsmcpp {
+
+// ============================================================================
+// StateCallbacks
+// ============================================================================
+StateCallbacks::StateCallbacks(HsmStateChangedCallback_t&& cbStateChanged,
+                               HsmStateEnterCallback_t&& cbEntering,
+                               HsmStateExitCallback_t&& cbExiting)
+    : onStateChanged(std::move(cbStateChanged))
+    , onEntering(std::move(cbEntering))
+    , onExiting(std::move(cbExiting)) {}
+
+StateCallbacks::StateCallbacks(StateCallbacks&& src) noexcept {
+    *this = std::move(src);
+}
+
+StateCallbacks& StateCallbacks::operator=(StateCallbacks&& src) noexcept {
+    if (this != &src) {
+        onStateChanged = std::move(src.onStateChanged);
+        onEntering = std::move(src.onEntering);
+        onExiting = std::move(src.onExiting);
+    }
+
+    return *this;
+}
+
 // ============================================================================
 // TransitionInfo
 // ============================================================================
@@ -43,12 +68,30 @@ HistoryInfo::HistoryInfo(const HistoryType newType,
     , defaultTarget(newDefaultTarget)
     , defaultTargetTransitionCallback(std::move(newTransitionCallback)) {}
 
+HistoryInfo::HistoryInfo(HistoryInfo&& src) noexcept {
+    *this = std::move(src);
+}
+
+HistoryInfo& HistoryInfo::operator=(HistoryInfo&& src) noexcept {
+    if (this != &src) {
+        type = src.type;
+        defaultTarget = src.defaultTarget;
+        defaultTargetTransitionCallback = std::move(src.defaultTargetTransitionCallback);
+        previousActiveStates = std::move(src.previousActiveStates);
+
+        src.type = HistoryType::SHALLOW;
+        src.defaultTarget = INVALID_HSM_STATE_ID;
+    }
+
+    return *this;
+}
+
 // ============================================================================
 // PendingEventInfo
 // ============================================================================
 constexpr const char* HSM_TRACE_CLASS = "PendingEventInfo";
 
-PendingEventInfo::PendingEventInfo(PendingEventInfo&& src) {
+PendingEventInfo::PendingEventInfo(PendingEventInfo&& src) noexcept {
     *this = std::move(src);
 }
 
@@ -61,7 +104,7 @@ PendingEventInfo::~PendingEventInfo() {
     }
 }
 
-PendingEventInfo& PendingEventInfo::operator=(PendingEventInfo&& src) {
+PendingEventInfo& PendingEventInfo::operator=(PendingEventInfo&& src) noexcept {
     if (this != &src) {
         transitionType = src.transitionType;
         id = src.id;

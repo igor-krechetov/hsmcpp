@@ -1,5 +1,5 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v0.38.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-v1.0.0-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 
 # Releases
@@ -29,19 +29,61 @@
 
 
 # Overview
-HSMCPP is a C++ library providing implementation of state machine design pattern. It allows you to easily add hierarchical (HSM) or finite state machine (FSM) to your project. Main motivation behind creating it was lack of suitable alternatives which do not require usage of large frameworks (often commercial). And even they couldn't satisfy project needs that I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multi-threading or event driven applications.
+HSMCPP is a C++ library providing implementation of state machine design pattern (also known as statecharts). It allows you to easily add hierarchical (HSM) or finite state machine (FSM) to your project. The main motivation behind creating it was the lack of suitable non-commercial alternatives which do not require the usage of large frameworks. And even existing commercial solutions couldn't satisfy all project needs that I usually have to deal with. This is in no way a "silver bullet" library, but it might be useful for you when dealing with RTOS systems, multi-threading or event-driven applications.
 
-It's also applicable for single threaded and synchronous applications, but it might not be the most efficient option.
+It's also applicable for single-threaded and synchronous applications, but it might not be the most efficient option.
 
-If you are not familiar with HSM/FSM and which problems they can solve in your code, I recommend reading:
+If you are not familiar with HSM/FSM design concept and which problems it helps you solve, I recommend reading:
 - [Welcome to the world of Statecharts](https://statecharts.dev)
 - [Introduction to Hierarchical State Machines](https://barrgroup.com/embedded-systems/how-to/introduction-hierarchical-state-machines)
 - [Hierarchical Finite State Machine for AI Acting Engine](https://towardsdatascience.com/hierarchical-finite-state-machine-for-ai-acting-engine-9b24efc66f2)
 
+And if you just want to know if state machines are for you or not, here is a quick list (taken from [statecharts.dev](https://statecharts.dev))
+
+## Why should you use Statecharts?
+
+Statecharts offer a surprising array of benefits
+
+- It's [easier to understand a statechart](https://statecharts.dev/benefit-easy-to-understand.html) than many other forms of code.
+- The [behaviour is decoupled](https://statecharts.dev/benefit-decoupled-behaviour-component.html) from the component in question.
+  - This makes it [easier to make changes to the behaviour](https://statecharts.dev/benefit-make-changes-to-the-behaviour.html).
+  - It also makes it [easier to reason about the code](https://statecharts.dev/benefit-reason-about-code.html).
+  - And the behaviour can be [tested independently](https://statecharts.dev/benefit-testable-behaviour.html) of the component.
+- The process of building a statechart causes [all the states to be explored](https://statecharts.dev/benefit-all-states-explored.html).
+- Studies have shown that statechart based code has [lower bug counts](https://statecharts.dev/benefit-low-bug-count.html) than traditional code.
+- Statecharts lends itself to dealing with [exceptional situations](https://statecharts.dev/benefit-handle-anomalies.html) that might otherwise be overlooked.
+- As complexity grows, statecharts [scale well](https://statecharts.dev/benefit-scales-with-complexity.html).
+- A statechart is a great communicator: Non-developers can [understand the statecharts](https://statecharts.dev/benefit-non-developers-understanding.html), while QA can [use a statecharts as an exploratory tool](https://statecharts.dev/benefit-qa-exploration-tool.html).
+
+It's worth noting that you're [already coding state machines](https://statecharts.dev/benefit-explicit.html), except that they're hidden in the code.
+
+## Why should you not use statecharts?
+
+There are a few downsides to using statecharts that you should be aware of.
+
+- Programmers typically [need to learn something new](https://statecharts.dev/drawback-learn-new-technique.html), although the underpinnings (state machines) would be something that most programmers are familiar with.
+- [It's usually a very foreign way of coding](https://statecharts.dev/drawback-foreign-paradigm.html), so teams might experience pushback based on how very different it is.
+- There is an overhead to extracting the behaviour in that the [number of lines of code might increase](https://statecharts.dev/drawback-lines-of-code.html) with smaller statecharts.
+
+## Why are they not used?
+
+- [People don't know about them, and YAGNI](https://statecharts.dev/faq/why-statecharts-are-not-used.html).
+
+## What are the main arguments against statecharts?
+
+There are a few common arguments against statecharts in addition to the ones listed above:
+
+- It's [simply not needed](https://statecharts.dev/faq/an-event-always-has-one-action.html).
+- It [goes against the grain](https://statecharts.dev/faq/goes-against-grain.html) of _\[insert name of technology]_.
+- It [increases the number of libraries](https://statecharts.dev/faq/increases-number-of-libraries.html), for web applications this means increased load time.
+
+The benefits outlined above should make it clear that the introduction of statecharts is generally a _net positive_.
+
+
 # Key Features
 ## Generic
 - visual state machine editors (through [thirdparty editors](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html))
-- [code generation](https://hsmcpp.readthedocs.io/en/latest/code-generation/code-generation.html) (using state machine described in SCXML format as an input)
+- [code generation](https://hsmcpp.readthedocs.io/en/latest/code-generation/code-generation.html) based on [W3C SCXML format](https://www.w3.org/TR/scxml/)
 - PlantUML diagrams generation (from SCXML files)
 - asynchronous / synchronous execution
 - thread safety
@@ -102,7 +144,7 @@ cd ./hsmcpp
 cd ./build
 make install
 ```
-By default it will build all included components, tests and examples. You can disable any of them using cmake build flags. For example you probably will not have glib or glibmm libraries available on Windows so you might want to exclude them.
+By default, it will build all included components, tests and examples. You can disable any of them using cmake build flags. For example you probably will not have glib or glibmm libraries available on Windows so you might want to exclude them.
 
 See [detailed instructions in documentation](https://hsmcpp.readthedocs.io/en/latest/getting-started/getting-started.html#building-the-library).
 

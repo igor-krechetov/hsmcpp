@@ -175,8 +175,12 @@ public:
     template <typename T>
     static Variant make(const T& v);
 
-    // DEF_MAKE_DOC(Type::CUSTOM)
-    // TODO: doc
+    DEF_MAKE_DOC(Type::CUSTOM)
+    /**
+     * @note Normally if value type is supported (for example int, std::string, std::list, etc.) it will be properly identified
+     * and stored internally. This method is usefull if you want to explicitly create Variant with CUSTOM type (even when value
+     * type is supported by Variant, like std::string).
+     */
     template <typename T>
     static Variant makeCustom(const T& v);
 

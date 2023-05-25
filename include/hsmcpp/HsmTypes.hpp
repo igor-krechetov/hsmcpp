@@ -66,10 +66,11 @@ using HsmStateExitCallback_t = std::function<bool(void)>;
  * Function type for HierarchicalStateMachine failed transition callbacks. Callback is called whenever HSM failed to process new
  * event (due to no registered transition, failed conditions or transition being canceled by a enter/exit callback).
  *
+ * @param std::list<StateID_t> list of active states which didn't have a matching transition
  * @param EventID_t id of the event which was not processed
  * @param VariantVector_t \c args value provided in HierarchicalStateMachine::transition() or similar API
  */
-using HsmTransitionFailedCallback_t = std::function<void(const EventID_t, const VariantVector_t&)>;
+using HsmTransitionFailedCallback_t = std::function<void(const std::list<StateID_t>&, const EventID_t, const VariantVector_t&)>;
 
 // cppcheck-suppress misra-c2012-20.7 ; enclosing input expressions in parentheses is not needed (and will not compile)
 #define HsmTransitionCallbackPtr_t(_class, _func) void (_class::*_func)(const VariantVector_t&)
@@ -82,7 +83,7 @@ using HsmTransitionFailedCallback_t = std::function<void(const EventID_t, const 
 // cppcheck-suppress misra-c2012-20.7
 #define HsmStateExitCallbackPtr_t(_class, _func) bool (_class::*_func)()
 // cppcheck-suppress misra-c2012-20.7
-#define HsmTransitionFailedCallbackPtr_t(_class, _func) void (_class::*_func)(const EventID_t, const VariantVector_t&)
+#define HsmTransitionFailedCallbackPtr_t(_class, _func) void (_class::*_func)(const std::list<StateID_t>&, const EventID_t, const VariantVector_t&)
 
 /**
  * @enum HistoryType

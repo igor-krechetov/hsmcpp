@@ -2,6 +2,10 @@ set(TEST_BIN_NAME_TEMPLATE hsmUnitTests)
 
 installGoogleTest()
 
+# Check for memory leaks
+# add_compile_options(-fsanitize=leak,address,undefined -fno-omit-frame-pointer -fno-common -O1)
+# link_libraries(-fsanitize=leak,address,undefined)
+
 # ================================================
 # INCLUDES
 include_directories(

@@ -157,7 +157,7 @@ void HsmEventDispatcherFreeRTOS::startTimerImpl(const TimerID_t timerID,
 
         if (nullptr != timer) {
             InterruptsFreeSection lck;
-            mNativeTimerHandlers.emplace(timerID, timer);
+            mNativeTimerHandlers[timerID] = timer;
         }
     } else {
         timer = it->second;

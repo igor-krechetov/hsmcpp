@@ -107,7 +107,7 @@ void HsmEventDispatcherQt::startTimerImpl(const TimerID_t timerID, const unsigne
             newTimer->start(intervalMs);
 
             CriticalSection cs(mRunningTimersSync);
-            mNativeTimerHandlers.emplace(timerID, newTimer);
+            mNativeTimerHandlers[timerID] = newTimer;
         };
 
         // NOTE: need to make sure that QTimer is started only from Qt main thread

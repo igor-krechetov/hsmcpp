@@ -2,5 +2,6 @@ To support build for a platform, which doesn't have concurrency primitives suppo
 
 * Mutex
 * ConditionVariable
+* AtomicFlag
 
 See implementation in stl folder for the reference.

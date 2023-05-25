@@ -126,12 +126,9 @@ void HsmEventDispatcherGLibmm::startTimerImpl(const TimerID_t timerID, const uns
     auto it = mNativeTimerHandlers.find(timerID);
 
     if (mNativeTimerHandlers.end() == it) {
-        sigc::connection newTimerConnection;
-
-        newTimerConnection = mMainContext->signal_timeout().connect(
+        mNativeTimerHandlers[timerID] = mMainContext->signal_timeout().connect(
             sigc::bind(sigc::mem_fun(this, &HsmEventDispatcherGLibmm::onTimerEvent), timerID),
             intervalMs);
-        mNativeTimerHandlers.emplace(timerID, newTimerConnection);
     } else {
         HSM_TRACE_ERROR("timer with id=%d already exists", timerID);
     }

@@ -707,7 +707,7 @@ template <class HsmHandlerClass>
 void HierarchicalStateMachine::registerFailedTransitionCallback(HsmHandlerClass* handler,
                                                                 HsmTransitionFailedCallbackPtr_t(HsmHandlerClass,
                                                                                                  onFailedTransition)) {
-    registerFailedTransitionCallback(std::bind(onFailedTransition, handler, std::placeholders::_1, std::placeholders::_2));
+    registerFailedTransitionCallback(std::bind(onFailedTransition, handler, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 }
 
 template <class HsmHandlerClass>

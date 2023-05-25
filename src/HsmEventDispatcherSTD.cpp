@@ -100,7 +100,7 @@ void HsmEventDispatcherSTD::startTimerImpl(const TimerID_t timerID, const unsign
             newTimer.startedAt = std::chrono::steady_clock::now();
             newTimer.elapseAfter = newTimer.startedAt + std::chrono::milliseconds(intervalMs);
 
-            mRunningTimers.emplace(timerID, newTimer);
+            mRunningTimers[timerID] = newTimer;
         } else {
             // restart timer
             it->second.startedAt = std::chrono::steady_clock::now();

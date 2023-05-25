@@ -41,7 +41,7 @@ HandlerID_t HsmEventDispatcherBase::registerEventHandler(const EventHandlerFunc_
     HandlerID_t id = getNextHandlerID();
     LockGuard lck(mHandlersSync);
 
-    mEventHandlers.emplace(id, handler);
+    mEventHandlers[id] = handler;
 
     return id;
 }
@@ -104,7 +104,7 @@ HandlerID_t HsmEventDispatcherBase::registerEnqueuedEventHandler(const EnqueuedE
     HandlerID_t id = getNextHandlerID();
     LockGuard lck(mHandlersSync);
 
-    mEnqueuedEventHandlers.emplace(id, handler);
+    mEnqueuedEventHandlers[id] = handler;
 
     return id;
 }
@@ -120,7 +120,7 @@ HandlerID_t HsmEventDispatcherBase::registerTimerHandler(const TimerHandlerFunc_
     const HandlerID_t newID = getNextHandlerID();
     LockGuard lck(mHandlersSync);
 
-    mTimerHandlers.emplace(newID, handler);
+    mTimerHandlers[newID] = handler;
 
     return newID;
 }
@@ -172,7 +172,7 @@ void HsmEventDispatcherBase::startTimer(const HandlerID_t handlerID,
             newTimer.intervalMs = intervalMs;
             newTimer.isSingleShot = isSingleShot;
 
-            mActiveTimers.emplace(timerID, newTimer);
+            mActiveTimers[timerID] = newTimer;
             startTimerImpl(timerID, intervalMs, isSingleShot);
         }
     }

@@ -164,7 +164,7 @@ void HsmEventDispatcherGLib::startTimerImpl(const TimerID_t timerID, const unsig
                               &HsmEventDispatcherGLib::onFreeTimerData);
 
         g_source_attach(timeoutSource, mContext);
-        mNativeTimerHandlers.emplace(timerID, timeoutSource);
+        mNativeTimerHandlers[timerID] = timeoutSource;
     } else {
         HSM_TRACE_ERROR("timer with id=%d already exists", timerID);
     }

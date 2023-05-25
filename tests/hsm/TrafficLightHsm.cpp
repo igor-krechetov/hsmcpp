@@ -74,7 +74,9 @@ bool TrafficLightHsm::checkConditionOff2On(const VariantVector_t& args) {
     return result;
 }
 
-void TrafficLightHsm::onTransitionFailed(const hsmcpp::EventID_t event, const VariantVector_t& args) {
+void TrafficLightHsm::onTransitionFailed(const std::list<hsmcpp::StateID_t>& activeStates,
+                                         const hsmcpp::EventID_t event,
+                                         const VariantVector_t& args) {
     mFailedTransitionCounter++;
     mLastFailedTransition = event;
     mLastFailedTransitionArgs = args;

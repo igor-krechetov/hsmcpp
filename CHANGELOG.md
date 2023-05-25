@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [1.0.0] - 2023-05-25
+### Updated
+- add activeStates argument to failedTransition callback
+- optimize HSM::impl::isSubstateOf()
+
+### Fixed
+- overriding HSM and dispatcher callbacks didn't work
+- made logHsmAction() thread-safe
+
 ## [0.38.0] - 2023-05-18
 ### Updated
 - added new constructors for Variant class (initialization from vector, list and map)

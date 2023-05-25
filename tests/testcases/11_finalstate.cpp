@@ -42,13 +42,13 @@ TEST_F(ABCHsm, finalstate_simple_exitpoint) {
     registerTransition<ABCHsm>(AbcState::P1, AbcState::B, AbcEvent::EXIT1);
 
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for state A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for state A to activate
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
     transition(AbcEvent::E1);
-    ASSERT_TRUE(waitAsyncOperation());// wait for state B to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for state B to activate
 
     //-------------------------------------------
     // VALIDATION
@@ -90,27 +90,29 @@ TEST_F(ABCHsm, finalstate_forward_event) {
     registerTransition<ABCHsm>(AbcState::P1, AbcState::B, AbcEvent::E1);
 
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for state A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for state A to activate
 
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
     transition(AbcEvent::E1);
-    ASSERT_TRUE(waitAsyncOperation());// wait for state C to activate (exit transition is async)
+    ASSERT_TRUE(waitAsyncOperation());  // wait for state C to activate (exit transition is async)
 
     //-------------------------------------------
     // VALIDATION
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 }
 
-class ParamFixtureFinalState1 : public ABCHsm,
-                                public ::testing::WithParamInterface<std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t>> {};
+class ParamFixtureFinalState1
+    : public ABCHsm,
+      public ::testing::WithParamInterface<std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t>> {};
 
 INSTANTIATE_TEST_CASE_P(finalstate,
                         ParamFixtureFinalState1,
                         ::testing::Values(std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E1}), AbcState::C),
-                                          std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E3, AbcEvent::E2}), AbcState::D)));
+                                          std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E3, AbcEvent::E2}),
+                                                          AbcState::D)));
 
 TEST_P(ParamFixtureFinalState1, finalstate_multiple_final) {
     TEST_DESCRIPTION("HSM should support multiple path to a final state");
@@ -160,7 +162,7 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_final) {
 
     setInitialState(AbcState::P1);
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for state A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for state A to activate
 
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
@@ -228,7 +230,7 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_exitpoints) {
 
     setInitialState(AbcState::P1);
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for state A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for state A to activate
 
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
@@ -282,7 +284,7 @@ TEST_F(ABCHsm, finalstate_blocked_final) {
 
     setInitialState(AbcState::P1);
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for A to activate
 
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
@@ -335,7 +337,7 @@ TEST_F(ABCHsm, finalstate_blocked_exitpoint) {
 
     setInitialState(AbcState::P1);
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for A to activate
 
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
@@ -390,13 +392,13 @@ TEST_F(ABCHsm, finalstate_transition_args) {
     registerTransition<ABCHsm>(AbcState::P1, AbcState::B, AbcEvent::E2, this, &ABCHsm::onE2Transition);
 
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for A to activate
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
     transition(AbcEvent::E1, testArg);
-    ASSERT_TRUE(waitAsyncOperation());// wait for B to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for B to activate
 
     //-------------------------------------------
     // VALIDATION
@@ -431,6 +433,7 @@ TEST_F(ABCHsm, finalstate_no_transition) {
     //-------------------------------------------
     // PRECONDITIONS
     hsmcpp::EventID_t failedEvent;
+    std::list<hsmcpp::StateID_t> lastActiveStates;
 
     setInitialState(AbcState::P1);
     registerState<ABCHsm>(AbcState::P1);
@@ -442,10 +445,14 @@ TEST_F(ABCHsm, finalstate_no_transition) {
 
     registerTransition<ABCHsm>(AbcState::A, AbcState::F1, AbcEvent::E1);
 
-    registerFailedTransitionCallback([&](const hsmcpp::EventID_t event, const VariantVector_t& args) { failedEvent = event; });
+    registerFailedTransitionCallback(
+        [&](const std::list<hsmcpp::StateID_t>& activeStates, const hsmcpp::EventID_t event, const VariantVector_t& args) {
+            lastActiveStates = activeStates;
+            failedEvent = event;
+        });
 
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for A to activate
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
     //-------------------------------------------
@@ -457,13 +464,15 @@ TEST_F(ABCHsm, finalstate_no_transition) {
     //-------------------------------------------
     // VALIDATION
     // state should be F1 because no one handled
+    ASSERT_TRUE(compareStateLists(lastActiveStates, {AbcState::P1, AbcState::F1}));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::F1}));
     ASSERT_EQ(failedEvent, AbcEvent::EXIT1);
 }
 
 TEST_F(ABCHsm, finalstate_toplevel) {
-    TEST_DESCRIPTION("HSM will not generate event if final state has no parent (top level final state). "
-                     "Defined events will be ignored");
+    TEST_DESCRIPTION(
+        "HSM will not generate event if final state has no parent (top level final state). "
+        "Defined events will be ignored");
     /*
     @startuml
     title finalstate_toplevel
@@ -487,7 +496,9 @@ TEST_F(ABCHsm, finalstate_toplevel) {
     registerFinalState(AbcState::F1, AbcEvent::E2);
 
     registerTransition(AbcState::A, AbcState::F1, AbcEvent::E1);
-    registerFailedTransitionCallback([&](const hsmcpp::EventID_t event, const VariantVector_t& args) { wasFailedEvent = true; });
+    registerFailedTransitionCallback([&](const std::list<hsmcpp::StateID_t>& activeStates,
+                                         const hsmcpp::EventID_t event,
+                                         const VariantVector_t& args) { wasFailedEvent = true; });
 
     initializeHsm();
 
@@ -504,13 +515,15 @@ TEST_F(ABCHsm, finalstate_toplevel) {
     ASSERT_FALSE(wasFailedEvent);
 }
 
-class ParamFixtureFinalState2 : public ABCHsm,
-                                public ::testing::WithParamInterface<std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t>> {};
+class ParamFixtureFinalState2
+    : public ABCHsm,
+      public ::testing::WithParamInterface<std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t>> {};
 
 INSTANTIATE_TEST_CASE_P(finalstate,
                         ParamFixtureFinalState2,
                         ::testing::Values(std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E1}), AbcState::C),
-                                          std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E3, AbcEvent::E2}), AbcState::C)));
+                                          std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E3, AbcEvent::E2}),
+                                                          AbcState::C)));
 
 TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path) {
     TEST_DESCRIPTION("Check that multiple paths to a single exit point are supported");
@@ -559,14 +572,14 @@ TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path) {
 
     setInitialState(AbcState::P1);
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for A to activate
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
     for (const auto curEvent : argEvents) {
         transition(curEvent);
-        ASSERT_TRUE(waitAsyncOperation());// wait for async exit transition
+        ASSERT_TRUE(waitAsyncOperation());  // wait for async exit transition
     }
 
     //-------------------------------------------
@@ -574,13 +587,15 @@ TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path) {
     ASSERT_TRUE(compareStateLists(getActiveStates(), {expectedState}));
 }
 
-class ParamFixtureFinalState3 : public ABCHsm,
-                                public ::testing::WithParamInterface<std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t>> {};
+class ParamFixtureFinalState3
+    : public ABCHsm,
+      public ::testing::WithParamInterface<std::tuple<std::list<hsmcpp::EventID_t>, hsmcpp::StateID_t>> {};
 
 INSTANTIATE_TEST_CASE_P(finalstate,
                         ParamFixtureFinalState3,
                         ::testing::Values(std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E1}), AbcState::C),
-                                          std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E3, AbcEvent::E2}), AbcState::D)));
+                                          std::make_tuple(std::list<hsmcpp::EventID_t>({AbcEvent::E3, AbcEvent::E2}),
+                                                          AbcState::D)));
 
 TEST_P(ParamFixtureFinalState3, finalstate_both_types) {
     TEST_DESCRIPTION("Both exitpoints and final states can exist in the same parent state");
@@ -635,14 +650,14 @@ TEST_P(ParamFixtureFinalState3, finalstate_both_types) {
 
     setInitialState(AbcState::P1);
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for A to activate
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
     //-------------------------------------------
     // ACTIONS
     for (const auto& curEvent : argEvents) {
         transition(curEvent);
-        ASSERT_TRUE(waitAsyncOperation());// wait for async exit transition
+        ASSERT_TRUE(waitAsyncOperation());  // wait for async exit transition
     }
 
     //-------------------------------------------

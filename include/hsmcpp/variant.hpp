@@ -32,12 +32,10 @@ using VariantPair_t = std::pair<Variant, Variant>;  ///< Provides a way to store
   /** @brief Assigns _val_type value to current variant object and changing it's type to _internal_type. */ \
   Variant& operator=(const _val_type v);
 
-#define DEF_MAKE_DOC(_internal_type)                                      \
-  /**                                                                     \
-   * @brief Creates a Variant object with a value of type _internal_type. \
-   * @param v The value to assign to the Variant object.                  \
-   * @return Newly constructed Variant object.                            \
-   */
+#define DEF_MAKE_DOC(_internal_type)                                            \
+  /** @brief Creates a Variant object with a value of type _internal_type. */   \
+  /** @param v The value to assign to the Variant object.  */                   \
+  /** @return Newly constructed Variant object.            */
 
 // cppcheck-suppress misra-c2012-20.7 ; parentheses are not needed
 #define DEF_MAKE(_val_type, _internal_type) \
@@ -568,7 +566,7 @@ public:
 
     /**
      * @brief Copies internal data to a requested std::pair type.
-     * Usage example:
+     * @details Usage example:
      *
      * \code{.cpp}
      * std::pair<int, std::string> intStrData = {1, "aa"};

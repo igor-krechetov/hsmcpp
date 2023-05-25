@@ -1,5 +1,9 @@
 // Copyright (C) 2023 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
+/**
+ * @file
+ * Contains definitions of global types used by HSM.
+*/
 
 #ifndef HSMCPP_HSMTYPES_HPP
 #define HSMCPP_HSMTYPES_HPP

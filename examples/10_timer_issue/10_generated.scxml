@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="02_generated.scxml" qt:editorversion="11.0.3" initial="State">
+    <qt:editorinfo initialGeometry="275.75;140.80;-20;-20;40;40"/>
+    <state id="State">
+        <qt:editorinfo geometry="222.33;253.94;-60;-50;226.85;177.09" scenegeometry="222.33;253.94;162.33;203.94;226.85;177.09"/>
+        <invoke/>
+        <onentry>
+            <script>start_timer(TEST,1000,false)</script>
+            <script>start_timer(ANOTHER,1000,false)</script>
+        </onentry>
+        <onexit>
+            <script>stop_timer(TEST)</script>
+        </onexit>
+        <transition type="internal" event="ON_TIMER_TEST" target="State" cond="timer_condition"/>
+    </state>
+</scxml>

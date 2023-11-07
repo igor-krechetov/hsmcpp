@@ -15,7 +15,7 @@ namespace Events {
 }
 
 long getAllocatedHeapMemory() {
-    struct mallinfo2 mi = mallinfo2();
+    struct mallinfo mi = mallinfo();
 
     return mi.uordblks + mi.hblkhd;
 }

@@ -200,8 +200,9 @@ void HsmEventDispatcherSTD::handleTimers() {
                 if (itTimeout != mRunningTimers.end()) {
                     if (true == handleTimerEvent(waitingTimerId)) {
                         // restart timer
+                        auto timer_interval = itTimeout->second.elapseAfter - itTimeout->second.startedAt;
                         itTimeout->second.startedAt = std::chrono::steady_clock::now();
-                        itTimeout->second.elapseAfter = itTimeout->second.startedAt + std::chrono::milliseconds(intervalMs);
+                        itTimeout->second.elapseAfter = itTimeout->second.startedAt + timer_interval;
                     } else {
                         // single shot timer. remove from queue
                         mRunningTimers.erase(itTimeout);

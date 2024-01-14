@@ -178,30 +178,43 @@ void HsmEventDispatcherSTD::handleTimers() {
             }
 
             TimerID_t waitingTimerId = itTimeout->first;
-            const int intervalMs = std::chrono::duration_cast<std::chrono::milliseconds>(itTimeout->second.elapseAfter -
+            const int waitDurationMs = std::chrono::duration_cast<std::chrono::milliseconds>(itTimeout->second.elapseAfter -
                                                                                          std::chrono::steady_clock::now())
                                        .count();
 
+            // unlock after itTimeout value is not needed anymore
             mRunningTimersSync.unlock();
+            // NOTE: make sure we don't use itTimeout value after this line
 
-            // NOTE: false-positive. "A function should have a single point of exit at the end" is not vialated because
-            //       "return" statement belogs to a lamda function, not doDispatching.
-            // cppcheck-suppress misra-c2012-15.5
-            const bool waitResult = mTimerEvent.wait_for(lck, intervalMs, [&]() { return mNotifiedTimersThread; });
+            bool waitResult = false;
+
+            // if waitDurationMs <= 0 it means that timer already expired and we only need to trigger event
+            if (waitDurationMs > 0) {
+                // NOTE: false-positive. "A function should have a single point of exit at the end" is not vialated because
+                //       "return" statement belogs to a lamda function, not doDispatching.
+                // cppcheck-suppress misra-c2012-15.5
+                waitResult = mTimerEvent.wait_for(lck, waitDurationMs, [&]() { return mNotifiedTimersThread; });
+            }
 
             mNotifiedTimersThread = false;
 
             if (false == waitResult) {
                 // timeout expired
+
+                // store wakeup time in case we'll need to calculate new elapseAfter value
+                // needed to avoid potential delays caused by CriticalSection and handleTimerEvent()
+                const auto wakeupTime = std::chrono::steady_clock::now();
                 CriticalSection lckExpired(mRunningTimersSync);
 
                 itTimeout = mRunningTimers.find(waitingTimerId);
 
                 if (itTimeout != mRunningTimers.end()) {
-                    if (true == handleTimerEvent(waitingTimerId)) {
+                    const unsigned int nextIntervalMs = handleTimerEvent(waitingTimerId);
+
+                    if (nextIntervalMs > 0u) {
                         // restart timer
-                        itTimeout->second.startedAt = std::chrono::steady_clock::now();
-                        itTimeout->second.elapseAfter = itTimeout->second.startedAt + std::chrono::milliseconds(intervalMs);
+                        itTimeout->second.startedAt = wakeupTime;
+                        itTimeout->second.elapseAfter = itTimeout->second.startedAt + std::chrono::milliseconds(nextIntervalMs);
                     } else {
                         // single shot timer. remove from queue
                         mRunningTimers.erase(itTimeout);

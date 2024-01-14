@@ -57,7 +57,7 @@ TEST_F(ABCHsm, timers_onexit) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
+    const TimerID_t timer1 = 2;
     const int timer1Duration = 500;
 
     registerState<ABCHsm>(AbcState::A);
@@ -109,8 +109,8 @@ TEST_F(ABCHsm, timers_multiple_actions) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
-    const TimerID_t timer2 = 2;
+    const TimerID_t timer1 = 3;
+    const TimerID_t timer2 = 4;
     const int timer1Duration = 100;
     const int timer2Duration = 200;
 
@@ -167,7 +167,7 @@ TEST_F(ABCHsm, timers_singleshot) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
+    const TimerID_t timer1 = 5;
     const int timer1Duration = 100;
 
     registerState<ABCHsm>(AbcState::A);
@@ -204,17 +204,16 @@ TEST_F(ABCHsm, timers_repeating) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
+    const TimerID_t timer1 = 6;
     const int timer1Duration = 100;
 
     registerState<ABCHsm>(AbcState::A);
     registerState<ABCHsm>(AbcState::B);
     registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
-    registerState<ABCHsm>(AbcState::D, this, &ABCHsm::onD);
 
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
     registerTransition<ABCHsm>(AbcState::B, AbcState::C, AbcEvent::E2);
-    registerTransition<ABCHsm>(AbcState::C, AbcState::D, AbcEvent::E2);
+    registerSelfTransition<ABCHsm>(AbcState::C, AbcEvent::E2);
 
     registerTimer(timer1, AbcEvent::E2);
     registerStateAction(AbcState::B,
@@ -230,13 +229,109 @@ TEST_F(ABCHsm, timers_repeating) {
 
     //-------------------------------------------
     // ACTIONS
+    // timer will expire 2-3 times depending on thread scheduling
     std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration * 2 + 50));
 
     //-------------------------------------------
     // VALIDATION
-    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::D}));
-    EXPECT_EQ(mStateCounterC, 1);
-    EXPECT_EQ(mStateCounterD, 1);
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
+    EXPECT_GE(mStateCounterC, 2);
+    EXPECT_LE(mStateCounterC, 3);
+}
+
+TEST_F(ABCHsm, timers_repeating_delay) {
+    TEST_DESCRIPTION("Repeating timer event should be fired after equal intervals");
+
+    /*
+    @startuml
+    scale 50 as 70 pixels
+    title timers_repeating_delay
+    concise "Timer" as Timer
+    concise "Task" as Task
+
+    @0
+    Timer is Running
+    Task is {hidden}
+    @100
+    Timer is Running
+    Timer -> Task@100: trigger
+    @200
+    Timer is Running
+    Timer -> Task@200: trigger
+    @300
+    Timer is {hidden}
+    Timer -> Task@300: trigger
+
+
+    @100
+    Task is Working
+    @180
+    Task is {hidden}
+    @200
+    Task is Working
+    @270
+    Task is {hidden}
+    @300
+    Task is Working
+    @380
+    Task is {hidden}
+
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    const TimerID_t timer1 = 7;
+    const int timer1Duration = 100;
+    const int timer1Repeat = 2;
+    std::chrono::time_point<std::chrono::steady_clock> timerStartTime;
+    int correctIterations = 0;
+    int iterationsCount = 0;
+
+    registerState<ABCHsm>(AbcState::A);
+    registerState<ABCHsm>(AbcState::B);
+
+    registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
+    registerSelfTransition(AbcState::B, AbcEvent::E2, hsmcpp::TransitionType::INTERNAL_TRANSITION,
+        [&](const VariantVector_t& args){
+            const auto eventTriggerTime = std::chrono::steady_clock::now();
+            const int iterationDuration = std::chrono::duration_cast<std::chrono::milliseconds>(eventTriggerTime - timerStartTime).count();
+
+            // NOTE: this is not precise since timer event is dispatched on a different thread.
+            //       so need to account for iterationDuration being reduced by 1-2ms
+            timerStartTime = std::chrono::steady_clock::now();
+
+            // This measurement is not precise so need to count for operational costs
+            if ((iterationDuration >= (timer1Duration - 5)) && (iterationDuration <= (timer1Duration + 5))) {
+                ++correctIterations;
+            }
+
+            ++iterationsCount;
+            std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2));
+        });
+
+    registerTimer(timer1, AbcEvent::E2);
+    registerStateAction(AbcState::B,
+                        StateActionTrigger::ON_STATE_ENTRY,
+                        StateAction::START_TIMER,
+                        timer1,
+                        timer1Duration,
+                        false);
+    initializeHsm();
+
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
+    timerStartTime = std::chrono::steady_clock::now();
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
+
+    //-------------------------------------------
+    // ACTIONS
+    // timer will expire 2-3 times depending on thread scheduling
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration * timer1Repeat + static_cast<int>(timer1Duration * 0.5)));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_GE(iterationsCount, timer1Repeat);
+    EXPECT_EQ(correctIterations, iterationsCount);
 }
 
 TEST_F(ABCHsm, timers_stop) {
@@ -262,7 +357,7 @@ TEST_F(ABCHsm, timers_stop) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
+    const TimerID_t timer1 = 8;
     const int timer1Duration = 100;
 
     registerState<ABCHsm>(AbcState::A);
@@ -318,8 +413,8 @@ TEST_F(ABCHsm, timers_restart) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
-    const TimerID_t timer2 = 2;
+    const TimerID_t timer1 = 9;
+    const TimerID_t timer2 = 10;
     const int timer1Duration = 600;
     const int timer2Duration = 200;
 
@@ -376,7 +471,7 @@ TEST_F(ABCHsm, timers_delete_running) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
+    const TimerID_t timer1 = 11;
     const int timer1Duration = 100;
 
     registerState<ABCHsm>(AbcState::A);
@@ -413,7 +508,7 @@ TEST_F(ABCHsm, timers_start_from_code) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
+    const TimerID_t timer1 = 12;
     const int timer1Duration = 100;
 
     registerState<ABCHsm>(AbcState::A);
@@ -436,12 +531,79 @@ TEST_F(ABCHsm, timers_start_from_code) {
     EXPECT_EQ(mStateCounterB, 1);
 }
 
+TEST_F(ABCHsm, timers_start_higher_priority) {
+    TEST_DESCRIPTION("If during a running timer a new timer with a shorter elapse period is started HSM should "
+                     "correctly schedule it");
+
+    /*
+    @startuml
+    scale 10 as 40 pixels
+    title timers_start_higher_priority
+    binary "Timer Long" as Timer1
+    binary "Timer Short" as Timer2
+    concise "HSM" as HSM
+
+    @0
+    Timer1 is high
+    @100
+    Timer1 is low
+    Timer1 -> HSM : ignore
+
+    @20
+    Timer2 is high
+    @40
+    Timer2 is low
+    Timer2 -> HSM : trigger
+
+    @40
+    HSM is E2
+    @80
+    HSM is {hidden}
+
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    const TimerID_t timerShort = 13;
+    const int timerShortDuration = 20;
+    const TimerID_t timerLong = 14;
+    const int timerLongDuration = timerShortDuration * 5;
+
+    registerState<ABCHsm>(AbcState::A);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
+
+    registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
+    registerTransition<ABCHsm>(AbcState::A, AbcState::C, AbcEvent::E2);
+
+    registerTimer(timerLong, AbcEvent::E1);
+    registerTimer(timerShort, AbcEvent::E2);
+    initializeHsm();
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+
+    //-------------------------------------------
+    // ACTIONS
+    startTimer(timerLong, timerLongDuration, true);
+    // wait a bit
+    std::this_thread::sleep_for(std::chrono::milliseconds(timerShortDuration));
+    startTimer(timerShort, timerShortDuration, true);
+    std::this_thread::sleep_for(std::chrono::milliseconds(timerLongDuration + 50));
+
+    //-------------------------------------------
+    // VALIDATION
+    // Short timer should fire first and Long timer transition must be ignored
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
+    EXPECT_EQ(mStateCounterB, 0);
+    EXPECT_EQ(mStateCounterC, 1);
+}
+
 TEST_F(ABCHsm, timers_stop_from_code) {
     TEST_DESCRIPTION("Validate support for stopping timers from code");
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
+    const TimerID_t timer1 = 15;
     const int timer1Duration = 100;
 
     registerState<ABCHsm>(AbcState::A);
@@ -471,7 +633,7 @@ TEST_F(ABCHsm, timers_restart_from_code) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
+    const TimerID_t timer1 = 16;
     const int timer1Duration = 100;
 
     registerState<ABCHsm>(AbcState::A);
@@ -503,7 +665,7 @@ TEST_F(ABCHsm, timers_is_running) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
+    const TimerID_t timer1 = 17;
     const int timer1Duration2 = 2000;
 
     registerState<ABCHsm>(AbcState::A);
@@ -534,7 +696,7 @@ TEST_F(ABCHsm, timers_singleshot_is_running) {
 
     //-------------------------------------------
     // PRECONDITIONS
-    const TimerID_t timer1 = 1;
+    const TimerID_t timer1 = 18;
     const int timer1Duration1 = 50;
 
     registerState<ABCHsm>(AbcState::A);
@@ -551,7 +713,7 @@ TEST_F(ABCHsm, timers_singleshot_is_running) {
     // ACTIONS
     startTimer(timer1, timer1Duration1, true);
     ASSERT_TRUE(isTimerRunning(timer1));
-    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration1 + 50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration1 * 2));
     ASSERT_FALSE(isTimerRunning(timer1));
 
     //-------------------------------------------

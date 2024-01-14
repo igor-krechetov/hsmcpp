@@ -27,6 +27,7 @@ set(SRC_UNITTESTS_COMMON ${CMAKE_CURRENT_SOURCE_DIR}/testcases/01_states.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/testcases/10_state_actions.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/testcases/11_finalstate.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/testcases/20_variant.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/99_regression_tests.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/TestsCommon.cpp
 
                          ${CMAKE_CURRENT_SOURCE_DIR}/hsm/TrafficLightHsm.cpp
@@ -74,12 +75,20 @@ if (HSMBUILD_DISPATCHER_STD)
     target_compile_options(${TEST_BIN_STD} PRIVATE ${HSMCPP_STD_CXX_FLAGS})
 
     if (NOT WIN32)
-        # this tool uses Linux specific mallinfo() API
-        add_executable(test_memory_footprint test_memory_footprint.cpp)
-        target_compile_definitions(test_memory_footprint PUBLIC -DTEST_HSM_STD)
-        target_include_directories(test_memory_footprint PRIVATE ${HSMCPP_STD_INCLUDE})
-        target_link_libraries(test_memory_footprint PRIVATE ${HSMCPP_STD_LIB})
-        target_compile_options(test_memory_footprint PRIVATE ${HSMCPP_STD_CXX_FLAGS})
+        # this tool uses Linux specific mallinfo() API and requires glib 2.33+
+        include (CheckSymbolExists)
+
+        CHECK_SYMBOL_EXISTS(mallinfo2 malloc.h MALLINFO2_EXISTS)
+
+        if (MALLINFO2_EXISTS)
+            add_executable(test_memory_footprint test_memory_footprint.cpp)
+            target_compile_definitions(test_memory_footprint PUBLIC -DTEST_HSM_STD)
+            target_include_directories(test_memory_footprint PRIVATE ${HSMCPP_STD_INCLUDE})
+            target_link_libraries(test_memory_footprint PRIVATE ${HSMCPP_STD_LIB})
+            target_compile_options(test_memory_footprint PRIVATE ${HSMCPP_STD_CXX_FLAGS})
+        else()
+            message("[SKIP] test_memory_footprint: mallinfo2 symbol not found (check glib version; version 2.33 or newer is required)")
+        endif()
     endif()
 endif()
 

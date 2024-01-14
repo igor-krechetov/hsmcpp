@@ -14,7 +14,7 @@ char** gArgv = nullptr;
 extern "C" {
 void startTests(void* pvParameters) {
     ::testing::InitGoogleMock(&gArgc, gArgv);
-    configureGTest();
+    configureGTest("freertos");
 
     static_cast<void>(RUN_ALL_TESTS());
     vTaskEndScheduler();

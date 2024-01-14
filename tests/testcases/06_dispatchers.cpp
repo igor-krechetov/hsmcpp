@@ -120,6 +120,8 @@ TEST(dispatchers, release_sync) {
     EXPECT_LT(*callbackCounter, eventsCount);
 }
 
+#ifndef TEST_HSM_FREERTOS
+
 TEST(dispatchers, stresstest_create_destroy_hsm_later) {
     TEST_DESCRIPTION("check that it's possible to destroy HSM and disconnect from dispatcher when there are pending events");
     // The idea behild this test is to make sure that HSM is not deleted while being inside one of it's callbacks
@@ -218,6 +220,8 @@ TEST(dispatchers, stresstest_create_destroy_hsm_later) {
     EXPECT_LT(*callbackCounter, iterationsCount * eventsCount);
     EXPECT_EQ(objectsDeleted, iterationsCount);
 }
+
+#endif // TEST_HSM_FREERTOS
 
 TEST(dispatchers, stresstest_create_destroy_dispatcher) {
     TEST_DESCRIPTION("check that it's possible to destroy dispatcher when there are pending events");

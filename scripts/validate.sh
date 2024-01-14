@@ -9,8 +9,8 @@ fi
 mkdir ./build
 cd ./build
 
-export Qt6_DIR=~/qt/6.4.2/gcc_64/lib/cmake/Qt6
-# export Qt5_DIR=~/qt/5.13.2/gcc_64/lib/cmake/Qt5
+export Qt6_DIR=~/Qt/6.5.1/gcc_64/lib/cmake/Qt6
+# export Qt5_DIR=~/Qt/5.15.2/gcc_64/lib/cmake/Qt5
 
 if [ ${PWD##*/} = "build" ]
 then
@@ -29,7 +29,7 @@ then
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
         -DHSMBUILD_CODECOVERAGE=ON \
         -DHSMBUILD_CLANGTIDY=OFF \
-        -DCMAKE_TOOLCHAIN_FILE=~/qt/6.4.2/gcc_64/lib/cmake/Qt6/qt.toolchain.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=$Qt6_DIR/qt.toolchain.cmake \
         ..
     make -j5
 

@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [1.0.1] - 2024-01-11
+### Fixed
+- STD dispatcher incorrectly schedules repeating timer event (https://github.com/igor-krechetov/hsmcpp/pull/8)
+- Race condition when starting timers with Qt Dispatcher (used invalid context for lambda function)
+- Add libc version check for test_memory_footprint test application
+
 ## [1.0.0] - 2023-05-25
 ### Updated
 - add activeStates argument to failedTransition callback

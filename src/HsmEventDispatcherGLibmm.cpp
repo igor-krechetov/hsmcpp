@@ -151,7 +151,7 @@ void HsmEventDispatcherGLibmm::notifyDispatcherAboutEvent() {
 
 bool HsmEventDispatcherGLibmm::onTimerEvent(const TimerID_t timerID) {
     HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
-    const bool restartTimer = handleTimerEvent(timerID);
+    const bool restartTimer = (handleTimerEvent(timerID) > 0);
 
     if (false == restartTimer) {
         CriticalSection cs(mRunningTimersSync);

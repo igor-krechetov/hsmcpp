@@ -1,4 +1,5 @@
 #include <malloc.h>
+// NOTE: glib 2.33 required
 
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
 #include <hsmcpp/hsm.hpp>

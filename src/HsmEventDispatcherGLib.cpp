@@ -186,7 +186,7 @@ gboolean HsmEventDispatcherGLib::onTimerEvent(const TimerData_t* timerData) {
     bool restartTimer = false;
 
     if (nullptr != timerData) {
-        restartTimer = timerData->first->handleTimerEvent(timerData->second);
+        restartTimer = (timerData->first->handleTimerEvent(timerData->second) > 0);
 
         if (false == restartTimer) {
             CriticalSection lckExpired(timerData->first->mRunningTimersSync);

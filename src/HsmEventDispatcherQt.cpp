@@ -91,14 +91,14 @@ void HsmEventDispatcherQt::unregisterAllTimerHandlers() {
 }
 
 void HsmEventDispatcherQt::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) {
-    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d",
+    HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d, intervalMs=%u, isSingleShot=%d",
                               SC2INT(timerID),
                               intervalMs,
                               BOOL2INT(isSingleShot));
     auto it = mNativeTimerHandlers.find(timerID);
 
     if (mNativeTimerHandlers.end() == it) {
-        auto funcCreateTimer = [&]() {
+        auto funcCreateTimer = [=]() {
             QTimer* newTimer = new QTimer(this);
 
             newTimer->setProperty("hsmid", QVariant(timerID));
@@ -150,9 +150,9 @@ void HsmEventDispatcherQt::onTimerEvent() {
         const TimerID_t timerID = ptrTimer->property("hsmid").toInt();
 
         HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
-        const bool restartTimer = handleTimerEvent(timerID);
 
-        if (false == restartTimer) {
+        if (0 == handleTimerEvent(timerID)) {
+            // delete timer since it doesn't need to be restarted
             CriticalSection cs(mRunningTimersSync);
             auto itTimer = mNativeTimerHandlers.find(timerID);
 

@@ -147,34 +147,38 @@ void HsmEventDispatcherBase::startTimer(const HandlerID_t handlerID,
                                         const TimerID_t timerID,
                                         const unsigned int intervalMs,
                                         const bool isSingleShot) {
-    HSM_TRACE_CALL_DEBUG_ARGS("handlerID=%d, timerID=%d, intervalMs=%d, isSingleShot=%d",
+    HSM_TRACE_CALL_DEBUG_ARGS("handlerID=%d, timerID=%d, intervalMs=%u, isSingleShot=%d",
                               handlerID,
                               timerID,
                               intervalMs,
                               BOOL2INT(isSingleShot));
-    LockGuard lck(mHandlersSync);
+    if (intervalMs > 0u) {
+        LockGuard lck(mHandlersSync);
 
-    if (mTimerHandlers.find(handlerID) != mTimerHandlers.end()) {
-        auto it = mActiveTimers.find(timerID);
+        if (mTimerHandlers.find(handlerID) != mTimerHandlers.end()) {
+            auto it = mActiveTimers.find(timerID);
 
-        if (mActiveTimers.end() != it) {
-            it->second.handlerID = handlerID;
-            it->second.intervalMs = intervalMs;
-            it->second.isSingleShot = isSingleShot;
+            if (mActiveTimers.end() != it) {
+                it->second.handlerID = handlerID;
+                it->second.intervalMs = intervalMs;
+                it->second.isSingleShot = isSingleShot;
 
-            // restart timer
-            stopTimerImpl(timerID);
-            startTimerImpl(timerID, it->second.intervalMs, it->second.isSingleShot);
-        } else {
-            TimerInfo newTimer;
+                // restart timer
+                stopTimerImpl(timerID);
+                startTimerImpl(timerID, it->second.intervalMs, it->second.isSingleShot);
+            } else {
+                TimerInfo newTimer;
 
-            newTimer.handlerID = handlerID;
-            newTimer.intervalMs = intervalMs;
-            newTimer.isSingleShot = isSingleShot;
+                newTimer.handlerID = handlerID;
+                newTimer.intervalMs = intervalMs;
+                newTimer.isSingleShot = isSingleShot;
 
-            mActiveTimers[timerID] = newTimer;
-            startTimerImpl(timerID, intervalMs, isSingleShot);
+                mActiveTimers[timerID] = newTimer;
+                startTimerImpl(timerID, intervalMs, isSingleShot);
+            }
         }
+    } else {
+        HSM_TRACE_WARNING("skip. intervalMs must be larger than zero");
     }
 }
 
@@ -247,9 +251,9 @@ void HsmEventDispatcherBase::stopTimerImpl(const TimerID_t timerID) {
     // do nothing. must be implemented in platfrom specific dispatcher
 }
 
-bool HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID) {
+unsigned int HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID) {
     HSM_TRACE_CALL_DEBUG_ARGS("timerID=%d", SC2INT(timerID));
-    bool restartTimer = false;
+    unsigned int nextIntervalMs = 0;
 
     if (INVALID_HSM_TIMER_ID != timerID) {
         // NOTE: should lock the whole block to prevent situation when timer handler is unregistered during handler execution
@@ -263,10 +267,10 @@ bool HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID) {
             if (INVALID_HSM_DISPATCHER_HANDLER_ID != itTimer->second.handlerID) {
                 TimerHandlerFunc_t timerHandler = getTimerHandlerFunc(itTimer->second.handlerID);
 
-                restartTimer = ((true == itTimer->second.isSingleShot) ? false : true);
+                nextIntervalMs = ((true == itTimer->second.isSingleShot) ? 0 : itTimer->second.intervalMs);
 
                 // Remove singleshot timer from active list
-                if (false == restartTimer) {
+                if (0u == nextIntervalMs) {
                     mActiveTimers.erase(itTimer);
                 }
 
@@ -275,7 +279,7 @@ bool HsmEventDispatcherBase::handleTimerEvent(const TimerID_t timerID) {
         }
     }
 
-    return restartTimer;
+    return nextIntervalMs;
 }
 
 void HsmEventDispatcherBase::dispatchEnqueuedEvents() {

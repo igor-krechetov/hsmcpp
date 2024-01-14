@@ -218,10 +218,10 @@ protected:
      *
      * @param timerID id of the expired timer
      *
-     * @retval true timer should be restarted
-     * @retval false timer can be deleted (usually because it's a singleshot timer)
+     * @return interval in milliseconds to use for restarting the timer or zero if timer can be deleted
+     *         (usually because it's a singleshot timer)
      */
-    bool handleTimerEvent(const TimerID_t timerID);
+    unsigned int handleTimerEvent(const TimerID_t timerID);
 
     /**
      * @brief Wakeup dispatching thread to process pending events.

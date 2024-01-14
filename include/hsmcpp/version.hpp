@@ -6,6 +6,6 @@
 
 #define HSMCPP_MAJOR_VERSION    (1)
 #define HSMCPP_MINOR_VERSION    (0)
-#define HSMCPP_MICRO_VERSION    (0)
+#define HSMCPP_MICRO_VERSION    (1)
 
 #endif // HSMCPP_VERSION_HPP

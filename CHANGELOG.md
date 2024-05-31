@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [1.0.2] - 2024-05-31
+### Fixed
+- fixed handling of <xi:include> tags during code generation (transition targets were getting double prefix which was breaking the build)
+
 ## [1.0.1] - 2024-01-11
 ### Fixed
 - STD dispatcher incorrectly schedules repeating timer event (https://github.com/igor-krechetov/hsmcpp/pull/8)

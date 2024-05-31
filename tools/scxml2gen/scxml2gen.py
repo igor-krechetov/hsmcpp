@@ -202,9 +202,11 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
                         includePath = os.path.join(rootDir, curState.attrib['href'])
                         print(f"-- INCLUDE: {includePath}")
 
-                        # add prefix only if xi:include is wrapped inside aa state with no other items inside
+                        # add prefix only if xi:include is wrapped inside a state with no other items inside
                         if ('id' in parentElement.attrib) and (xmlFind(parentElement, "state") is None) and (len(list(xmlFindAll(parentElement, "include"))) == 1):
                             newPrefix += parentElement.attrib['id'] + "__"
+                        else:
+                            print(f"WARNING: parent state({parentElement.attrib['id']}) of xi:include has other child states. State names will not be prefixed")
                         subScxml = parseScxml(includePath, newPrefix)
 
                         if subScxml is not None:
@@ -257,7 +259,7 @@ def parseScxmlStates(parentElement, rootDir, namePrefix):
                             if "target" in curTransition.attrib:
                                 newTransition["target"] = namePrefix + curTransition.attrib["target"]
                             else:
-                                newTransition["target"] = namePrefix + newState["id"]
+                                newTransition["target"] = newState["id"]
 
                             if "cond" in curTransition.attrib:
                                 newTransition["condition"] = getCallbackName(curTransition)

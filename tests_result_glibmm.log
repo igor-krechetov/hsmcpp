@@ -188,7 +188,7 @@
 [       OK ] ABCHsm.finalstate_toplevel (50 ms)
 [ RUN      ] ABCHsm.issue_pr_8__invalid_std_timers
 [       OK ] ABCHsm.issue_pr_8__invalid_std_timers (200 ms)
-[----------] 73 tests from ABCHsm (3961 ms total)
+[----------] 73 tests from ABCHsm (3962 ms total)
 
 [----------] 7 tests from dispatchers
 [ RUN      ] dispatchers.release_sync
@@ -205,7 +205,7 @@
 [       OK ] dispatchers.create_hsm_from_callback (0 ms)
 [ RUN      ] dispatchers.instance_ownership
 [       OK ] dispatchers.instance_ownership (0 ms)
-[----------] 7 tests from dispatchers (3206 ms total)
+[----------] 7 tests from dispatchers (3207 ms total)
 
 [----------] 16 tests from variant
 [ RUN      ] variant.copy_constructor
@@ -592,5 +592,5 @@
 [----------] 20 tests from variant/FixtureVariantTypeConversion (0 ms total)
 
 [----------] Global test environment tear-down
-[==========] 276 tests from 13 test suites ran. (7174 ms total)
+[==========] 276 tests from 13 test suites ran. (7175 ms total)
 [  PASSED  ] 276 tests.

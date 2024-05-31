@@ -550,7 +550,7 @@
 
 [----------] 20 tests from variant/FixtureVariantTypeConversion
 [ RUN      ] variant/FixtureVariantTypeConversion.convert/toInt64
-[       OK ] variant/FixtureVariantTypeConversion.convert/toInt64 (2 ms)
+[       OK ] variant/FixtureVariantTypeConversion.convert/toInt64 (0 ms)
 [ RUN      ] variant/FixtureVariantTypeConversion.convert/toUInt64
 [       OK ] variant/FixtureVariantTypeConversion.convert/toUInt64 (0 ms)
 [ RUN      ] variant/FixtureVariantTypeConversion.convert/toDouble
@@ -589,8 +589,8 @@
 [       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/getMap (0 ms)
 [ RUN      ] variant/FixtureVariantTypeConversion.convert_invalid_string/getPair
 [       OK ] variant/FixtureVariantTypeConversion.convert_invalid_string/getPair (0 ms)
-[----------] 20 tests from variant/FixtureVariantTypeConversion (2 ms total)
+[----------] 20 tests from variant/FixtureVariantTypeConversion (1 ms total)
 
 [----------] Global test environment tear-down
-[==========] 276 tests from 13 test suites ran. (7169 ms total)
+[==========] 276 tests from 13 test suites ran. (7168 ms total)
 [  PASSED  ] 276 tests.

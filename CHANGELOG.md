@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [1.0.3] - 2024-06-07
+### Fixed
+- fixed HSM debug log generation for builds with disabled traces
+
 ## [1.0.2] - 2024-05-31
 ### Fixed
 - fixed handling of <xi:include> tags during code generation (transition targets were getting double prefix which was breaking the build)

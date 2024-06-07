@@ -1787,6 +1787,7 @@ void HierarchicalStateMachine::Impl::dumpActiveStates() {
 
     HSM_TRACE_DEBUG("active states: <%s>", temp.c_str());
 }
+#endif  // HSM_DISABLE_DEBUG_TRACES
 
 std::string HierarchicalStateMachine::Impl::getStateName(const StateID_t state) {
     std::string res;
@@ -1813,15 +1814,5 @@ std::string HierarchicalStateMachine::Impl::getEventName(const EventID_t event) 
 
     return res;
 }
-#else   // HSM_DISABLE_DEBUG_TRACES
-
-std::string HierarchicalStateMachine::Impl::getStateName(const StateID_t state) {
-    return std::string();
-}
-
-std::string HierarchicalStateMachine::Impl::getEventName(const EventID_t event) {
-    return std::string();
-}
-#endif  // HSM_DISABLE_DEBUG_TRACES
 
 }  // namespace hsmcpp

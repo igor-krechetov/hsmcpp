@@ -49,7 +49,7 @@ void @CLASS_NAME@::onTransitionFailed(const std::list<hsmcpp::StateID_t>& active
 std::string @CLASS_NAME@::getStateName(const hsmcpp::StateID_t state) const {
     std::string stateName;
 
-#ifndef HSM_DISABLE_TRACES
+#ifndef HSM_MIN_BUILD
     switch(state) {
 ~~~BLOCK:ENUM_STATES_ITEM~~~
         case @ENUM_STATES@::@ENUM_STATES_ITEM@:
@@ -62,7 +62,7 @@ std::string @CLASS_NAME@::getStateName(const hsmcpp::StateID_t state) const {
     }
 #else
     stateName = hsmcpp::HierarchicalStateMachine::getStateName(state);
-#endif // HSM_DISABLE_TRACES
+#endif // HSM_MIN_BUILD
 
     return stateName;
 }
@@ -70,7 +70,7 @@ std::string @CLASS_NAME@::getStateName(const hsmcpp::StateID_t state) const {
 std::string @CLASS_NAME@::getEventName(const hsmcpp::EventID_t event) const {
     std::string eventName;
 
-#ifndef HSM_DISABLE_TRACES
+#ifndef HSM_MIN_BUILD
     switch(event) {
 ~~~BLOCK:ENUM_EVENTS_ITEM~~~
         case @ENUM_EVENTS@::@ENUM_EVENTS_ITEM@:
@@ -83,7 +83,7 @@ std::string @CLASS_NAME@::getEventName(const hsmcpp::EventID_t event) const {
     }
 #else
     eventName = hsmcpp::HierarchicalStateMachine::getEventName(event);
-#endif // HSM_DISABLE_TRACES
+#endif // HSM_MIN_BUILD
 
     return eventName;
 }

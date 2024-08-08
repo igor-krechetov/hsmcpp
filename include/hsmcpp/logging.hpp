@@ -28,6 +28,9 @@
 #ifndef HSM_DISABLE_TRACES
  #ifdef PLATFORM_ARDUINO
   #include <Arduino.h>
+ #elif defined(PLATFORM_WINDOWS)
+  #define WINDOWS_LEAN_AND_MEAN
+  #include <Windows.h>
  #elif !defined(PLATFORM_FREERTOS)
   #include <sys/syscall.h>
   #include <unistd.h>
@@ -45,6 +48,9 @@
  #ifdef PLATFORM_ARDUINO
   #define HSM_TRACE_CALL_COMMON()
   #define HSM_TRACE_INIT()
+ #elif defined(PLATFORM_WINDOWS)
+  #define HSM_TRACE_CALL_COMMON()             const int _tid = GetCurrentThreadId(); (void)_tid
+  #define HSM_TRACE_INIT()                    if (0 == g_hsm_traces_pid){ g_hsm_traces_pid = (int) GetCurrentProcessId(); }
  #elif !defined(PLATFORM_FREERTOS)
   #define HSM_TRACE_CALL_COMMON()             const int _tid = syscall(__NR_gettid); (void)_tid
   #define HSM_TRACE_INIT()                    if (0 == g_hsm_traces_pid){ g_hsm_traces_pid = getpid(); }

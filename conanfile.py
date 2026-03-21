@@ -92,10 +92,12 @@ class HsmcppConan(ConanFile):
         copy(self, "LICENSE", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
 
     def package_info(self):
-        self.cpp_info.libs = ["hsmcpp"]
+        self.cpp_info.libs = []
 
         if self.options.with_std_dispatcher:
             self.cpp_info.libs.append("hsmcpp_std")
+
+        self.cpp_info.libs.append("hsmcpp")
 
         if str(self.settings.os) in ["Linux", "FreeBSD", "Neutrino"]:
             self.cpp_info.system_libs.append("pthread")

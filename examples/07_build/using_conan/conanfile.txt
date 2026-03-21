@@ -1,0 +1,6 @@
+[requires]
+hsmcpp/1.0.2
+
+[generators]
+CMakeDeps
+CMakeToolchain

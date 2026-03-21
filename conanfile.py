@@ -1,4 +1,5 @@
 from conan import ConanFile
+from conan.errors import ConanInvalidConfiguration
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 from conan.tools.files import copy
 import os
@@ -6,6 +7,7 @@ import os
 
 class HsmcppConan(ConanFile):
     name = "hsmcpp"
+    version = "1.0.2"
     package_type = "library"
 
     description = "C++ library for hierarchical/finite state machines"
@@ -17,6 +19,7 @@ class HsmcppConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
 
     options = {
+        "shared": [True, False],
         "fPIC": [True, False],
         "with_std_dispatcher": [True, False],
         "enable_thread_safety": [True, False],
@@ -25,6 +28,7 @@ class HsmcppConan(ConanFile):
         "enable_verbose_logging": [True, False],
     }
     default_options = {
+        "shared": False,
         "fPIC": True,
         "with_std_dispatcher": True,
         "enable_thread_safety": True,
@@ -48,6 +52,10 @@ class HsmcppConan(ConanFile):
 
     def layout(self):
         cmake_layout(self)
+
+    def validate(self):
+        if self.options.shared:
+            raise ConanInvalidConfiguration("hsmcpp Conan recipe currently supports static library packaging only (shared=False).")
 
     def generate(self):
         tc = CMakeToolchain(self)

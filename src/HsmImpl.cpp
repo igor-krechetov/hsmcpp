@@ -347,6 +347,13 @@ bool HierarchicalStateMachine::Impl::registerStateAction(const StateID_t state,
     return result;
 }
 
+bool HierarchicalStateMachine::Impl::registerStateAction(const StateID_t state,
+                                                         const StateActionTrigger actionTrigger,
+                                                         const StateAction action,
+                                                         VariantVector_t&& args) {
+    return registerStateAction(state, actionTrigger, action, args);
+}
+
 void HierarchicalStateMachine::Impl::registerTransition(const StateID_t fromState,
                                                         const StateID_t toState,
                                                         const EventID_t onEvent,
@@ -393,6 +400,11 @@ const std::list<StateID_t>& HierarchicalStateMachine::Impl::getActiveStates() co
 
 bool HierarchicalStateMachine::Impl::isStateActive(const StateID_t state) const {
     return (std::find(mActiveStates.begin(), mActiveStates.end(), state) != mActiveStates.end());
+}
+
+void HierarchicalStateMachine::Impl::transitionWithArgsArray(const EventID_t event, const VariantVector_t& args) {
+    VariantVector_t argsCopy = args;
+    transitionWithArgsArray(event, std::move(argsCopy));
 }
 
 void HierarchicalStateMachine::Impl::transitionWithArgsArray(const EventID_t event, VariantVector_t&& args) {

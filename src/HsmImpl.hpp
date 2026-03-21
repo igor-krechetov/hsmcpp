@@ -62,6 +62,10 @@ public:
                              const StateActionTrigger actionTrigger,
                              const StateAction action,
                              const VariantVector_t& args);
+    bool registerStateAction(const StateID_t state,
+                             const StateActionTrigger actionTrigger,
+                             const StateAction action,
+                             VariantVector_t&& args);
     void registerTransition(const StateID_t from,
                             const StateID_t to,
                             const EventID_t onEvent,
@@ -78,6 +82,7 @@ public:
     const std::list<StateID_t>& getActiveStates() const;
     bool isStateActive(const StateID_t state) const;
 
+    void transitionWithArgsArray(const EventID_t event, const VariantVector_t& args);
     void transitionWithArgsArray(const EventID_t event, VariantVector_t&& args);
     bool transitionExWithArgsArray(const EventID_t event,
                                    const bool clearQueue,

@@ -172,8 +172,13 @@ For complete workflows and editor integration, see [Code generation docs](https:
 
 ```bash
 git clone https://github.com/igor-krechetov/hsmcpp.git
-cd hsmcpp && ./build.sh
-./examples/00_helloworld
+cd ./hsmcpp
+mkdir ./build
+cd ./build
+cmake ..
+make -j4
+# run example
+./examples/00_helloworld/00_helloworld_std
 ```
 Explore more examples in [/examples](https://github.com/igor-krechetov/hsmcpp/tree/main/examples).
 
@@ -184,11 +189,11 @@ Explore more examples in [/examples](https://github.com/igor-krechetov/hsmcpp/tr
 
 | Platform | Support | Dispatchers | Notes |
 | --- | --- | --- | --- |
-| Linux | ✅ | STD, GLib, GLibmm, Qt | Best for Linux CI/dev flows |
-| QNX | ✅ | STD | Built as POSIX target (cross-compile friendly) |
-| Arduino | ✅ | Arduino | Embedded-targeted dispatcher |
-| FreeRTOS | ✅ | FreeRTOS | RTOS-oriented integration |
-| Windows | ✅ | STD, Qt | Desktop/server integration |
+| Linux | ✅ | STD, GLib, GLibmm, Qt |  |
+| QNX | ✅ | STD | Custom dispatcher planned |
+| Arduino | ✅ | Arduino |  |
+| FreeRTOS | ✅ | FreeRTOS | V10.3.1+ |
+| Windows | ✅ | STD, Qt |  |
 
 ## Generic
 - visual state machine editors (through [thirdparty editors](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html))
@@ -223,7 +228,7 @@ Explore more examples in [/examples](https://github.com/igor-krechetov/hsmcpp/tr
 ```bash
 git clone https://github.com/igor-krechetov/hsmcpp.git
 cd ./hsmcpp
-./build.sh
+./srcipts/build.sh
 cd ./build
 make install
 ```
@@ -258,10 +263,10 @@ By default, this builds core library components, tests, and examples. You can di
 # Documentation
 Documentation is available at [hsmcpp.readthedocs.io](https://hsmcpp.readthedocs.io).
 
-- Getting Started
-- SCXML workflows
-- Dispatcher integration
-- API reference
+- [Getting Started](https://hsmcpp.readthedocs.io/en/latest/getting-started/getting-started.html)
+- [SCXML workflows](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html)
+- [Platform integration](https://hsmcpp.readthedocs.io/en/latest/platforms/platforms.html)
+- [API reference](https://hsmcpp.readthedocs.io/en/latest/api/api.html)
 
 
 # Tooling
@@ -280,15 +285,6 @@ Check out [documentation](https://hsmcpp.readthedocs.io/en/latest/code-generatio
 
 ![Editing HSM in scxmlgui](https://hsmcpp.readthedocs.io/en/latest/_images/editor_scxmlgui.png)
 
-
-# Notable FSM/HSM libraries
-There is no one-for-all library, so if hsmcpp doesn't fully suit your needs you can check out one of these alternatives:
-- [Qt](https://github.com/qt/qtscxml) (using QStateMachine or QScxmlStateMachine)
-- [QP/C++](https://github.com/QuantumLeaps/qpcpp)
-- [TinyFSM](https://github.com/digint/tinyfsm)
-- [Another Finite State Machine](https://github.com/zmij/afsm)
-- [HFSM2](https://github.com/andrew-gresyk/HFSM2)
-- [arduino-fsm](https://github.com/jonblack/arduino-fsm)
 
 # Why should you use Statecharts?
 
@@ -328,6 +324,16 @@ There are a few common arguments against statecharts in addition to the ones lis
 - It [increases the number of libraries](https://statecharts.dev/faq/increases-number-of-libraries.html), for web applications this means increased load time.
 
 The benefits outlined above should make it clear that the introduction of statecharts is generally a _net positive_.
+
+
+# Notable alternatives
+There is no one-for-all library, so if hsmcpp doesn't fully suit your needs you can check out one of these alternatives:
+- [Qt](https://github.com/qt/qtscxml) (using QStateMachine or QScxmlStateMachine)
+- [QP/C++](https://github.com/QuantumLeaps/qpcpp)
+- [TinyFSM](https://github.com/digint/tinyfsm)
+- [Another Finite State Machine](https://github.com/zmij/afsm)
+- [HFSM2](https://github.com/andrew-gresyk/HFSM2)
+- [arduino-fsm](https://github.com/jonblack/arduino-fsm)
 
 
 # Releases

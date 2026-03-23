@@ -2,95 +2,145 @@
 [![Changelog](https://img.shields.io/badge/changelog-v1.0.2-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 
-# Releases
-[![Latest Release](https://img.shields.io/github/v/tag/igor-krechetov/hsmcpp?label=latest%20release)](https://github.com/igor-krechetov/hsmcpp/tags)
-[![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
-[![arduino-library-badge](https://www.ardu-badge.com/badge/hsmcpp.svg?)](https://www.ardu-badge.com/hsmcpp)
 
-# Quality Status
+# hsmcpp — Hierarchical State Machines for Embedded & Event-Driven C++
+A C++ library for building scalable, maintainable hierarchical state machines for embedded and event-driven systems.
 
-[![Build Status](https://github.com/igor-krechetov/hsmcpp/actions/workflows/build.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/build.yml)
+* Embedded-ready (Linux, QNX, FreeRTOS, Arduino)
+* SCXML-based code generation + visual tooling
+* Thread-safe, async/sync execution  
+* MISRA C++ checks enforced in CI
 
-## Static Code Analysis
-
-[![SCA: MISRA](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_misra.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_misra.yml)
-[![SCA: CodeQL](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_codeql.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_codeql.yml)
-[![SCA: Coverity](https://img.shields.io/coverity/scan/27361.svg)](https://scan.coverity.com/projects/igor-krechetov-hsmcpp)
-
-MISRA static-analysis checks are part of CI to support safety-critical and automotive-oriented development flows.
-
-## Unit Tests
-
-[![Coverage Status](https://coveralls.io/repos/github/igor-krechetov/hsmcpp/badge.svg?branch=main)](https://coveralls.io/github/igor-krechetov/hsmcpp?branch=main)
-
-[![Tests: STD](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_std.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_std.log)
-[![Tests: Glib](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_glib.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_glib.log)
-[![Tests: GLibmm](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_glibmm.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_glibmm.log)
-[![Tests: Qt](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_qt.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_qt.log)
-
-# Overview
-hsmcpp is a C++ library for hierarchical/finite state machines (HSM/FSM) built for event-driven and embedded-friendly workflows.
+Eliminate fragile switch-case FSMs and replace them with scalable, testable state machines that work across embedded and multi-threaded systems.
 
 ## Why hsmcpp for embedded systems?
-- Works across POSIX, Windows, QNX, Arduino, and FreeRTOS.
-- Supports synchronous and asynchronous execution models.
-- Offers optional dispatchers (`std::thread`, GLib, GLibmm, Qt, FreeRTOS, Arduino).
-- Includes SCXML-based code generation and PlantUML diagram generation.
-- Ships with a visual debugger (`hsmdebugger`) for transition analysis.
-- Includes MISRA-oriented static analysis checks in CI for safety-critical workflows.
+- Manage complex state logic without spaghetti code
+- Model behavior visually with SCXML and keep it in sync with implementation
+- Debug transitions and state flow with built-in tooling
+- Designed for high-performance and real-time workflows
+- Integrate easily with your runtime (RTOS, Qt, STD, etc.)
 
 ## Is this library a good fit for your project?
-**Good fit for:** RTOS, event-driven, and multi-threaded applications where explicit state behavior and maintainability matter.
+**Good fit for:**
+- C++ engineers building event-driven and embedded systems
+- Teams needing maintainable state logic at scale and architecture-as-code
 
-**May be overkill for:** very small/simple single-threaded flows where a plain switch-based FSM is enough.
+**May be overkill for:**
+- trivial FSMs
+- ultra-constrained environments with no dynamic memory
 
-# Quick Start (2 minutes)
+# Quick Start
 
-## Build from source
-```bash
-git clone https://github.com/igor-krechetov/hsmcpp.git
-cd ./hsmcpp
-./build.sh
-cd ./build
-make install
+hsmcpp supports two workflows:
+- **Model-driven (recommended): SCXML + code generation + visual tooling**
+- Code-first: define state machines directly in C++
+
+## Visual Workflow (SCXML-based)
+```mermaid
+flowchart LR
+    subgraph Modeling
+        REQ[Requirements]
+        SCXML[SCXML Definition]
+        IDE[Visual Editor]
+    end
+
+    subgraph Generation
+        GEN[Code Generator]
+        UML[PlantUML Diagram]
+    end
+
+    subgraph Runtime
+        HSM[C++ HSM]
+        DISP[Dispatcher]
+        APP[Application]
+    end
+
+    subgraph Analysis
+        DBG[hsmdebugger]
+    end
+
+    subgraph Artifacts
+        DESIGN[Design Documentation]
+        EXE[Binaries]
+    end
+
+    REQ --> IDE
+    IDE --> SCXML
+    SCXML --> GEN
+    SCXML --> UML
+    UML --> DESIGN
+    GEN --> HSM
+
+    HSM --> DISP
+    DISP --> APP
+
+    APP --> EXE
+    EXE --> DBG
+    DBG -. inspect / refine .-> SCXML
 ```
 
-By default, this builds core library components, tests, and examples. You can disable unneeded components with CMake options.
+## Minimal code-only example
+
+```C++
+#include <chrono>
+#include <thread>
+#include <memory>
+#include <hsmcpp/hsm.hpp>
+#include <hsmcpp/HsmEventDispatcherSTD.hpp>
+
+enum class States { OFF, ON };
+enum class Events { SWITCH };
+
+int main(const int argc, const char**argv)
+{
+    std::shared_ptr<hsmcpp::HsmEventDispatcherSTD> dispatcher = hsmcpp::HsmEventDispatcherSTD::create();
+    hsmcpp::HierarchicalStateMachine<States, Events> hsm(States::OFF);
+
+    // Register states
+    hsm.registerState(States::OFF, [&hsm](const VariantList_t& args) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        hsm.transition(Events::SWITCH);
+    });
+    hsm.registerState(States::ON, [&hsm](const VariantList_t& args) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        hsm.transition(Events::SWITCH);
+    });
+
+    // Register transitions
+    hsm.registerTransition(States::OFF, States::ON, Events::SWITCH);
+    hsm.registerTransition(States::ON, States::OFF, Events::SWITCH);
+
+    // Initialize HSM
+    hsm.initialize(dispatcher);
+
+    // Start dispatcher and block
+    dispatcher->join();
+
+    return 0;
+}
+```
+For complete code see [examples/00_helloworld/00_helloworld_std.cpp](https://github.com/igor-krechetov/hsmcpp/blob/codex/test-and-fix-conan-build-for-examples/examples/00_helloworld/00_helloworld_std.cpp).
 
 ## Minimal SCXML-based example
 
 `blink.scxml`:
-
 ```xml
 <scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" initial="OFF">
   <state id="OFF">
+    <invoke srcexpr="onOff"/>
     <transition event="SWITCH" target="ON"/>
   </state>
 
   <state id="ON">
+    <invoke srcexpr="onOn"/>
     <transition event="SWITCH" target="OFF"/>
   </state>
 </scxml>
 ```
 
-Generate C++ from SCXML using CMake helper:
-
-```bash
-set(GEN_DIR ${CMAKE_BINARY_DIR}/gen)
-file(MAKE_DIRECTORY ${GEN_DIR})
-
-generateHsm(GEN_BLINK_HSM ${CMAKE_CURRENT_SOURCE_DIR}/blink.scxml "BlinkHsm" ${GEN_DIR} "GEN_OUT_SRC")
-
-add_executable(blink main.cpp ${GEN_OUT_SRC})
-add_dependencies(blink GEN_BLINK_HSM)
-target_include_directories(blink PRIVATE ${GEN_DIR} ${HSMCPP_STD_INCLUDE})
-target_link_libraries(blink PRIVATE ${HSMCPP_STD_LIB})
-```
-
-Minimal C++ wrapper class around generated `BlinkHsmBase`:
+Minimal C++ code to use the generated `BlinkHsmBase`:
 
 ```C++
-#include <hsmcpp/HsmEventDispatcherSTD.hpp>
 #include "gen/BlinkHsmBase.hpp"
 
 class BlinkHsm : public BlinkHsmBase {
@@ -103,72 +153,42 @@ protected:
         transition(BlinkHsmEvents::SWITCH);
     }
 };
-```
 
-For complete workflows and editor integration, see [Code generation docs](https://hsmcpp.readthedocs.io/en/latest/code-generation/code-generation.html) and [/examples/02_generated](https://github.com/igor-krechetov/hsmcpp/tree/main/examples/02_generated).
+int main(const int argc, const char** argv) {
+    std::shared_ptr<HsmEventDispatcherSTD> dispatcher = HsmEventDispatcherSTD::create();
+    BlinkHsm hsm;
 
-## Minimal code-only example
-```C++
-#include <chrono>
-#include <thread>
-#include <hsmcpp/hsm.hpp>
-#include <hsmcpp/HsmEventDispatcherSTD.hpp>
-
-enum class States
-{
-    OFF,
-    ON
-};
-
-enum class Events
-{
-    SWITCH
-};
-
-int main(const int argc, const char**argv)
-{
-    std::shared_ptr<hsmcpp::HsmEventDispatcherSTD> dispatcher = hsmcpp::HsmEventDispatcherSTD::create();
-    hsmcpp::HierarchicalStateMachine<States, Events> hsm(States::OFF);
-
-    hsm.initialize(dispatcher);
-
-    hsm.registerState(States::OFF, [&hsm](const VariantList_t& args)
-    {
-        printf("Off\n");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        hsm.transition(Events::SWITCH);
-    });
-    hsm.registerState(States::ON, [&hsm](const VariantList_t& args)
-    {
-        printf("On\n");
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        hsm.transition(Events::SWITCH);
-    });
-
-    hsm.registerTransition(States::OFF, States::ON, Events::SWITCH);
-    hsm.registerTransition(States::ON, States::OFF, Events::SWITCH);
-
-    hsm.transition(Events::SWITCH);
-
-    dispatcher->join();
+    if (true == hsm.initialize(dispatcher)) {
+        dispatcher->join();
+    }
 
     return 0;
 }
 ```
 
-See [/examples/07_build](https://github.com/igor-krechetov/hsmcpp/tree/main/examples/07_build) for integration variants (`using_code`, `using_fetch`, `using_pkgconfig`, `using_conan`).
+For complete workflows and editor integration, see [Code generation docs](https://hsmcpp.readthedocs.io/en/latest/code-generation/code-generation.html) and [/examples/02_generated](https://github.com/igor-krechetov/hsmcpp/tree/main/examples/02_generated).
 
-# Embedded readiness matrix
+## Get Started in 60 Seconds
+
+```bash
+git clone https://github.com/igor-krechetov/hsmcpp.git
+cd hsmcpp && ./build.sh
+./examples/00_helloworld
+```
+Explore more examples in [/examples](https://github.com/igor-krechetov/hsmcpp/tree/main/examples).
+
+
+# Key Features
+
+## Platform support matrix
 
 | Platform | Support | Dispatchers | Notes |
 | --- | --- | --- | --- |
-| POSIX | ✅ | STD, GLib, GLibmm, Qt | Best for Linux CI/dev flows |
-| Windows | ✅ | STD, Qt | Desktop/server integration |
+| Linux | ✅ | STD, GLib, GLibmm, Qt | Best for Linux CI/dev flows |
 | QNX | ✅ | STD | Built as POSIX target (cross-compile friendly) |
 | Arduino | ✅ | Arduino | Embedded-targeted dispatcher |
 | FreeRTOS | ✅ | FreeRTOS | RTOS-oriented integration |
-
-# Key Features
+| Windows | ✅ | STD, Qt | Desktop/server integration |
 
 ## Generic
 - visual state machine editors (through [thirdparty editors](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html))
@@ -196,20 +216,29 @@ See [/examples/07_build](https://github.com/igor-krechetov/hsmcpp/tree/main/exam
 - transition cancelation
 - support for std::function and lambdas as callbacks
 
-# Installation & packaging
 
-## Available today
-- Source build (CMake)
-- [PlatformIO package](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
-- [Arduino library registry](https://www.ardu-badge.com/hsmcpp)
+# Installation
 
-## Planned / in progress
-- Conan package support (recipe added in this repository)
-- Ubuntu/Debian package support
+## Building from source
+```bash
+git clone https://github.com/igor-krechetov/hsmcpp.git
+cd ./hsmcpp
+./build.sh
+cd ./build
+make install
+```
 
-See [doc/conan.md](doc/conan.md) for Conan usage and publishing workflow.
+By default, this builds core library components, tests, and examples. You can disable unneeded components with CMake options. See [Getting started](https://hsmcpp.readthedocs.io/en/latest/getting-started/getting-started.html#building-the-library) page for details and more options.
 
-# Dependencies
+## Supported package managers
+| Package manager | Status |
+| --- | --- |
+| [PlatformIO](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp) | ✅ |
+| [Arduino library registry](https://www.ardu-badge.com/hsmcpp) | ✅ |
+| [Conan](https://conan.io) | TODO |
+| Ubuntu (TBD) | TODO |
+
+## Dependencies
 - For library:
   - C++11 or newer
   - glib (optional, for dispatcher)
@@ -227,23 +256,32 @@ See [doc/conan.md](doc/conan.md) for Conan usage and publishing workflow.
   - plantuml (minimal version: V1.2020.11)
 
 # Documentation
-Documentation is available [online](https://hsmcpp.readthedocs.io).
+Documentation is available at [hsmcpp.readthedocs.io](https://hsmcpp.readthedocs.io).
 
-# HSM GUI Editors
+- Getting Started
+- SCXML workflows
+- Dispatcher integration
+- API reference
+
+
+# Tooling
+
+## hsmdebugger
+[Read documentation](https://hsmcpp.readthedocs.io/en/latest/tools/hsmdebugger/hsmdebugger.html) for details on how to use debugger.
+
+![hsmdebugger demo](https://hsmcpp.readthedocs.io/en/latest/_images/hsmdebugger_demo.gif)
+
+## SCXML GUI Editors
 Check out [documentation](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html) to learn more about available editors.
 
-> **Note:** the dedicated editor [hsm-ide](https://github.com/igor-krechetov/hsm-ide/) is under active development.
+> **Note:** the dedicated editor [hsm-ide](https://github.com/igor-krechetov/hsm-ide/) is under active development and will be available soon.
 
 ![Editing HSM in Qt Creator](https://hsmcpp.readthedocs.io/en/latest/_images/editor_qt.png)
 
 ![Editing HSM in scxmlgui](https://hsmcpp.readthedocs.io/en/latest/_images/editor_scxmlgui.png)
 
-# hsmdebugger
-[Read documentation](https://hsmcpp.readthedocs.io/en/latest/tools/hsmdebugger/hsmdebugger.html) for details on how to use debugger.
 
-![hsmdebugger demo](https://hsmcpp.readthedocs.io/en/latest/_images/hsmdebugger_demo.gif)
-
-## Notable FSM/HSM libraries
+# Notable FSM/HSM libraries
 There is no one-for-all library, so if hsmcpp doesn't fully suit your needs you can check out one of these alternatives:
 - [Qt](https://github.com/qt/qtscxml) (using QStateMachine or QScxmlStateMachine)
 - [QP/C++](https://github.com/QuantumLeaps/qpcpp)
@@ -290,3 +328,30 @@ There are a few common arguments against statecharts in addition to the ones lis
 - It [increases the number of libraries](https://statecharts.dev/faq/increases-number-of-libraries.html), for web applications this means increased load time.
 
 The benefits outlined above should make it clear that the introduction of statecharts is generally a _net positive_.
+
+
+# Releases
+[![Latest Release](https://img.shields.io/github/v/tag/igor-krechetov/hsmcpp?label=latest%20release)](https://github.com/igor-krechetov/hsmcpp/tags)
+[![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
+[![arduino-library-badge](https://www.ardu-badge.com/badge/hsmcpp.svg?)](https://www.ardu-badge.com/hsmcpp)
+
+# Quality Status
+
+[![Build Status](https://github.com/igor-krechetov/hsmcpp/actions/workflows/build.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/build.yml)
+
+## Static Code Analysis
+
+[![SCA: MISRA](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_misra.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_misra.yml)
+[![SCA: CodeQL](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_codeql.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_codeql.yml)
+[![SCA: Coverity](https://img.shields.io/coverity/scan/27361.svg)](https://scan.coverity.com/projects/igor-krechetov-hsmcpp)
+
+MISRA static-analysis checks are part of CI to support safety-critical and automotive-oriented development flows.
+
+## Unit Tests
+
+[![Coverage Status](https://coveralls.io/repos/github/igor-krechetov/hsmcpp/badge.svg?branch=main)](https://coveralls.io/github/igor-krechetov/hsmcpp?branch=main)
+
+[![Tests: STD](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_std.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_std.log)
+[![Tests: Glib](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_glib.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_glib.log)
+[![Tests: GLibmm](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_glibmm.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_glibmm.log)
+[![Tests: Qt](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_qt.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_qt.log)

@@ -34,7 +34,7 @@ if command -v conan >/dev/null 2>&1; then
 cd $ROOT_07_BUILD/using_conan
 rm -Rvf ./build
 conan install . --output-folder=build --build=missing
-cmake -S . -B ./build -DCMAKE_TOOLCHAIN_FILE=./build/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
 cmake --build ./build
 else
 echo "conan not found. Skipping using_conan example."

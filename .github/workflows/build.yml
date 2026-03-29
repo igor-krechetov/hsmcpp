@@ -3,16 +3,16 @@ name: "Build"
 on:
   workflow_dispatch:
   push:
-    branches: [ main, dev ]
+    branches:
+      - "**"
   pull_request:
     branches: [ main, dev ]
 
 jobs:
   verify:
     if: >
-      github.ref_name == 'main' ||
-      github.ref_name == 'dev' ||
-      github.event_name == 'pull_request'
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'dev'))
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/verify.yml@main
 
   build:
@@ -30,23 +30,17 @@ jobs:
   test:
     needs: build
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@main
-    if: >
-      always() && (needs.build.result == 'success')
+    if: always() && (needs.build.result == 'success')
     with:
       test_script: "validate.sh"
 
-  autotag:
-    needs: [test, verify]
-    if: github.event_name == 'push' && github.ref_name == 'dev'
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/autotag.yml@main
-    with:
-      commit_version: ${{ needs.verify.outputs.commit_version }}
-      commit_action: ${{ needs.verify.outputs.commit_action }}
-      commit_sha: ${{ github.sha }}
-
   update_documentation:
-    needs: test
-    if: github.event_name == 'push' && github.ref_name == 'main'
+    needs: [verify, test]
+    if: >
+      github.event_name == 'push' &&
+      github.ref_name == 'main' &&
+      needs.verify.result == 'success' &&
+      needs.test.result == 'success'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/update-docs.yml@main
 
   release:
@@ -54,7 +48,9 @@ jobs:
     if: >
       github.event_name == 'push' &&
       github.ref_name == 'main' &&
-      needs.verify.outputs.commit_action == 'r'
+      needs.verify.outputs.commit_action == 'r' &&
+      needs.verify.result == 'success' &&
+      needs.update_documentation.result == 'success'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/release.yml@main
     with:
       commit_sha: ${{ github.sha }}

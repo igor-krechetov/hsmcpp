@@ -1,0 +1,41 @@
+name: "Validate Metadata (Reusable)"
+on:
+  workflow_call:
+    inputs:
+      commit_version:
+        required: true
+        type: string
+
+jobs:
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Validate metadata
+#        if: ${{ (inputs.commit_version != '') }}
+#        run: ./scripts/validate_metadata.py ${{ inputs.commit_version }} ./
+
+  validate_metadata:
+    name: "Verify Commit"
+    runs-on: ubuntu-latest
+    steps:
+      # 1️⃣ Checkout the target project
+      - name: Checkout caller repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: repoProject
+          fetch-depth: 0   # important to have full git history if needed
+
+      # 2️⃣ Checkout reusable workflow repo
+      - name: Checkout scripts repository
+        uses: actions/checkout@v3
+        with:
+          repository: igor-krechetov/hsm-github-workflows
+          path: repoWorkflows
+          fetch-depth: 0
+
+      # 3️⃣ Run the Python script from Repo A, pointing to Repo B
+      - name: Validate metadata
+        if: ${{ inputs.commit_version != '' }}
+        run: |
+          python3 ./repoWorkflows/scripts/validate_metadata.py ${{ inputs.commit_version }} ./repoProject/

@@ -1,0 +1,169 @@
+name: "Build Ubuntu with Qt (Reusable)"
+on:
+  workflow_call:
+    inputs:
+      platforms:
+        description: "Comma-separated list of platforms: windows,posix"
+        required: false
+        type: string
+        default: "posix"
+      src_dir:
+        required: false
+        type: string
+      build_dir:
+        required: false
+        type: string
+      # values: Release, Debug
+      build_type:
+        required: false
+        type: string
+        default: 'Release'
+      build_glib:
+        required: false
+        type: string
+        default: 'OFF'
+      build_glibmm:
+        required: false
+        type: string
+        default: 'OFF'
+      build_qt:
+        required: false
+        type: string
+        default: 'OFF'
+      build_std:
+        required: false
+        type: string
+        default: 'ON'
+      build_tests:
+        required: false
+        type: string
+        default: 'OFF'
+      build_examples:
+        required: false
+        type: string
+        default: 'OFF'
+      codecoverage:
+        required: false
+        type: string
+        default: 'OFF'
+      cmake_args:
+        required: false
+        type: string
+        default: ''
+jobs:
+  # --------------------------------------------------------
+  # 1) COMMON JOB — Parse "platforms"
+  # --------------------------------------------------------
+  prepare_args:
+    name: "Parse Build Arguments"
+    runs-on: ubuntu-latest
+    outputs:
+      platforms_json: ${{ steps.parse.outputs.platforms_json }}
+      build_dir: ${{ steps.resolve_build_dir.outputs.dir }}
+      src_dir: ${{ steps.resolve_src_dir.outputs.dir }}
+    steps:
+      - name: Parse platforms input
+        id: parse
+        run: |
+          platforms="${{ inputs.platforms }}"
+          
+          # Convert comma-separated string → JSON list
+          json="[$(printf '"%s",' ${platforms//,/ })]"
+          json="${json%,}"   # trim last comma
+          json="${json}]"
+
+          echo "Parsed platforms: $json"
+          echo "platforms_json=$json" >> $GITHUB_OUTPUT
+
+      - name: Resolve build directory
+        id: resolve_build_dir
+        run: |
+          echo "dir=${{ inputs.build_dir || format('{0}/build', github.workspace) }}" >> $GITHUB_OUTPUT
+
+      - name: Resolve src directory
+        id: resolve_src_dir
+        run: |
+          echo "dir=${{ inputs.src_dir || github.workspace }}" >> $GITHUB_OUTPUT
+
+  # # --------------------------------------------------------
+  # # 2) CHECK VERSION — Always runs
+  # # --------------------------------------------------------
+  # check_version:
+  #   uses: ./.github/workflows/check-version.yml
+#
+  # # --------------------------------------------------------
+  # # 3) VALIDATE METADATA — Always runs (change if needed)
+  # # --------------------------------------------------------
+  # validate_metadata:
+  #   needs: check_version
+  #   uses: ./.github/workflows/validate-metadata.yml
+  #   with:
+  #     commit_version: ${{ needs.check_version.outputs.commit_version }}
+
+  # --------------------------------------------------------
+  # 4) BUILD UBUNTU — Only runs if "posix" enabled
+  # --------------------------------------------------------
+  build_project_ubuntu:
+    name: "Ubuntu"
+    needs: prepare_args
+    if: contains(needs.prepare_args.outputs.platforms_json, 'posix')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: Build project (Ubuntu)
+        uses: igor-krechetov/hsm-github-workflows/.github/actions/build_helper@main
+        with:
+          platform: 'posix'
+          build_type: ${{ inputs.build_type }}
+          src_dir: ${{ needs.prepare_args.outputs.src_dir }}
+          build_dir: ${{ needs.prepare_args.outputs.build_dir }}
+          build_glib: ${{ inputs.build_glib }}
+          build_glibmm: ${{ inputs.build_glibmm }}
+          build_qt: ${{ inputs.build_qt }}
+          build_std: ${{ inputs.build_std }}
+          build_tests: ${{ inputs.build_tests }}
+          build_examples: ${{ inputs.build_examples }}
+          codecoverage: ${{ inputs.codecoverage }}
+          cmake_args: ${{ inputs.cmake_args }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-ubuntu
+          path: ${{ needs.prepare_args.outputs.build_dir }}
+
+  # --------------------------------------------------------
+  # 5) BUILD WIDNOWS — Only runs if "windows" enabled
+  # --------------------------------------------------------
+  build_project_windows:
+    name: "Windows"
+    needs: prepare_args
+    if: contains(needs.prepare_args.outputs.platforms_json, 'windows')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: Build project (Windows)
+        uses: igor-krechetov/hsm-github-workflows/.github/actions/build_helper@main
+        with:
+          platform: 'windows'
+          build_type: ${{ inputs.build_type }}
+          src_dir: ${{ needs.prepare_args.outputs.src_dir }}
+          build_dir: ${{ needs.prepare_args.outputs.build_dir }}
+          build_glib: ${{ inputs.build_glib }}
+          build_glibmm: ${{ inputs.build_glibmm }}
+          build_qt: ${{ inputs.build_qt }}
+          build_std: ${{ inputs.build_std }}
+          build_tests: ${{ inputs.build_tests }}
+          build_examples: ${{ inputs.build_examples }}
+          codecoverage: ${{ inputs.codecoverage }}
+          cmake_args: ${{ inputs.cmake_args }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-windows
+          path: ${{ needs.prepare_args.outputs.build_dir }}

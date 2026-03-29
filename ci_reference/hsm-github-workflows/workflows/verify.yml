@@ -1,0 +1,67 @@
+name: "Validate commit (Reusable)"
+
+on:
+  workflow_call:
+    outputs:
+      commit_version:
+        value: ${{ jobs.check_version.outputs.commit_version }}
+      commit_action:
+        value: ${{ jobs.check_version.outputs.commit_action }}
+
+jobs:
+  # --------------------------------------------------------
+  # 1) CHECK VERSION
+  # --------------------------------------------------------
+  check_version:
+    # uses: ./.github/workflows/check-version.yml
+    name: "Extract Version"
+    runs-on: ubuntu-latest
+    outputs:
+      commit_version: ${{ steps.get_version.outputs.commit_version }}
+      commit_action: ${{ steps.get_version.outputs.commit_action }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: igor-krechetov/hsm-github-workflows/.github/actions/get-commit-version@main
+        id: get_version
+        with:
+          repo_dir: ${{ env.GITHUB_WORKSPACE }}
+          commit_sha: ${{ github.event.workflow_run.head_sha }}
+
+  # --------------------------------------------------------
+  # 2) VALIDATE METADATA
+  # --------------------------------------------------------
+  verify_metadata:
+    name: "Verify Commit"
+    needs: check_version
+    # Skip metadata checks if no version change was defined
+    if: needs.check_version.outputs.commit_version != ''
+
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the target project
+      - name: Checkout caller repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          path: repoProject
+          fetch-depth: 0   # important to have full git history if needed
+
+      # Checkout reusable workflow repo
+      - name: Checkout scripts repository
+        uses: actions/checkout@v3
+        with:
+          repository: igor-krechetov/hsm-github-workflows
+          path: repoWorkflows
+          fetch-depth: 0
+
+      - name: Validate metadata
+        if: ${{ needs.check_version.outputs.commit_version != '' }}
+        run: |
+          python3 ./repoWorkflows/scripts/validate_metadata.py ${{ needs.check_version.outputs.commit_version }} ./repoProject/
+
+      - name: Fail if version is missing
+        if: ${{ needs.check_version.outputs.commit_version == '' }}
+        run: |
+          echo "Missing commit_version!"
+          exit 1

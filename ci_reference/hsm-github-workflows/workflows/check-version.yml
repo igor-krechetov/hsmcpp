@@ -1,0 +1,21 @@
+name: "Check Version (Reusable)"
+on:
+  workflow_call:
+    outputs:
+      commit_version:
+        description: "Commit version"
+        value: ${{ jobs.check_version.outputs.commit_version }}
+
+jobs:
+  check_version:
+    name: "Extract Version"
+    runs-on: ubuntu-latest
+    outputs:
+      commit_version: ${{ steps.get_version.outputs.commit_version }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: igor-krechetov/hsm-github-workflows/.github/actions/get-commit-version@main
+        id: get_version
+        with:
+          repo_dir: ${{ env.GITHUB_WORKSPACE }}
+          commit_sha: ${{ github.event.workflow_run.head_sha }}

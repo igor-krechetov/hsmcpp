@@ -1,0 +1,89 @@
+name: "CI/CD for HSM IDE"
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - "**"        # allow other branches to trigger build+test
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  # --------------------------------------------------------
+  # VERIFY — only on main/dev (push or PR)
+  # --------------------------------------------------------
+  verify:
+    if: >
+      github.ref_name == 'main' ||
+      github.ref_name == 'dev' ||
+      github.event_name == 'pull_request'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/verify.yml@main
+
+  # --------------------------------------------------------
+  # BUILD — always runs (even if verify is skipped)
+  # --------------------------------------------------------
+  build:
+    needs: verify
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/build.yml@main
+    if: >
+        always() &&
+        (needs.verify.result == 'success' || needs.verify.result == 'skipped')
+    with:
+      build_type: Release
+      platforms: "posix,windows"
+      build_qt: 'ON'
+      build_tests: 'ON'
+
+  # --------------------------------------------------------
+  # TEST — always runs after build
+  # --------------------------------------------------------
+  test:
+    needs: build
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@main
+    if: >
+        always() && (needs.build.result == 'success')
+    with:
+      test_script: "validate.sh"
+
+  # --------------------------------------------------------
+  # AUTOTAG — only on push to *dev*
+  # --------------------------------------------------------
+  autotag:
+    needs: [test, verify]
+    if: github.event_name == 'push' && github.ref_name == 'dev'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/autotag.yml@main
+    with:
+      commit_version: ${{ needs.verify.outputs.commit_version }}
+      commit_action: ${{ needs.verify.outputs.commit_action }}
+      commit_sha: ${{ github.sha }}
+
+  # --------------------------------------------------------
+  # DOCS — only on push to *main*
+  # --------------------------------------------------------
+  update_documentation:
+    needs: test
+    if: github.event_name == 'push' && github.ref_name == 'main'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/update-docs.yml@main
+
+  # --------------------------------------------------------
+  # RELEASE — only on push to main (after docs)
+  # --------------------------------------------------------
+  release:
+    needs: [verify, update_documentation]
+    if: >
+      github.event_name == 'push' &&
+      github.ref_name == 'main' &&
+      needs.verify.outputs.commit_action == 'r'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/release.yml@main
+    with:
+      commit_sha: ${{ github.sha }}
+      tag_version: ${{ needs.update_documentation.outputs.tag_name }}
+      builds: "build-artifacts-ubuntu,build-artifacts-windows"
+      release_description: |
+        Release ${{ needs.update_documentation.outputs.tag_name }}
+
+        - Built on Ubuntu and Windows
+        - Includes binaries for both platforms

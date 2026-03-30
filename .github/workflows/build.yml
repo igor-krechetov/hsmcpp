@@ -25,6 +25,7 @@ jobs:
       build_type: Release
       platforms: "posix,windows,platformio,arduinoide,freertos"
       install_qt: 'ON'
+      install_glibmm: 'ON'
       build_tests: 'ON'
 
   test:

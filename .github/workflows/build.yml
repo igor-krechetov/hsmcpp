@@ -33,10 +33,21 @@ jobs:
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@feature/hsmcpp-ci-integration
     if: always() && (needs.build.result == 'success')
     with:
-      test_script: "validate.sh"
+      platform: "ubuntu"
+
+  sca:
+    needs: test
+    # uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@feature/hsmcpp-ci-integration
+    if: always() && (needs.test.result == 'success')
+    runs-on: ubuntu-latest
+    # with:
+    #   test_script: "validate.sh"
+    steps:
+      - name: DUMMY
+        run: echo "Static Code Analises"
 
   update_documentation:
-    needs: [verify, test]
+    needs: [verify, test, sca]
     if: >
       github.event_name == 'push' &&
       github.ref_name == 'main' &&

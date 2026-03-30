@@ -37,7 +37,7 @@ jobs:
 
   deploy:
     needs: check-hsmcpp-version
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/deploy.yml@main
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/deploy.yml@feature/hsmcpp-ci-integration
     if: ${{ needs.check-hsmcpp-version.outputs.commit_version != '' }}
     with:
       deploy_target: platformio

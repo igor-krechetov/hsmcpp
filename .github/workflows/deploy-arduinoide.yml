@@ -28,7 +28,7 @@ jobs:
   deploy:
     needs: check-hsmcpp-version
     if: ${{ needs.check-hsmcpp-version.outputs.commit_version != '' }}
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/deploy.yml@main
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/deploy.yml@feature/hsmcpp-ci-integration
     with:
       deploy_target: arduinoide
       commit_sha: ${{ needs.check-hsmcpp-version.outputs.commit_sha }}

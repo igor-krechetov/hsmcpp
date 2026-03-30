@@ -13,11 +13,11 @@ jobs:
     if: >
       github.event_name == 'pull_request' ||
       (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'dev'))
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/verify.yml@main
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/verify.yml@feature/hsmcpp-ci-integration
 
   build:
     needs: verify
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/build.yml@main
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/build.yml@feature/hsmcpp-ci-integration
     if: >
       always() &&
       (needs.verify.result == 'success' || needs.verify.result == 'skipped')
@@ -29,7 +29,7 @@ jobs:
 
   test:
     needs: build
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@main
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@feature/hsmcpp-ci-integration
     if: always() && (needs.build.result == 'success')
     with:
       test_script: "validate.sh"
@@ -41,7 +41,7 @@ jobs:
       github.ref_name == 'main' &&
       needs.verify.result == 'success' &&
       needs.test.result == 'success'
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/update-docs.yml@main
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/update-docs.yml@feature/hsmcpp-ci-integration
 
   release:
     needs: [verify, update_documentation]
@@ -51,7 +51,7 @@ jobs:
       needs.verify.outputs.commit_action == 'r' &&
       needs.verify.result == 'success' &&
       needs.update_documentation.result == 'success'
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/release.yml@main
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/release.yml@feature/hsmcpp-ci-integration
     with:
       commit_sha: ${{ github.sha }}
       tag_version: ${{ needs.update_documentation.outputs.tag_name }}

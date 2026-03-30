@@ -24,7 +24,7 @@ jobs:
     with:
       build_type: Release
       platforms: "posix,windows,platformio,arduinoide,freertos"
-      build_qt: 'ON'
+      install_qt: 'ON'
       build_tests: 'ON'
 
   test:

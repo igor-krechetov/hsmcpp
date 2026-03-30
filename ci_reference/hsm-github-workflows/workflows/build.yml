@@ -25,7 +25,7 @@ on:
         required: false
         type: string
         default: 'OFF'
-      build_qt:
+      install_qt:
         required: false
         type: string
         default: 'OFF'
@@ -98,7 +98,7 @@ jobs:
           build_dir: ${{ needs.prepare_args.outputs.build_dir }}
           build_glib: ${{ inputs.build_glib }}
           build_glibmm: ${{ inputs.build_glibmm }}
-          build_qt: ${{ inputs.build_qt }}
+          install_qt: ${{ inputs.install_qt }}
           build_std: ${{ inputs.build_std }}
           build_tests: ${{ inputs.build_tests }}
           build_examples: ${{ inputs.build_examples }}
@@ -129,7 +129,7 @@ jobs:
           build_dir: ${{ needs.prepare_args.outputs.build_dir }}
           build_glib: ${{ inputs.build_glib }}
           build_glibmm: ${{ inputs.build_glibmm }}
-          build_qt: ${{ inputs.build_qt }}
+          install_qt: ${{ inputs.install_qt }}
           build_std: ${{ inputs.build_std }}
           build_tests: ${{ inputs.build_tests }}
           build_examples: ${{ inputs.build_examples }}

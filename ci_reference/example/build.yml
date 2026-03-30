@@ -34,7 +34,7 @@ jobs:
     with:
       build_type: Release
       platforms: "posix,windows"
-      build_qt: 'ON'
+      install_qt: 'ON'
       build_tests: 'ON'
 
   # --------------------------------------------------------

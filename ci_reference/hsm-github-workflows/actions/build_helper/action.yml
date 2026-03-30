@@ -1,7 +1,7 @@
 name: "Build Helper"
 
 inputs:
-  # values: posix, windows
+  # values: posix, windows, platformio, arduino, freertos
   platform:
     required: true
     type: string
@@ -25,7 +25,7 @@ inputs:
     required: false
     type: string
     default: 'OFF'
-  build_qt:
+  install_qt:
     required: false
     type: string
     default: 'OFF'
@@ -58,7 +58,15 @@ runs:
   using: "composite"
 
   steps:
-    # --------------------------------- Ubuntu build ---------------------------------
+    - name: Validate platform scripts directory
+      shell: bash
+      run: |
+        scripts_dir="$GITHUB_ACTION_PATH/../../../scripts/build/${{ inputs.platform }}"
+        if [ ! -d "$scripts_dir" ]; then
+          echo "Missing scripts directory: $scripts_dir"
+          exit 1
+        fi
+
     - uses: awalsh128/cache-apt-pkgs-action@v1.6.0
       if: ${{ (inputs.platform == 'posix') && ((inputs.build_glib == 'ON') || (inputs.build_glibmm == 'ON')) }}
       with:
@@ -66,7 +74,7 @@ runs:
         version: 1.0
 
     - name: Install Qt (Ubuntu)
-      if: ${{ (inputs.platform == 'posix') && (inputs.build_qt == 'ON') }}
+      if: ${{ (inputs.platform == 'posix') && (inputs.install_qt == 'ON') }}
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.4.*'
@@ -78,34 +86,8 @@ runs:
         cache-key-prefix: 'install-qt-action-linux'
         set-env: 'true'
 
-    #     -DHSMBUILD_VERBOSE=OFF \
-    # -DHSMBUILD_PLATFORM=${{ inputs.platform }} \
-    # -DHSMBUILD_DISPATCHER_GLIB=${{ inputs.build_glib }} \
-    # -DHSMBUILD_DISPATCHER_GLIBMM=${{ inputs.build_glibmm }} \
-    # -DHSMBUILD_DISPATCHER_STD=${{ inputs.build_std }} \
-    # -DHSMBUILD_DISPATCHER_QT=${{ inputs.build_qt }} \
-    # -DHSMBUILD_TESTS=${{ inputs.build_tests }} \
-    # -DHSMBUILD_EXAMPLES=${{ inputs.build_examples }} \
-    # -DHSMBUILD_CODECOVERAGE=${{ inputs.codecoverage }} \
-    # -DHSMBUILD_DEBUGGING=ON \
-
-    - name: Configure CMake (Ubuntu)
-      if: ${{ inputs.platform == 'posix' }}
-      shell: bash
-      run: |
-        cmake -B ${{ inputs.build_dir }} -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-          ${{ inputs.cmake_args }} \
-          ${{ inputs.src_dir }}
-
-    - name: Build (Ubuntu)
-      if: ${{ (inputs.platform == 'posix') && (inputs.only_configure == 'false') }}
-      shell: bash
-      run: cmake --build ${{ inputs.build_dir }} --parallel 2 --config ${{ inputs.build_type }}
-
-    # --------------------------------- Windows build ---------------------------------
     - name: Install Qt (Windows)
-      if: ${{ (inputs.platform == 'windows') && (inputs.build_qt == 'ON') }}
+      if: ${{ (inputs.platform == 'windows') && (inputs.install_qt == 'ON') }}
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.4.*'
@@ -117,23 +99,33 @@ runs:
         cache-key-prefix: 'install-qt-action-win32'
         set-env: 'true'
 
-    # -DHSMBUILD_VERBOSE=OFF ^
-    # -DHSMBUILD_PLATFORM=${{ inputs.platform }} ^
-    # -DHSMBUILD_DISPATCHER_GLIB=OFF ^
-    # -DHSMBUILD_DISPATCHER_GLIBMM=OFF ^
-    # -DHSMBUILD_DISPATCHER_STD=ON ^
-    # -DHSMBUILD_DISPATCHER_QT=ON ^
-    # -DHSMBUILD_TESTS=ON ^
-    # -DHSMBUILD_EXAMPLES=ON ^
-    # -DHSMBUILD_DEBUGGING=ON ^
-    - name: Configure CMake (Windows)
+    - name: Configure (POSIX platforms)
+      if: ${{ inputs.platform != 'windows' }}
+      shell: bash
+      run: |
+        $GITHUB_ACTION_PATH/../../../scripts/build/${{ inputs.platform }}/configure.sh \
+          "${{ inputs.build_dir }}" \
+          "${{ inputs.build_type }}" \
+          "${{ inputs.cmake_args }}" \
+          "${{ inputs.src_dir }}" \
+          "${{ inputs.build_tests }}"
+
+    - name: Configure (Windows)
       if: ${{ inputs.platform == 'windows' }}
       shell: cmd
-      run: cmake -B ${{github.workspace}}\build -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ^
-            ${{ inputs.cmake_args }} ^
-            ${{ inputs.src_dir }}
+      run: |
+        call "%GITHUB_ACTION_PATH%\..\..\..\scripts\build\windows\configure.cmd" "${{ inputs.build_dir }}" "${{ inputs.build_type }}" "${{ inputs.cmake_args }}" "${{ inputs.src_dir }}" "${{ inputs.build_tests }}"
+
+    - name: Build (POSIX platforms)
+      if: ${{ (inputs.platform != 'windows') && (inputs.only_configure == 'false') }}
+      shell: bash
+      run: |
+        $GITHUB_ACTION_PATH/../../../scripts/build/${{ inputs.platform }}/build.sh \
+          "${{ inputs.build_dir }}" \
+          "${{ inputs.build_type }}"
 
     - name: Build (Windows)
       if: ${{ (inputs.platform == 'windows') && (inputs.only_configure == 'false') }}
       shell: cmd
-      run: cmake --build ${{github.workspace}}\build --parallel 2 --config ${{ inputs.build_type }}
+      run: |
+        call "%GITHUB_ACTION_PATH%\..\..\..\scripts\build\windows\build.cmd" "${{ inputs.build_dir }}" "${{ inputs.build_type }}"

@@ -45,7 +45,7 @@ jobs:
     #   test_script: "validate.sh"
     steps:
       - name: DUMMY
-        run: echo "Static Code Analises 2"
+        run: echo "Static Code Analises 3"
 
   update_documentation:
     needs: [verify, test, sca]

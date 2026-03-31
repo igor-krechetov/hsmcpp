@@ -34,7 +34,9 @@ jobs:
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@feature/hsmcpp-ci-integration
     if: always() && (needs.build.result == 'success')
     with:
-      platform: "ubuntu"
+      platform: 'ubuntu'
+      install_qt: 'ON'
+      install_glibmm: 'ON'
 
   sca:
     needs: test

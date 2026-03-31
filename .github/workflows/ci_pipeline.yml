@@ -31,23 +31,17 @@ jobs:
 
   test:
     needs: build
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@feature/hsmcpp-ci-integration
     if: always() && (needs.build.result == 'success')
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@feature/hsmcpp-ci-integration
     with:
       platform: 'ubuntu'
       install_qt: 'ON'
       install_glibmm: 'ON'
 
   sca:
-    needs: test
-    # uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@feature/hsmcpp-ci-integration
-    if: always() && (needs.test.result == 'success')
-    runs-on: ubuntu-latest
-    # with:
-    #   test_script: "validate.sh"
-    steps:
-      - name: DUMMY
-        run: echo "Static Code Analises 3"
+    needs: build
+    if: always() && (needs.build.result == 'success')
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/sca.yml@feature/hsmcpp-ci-integration
 
   update_documentation:
     needs: [verify, test, sca]

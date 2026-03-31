@@ -5,6 +5,10 @@ build_dir="$1"
 
 cd $build_dir
 
+gcc --version
+gcov --version
+lcov --version
+
 echo "Run Tests (STD)"
 chmod +x ./tests/hsmUnitTestsSTD
 timeout 2m ./tests/hsmUnitTestsSTD > ./tests_result_std.log

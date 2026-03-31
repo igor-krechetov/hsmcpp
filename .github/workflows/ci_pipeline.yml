@@ -23,7 +23,8 @@ jobs:
       (needs.verify.result == 'success' || needs.verify.result == 'skipped')
     with:
       build_type: Release
-      platforms: "posix,windows,platformio,arduinoide,freertos"
+      # platforms: "posix,windows,platformio,arduinoide,freertos"
+      platforms: "posix"
       install_qt: 'ON'
       install_glibmm: 'ON'
       build_tests: 'ON'

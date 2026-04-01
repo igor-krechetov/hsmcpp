@@ -51,7 +51,9 @@ jobs:
     needs: [verify, build, test, sast]
     if: >
       (github.event_name == 'push' && github.ref_name == 'main') &&
-      needs.build.result == 'success'
+      needs.build.result == 'success' &&
+      needs.test.result == 'success' &&
+      needs.sast.result == 'success'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/autotag.yml@main
     with:
       commit_version: ${{ needs.verify.outputs.commit_version }}

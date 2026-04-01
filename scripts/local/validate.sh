@@ -67,11 +67,11 @@ then
           -DHSMBUILD_CLANGTIDY=OFF \
           ..
 
-    cppcheck --addon=../scripts/cppcheck/misra.json \
+    cppcheck --addon=../scripts/sca/cppcheck/misra.json \
          --enable=warning,performance,portability,information \
          --inline-suppr \
          --xml \
-         --suppressions-list=../scripts/cppcheck/cppcheck_suppress.txt --project=./compile_commands.json \
+         --suppressions-list=../scripts/sca/cppcheck/cppcheck_suppress.txt --project=./compile_commands.json \
          -DSTL_AVAILABLE -D__GNU__=1 -D__LITTLE_ENDIAN__ -D__GNUC__
 
     lcov --add-tracefile ./coverage_std.info \

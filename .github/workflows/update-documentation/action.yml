@@ -8,6 +8,12 @@ on:
     branches: [main]
     types: [completed]
 
+inputs:
+  commit_version:
+    description: "Commit version"
+    required: true
+    type: string
+
 jobs:
   check-hsmcpp-version:
     # only run for successful build after push event

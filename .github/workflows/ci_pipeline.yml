@@ -39,25 +39,37 @@ jobs:
       install_qt: 'ON'
       install_glibmm: 'ON'
 
-  sca:
+  sast:
     needs: build
     if: always() && (needs.build.result == 'success')
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/sca.yml@feature/hsmcpp-ci-integration
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/sast.yml@feature/hsmcpp-ci-integration
+
+  # --------------------------------------------------------
+  # AUTOTAG — only on push to *dev*
+  # --------------------------------------------------------
+  autotag:
+    needs: [verify, build, test, sast]
+    if: >
+      (github.event_name == 'push' && github.ref_name == 'main') &&
+      needs.build.result == 'success'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/autotag.yml@main
+    with:
+      commit_version: ${{ needs.verify.outputs.commit_version }}
+      commit_action: ${{ needs.verify.outputs.commit_action }}
+      commit_sha: ${{ github.sha }}
 
   update_documentation:
-    needs: [verify, test, sca]
+    needs: [verify, autotag]
     if: >
-      github.event_name == 'push' &&
-      github.ref_name == 'main' &&
+      (github.event_name == 'push' && github.ref_name == 'main') &&
       needs.verify.result == 'success' &&
-      needs.test.result == 'success'
+      needs.autotag.result == 'success'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/update-docs.yml@feature/hsmcpp-ci-integration
 
   release:
     needs: [verify, update_documentation]
     if: >
-      github.event_name == 'push' &&
-      github.ref_name == 'main' &&
+      (github.event_name == 'push' && github.ref_name == 'main') &&
       needs.verify.outputs.commit_action == 'r' &&
       needs.verify.result == 'success' &&
       needs.update_documentation.result == 'success'

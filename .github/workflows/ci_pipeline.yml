@@ -24,8 +24,8 @@ jobs:
       (needs.verify.result == 'success' || needs.verify.result == 'skipped')
     with:
       build_type: Release
-      # platforms: "posix,windows,platformio,arduinoide,freertos"
-      platforms: "posix"
+      platforms: "posix,windows,platformio,arduinoide,freertos"
+      # platforms: "posix"
       install_qt: 'ON'
       install_glibmm: 'ON'
       build_tests: 'ON'
@@ -67,6 +67,13 @@ jobs:
       needs.verify.result == 'success' &&
       needs.autotag.result == 'success'
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/update-docs.yml@feature/hsmcpp-ci-integration
+    with:
+      library_name: hsmcpp
+      commit_version: ${{ needs.verify.outputs.commit_version }}
+    secrets:
+      HSMCPP_BOT_TOKEN: ${{ secrets.HSMCPP_BOT_TOKEN }}
+      BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+      BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
 
   release:
     needs: [verify, update_documentation]
@@ -85,3 +92,16 @@ jobs:
 
         - Built on Ubuntu and Windows
         - Includes binaries for both platforms
+
+  deploy:
+    needs: [verify, release]
+    if: >
+      (github.event_name == 'push' && github.ref_name == 'main') &&
+      needs.release.result == 'success'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/deploy.yml@feature/hsmcpp-ci-integration
+    with:
+      deploy_target: "platformio,arduinoide"
+      commit_sha: ${{ needs.check-hsmcpp-version.outputs.commit_sha }}
+      commit_version: ${{ needs.check-hsmcpp-version.outputs.commit_version }}
+      target_repo: igor-krechetov/hsmcpp
+      platformio_target_branch: platformio_library

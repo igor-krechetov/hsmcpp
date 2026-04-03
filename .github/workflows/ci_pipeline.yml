@@ -16,6 +16,7 @@ jobs:
       (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'dev'))
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/verify.yml@feature/hsmcpp-ci-integration
 
+  # --------------------------------------------------------
   build:
     needs: verify
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/build.yml@feature/hsmcpp-ci-integration
@@ -25,11 +26,11 @@ jobs:
     with:
       build_type: Release
       platforms: "posix,windows,platformio,arduinoide,freertos"
-      # platforms: "posix"
       install_qt: 'ON'
       install_glibmm: 'ON'
       build_tests: 'ON'
 
+  # --------------------------------------------------------
   test:
     needs: build
     if: always() && (needs.build.result == 'success')
@@ -39,13 +40,12 @@ jobs:
       install_qt: 'ON'
       install_glibmm: 'ON'
 
+  # --------------------------------------------------------
   sast:
     needs: build
     if: always() && (needs.build.result == 'success')
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/sast.yml@feature/hsmcpp-ci-integration
 
-  # --------------------------------------------------------
-  # AUTOTAG — only on push to *dev*
   # --------------------------------------------------------
   autotag:
     needs: [verify, build, test, sast]
@@ -60,6 +60,7 @@ jobs:
       commit_action: ${{ needs.verify.outputs.commit_action }}
       commit_sha: ${{ github.sha }}
 
+  # --------------------------------------------------------
   update_documentation:
     needs: [verify, autotag]
     if: >
@@ -75,6 +76,7 @@ jobs:
       BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
       BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
 
+  # --------------------------------------------------------
   release:
     needs: [verify, update_documentation]
     if: >
@@ -93,6 +95,7 @@ jobs:
         - Built on Ubuntu and Windows
         - Includes binaries for both platforms
 
+  # --------------------------------------------------------
   deploy:
     needs: [verify, release]
     if: >

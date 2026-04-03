@@ -111,4 +111,4 @@ jobs:
       BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
       PLATFORMIO_TOKEN: ${{ secrets.PLATFORMIO_TOKEN }}
 
-  
+

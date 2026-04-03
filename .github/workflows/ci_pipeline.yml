@@ -105,3 +105,10 @@ jobs:
       commit_version: ${{ needs.check-hsmcpp-version.outputs.commit_version }}
       target_repo: igor-krechetov/hsmcpp
       platformio_target_branch: platformio_library
+    secrets:
+      HSMCPP_BOT_TOKEN: ${{ secrets.HSMCPP_BOT_TOKEN }}
+      BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+      BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
+      PLATFORMIO_TOKEN: ${{ secrets.PLATFORMIO_TOKEN }}
+
+  

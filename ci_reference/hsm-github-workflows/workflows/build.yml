@@ -1,0 +1,246 @@
+name: "Build (Reusable)"
+on:
+  workflow_call:
+    inputs:
+      platforms:
+        description: "Comma-separated list of platforms: windows,posix,platformio,arduinoide,freertos"
+        required: false
+        type: string
+        default: "posix"
+      src_dir:
+        required: false
+        type: string
+      build_dir:
+        required: false
+        type: string
+      build_type:
+        required: false
+        type: string
+        default: 'Release'
+      build_glib:
+        required: false
+        type: string
+        default: 'OFF'
+      build_glibmm:
+        required: false
+        type: string
+        default: 'OFF'
+      install_qt:
+        required: false
+        type: string
+        default: 'OFF'
+      build_std:
+        required: false
+        type: string
+        default: 'ON'
+      build_tests:
+        required: false
+        type: string
+        default: 'OFF'
+      build_examples:
+        required: false
+        type: string
+        default: 'OFF'
+      codecoverage:
+        required: false
+        type: string
+        default: 'OFF'
+      cmake_args:
+        required: false
+        type: string
+        default: ''
+      freertos_ref:
+        required: false
+        type: string
+        default: '202212.00'
+jobs:
+  prepare_args:
+    name: "Parse Build Arguments"
+    runs-on: ubuntu-latest
+    outputs:
+      platforms_json: ${{ steps.parse.outputs.platforms_json }}
+      build_dir: ${{ steps.resolve_build_dir.outputs.dir }}
+      src_dir: ${{ steps.resolve_src_dir.outputs.dir }}
+    steps:
+      - name: Parse platforms input
+        id: parse
+        run: |
+          platforms="${{ inputs.platforms }}"
+          json="[$(printf '"%s",' ${platforms//,/ })]"
+          json="${json%,}]"
+          echo "platforms_json=$json" >> $GITHUB_OUTPUT
+
+      - name: Resolve build directory
+        id: resolve_build_dir
+        run: |
+          echo "dir=${{ inputs.build_dir || format('{0}/build', github.workspace) }}" >> $GITHUB_OUTPUT
+
+      - name: Resolve src directory
+        id: resolve_src_dir
+        run: |
+          echo "dir=${{ inputs.src_dir || github.workspace }}" >> $GITHUB_OUTPUT
+
+  build_project_ubuntu:
+    name: "Ubuntu"
+    needs: prepare_args
+    if: contains(needs.prepare_args.outputs.platforms_json, 'posix')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: Build project (Ubuntu)
+        uses: igor-krechetov/hsm-github-workflows/.github/actions/build_helper@main
+        with:
+          platform: 'posix'
+          build_type: ${{ inputs.build_type }}
+          src_dir: ${{ needs.prepare_args.outputs.src_dir }}
+          build_dir: ${{ needs.prepare_args.outputs.build_dir }}
+          build_glib: ${{ inputs.build_glib }}
+          build_glibmm: ${{ inputs.build_glibmm }}
+          install_qt: ${{ inputs.install_qt }}
+          build_std: ${{ inputs.build_std }}
+          build_tests: ${{ inputs.build_tests }}
+          build_examples: ${{ inputs.build_examples }}
+          codecoverage: ${{ inputs.codecoverage }}
+          cmake_args: ${{ inputs.cmake_args }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-ubuntu
+          path: ${{ needs.prepare_args.outputs.build_dir }}
+
+  build_project_windows:
+    name: "Windows"
+    needs: prepare_args
+    if: contains(needs.prepare_args.outputs.platforms_json, 'windows')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: Build project (Windows)
+        uses: igor-krechetov/hsm-github-workflows/.github/actions/build_helper@main
+        with:
+          platform: 'windows'
+          build_type: ${{ inputs.build_type }}
+          src_dir: ${{ needs.prepare_args.outputs.src_dir }}
+          build_dir: ${{ needs.prepare_args.outputs.build_dir }}
+          build_glib: ${{ inputs.build_glib }}
+          build_glibmm: ${{ inputs.build_glibmm }}
+          install_qt: ${{ inputs.install_qt }}
+          build_std: ${{ inputs.build_std }}
+          build_tests: ${{ inputs.build_tests }}
+          build_examples: ${{ inputs.build_examples }}
+          codecoverage: ${{ inputs.codecoverage }}
+          cmake_args: ${{ inputs.cmake_args }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-windows
+          path: ${{ needs.prepare_args.outputs.build_dir }}
+
+  build_platformio:
+    name: "PlatformIO"
+    needs: prepare_args
+    if: contains(needs.prepare_args.outputs.platforms_json, 'platformio')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: Install PlatformIO
+        run: pip3 install --user platformio
+      - name: Generate package
+        run: |
+          cmake -S ./ -B ./build -DHSMBUILD_TARGET=platformio -DHSMBUILD_PLATFORM=arduino
+          cmake --build ./build --target install
+      - name: Copy package to examples folder
+        run: |
+          mkdir -p ./examples/09_arduino/01_blink/lib/hsmcpp
+          cp -Rv ./build/deploy/platformio/* ./examples/09_arduino/01_blink/lib/hsmcpp
+          mkdir -p ./examples/09_arduino/02_blink_button/lib/hsmcpp
+          cp -Rv ./build/deploy/platformio/* ./examples/09_arduino/02_blink_button/lib/hsmcpp
+      - name: Build 01_blink
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          cd ./examples/09_arduino/01_blink/
+          pio run
+      - name: Build 02_blink_button
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          cd ./examples/09_arduino/02_blink_button/
+          pio run
+
+  build_arduinoide:
+    name: "ArduinoIDE"
+    needs: prepare_args
+    if: contains(needs.prepare_args.outputs.platforms_json, 'arduinoide')
+    runs-on: ubuntu-latest
+    env:
+      library_dir: ./build/deploy/arduinoide
+      example1_dir: ./build/deploy/arduinoide/examples/01_blink
+      example2_dir: ./build/deploy/arduinoide/examples/02_blink_button
+      scxml2gen_dir: ./build/deploy/arduinoide/tools/scxml2gen
+      hsmcpp_library: ./build/deploy/hsmcpp.zip
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: Generate hsmcpp library package
+        run: |
+          cmake -S ./ -B ./build -DHSMBUILD_TARGET=arduinoide -DHSMBUILD_PLATFORM=arduino
+          cmake --build ./build --target install
+          cp -Rv ${{ env.library_dir }} ./build/deploy/hsmcpp
+          cd ./build/deploy/
+          zip -r ./hsmcpp.zip ./hsmcpp
+      - name: Generate HSM files
+        run: |
+          python3 ${{ env.scxml2gen_dir }}/scxml2gen.py -code -scxml ${{ env.example1_dir }}/blink.scxml \
+            -class_name BlinkHsm -class_suffix Base \
+            -template_hpp ${{ env.scxml2gen_dir }}/template.hpp \
+            -template_cpp ${{ env.scxml2gen_dir }}/template.cpp \
+            -dest_dir ${{ env.example1_dir }}/
+          python3 ${{ env.scxml2gen_dir }}/scxml2gen.py -code -scxml ${{ env.example2_dir }}/blink_button.scxml \
+            -class_name BlinkButtonHsm -class_suffix Base \
+            -template_hpp ${{ env.scxml2gen_dir }}/template.hpp \
+            -template_cpp ${{ env.scxml2gen_dir }}/template.cpp \
+            -dest_dir ${{ env.example2_dir }}/
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+      - name: Install platform files
+        run: |
+          arduino-cli core update-index --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
+          arduino-cli core install esp8266:esp8266 --additional-urls http://arduino.esp8266.com/stable/package_esp8266com_index.json
+      - name: Install hsmcpp library
+        run: |
+          arduino-cli config init
+          arduino-cli config set library.enable_unsafe_install true
+          arduino-cli lib install --zip-path ${{ env.hsmcpp_library }}
+      - name: Compile Sketch 01
+        run: arduino-cli compile --fqbn esp8266:esp8266:d1_mini ${{ env.example1_dir }}/ --warnings more
+      - name: Compile Sketch 02
+        run: arduino-cli compile --fqbn esp8266:esp8266:d1_mini ${{ env.example2_dir }}/ --warnings more
+
+  build_freertos:
+    name: "FreeRTOS"
+    needs: prepare_args
+    if: contains(needs.prepare_args.outputs.platforms_json, 'freertos')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: './source'
+          submodules: 'recursive'
+      - uses: actions/checkout@v3
+        with:
+          repository: 'FreeRTOS/FreeRTOS'
+          ref: ${{ inputs.freertos_ref }}
+          submodules: 'recursive'
+          path: './FreeRTOS'
+      - name: Build 08_freertos
+        run: |
+          cd ./source/examples/08_freertos
+          ./build.sh '${{github.workspace}}/FreeRTOS'

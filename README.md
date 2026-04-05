@@ -2,6 +2,11 @@
 [![Changelog](https://img.shields.io/badge/changelog-v1.0.2-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
 [![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 
+# Releases
+[![Latest Release](https://img.shields.io/github/v/tag/igor-krechetov/hsmcpp?label=latest%20release)](https://github.com/igor-krechetov/hsmcpp/tags)
+[![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
+[![arduino-library-badge](https://www.ardu-badge.com/badge/hsmcpp.svg?)](https://www.ardu-badge.com/hsmcpp)
+
 
 # hsmcpp — Hierarchical State Machines for Embedded & Event-Driven C++
 A C++ library for building scalable, maintainable hierarchical state machines for embedded and event-driven systems.
@@ -336,28 +341,21 @@ There is no one-for-all library, so if hsmcpp doesn't fully suit your needs you 
 - [arduino-fsm](https://github.com/jonblack/arduino-fsm)
 
 
-# Releases
-[![Latest Release](https://img.shields.io/github/v/tag/igor-krechetov/hsmcpp?label=latest%20release)](https://github.com/igor-krechetov/hsmcpp/tags)
-[![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
-[![arduino-library-badge](https://www.ardu-badge.com/badge/hsmcpp.svg?)](https://www.ardu-badge.com/hsmcpp)
 
 # Quality Status
 
-[![Build Status](https://github.com/igor-krechetov/hsmcpp/actions/workflows/build.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/build.yml)
+[![CI/CD](https://github.com/igor-krechetov/hsmcpp/actions/workflows/ci_pipeline.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/ci_pipeline.yml)
 
 ## Static Code Analysis
 
-[![SCA: MISRA](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_misra.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_misra.yml)
-[![SCA: CodeQL](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_codeql.yml/badge.svg)](https://github.com/igor-krechetov/hsmcpp/actions/workflows/sca_codeql.yml)
 [![SCA: Coverity](https://img.shields.io/coverity/scan/27361.svg)](https://scan.coverity.com/projects/igor-krechetov-hsmcpp)
 
-MISRA static-analysis checks are part of CI to support safety-critical and automotive-oriented development flows.
 
 ## Unit Tests
 
 [![Coverage Status](https://coveralls.io/repos/github/igor-krechetov/hsmcpp/badge.svg?branch=main)](https://coveralls.io/github/igor-krechetov/hsmcpp?branch=main)
 
-[![Tests: STD](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_std.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_std.log)
-[![Tests: Glib](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_glib.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_glib.log)
-[![Tests: GLibmm](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_glibmm.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_glibmm.log)
-[![Tests: Qt](https://raw.githubusercontent.com/igor-krechetov/hsmcpp/build_artifacts/tests_result_qt.svg)](https://github.com/igor-krechetov/hsmcpp/blob/build_artifacts/tests_result_qt.log)
+[![Tests: STD](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_std.svg)](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_std.log)
+[![Tests: Glib](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_glib.svg)](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_glib.log)
+[![Tests: GLibmm](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_glibmm.svg)](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_glibmm.log)
+[![Tests: Qt](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_qt.svg)](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_qt.log)

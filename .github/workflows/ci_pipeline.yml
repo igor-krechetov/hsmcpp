@@ -1,0 +1,124 @@
+name: "CI/CD"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches: [ main, dev ]
+
+
+jobs:
+  verify:
+    if: >
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'dev'))
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/verify.yml@feature/hsmcpp-ci-integration
+
+  # --------------------------------------------------------
+  build:
+    needs: verify
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/build.yml@feature/hsmcpp-ci-integration
+    if: >
+      always() &&
+      (needs.verify.result == 'success' || needs.verify.result == 'skipped')
+    with:
+      build_type: Release
+      platforms: "posix,windows,platformio,arduinoide,freertos"
+      install_qt: 'ON'
+      install_glibmm: 'ON'
+      build_tests: 'ON'
+
+  # --------------------------------------------------------
+  test:
+    needs: build
+    if: always() && (needs.build.result == 'success')
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/test.yml@feature/hsmcpp-ci-integration
+    with:
+      platform: 'ubuntu'
+      install_qt: 'ON'
+      install_glibmm: 'ON'
+
+  # --------------------------------------------------------
+  sast:
+    needs: build
+    if: always() && (needs.build.result == 'success')
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/sast.yml@feature/hsmcpp-ci-integration
+    with:
+      coverity_project: igor-krechetov/hsmcpp
+      coverity_project_url: igor-krechetov%2Fhsmcpp
+    secrets:
+      COVERITY_TOKEN: ${{ secrets.COVERITY_TOKEN }}
+      COVERITY_EMAIL: ${{ secrets.COVERITY_EMAIL }}
+
+
+  # --------------------------------------------------------
+  autotag:
+    needs: [verify, build, test, sast]
+    if: >
+      (github.event_name == 'push' && github.ref_name == 'main') &&
+      needs.build.result == 'success' &&
+      needs.test.result == 'success' &&
+      needs.sast.result == 'success'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/autotag.yml@main
+    with:
+      commit_version: ${{ needs.verify.outputs.commit_version }}
+      commit_action: ${{ needs.verify.outputs.commit_action }}
+      commit_sha: ${{ github.sha }}
+
+  # --------------------------------------------------------
+  update_documentation:
+    needs: [verify, autotag]
+    if: >
+      (github.event_name == 'push' && github.ref_name == 'main') &&
+      needs.verify.result == 'success' &&
+      needs.autotag.result == 'success'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/update-docs.yml@feature/hsmcpp-ci-integration
+    with:
+      library_name: hsmcpp
+      commit_version: ${{ needs.verify.outputs.commit_version }}
+    secrets:
+      HSMCPP_BOT_TOKEN: ${{ secrets.HSMCPP_BOT_TOKEN }}
+      BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+      BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
+
+  # --------------------------------------------------------
+  release:
+    needs: [verify, update_documentation]
+    if: >
+      (github.event_name == 'push' && github.ref_name == 'main') &&
+      needs.verify.outputs.commit_action == 'r' &&
+      needs.verify.result == 'success' &&
+      needs.update_documentation.result == 'success'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/release.yml@feature/hsmcpp-ci-integration
+    with:
+      commit_sha: ${{ github.sha }}
+      tag_version: ${{ needs.update_documentation.outputs.tag_name }}
+      builds: "build-artifacts-ubuntu,build-artifacts-windows"
+      release_description: |
+        Release ${{ needs.update_documentation.outputs.tag_name }}
+
+        - Built on Ubuntu and Windows
+        - Includes binaries for both platforms
+
+  # --------------------------------------------------------
+  deploy:
+    needs: [verify, release]
+    if: >
+      (github.event_name == 'push' && github.ref_name == 'main') &&
+      needs.release.result == 'success'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/deploy.yml@feature/hsmcpp-ci-integration
+    with:
+      deploy_target: "platformio,arduinoide"
+      commit_sha: ${{ needs.check-hsmcpp-version.outputs.commit_sha }}
+      commit_version: ${{ needs.check-hsmcpp-version.outputs.commit_version }}
+      target_repo: igor-krechetov/hsmcpp
+      platformio_target_branch: platformio_library
+    secrets:
+      HSMCPP_BOT_TOKEN: ${{ secrets.HSMCPP_BOT_TOKEN }}
+      BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+      BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
+      PLATFORMIO_TOKEN: ${{ secrets.PLATFORMIO_TOKEN }}
+
+

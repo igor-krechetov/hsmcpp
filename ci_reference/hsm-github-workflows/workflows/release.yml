@@ -1,0 +1,74 @@
+name: "Release Binaries (Reusable)"
+
+on:
+  workflow_call:
+    inputs:
+      commit_sha:
+        required: true
+        type: string
+      tag_version:
+        required: false
+        type: string
+      builds:
+        description: "Comma-separated list of artifact names to release"
+        required: true
+        type: string
+      release_description:
+        description: "Release notes / description (multiline allowed)"
+        required: false
+        type: string
+      repo_dir:
+        required: false
+        type: string
+        default: ${{ github.workspace }}
+
+# Secrets:
+# - GITHUB_TOKEN
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+
+      # Checkout the repo (needed if scripts rely on repo content)
+      - uses: actions/checkout@v4
+
+      # Determine release tag
+      - name: Determine release tag
+        id: tag
+        run: |
+          if [ -z "${{ inputs.tag_version }}" ]; then
+            TAG="v$(date +'%Y%m%d-%H%M%S')"
+          else
+            TAG="${{ inputs.tag_version }}"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      # Create GitHub release
+      - name: Create release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
+          body: ${{ inputs.release_description }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload all artifacts from the builds list
+      - name: Upload artifacts
+        run: |
+          IFS=',' read -ra ARTIFACT_NAMES <<< "${{ inputs.builds }}"
+          for ARTIFACT in "${ARTIFACT_NAMES[@]}"; do
+            echo "Downloading artifact: $ARTIFACT"
+            # Download artifact from the same workflow run
+            gh run download --name "$ARTIFACT" --dir ./tmp
+
+            # Assuming each artifact contains a single archive file
+            FILE=$(ls ./tmp)
+            echo "Uploading $FILE to release ${{ steps.tag.outputs.tag }}"
+            gh release upload "${{ steps.tag.outputs.tag }}" ./tmp/"$FILE" --clobber --repo ${{ github.repository }}
+            rm -rf ./tmp
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

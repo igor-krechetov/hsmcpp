@@ -1,0 +1,131 @@
+name: "Build Helper"
+
+inputs:
+  # values: posix, windows, platformio, arduino, freertos
+  platform:
+    required: true
+    type: string
+    default: 'posix'
+  src_dir:
+    required: true
+    type: string
+  build_dir:
+    required: true
+    type: string
+  # values: Release, Debug
+  build_type:
+    required: false
+    type: string
+    default: 'Release'
+  build_glib:
+    required: false
+    type: string
+    default: 'OFF'
+  build_glibmm:
+    required: false
+    type: string
+    default: 'OFF'
+  install_qt:
+    required: false
+    type: string
+    default: 'OFF'
+  build_std:
+    required: false
+    type: string
+    default: 'ON'
+  build_tests:
+    required: false
+    type: string
+    default: 'OFF'
+  build_examples:
+    required: false
+    type: string
+    default: 'OFF'
+  codecoverage:
+    required: false
+    type: string
+    default: 'OFF'
+  only_configure:
+    required: false
+    type: boolean
+    default: false
+  cmake_args:
+    required: false
+    type: string
+    default: ''
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Validate platform scripts directory
+      shell: bash
+      run: |
+        scripts_dir="$GITHUB_ACTION_PATH/../../../scripts/build/${{ inputs.platform }}"
+        if [ ! -d "$scripts_dir" ]; then
+          echo "Missing scripts directory: $scripts_dir"
+          exit 1
+        fi
+
+    - uses: awalsh128/cache-apt-pkgs-action@v1.6.0
+      if: ${{ (inputs.platform == 'posix') && ((inputs.build_glib == 'ON') || (inputs.build_glibmm == 'ON')) }}
+      with:
+        packages: libglibmm-2.4-dev
+        version: 1.0
+
+    - name: Install Qt (Ubuntu)
+      if: ${{ (inputs.platform == 'posix') && (inputs.install_qt == 'ON') }}
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.4.*'
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        modules: ''
+        cache: 'true'
+        cache-key-prefix: 'install-qt-action-linux'
+        set-env: 'true'
+
+    - name: Install Qt (Windows)
+      if: ${{ (inputs.platform == 'windows') && (inputs.install_qt == 'ON') }}
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.4.*'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        modules: ''
+        cache: 'true'
+        cache-key-prefix: 'install-qt-action-win32'
+        set-env: 'true'
+
+    - name: Configure (POSIX platforms)
+      if: ${{ inputs.platform != 'windows' }}
+      shell: bash
+      run: |
+        $GITHUB_ACTION_PATH/../../../scripts/build/${{ inputs.platform }}/configure.sh \
+          "${{ inputs.build_dir }}" \
+          "${{ inputs.build_type }}" \
+          "${{ inputs.cmake_args }}" \
+          "${{ inputs.src_dir }}" \
+          "${{ inputs.build_tests }}"
+
+    - name: Configure (Windows)
+      if: ${{ inputs.platform == 'windows' }}
+      shell: cmd
+      run: |
+        call "%GITHUB_ACTION_PATH%\..\..\..\scripts\build\windows\configure.cmd" "${{ inputs.build_dir }}" "${{ inputs.build_type }}" "${{ inputs.cmake_args }}" "${{ inputs.src_dir }}" "${{ inputs.build_tests }}"
+
+    - name: Build (POSIX platforms)
+      if: ${{ (inputs.platform != 'windows') && (inputs.only_configure == 'false') }}
+      shell: bash
+      run: |
+        $GITHUB_ACTION_PATH/../../../scripts/build/${{ inputs.platform }}/build.sh \
+          "${{ inputs.build_dir }}" \
+          "${{ inputs.build_type }}"
+
+    - name: Build (Windows)
+      if: ${{ (inputs.platform == 'windows') && (inputs.only_configure == 'false') }}
+      shell: cmd
+      run: |
+        call "%GITHUB_ACTION_PATH%\..\..\..\scripts\build\windows\build.cmd" "${{ inputs.build_dir }}" "${{ inputs.build_type }}"

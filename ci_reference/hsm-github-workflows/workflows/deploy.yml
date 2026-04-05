@@ -1,0 +1,121 @@
+name: "Deploy Package (Reusable)"
+
+on:
+  workflow_call:
+    inputs:
+      deploy_target:
+        description: "Target platform: platformio or arduinoide"
+        required: true
+        type: string
+      commit_sha:
+        required: true
+        type: string
+      commit_version:
+        required: false
+        type: string
+        default: ''
+      commit_action:
+        required: false
+        type: string
+        default: ''
+      target_repo:
+        description: "Target repo in owner/name format"
+        required: true
+        type: string
+      target_branch:
+        required: false
+        type: string
+        default: 'main'
+      publish_registry:
+        description: "Publish to external registry if supported"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: >
+      inputs.commit_version != '' &&
+      (inputs.deploy_target == 'platformio' || inputs.commit_action == 'r')
+    env:
+      target_dir: ./deploy_target
+      library_dir: ./main/build/deploy/hsmcpp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          path: ./main
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.target_repo }}
+          token: ${{ secrets.HSMCPP_BOT_TOKEN }}
+          ref: ${{ inputs.target_branch }}
+          path: ${{ env.target_dir }}
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.BOT_GPG_PASSPHRASE }}
+          git_config_global: true
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          workdir: ${{ env.target_dir }}
+
+      - name: Install PlatformIO
+        if: inputs.deploy_target == 'platformio'
+        run: pip3 install --user platformio
+
+      - name: Generate package for PlatformIO
+        if: inputs.deploy_target == 'platformio'
+        run: |
+          cmake -S ./main -B ./main/build -DHSMBUILD_TARGET=platformio -DHSMBUILD_PLATFORM=arduino
+          cmake --build ./main/build --target install
+
+      - name: Generate package for ArduinoIDE
+        if: inputs.deploy_target == 'arduinoide'
+        run: |
+          cmake -S ./main -B ./main/build -DHSMBUILD_TARGET=arduinoide -DHSMBUILD_PLATFORM=arduino
+          cmake --build ./main/build --target install
+          mv ./main/build/deploy/arduinoide ${{ env.library_dir }}
+
+      - name: Validate arduino library structure
+        if: inputs.deploy_target == 'arduinoide'
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-lint/main/etc/install.sh | BINDIR=./ sh
+          ./arduino-lint --compliance strict --recursive --library-manager update ${{ env.library_dir }}
+
+      - name: Copy package files to target repository
+        run: |
+          if [ "${{ inputs.deploy_target }}" = "platformio" ]; then
+            cp -Rv ./main/build/deploy/platformio/* "$target_dir"
+          else
+            cp -Rv ${{ env.library_dir }}/* "$target_dir"
+          fi
+
+      - name: Publish PlatformIO package
+        if: inputs.deploy_target == 'platformio' && inputs.publish_registry
+        env:
+          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_TOKEN }}
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          pio pkg publish --type library --no-interactive $PWD/main/build/deploy/platformio/
+
+      - name: Prepare commit message
+        run: |
+          cd ./main
+          git log -1 --format=%B ${{ inputs.commit_sha }} > ../commit.txt
+
+      - name: Commit and push files
+        run: |
+          cd "$target_dir"
+          git add -A
+          git commit -S -F ../commit.txt
+          if [ "${{ inputs.deploy_target }}" = "arduinoide" ]; then
+            git tag ${{ inputs.commit_version }}
+            git push
+            git push --tags
+          else
+            git push
+          fi

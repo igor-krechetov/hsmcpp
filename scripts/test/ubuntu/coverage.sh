@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+build_dir="$1"
+
+cd $build_dir
+
+echo "Generate code coverage"
+lcov --add-tracefile ./coverage_std.info \
+    -a ./coverage_glib.info \
+    -a ./coverage_qt.info \
+    -a ./coverage_glibmm.info \
+    -o ./coverage.info
+
+lcov -r ./coverage.info \
+        '/usr/include/*' \
+        '*/build/*' \
+        '*/tests/*' \
+        '*/gcc_64/include/QtCore/*' \
+        '*/thirdparty/*' \
+        -o ./coverage.info

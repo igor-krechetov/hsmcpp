@@ -1,0 +1,59 @@
+name: "Run Tests (Reusable)"
+on:
+  workflow_call:
+    inputs:
+      test_script:
+        description: "Path to the shell script that runs unit tests"
+        required: true
+        type: string
+      artifact_name:
+        description: "Name of build artifact produced by build.yml"
+        required: false
+        type: string
+        default: "build-artifacts-ubuntu"
+      artifacts_dir:
+        description: "Directory where build artifacts will be downloaded"
+        required: false
+        type: string
+        default: "build"
+
+jobs:
+  unit_tests_ubuntu:
+    name: "Unit Tests (Ubuntu)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Qt (Ubuntu)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.4.*'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'gcc_64'
+          modules: ''
+          cache: 'true'
+          cache-key-prefix: 'install-qt-action-linux'
+          set-env: 'true'
+
+      - uses: actions/checkout@v3
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ inputs.artifacts_dir }}
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          repo_root="${{ github.workspace }}"
+          script_path="${{ github.workspace }}/${{ inputs.test_script }}"
+
+          if [[ ! -f "$script_path" ]]; then
+            echo "Test script not found: $script_path"
+            exit 1
+          fi
+
+          chmod +x "$script_path"
+
+          cd "${{ inputs.artifacts_dir }}"
+          "$script_path" "$repo_root"

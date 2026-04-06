@@ -3,6 +3,8 @@
 #ifndef HSMCPP_OS_COMMON_UNIQUELOCK_HPP
 #define HSMCPP_OS_COMMON_UNIQUELOCK_HPP
 
+#include <atomic>
+
 namespace hsmcpp
 {
 
@@ -24,7 +26,13 @@ public:
 
     inline bool owns_lock() const noexcept
     {
-        return mOwnsLock;
+        const bool isLocked = const_cast<std::atomic_flag&>(mOwnsLock).test_and_set(std::memory_order_acquire);
+
+        if (false == isLocked) {
+            const_cast<std::atomic_flag&>(mOwnsLock).clear(std::memory_order_release);
+        }
+        
+        return isLocked;
     }
 
     inline explicit operator bool() const noexcept
@@ -44,7 +52,7 @@ private:
 
 private:
     Mutex* mSync = nullptr;
-    bool mOwnsLock = false;
+    mutable std::atomic_flag mOwnsLock = ATOMIC_FLAG_INIT;
 };
 
 } // namespace hsmcpp

@@ -207,6 +207,7 @@ void HsmEventDispatcherBase::stopTimer(const TimerID_t timerID) {
 }
 
 bool HsmEventDispatcherBase::isTimerRunning(const TimerID_t timerID) {
+    LockGuard lck(mHandlersSync);
     return (mActiveTimers.find(timerID) != mActiveTimers.end());
 }
 

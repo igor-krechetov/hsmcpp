@@ -95,9 +95,12 @@ void HsmEventDispatcherQt::startTimerImpl(const TimerID_t timerID, const unsigne
                               SC2INT(timerID),
                               intervalMs,
                               BOOL2INT(isSingleShot));
+    mRunningTimersSync.lock();
     auto it = mNativeTimerHandlers.find(timerID);
+    const bool timerDoesntExist = (mNativeTimerHandlers.end() == it);
+    mRunningTimersSync.unlock();
 
-    if (mNativeTimerHandlers.end() == it) {
+    if (timerDoesntExist) {
         auto funcCreateTimer = [=]() {
             QTimer* newTimer = new QTimer(this);
 

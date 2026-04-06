@@ -7,6 +7,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "HsmTypes.hpp"
 #include "variant.hpp"
@@ -734,7 +735,7 @@ void HierarchicalStateMachine::registerState(const StateID_t state,
         }
     }
 
-    registerState(state, funcStateChanged, funcEntering, funcExiting);
+    registerState(state, std::move(funcStateChanged), std::move(funcEntering), std::move(funcExiting));
 }
 
 template <class HsmHandlerClass>
@@ -762,7 +763,7 @@ void HierarchicalStateMachine::registerFinalState(const StateID_t state,
         }
     }
 
-    registerFinalState(state, event, funcStateChanged, funcEntering, funcExiting);
+    registerFinalState(state, event, std::move(funcStateChanged), std::move(funcEntering), std::move(funcExiting));
 }
 
 template <class HsmHandlerClass>
@@ -780,7 +781,7 @@ void HierarchicalStateMachine::registerHistory(const StateID_t parent,
         }
     }
 
-    registerHistory(parent, historyState, type, defaultTarget, funcTransitionCallback);
+    registerHistory(parent, historyState, type, defaultTarget, std::move(funcTransitionCallback));
 }
 
 template <class HsmHandlerClass>
@@ -797,7 +798,7 @@ bool HierarchicalStateMachine::registerSubstateEntryPoint(const StateID_t parent
         condition = std::bind(conditionCallback, handler, std::placeholders::_1);
     }
 
-    return registerSubstateEntryPoint(parent, substate, onEvent, condition, expectedConditionValue);
+    return registerSubstateEntryPoint(parent, substate, onEvent, std::move(condition), expectedConditionValue);
 }
 
 template <typename... Args>
@@ -832,7 +833,7 @@ void HierarchicalStateMachine::registerTransition(const StateID_t fromState,
         }
     }
 
-    registerTransition(fromState, toState, onEvent, funcTransitionCallback, funcConditionCallback, expectedConditionValue);
+    registerTransition(fromState, toState, onEvent, std::move(funcTransitionCallback), std::move(funcConditionCallback), expectedConditionValue);
 }
 
 template <class HsmHandlerClass>
@@ -856,7 +857,7 @@ void HierarchicalStateMachine::registerSelfTransition(const StateID_t state,
         }
     }
 
-    registerSelfTransition(state, onEvent, type, funcTransitionCallback, funcConditionCallback, expectedConditionValue);
+    registerSelfTransition(state, onEvent, type, std::move(funcTransitionCallback), std::move(funcConditionCallback), expectedConditionValue);
 }
 
 template <typename... Args>

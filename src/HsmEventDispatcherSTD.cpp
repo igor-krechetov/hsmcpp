@@ -82,7 +82,6 @@ void HsmEventDispatcherSTD::join() {
 
 void HsmEventDispatcherSTD::startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) {
     HSM_TRACE_CALL_ARGS("timerID=%d, intervalMs=%d, isSingleShot=%d", SC2INT(timerID), intervalMs, BOOL2INT(isSingleShot));
-    auto it = mRunningTimers.end();
 
     // lazy initialization of timers thread
     if (false == mTimersThread.joinable()) {
@@ -91,7 +90,7 @@ void HsmEventDispatcherSTD::startTimerImpl(const TimerID_t timerID, const unsign
 
     {
         CriticalSection cs(mRunningTimersSync);
-        it = mRunningTimers.find(timerID);
+        auto it = mRunningTimers.find(timerID);
 
         // new timer
         if (mRunningTimers.end() == it) {
@@ -144,6 +143,8 @@ void HsmEventDispatcherSTD::doDispatching() {
                 // cppcheck-suppress misra-c2012-15.5
                 mEmitEvent.wait(lck, [=]() {
                     // cppcheck-suppress misra-c2012-15.5 ; false-positive. "return" statement belongs to lambda function
+                    // NOTE: it's assumed that calling empty() is thread-safe. Even if due to a race condition we get
+                    //       wrong value it will only cause a small delay in event processing, but won't cause any critical issues
                     return (false == mPendingEvents.empty()) || (false == mEnqueuedEvents.empty()) || (true == mStopDispatcher);
                 });
                 HSM_TRACE_DEBUG("woke up. pending events=%lu", mPendingEvents.size());
@@ -168,6 +169,9 @@ void HsmEventDispatcherSTD::handleTimers() {
     while (false == mStopDispatcher) {
         mRunningTimersSync.lock();
 
+        // NOTE: it's assumed that calling empty() is thread-safe. Even if due to
+        //       a race condition we get wrong value it will only cause a small delay in timer processing,
+        //       but won't cause any critical issues
         if (false == mRunningTimers.empty()) {
             auto itTimeout = mRunningTimers.begin();
 

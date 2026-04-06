@@ -61,11 +61,14 @@ jobs:
       needs.build.result == 'success' &&
       needs.test.result == 'success' &&
       needs.sast.result == 'success'
-    uses: igor-krechetov/hsm-github-workflows/.github/workflows/autotag.yml@main
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/autotag.yml@feature/hsmcpp-ci-integration
     with:
       commit_version: ${{ needs.verify.outputs.commit_version }}
       commit_action: ${{ needs.verify.outputs.commit_action }}
       commit_sha: ${{ github.sha }}
+    secrets:
+      BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
+      BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
 
   # --------------------------------------------------------
   update_documentation:
@@ -94,13 +97,11 @@ jobs:
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/release.yml@feature/hsmcpp-ci-integration
     with:
       commit_sha: ${{ github.sha }}
-      tag_version: ${{ needs.update_documentation.outputs.tag_name }}
-      builds: "build-artifacts-ubuntu,build-artifacts-windows"
+      tag_version: ${{ needs.verify.outputs.commit_version }}
+      # dont upload any binaries
+      builds: ""
       release_description: |
-        Release ${{ needs.update_documentation.outputs.tag_name }}
-
-        - Built on Ubuntu and Windows
-        - Includes binaries for both platforms
+        Release ${{ needs.verify.outputs.commit_version }}
 
   # --------------------------------------------------------
   deploy:
@@ -111,8 +112,8 @@ jobs:
     uses: igor-krechetov/hsm-github-workflows/.github/workflows/deploy.yml@feature/hsmcpp-ci-integration
     with:
       deploy_target: "platformio,arduinoide"
-      commit_sha: ${{ needs.check-hsmcpp-version.outputs.commit_sha }}
-      commit_version: ${{ needs.check-hsmcpp-version.outputs.commit_version }}
+      commit_sha: ${{ github.sha }}
+      commit_version: ${{ needs.verify.outputs.commit_version }}
       target_repo: igor-krechetov/hsmcpp
       platformio_target_branch: platformio_library
     secrets:

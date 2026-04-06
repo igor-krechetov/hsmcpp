@@ -1490,7 +1490,7 @@ bool HierarchicalStateMachine::Impl::processFinalStateTransition(const PendingEv
 
                 {
                     HSM_SYNC_EVENTS_QUEUE();
-                    mPendingEvents.push_front(finalStateEvent);
+                    mPendingEvents.push_front(std::move(finalStateEvent));
                 }
             }
         }

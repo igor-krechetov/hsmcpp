@@ -1,11 +1,5 @@
 #!/bin/sh
 
-# python3 ./scripts/local/validate_metadata.py $1 ./
-# if [ $? != 0 ]
-# then
-#     exit 1
-# fi
-
 mkdir ./build
 cd ./build
 
@@ -67,23 +61,13 @@ then
           -DHSMBUILD_CLANGTIDY=OFF \
           ..
 
-    cppcheck --addon=../scripts/sca/cppcheck/misra.json \
-         --enable=warning,performance,portability,information \
-         --inline-suppr \
-         --xml \
-         --suppressions-list=../scripts/sca/cppcheck/cppcheck_suppress.txt --project=./compile_commands.json \
-         -DSTL_AVAILABLE -D__GNU__=1 -D__LITTLE_ENDIAN__ -D__GNUC__
+    # cppcheck --enable=warning,performance,portability,information \
+    #      --inline-suppr \
+    #      --xml \
+    #      --suppressions-list=../scripts/sca/cppcheck/cppcheck_suppress.txt --project=./compile_commands.json \
+    #      -DSTL_AVAILABLE -D__GNU__=1 -D__LITTLE_ENDIAN__ -D__GNUC__
 
-    lcov --add-tracefile ./coverage_std.info \
-               -a ./coverage_glib.info \
-               -a ./coverage_qt.info \
-               -a ./coverage_glibmm.info \
-               -o ./coverage.info
-    lcov -r ./coverage.info /usr/include/\* . -o ./coverage.info
-    lcov -r ./coverage.info \*/build/\* . -o ./coverage.info
-    lcov -r ./coverage.info \*/tests/\* . -o ./coverage.info
-    lcov -r ./coverage.info \*/gcc_64/include/QtCore/\* . -o ./coverage.info
-    lcov -r ./coverage.info \*/thirdparty/\* . -o ./coverage.info
+    ../scripts/test/ubuntu/coverage.sh ./
 
     genhtml ./coverage.info --output-directory out
 fi

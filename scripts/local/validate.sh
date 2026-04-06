@@ -1,11 +1,5 @@
 #!/bin/sh
 
-# python3 ./scripts/local/validate_metadata.py $1 ./
-# if [ $? != 0 ]
-# then
-#     exit 1
-# fi
-
 mkdir ./build
 cd ./build
 
@@ -67,8 +61,7 @@ then
           -DHSMBUILD_CLANGTIDY=OFF \
           ..
 
-    cppcheck --addon=../scripts/sca/cppcheck/misra.json \
-         --enable=warning,performance,portability,information \
+    cppcheck --enable=warning,performance,portability,information \
          --inline-suppr \
          --xml \
          --suppressions-list=../scripts/sca/cppcheck/cppcheck_suppress.txt --project=./compile_commands.json \

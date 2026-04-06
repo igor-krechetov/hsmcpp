@@ -7,8 +7,8 @@
 namespace hsmcpp {
 
 UniqueLock::UniqueLock(Mutex& sync)
-// NOTE: false-positive. thinks that ':' is arithmetic operation
-// cppcheck-suppress misra-c2012-10.4
+    // NOTE: false-positive. thinks that ':' is arithmetic operation
+    // cppcheck-suppress misra-c2012-10.4
     : mSync(&sync) {
     lock();
 }
@@ -18,37 +18,56 @@ UniqueLock::~UniqueLock() {
 }
 
 UniqueLock::UniqueLock(UniqueLock&& src) noexcept
-    : mSync(src.mSync)
-    , mOwnsLock(src.mOwnsLock) {
+    : mSync(src.mSync) {
+    if (true == src.mOwnsLock.test_and_set(std::memory_order_acquire)) {
+        mOwnsLock.test_and_set(std::memory_order_release);
+    } else {
+        mOwnsLock.clear(std::memory_order_release);
+    }
+
     src.mSync = nullptr;
-    src.mOwnsLock = false;
+    src.mOwnsLock.clear(std::memory_order_release);
 }
 
 UniqueLock& UniqueLock::operator=(UniqueLock&& src) noexcept {
-    if (mOwnsLock) {
-        unlock();
+    if (this != &src) {
+        if (nullptr != mSync) {
+            if (true == mOwnsLock.test_and_set(std::memory_order_acquire)) {
+                mSync->unlock();
+            } else {
+                mOwnsLock.clear(std::memory_order_release);
+            }
+        }
+
+        mSync = src.mSync;
+
+        if (true == src.mOwnsLock.test_and_set(std::memory_order_acquire)) {
+            mOwnsLock.test_and_set(std::memory_order_release);
+        } else {
+            mOwnsLock.clear(std::memory_order_release);
+        }
+
+        src.mSync = nullptr;
+        src.mOwnsLock.clear(std::memory_order_release);
     }
-
-    mSync = src.mSync;
-    mOwnsLock = src.mOwnsLock;
-
-    src.mSync = nullptr;
-    src.mOwnsLock = false;
 
     return *this;
 }
 
 void UniqueLock::lock() {
-    if ((nullptr != mSync) && (false == mOwnsLock)) {
+    if ((nullptr != mSync) && (false == mOwnsLock.test_and_set(std::memory_order_acq_rel))) {
         mSync->lock();
-        mOwnsLock = true;
     }
 }
 
 void UniqueLock::unlock() {
-    if ((nullptr != mSync) && (true == mOwnsLock)) {
-        mSync->unlock();
-        mOwnsLock = false;
+    if (nullptr != mSync) {
+        if (true == mOwnsLock.test_and_set(std::memory_order_acquire)) {
+            mSync->unlock();
+            mOwnsLock.clear(std::memory_order_release);
+        } else {
+            mOwnsLock.clear(std::memory_order_release);
+        }
     }
 }
 
@@ -56,7 +75,7 @@ Mutex* UniqueLock::release() noexcept {
     Mutex* res = mSync;
 
     mSync = nullptr;
-    mOwnsLock = false;
+    mOwnsLock.clear(std::memory_order_release);
 
     return res;
 }

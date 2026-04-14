@@ -8,7 +8,7 @@ if (HSMBUILD_DISPATCHER_STD)
     endif()
 
     # Export variables
-    if (NOT WIN32)
+    if (NOT WIN32 AND NOT HSMBUILD_PLATFORM STREQUAL "qnx")
         set(HSMCPP_STD_CXX_FLAGS ${HSMCPP_CXX_FLAGS} -pthread CACHE STRING "" FORCE)
     else()
         set(HSMCPP_STD_CXX_FLAGS ${HSMCPP_CXX_FLAGS} "" CACHE STRING "" FORCE)

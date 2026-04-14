@@ -4,6 +4,7 @@
 #include "hsmcpp/variant.hpp"
 
 #include <cstring>
+#include <math.h>
 
 #include "hsmcpp/os/os.hpp"
 
@@ -209,7 +210,7 @@ bool Variant::operator==(const Variant& val) const {
                 if ((Type::DOUBLE == type) || (Type::DOUBLE == val.type)) {
                     // compare with precision for double
                     // cppcheck-suppress misra-c2012-10.4 : false positive. both operands have type double
-                    equal = (std::abs(toDouble() - val.toDouble()) < comparePrecision);
+                    equal = (fabs(toDouble() - val.toDouble()) < comparePrecision);
                 } else if (isUnsignedNumeric() || val.isUnsignedNumeric()) {
                     equal = (toUInt64() == val.toUInt64());
                 } else {

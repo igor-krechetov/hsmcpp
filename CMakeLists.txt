@@ -33,7 +33,7 @@ option(HSMBUILD_EXAMPLES "Build examples" ON)
 option(HSMBUILD_CODECOVERAGE "Build with code coverage" OFF)
 option(HSMBUILD_CLANGTIDY "Enable validation with clang-tidy-15 (if available)" OFF)
 
-set(HSMBUILD_PLATFORM "posix" CACHE STRING "Specifies target platform. Possible values: posix, windows, freertos, arduino")
+set(HSMBUILD_PLATFORM "posix" CACHE STRING "Specifies target platform. Possible values: posix, windows, freertos, arduino, qnx")
 set(HSMBUILD_FREERTOS_ROOT "" CACHE STRING "FreeRTOS sources root folder")
 set(HSMBUILD_FREERTOS_CONFIG_FILE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/os/freertos" CACHE STRING "Path to folder with FreeRTOSConfig.h")
 option(HSMBUILD_DISPATCHER_FREERTOS "Enable FreeRTOS based dispatcher" OFF)
@@ -142,7 +142,7 @@ elseif (HSMBUILD_PLATFORM STREQUAL "arduino")
                                             ${HSM_INCLUDES_ROOT}/os/arduino/AtomicFlag.hpp
                                             ${HSM_INCLUDES_ROOT}/os/arduino/Mutex.hpp
                                             ${HSM_INCLUDES_ROOT}/HsmEventDispatcherArduino.hpp)
-elseif (HSMBUILD_PLATFORM STREQUAL "posix")
+elseif (HSMBUILD_PLATFORM STREQUAL "posix" OR HSMBUILD_PLATFORM STREQUAL "qnx")
     set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/posix/InterruptsFreeSection.cpp
                                     ${HSM_SRC_ROOT}/os/stl/ConditionVariable.cpp
                                     ${HSM_SRC_ROOT}/os/stl/AtomicFlag.cpp)
@@ -211,7 +211,8 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
     add_definitions(${HSM_DEFINITIONS_BASE})
     add_library(${HSM_LIBRARY_NAME} STATIC ${LIBRARY_SRC})
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-    target_include_directories(${HSM_LIBRARY_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+    target_include_directories(${HSM_LIBRARY_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+                                                           ${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/os)
     if (NOT WIN32)
         target_compile_options(${HSM_LIBRARY_NAME} PUBLIC "-fPIC")
     endif()

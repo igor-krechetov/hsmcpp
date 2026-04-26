@@ -732,6 +732,8 @@ void HierarchicalStateMachine::Impl::onStateChanged(const StateID_t state, const
     } else {
         HSM_TRACE_WARNING("no callback registered for state <%s>", getStateName(state).c_str());
     }
+	// notify parent
+	if (mParent) mParent->onStateChanged(state);
 }
 
 void HierarchicalStateMachine::Impl::executeStateAction(const StateID_t state, const StateActionTrigger actionTrigger) {

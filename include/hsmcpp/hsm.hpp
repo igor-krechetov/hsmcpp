@@ -439,6 +439,15 @@ public:
     bool isStateActive(const StateID_t state) const;
 
     /**
+     * @brief Called whenever a change state occurs.
+     * @details Overwrite this function to get informed when a new state is activated.
+     *
+     * @param state ID of the new state
+     *
+     */
+    virtual void onStateChanged(const StateID_t state) const { }
+
+    /**
      * @brief Trigger a transition in the HSM.
      * @details This function sends event to HSM to trigger a potential transition. The transition is executed asynchronously,
      * and any registered callbacks are called in the order they were registered. The user can optionally provide arguments

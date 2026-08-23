@@ -505,6 +505,56 @@ TEST_F(ABCHsm, substate_exit_multiple_layers) {
     EXPECT_EQ(mStateCounterD, 1);
 }
 
+TEST_F(ABCHsm, substate_exit_multiple_layers_from_substate) {
+    TEST_DESCRIPTION("Validate that exiting from a substate to an adjacent parent handles nested active states");
+    /*
+    @startuml
+    left to right direction
+    title substate_exit_multiple_layers_from_substate
+
+    A -[#green,bold]-> P1: **E1**
+    state P1 {
+        [*] -[#green,bold]-> P2
+        state P2 {
+            [*] --> C
+        }
+        state P3 {
+            [*] --> D
+        }
+        C -[#red,bold]-> P3: **E2**
+    }
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
+    registerState<ABCHsm>(AbcState::D, this, &ABCHsm::onD);
+
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::P2));
+    EXPECT_TRUE(registerSubstate(AbcState::P1, AbcState::P3));
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P2, AbcState::C));
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P3, AbcState::D));
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::C, AbcState::P3, AbcEvent::E2);
+
+    initializeHsm();
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::C}));
+
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P3, AbcState::D}));
+}
+
 TEST_F(ABCHsm, substate_safe_registration) {
     TEST_DESCRIPTION(
         "If HSM is compiled with safety check then it should prevent cyclic and multiple inclusions of substates. "

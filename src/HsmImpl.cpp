@@ -1303,7 +1303,9 @@ bool HierarchicalStateMachine::Impl::executeExitTransition(const PendingEventInf
                                 getStateName(curTransition.fromState).c_str(),
                                 getStateName(*itActiveState).c_str());
                 if ((curTransition.fromState == *itActiveState) ||
-                    (true == isSubstateOf(curTransition.fromState, *itActiveState))) {
+                    (true == isSubstateOf(curTransition.fromState, *itActiveState)) ||
+                    ((true == isSubstateOf(*itActiveState, curTransition.fromState))) &&
+                     (false == isSubstateOf(*itActiveState, curTransition.destinationState))) {
                     isExitAllowed = onStateExiting(*itActiveState);
 
                     if (true == isExitAllowed) {

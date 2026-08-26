@@ -3,1098 +3,1356 @@
 **Grammar**: software.gra.md
 **Prefix**: SWR-HSM-
 
-## Core State Machine Engine
+## Product Scope and Constraints
 
 ### C++ Standard Compatibility
 
 **UID**: SWR-HSM-001
-**Nature**: Functional
+**Nature**: NonFunctional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: C++11 is the minimum standard widely available on embedded toolchains while still providing the language features needed by the library; forward compatibility ensures adoption on newer platforms.
+**Rationale**: C++11 is the minimum standard widely available on embedded toolchains; forward compatibility ensures adoption on newer platforms.
 **Relations**:
 - **Type**: Parent \
   **ID**: SYS-HSM-001
 
-The library SHALL compile and function correctly with C++11 and any later C++ standard revision. No application-visible behavior SHALL differ based on the C++ standard version used for compilation.
+The library SHALL compile and function correctly with C++11 and supported later C++ standard revisions.
 
-### Type-Safe State, Event, and Timer Identification
+### Type-Safe State Identification
 
 **UID**: SWR-HSM-002
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Inspection
-**Rationale**: Type-safe identifiers prevent accidental misuse of raw numeric values and enable compile-time checking of state machine structure.
+**Verification**: Test
+**Rationale**: Type-safe identifiers prevent accidental misuse of raw numeric values and enable compile-time checking.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-001
+  **ID**: SYS-HSM-002
 
-The library SHALL provide type-safe, uniquely identifiable designators for states, events, and timers. The library SHALL allow users to define domain-specific identifier sets that the compiler can distinguish from unrelated integer or enumeration types.
+The library SHALL provide a type-safe state identifier type that the compiler can distinguish from unrelated integer or enumeration types. The library SHALL allow users to define domain-specific state identifier sets.
 
-### Independent Event Processing
+### Type-Safe Event Identification
 
 **UID**: SWR-HSM-003
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Inspection
-**Rationale**: Decoupling the state machine from any particular execution environment allows the same state machine logic to run on real-time operating systems, desktop platforms, and bare-metal environments without modification.
+**Verification**: Test
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-001
+  **ID**: SYS-HSM-002
 
-The library SHALL provide built-in event-processing capabilities sufficient to execute a state machine without requiring integration with an external event-processing framework. The library SHALL supply at least one ready-to-use event-processing mechanism as part of its distribution.
+The library SHALL provide a type-safe event identifier type that the compiler can distinguish from unrelated integer or enumeration types. The library SHALL allow users to define domain-specific event identifier sets.
 
-### Single-Threaded Callback Execution Model
+### Type-Safe Timer Identification
 
 **UID**: SWR-HSM-004
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Analysis
-**Rationale**: A single-threaded execution model for application-defined behavior eliminates data races within user-provided logic and removes the need for internal synchronization in application callbacks.
+**Verification**: Test
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-001
+  **ID**: SYS-HSM-002
 
-The library SHALL execute all application-defined state and transition behavior on a single execution context. The library SHALL guarantee that no two application-defined behaviors execute concurrently, ensuring that application code does not require internal synchronization.
+The library SHALL provide a type-safe timer identifier type that the compiler can distinguish from unrelated integer or enumeration types. The library SHALL allow users to define domain-specific timer identifier sets.
 
-### HSM Initialization
+### Built-In Event Processing
 
 **UID**: SWR-HSM-005
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Explicit initialization separates structure configuration from runtime execution, allowing the full state machine topology to be validated before any transitions occur.
+**Rationale**: Decoupling the state machine from any particular execution environment allows the same logic to run on different platforms.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-001
+  **ID**: SYS-HSM-003
 
-The library SHALL support explicit initialization that establishes the defined initial runtime state of the state machine. After successful initialization, the state machine SHALL be in its designated initial state and ready to process events. The library SHALL not process events before initialization completes successfully.
+The library SHALL provide at least one event-processing implementation sufficient to execute a state machine without requiring integration with an external event-processing framework.
 
-### Structure Immutability After Initialization
+### Application-Provided Event-Processing Integration
 
 **UID**: SWR-HSM-006
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Analysis
-**Rationale**: Immutable structure after initialization enables safe concurrent event processing without locks on the topology data and prevents accidental corruption of the state machine graph during operation.
+**Verification**: Test
+**Rationale**: Custom integration enables use with proprietary event loops, RTOSes, or frameworks not covered by built-in support.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-001
+  **ID**: SYS-HSM-004
 
-The library SHALL require that the complete state machine structure (states, transitions, and actions) is fully configured before initialization. The library SHALL either reject structural modifications attempted after initialization or leave the resulting behavior explicitly unspecified.
+The library SHALL provide a software interface allowing an application-provided event-processing implementation. Adding a custom event-processing implementation SHALL be possible without modifying library source code.
 
-### Multiple HSM Instances Per Event-Processing Context
+## State-Machine Execution
+
+### Initialization
 
 **UID**: SWR-HSM-007
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Sharing an event-processing context reduces resource consumption on constrained platforms and simplifies integration with application event loops that manage multiple state machines.
+**Rationale**: Explicit initialization separates structure configuration from runtime execution.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-001
+  **ID**: SYS-HSM-005
 
-The library SHALL support multiple state machine instances sharing a single event-processing context. Each state machine instance SHALL process events independently while sharing the underlying event-processing infrastructure.
+The library SHALL provide an explicit initialization operation that transitions a configured state machine into an executing state. After successful initialization, the state machine SHALL be in its designated initial state and ready to process events. Event processing SHALL begin only after initialization completes successfully.
 
-## State Management
-
-### State Definition
+### Structure Immutability After Initialization
 
 **UID**: SWR-HSM-008
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: States are the fundamental building blocks of a hierarchical state machine; associating behavior with state lifecycle events allows applications to react to state changes.
+**Rationale**: Immutable structure after initialization enables safe concurrent event processing without locks on topology data.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-002
+  **ID**: SYS-HSM-006
 
-The library SHALL support definition of uniquely identified states. Each state may have application-defined behavior associated with entry, exit, and state-changed lifecycle events.
+The library SHALL require that the complete state machine structure (states, transitions, and actions) is fully configured before initialization. The library SHALL reject structural modifications attempted after initialization with a defined error indication.
 
-### Initial State Configuration
+### Callback Serialization Per Instance
 
 **UID**: SWR-HSM-009
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Every well-formed state machine requires a defined starting state to ensure deterministic behavior upon initialization.
+**Rationale**: Serialized callback execution provides a predictable execution model for each state machine instance.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-002
+  **ID**: SYS-HSM-007
 
-The library SHALL allow the user to designate one state as the initial state. The designated initial state SHALL become active upon successful initialization of the state machine.
+The library SHALL serialize execution of application-defined callbacks for a given state machine instance, ensuring at most one callback executes at any time.
 
-### Final State Support
+### Multiple Instances Per Event-Processing Context
 
 **UID**: SWR-HSM-010
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Final states enable composite state completion semantics, allowing parent states to react when a substate machine reaches its terminal condition.
+**Rationale**: Sharing an event-processing context reduces resource consumption on constrained platforms.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-002
+  **ID**: SYS-HSM-008
 
-The library SHALL support designating a state as a final state. When a final state becomes active, the library SHALL automatically generate a specified event. If no event is specified, the library SHALL re-use the triggering event that caused the transition into the final state.
+The library SHALL support multiple state machine instances sharing a single event-processing context. Each state machine instance SHALL process events independently while sharing the underlying event-processing infrastructure.
 
-### Active State Query
+### Release and Re-initialization
 
 **UID**: SWR-HSM-011
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Applications need to inspect the current state machine configuration for conditional logic outside the state machine.
+**Rationale**: Release allows applications to reset a state machine without destroying the instance.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-002
+  **ID**: SYS-HSM-009
 
-The library SHALL provide the ability to determine which states are currently active. The library SHALL provide the ability to determine whether a specified state is active.
+The library SHALL provide a release operation that terminates execution of a state machine and returns it to a state in which re-initialization is possible. After release, event processing SHALL resume only after successful re-initialization.
 
-### Last Active State Query
+## State Modeling
+
+### State Registration
 
 **UID**: SWR-HSM-012
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: In state machines with parallel regions, the most recently activated state provides a deterministic single-state answer for simple queries.
+**Rationale**: States are the fundamental building blocks of a hierarchical state machine.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-002
+  **ID**: SYS-HSM-010
 
-The library SHALL provide the ability to determine the most recently activated state.
+The library SHALL support registration of uniquely identified states. Each state SHALL be identifiable by its type-safe state identifier.
 
-## State Transitions
-
-### Event-Triggered Transitions
+### Initial State Designation
 
 **UID**: SWR-HSM-013
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Event-driven transitions are the core mechanism for state machine progression; uniquely identified events ensure unambiguous routing.
+**Rationale**: Every well-formed state machine requires a defined starting state.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-003
+  **ID**: SYS-HSM-011
 
-The library SHALL support transitions between states triggered by uniquely identified events.
+The library SHALL allow the user to designate one state as the initial state during configuration. The designated initial state SHALL become active upon successful initialization.
 
-### Conditional Transitions (Guards)
+### Final State Support
 
 **UID**: SWR-HSM-014
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Guards allow dynamic routing of transitions based on runtime conditions without proliferating states.
+**Rationale**: Final states signal state machine completion and terminate event processing.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-003
+  **ID**: SYS-HSM-012
 
-The library SHALL support guard conditions on transitions. A guarded transition SHALL only execute when its associated runtime condition is satisfied.
+The library SHALL support designating a state as a final state. When a final state becomes active, the library SHALL stop processing further events and transition the state machine to a terminated lifecycle state.
 
-### Self-Transitions
+### Active State Query
 
 **UID**: SWR-HSM-015
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Internal self-transitions allow in-state processing without triggering exit and entry side effects, while external self-transitions reset state context.
+**Rationale**: Applications need to inspect the current state machine configuration for conditional logic.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-003
+  **ID**: SYS-HSM-013
 
-The library SHALL support self-transitions in two modes: internal self-transitions that do not trigger state exit or entry behavior, and external self-transitions that perform full exit and re-entry of the state.
+The library SHALL provide the ability to query which states are currently active. The library SHALL provide the ability to query whether a specified state identifier is currently active.
 
-### Transition Priority
+## Transitions
+
+### Event-Triggered Transition Registration
 
 **UID**: SWR-HSM-016
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Deterministic priority resolution ensures predictable behavior when multiple conditional transitions compete for the same event.
+**Rationale**: Event-driven transitions are the core mechanism for state machine progression.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-003
+  **ID**: SYS-HSM-014
 
-When multiple transitions from the same state match the same event, the library SHALL resolve competing transitions deterministically and SHALL execute the first transition whose guard condition is satisfied.
+The library SHALL support registration of transitions between states triggered by type-safe event identifiers. Each transition SHALL specify a source state, a target state, and a triggering event.
 
-### Synchronous Transition Execution
+### Guard Condition Registration
 
 **UID**: SWR-HSM-017
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Synchronous transitions simplify sequencing logic in scenarios where the caller must know the outcome before proceeding.
+**Rationale**: Guards allow dynamic routing of transitions based on runtime conditions.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-003
+  **ID**: SYS-HSM-015
 
-The library SHALL support the ability to request a transition synchronously and wait for its completion. If the transition does not complete within a defined timeout period, the wait SHALL terminate with a timeout indication.
+The library SHALL support associating a guard condition callback with a transition. The guard callback SHALL return a boolean result. The transition SHALL execute only when the guard result matches the configured expected value.
 
-### Pending Event Discard
+### Otherwise Transitions
 
 **UID**: SWR-HSM-018
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Discarding pending events enables cancel-all-pending-work semantics for high-priority state changes such as error recovery or shutdown.
+**Rationale**: Otherwise transitions provide deterministic fallback routing when no guarded transition is satisfied.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-003
+  **ID**: SYS-HSM-015
 
-The library SHALL support the ability to discard all pending events before processing a newly requested event.
+The library SHALL support registration of otherwise transitions that execute when no guarded transition for the same event from the same source state is satisfied. Otherwise transitions SHALL be evaluated after all guarded transitions have been evaluated and rejected.
 
-### Transition Possibility Check
+### Internal Self-Transitions
 
 **UID**: SWR-HSM-019
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Dry-run checks allow application logic to determine reachability without side effects, enabling conditional UI or decision logic.
+**Rationale**: Internal self-transitions allow in-state processing without triggering exit/entry side effects.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-003
+  **ID**: SYS-HSM-016
 
-The library SHALL support the ability to determine whether a specified event can cause a successful transition from the current state without changing the state machine state.
+The library SHALL support internal self-transitions that do not trigger state exit or entry callbacks.
 
-### Failed Transition Notification
+### External Self-Transitions
 
 **UID**: SWR-HSM-020
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Failed transition notifications enable logging, error handling, and defensive programming in response to unhandled or unprocessable events.
+**Rationale**: External self-transitions reset state context by performing full exit and re-entry.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-003
+  **ID**: SYS-HSM-016
 
-The library SHALL notify application-defined behavior when an event cannot be processed due to missing transitions, failed guards, or cancellation by application-defined behavior.
+The library SHALL support external self-transitions that perform full exit and re-entry of the state, including execution of exit and entry callbacks.
 
-### Transition-Associated Data
+### Deterministic Transition Priority
 
 **UID**: SWR-HSM-021
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Passing context data through transitions eliminates the need for external shared state between transition triggers and handlers.
+**Rationale**: Deterministic priority resolution ensures predictable behavior with multiple guarded transitions. Registration order is the intentional API-level priority mechanism.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-003
+  **ID**: SYS-HSM-017
 
-The library SHALL support associating arbitrary application data with a transition request. The library SHALL make that data available to all application-defined behavior triggered by that transition.
+When multiple transitions from the same state match the same event, the library SHALL evaluate guard conditions in registration order and SHALL execute the first transition whose guard condition is satisfied. Registration order SHALL be the defined priority mechanism.
 
-## State and Transition Actions
-
-### State Entry Behavior
+### Synchronous Transition with Timeout
 
 **UID**: SWR-HSM-022
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Executing application-defined behavior on state entry enables initialization logic and resource acquisition tied to becoming active; the ability to cancel prevents entering an invalid configuration.
+**Rationale**: Synchronous transitions simplify sequencing logic where the caller must know the outcome.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-018
 
-The library SHALL execute application-defined entry behavior before a state becomes active. The entry behavior SHALL receive any data associated with the triggering transition. The entry behavior SHALL be able to prevent the state from becoming active, thereby cancelling the transition.
+The library SHALL provide a synchronous transition operation that blocks the caller until the transition completes or fails. If the transition does not complete within a configurable timeout period, the operation SHALL return a timeout indication. A timeout indication SHALL indicate that the transition outcome is not available to the caller at the time the operation returns.
 
-### State Exit Behavior
+### Pending Event Discard on Transition
 
 **UID**: SWR-HSM-023
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Executing application-defined behavior on state exit enables cleanup logic and resource release; the ability to cancel prevents leaving a state when preconditions for departure are not met.
+**Rationale**: Discarding pending events enables cancel-all-pending-work semantics for high-priority state changes.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-019
 
-The library SHALL execute application-defined exit behavior before a state becomes inactive. The exit behavior SHALL be able to prevent the transition, keeping the state active.
+The library SHALL provide the ability to discard all pending events (both externally submitted and internally generated) before processing a newly requested transition.
 
-### State-Changed Behavior
+### Transition Possibility Query
 
 **UID**: SWR-HSM-024
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Executing behavior after a state has fully activated provides a safe point for operations that depend on the state machine having committed to the new configuration.
+**Rationale**: Dry-run checks allow application logic to determine reachability without side effects.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-020
 
-The library SHALL execute application-defined state-changed behavior after a state has become fully active. The state-changed behavior SHALL receive any data associated with the triggering transition.
+The library SHALL provide an operation to determine whether a specified event can cause a successful transition from the current active state configuration without changing state machine state. The operation SHALL evaluate guard conditions only and SHALL be side-effect-free with respect to callbacks, active state configuration, and conditional entry points.
 
-### Transition Behavior
+### Failed Transition Notification
 
 **UID**: SWR-HSM-025
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Behavior executed during a transition enables side effects that logically belong to the act of transitioning rather than to entering or exiting a particular state.
+**Rationale**: Failed transition notifications enable logging, error handling, and defensive programming.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-021
 
-The library SHALL support application-defined behavior associated with the execution of a transition. The transition behavior SHALL execute after the source state has been exited and before the target state is entered. The transition behavior SHALL receive any data associated with the triggering transition.
+The library SHALL invoke an application-defined callback when a transition request does not result in a successful state change. The callback SHALL distinguish between transition rejection (no transition matched the event from the current state after guard evaluation) and transition cancellation (a matching transition was selected but cancelled by application-defined callback behavior).
 
-### Guard Evaluation
+### Transition Data Passing
 
 **UID**: SWR-HSM-026
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Runtime guard conditions enable dynamic transition selection based on application state, allowing a single event to route to different targets depending on evaluated conditions.
+**Rationale**: Passing context data through transitions eliminates the need for external shared state.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-022
 
-The library SHALL evaluate a runtime condition before executing a guarded transition. The transition SHALL proceed only when the condition result matches the configured expected value.
+The library SHALL support associating application-defined data with a transition request. The associated data SHALL remain available to all callbacks executed as part of that transition and SHALL retain the value provided at submission time.
 
-### Automatic Timer Start
+### State Configuration Consistency
 
 **UID**: SWR-HSM-027
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Declarative timer start on state lifecycle eliminates boilerplate code for common timeout patterns and ensures timers are reliably started when states change.
+**Rationale**: Applications must never observe an inconsistent state configuration.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-023
 
-The library SHALL support automatically starting a specified timer when a state is entered or exited, based on configuration.
+When a transition is cancelled by application-defined behavior, the library SHALL restore the active state configuration to the configuration that existed before the transition attempt. The library does NOT undo externally visible side effects performed by callbacks that executed before the cancellation.
 
-### Automatic Timer Stop
+### Event Queue Capacity Handling
 
 **UID**: SWR-HSM-028
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Automatic timer cancellation prevents stale timeouts from firing after state transitions, reducing error-prone manual timer management.
+**Rationale**: Resource-constrained applications require predictable feedback when the queue is full.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-030
 
-The library SHALL support automatically stopping a specified timer when a state is entered or exited, based on configuration.
+The library SHALL return an error indication when an asynchronous event submission cannot be accepted because the event queue has reached its capacity limit.
 
-### Automatic Timer Restart
+## Transition Execution Model
+
+### Transition Callback Sequence
 
 **UID**: SWR-HSM-029
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Timer restart enables watchdog-style patterns where re-entering a state resets a deadline without requiring explicit stop-then-start sequences.
+**Rationale**: A defined callback execution sequence is essential for deterministic behavior, testability, and safety traceability.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-025
 
-The library SHALL support automatically restarting a specified timer with its original parameters when a state is entered or exited, based on configuration.
+For a non-hierarchical transition from source state S to target state T, the library SHALL execute applicable callbacks in the following order: (1) source state exit callback, (2) transition callback, (3) target state entry callback, (4) target state state-changed callback. Individual callback definitions and cancellation behavior are specified in SWR-HSM-030 through SWR-HSM-035. Guard evaluation SHALL precede callback execution.
 
-### Automatic Event Generation
+### Exit Callback Cancellation
 
 **UID**: SWR-HSM-030
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Automatic event generation on state lifecycle enables transient states and cascading state machine patterns without requiring external event sources.
+**Rationale**: Exit cancellation enables states to refuse departure if preconditions are not met.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-024
 
-The library SHALL support automatically generating a specified event when a state is entered or exited, based on configuration.
+The library SHALL allow a state exit callback to cancel the in-progress transition by returning a cancellation indication. When an exit callback cancels, no further callbacks in the transition sequence SHALL execute, the source state SHALL remain active, and no compensating callbacks SHALL be invoked for the cancellation.
 
-### Action Trigger Configuration
+### Entry Callback Cancellation
 
 **UID**: SWR-HSM-031
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Inspection
-**Rationale**: Configurable triggers provide flexibility to associate automatic actions with either the entry or exit phase of a state lifecycle.
+**Verification**: Test
+**Rationale**: Entry cancellation enables validation logic that rejects transitions at the target state.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-024
 
-The library SHALL allow automatic state-associated actions to be configured to occur either when entering or when leaving a state.
+The library SHALL allow a state entry callback to cancel the in-progress transition by returning a cancellation indication. When an entry callback cancels, the library SHALL stop the callback sequence and restore the source state as the active state. No compensating entry or exit callbacks SHALL be invoked during restoration. Side effects of callbacks already executed before the cancellation are not undone.
 
-### Action Conditioned on Successful Transition
+### State Entry Callback
 
 **UID**: SWR-HSM-032
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Automatic actions represent committed side effects that should only occur when the state machine actually reaches or leaves the configured state; executing them on cancelled transitions would produce inconsistent behavior.
+**Rationale**: Entry callbacks enable initialization logic tied to becoming active.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-025
 
-The library SHALL execute automatic state-associated actions only when the corresponding state transition completes successfully. The library SHALL NOT execute automatic actions when a transition is cancelled by entry or exit behavior.
+The library SHALL execute an application-defined entry callback when a state is entered as part of a transition. The entry callback SHALL receive any data associated with the triggering transition.
 
-### Behavior Binding
+### State Exit Callback
 
 **UID**: SWR-HSM-033
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Supporting multiple binding styles accommodates different programming paradigms and enables flexible integration with application architectures.
+**Rationale**: Exit callbacks enable cleanup logic and resource release.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-004
+  **ID**: SYS-HSM-025
 
-The library SHALL support associating application-defined behavior with state lifecycle and transition operations using multiple binding styles.
+The library SHALL execute an application-defined exit callback when a state is exited as part of a transition.
 
-## Event Processing
-
-### Asynchronous Event Processing
+### State-Changed Callback
 
 **UID**: SWR-HSM-034
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Asynchronous processing decouples event producers from state machine execution, enabling responsive systems where callers are not blocked by event handling.
+**Rationale**: Post-activation callback provides a safe point for operations that depend on the state being fully entered.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-005
+  **ID**: SYS-HSM-025
 
-The library SHALL support asynchronous event processing where the caller submitting an event returns immediately without executing the state machine processing. The library SHALL process the submitted event independently of the submitting caller.
+The library SHALL execute an application-defined state-changed callback after a state has become fully active. The state-changed callback SHALL receive any data associated with the triggering transition.
 
-### Event Processing Order (FIFO)
+### Transition Callback
 
 **UID**: SWR-HSM-035
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: FIFO ordering preserves causal relationships between events and ensures deterministic processing when multiple events are queued.
+**Rationale**: Transition callbacks enable side effects associated with the act of transitioning.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-005
+  **ID**: SYS-HSM-025
 
-The library SHALL process asynchronously submitted events in first-in-first-out order. The library SHALL maintain FIFO ordering unless pending events are explicitly discarded by the application.
+The library SHALL support an application-defined callback associated with a transition. The transition callback SHALL receive any data associated with the triggering transition. The transition callback is non-cancellable.
 
-### Re-Entrancy Prevention
+### Multiple Behavior Binding Styles
 
 **UID**: SWR-HSM-036
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Test
-**Rationale**: Nested event processing during an active transition can violate sequential event-processing guarantees and produce inconsistent state machine configurations.
+**Verification**: Review
+**Rationale**: Supporting multiple binding styles accommodates different programming paradigms. These are intentional API guarantees.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-005
+  **ID**: SYS-HSM-025
 
-The library SHALL prevent nested event processing during an active event-processing cycle. When application-defined behavior triggered by an event submits additional events, the library SHALL defer those events for later processing rather than executing them immediately within the current cycle.
+The library SHALL support associating application-defined behavior with state lifecycle and transition operations using at least: class member function pointers, free function pointers, and lambda/functor objects.
 
-### Internal Work Priority
+## Declarative State-Associated Actions
+
+### Automatic Timer Start on State Lifecycle
 
 **UID**: SWR-HSM-037
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Prioritizing internally generated work ensures that state machine housekeeping (such as automatic event generation or completion events) finishes before externally submitted events alter the configuration.
+**Rationale**: Declarative timer start eliminates boilerplate for common timeout patterns.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-005
+  **ID**: SYS-HSM-026
 
-The library SHALL process internally generated state machine work with higher priority than externally submitted events. The library SHALL execute pending internal work immediately after the current event processing completes, before processing the next externally submitted event.
+The library SHALL support configuration to automatically start a specified timer when a state is entered or exited.
 
-## Concurrency and Thread Safety
-
-### Thread-Safe Event Submission
+### Automatic Timer Stop on State Lifecycle
 
 **UID**: SWR-HSM-038
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Multi-threaded applications frequently produce events from worker threads or network callbacks that must be safely delivered to the state machine without data corruption or undefined behavior.
+**Rationale**: Automatic timer cancellation prevents stale timeouts from firing after state transitions.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-006
+  **ID**: SYS-HSM-026
 
-The library SHALL guarantee that event submission operates correctly when performed concurrently from multiple threads. Concurrent event submissions SHALL NOT cause data corruption, lost events, or undefined behavior.
+The library SHALL support configuration to automatically stop a specified timer when a state is entered or exited.
 
-### Thread-Safe Timer Operations
+### Automatic Timer Restart on State Lifecycle
 
 **UID**: SWR-HSM-039
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Timers may be started or stopped from different threads than the one running the event-processing loop; safe concurrent access prevents race conditions and resource corruption.
+**Rationale**: Timer restart enables watchdog-style patterns where re-entering a state resets a deadline.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-006
+  **ID**: SYS-HSM-026
 
-The library SHALL guarantee that timer control operations (start, stop, restart, and status query) operate correctly when invoked concurrently from multiple threads. Concurrent timer operations SHALL NOT cause data corruption or undefined behavior.
+The library SHALL support configuration to automatically restart a specified timer with its original parameters when a state is entered or exited.
 
-### Thread-Safe Transition Operations
+### Automatic Event Generation on State Lifecycle
 
 **UID**: SWR-HSM-040
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: The transition interface is the primary entry point for external threads to interact with the state machine and must remain safe for concurrent use to prevent state corruption.
+**Rationale**: Automatic event generation enables transient states and cascading patterns.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-006
+  **ID**: SYS-HSM-026
 
-The library SHALL guarantee that externally accessible transition operations operate correctly when invoked concurrently from multiple threads. Concurrent transition requests SHALL NOT cause state corruption or undefined behavior.
+The library SHALL support configuration to automatically generate a specified event when a state is entered or exited.
 
-### ISR-Safe Transitions
+### Declarative Action Execution Condition
 
 **UID**: SWR-HSM-041
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Certain concurrency contexts (interrupt service routines, signal handlers) cannot safely use dynamic memory allocation; a pre-allocated mechanism enables safe state machine interaction from such contexts.
+**Rationale**: Declarative actions are committed side effects that should only occur on successful transitions.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-006
+  **ID**: SYS-HSM-026
 
-The library SHALL provide a transition mechanism suitable for execution from concurrency contexts in which dynamic memory allocation is prohibited. The mechanism SHALL allow interrupt service routines and signal handlers to request transitions without allocating memory at invocation time.
+The library SHALL execute a declarative state-associated action only after its associated state lifecycle operation has completed successfully. Declarative actions SHALL be skipped for cancelled state lifecycle operations.
 
-### Configurable Thread Safety
+## Event Processing
+
+### Asynchronous Event Submission
 
 **UID**: SWR-HSM-042
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Single-threaded or bare-metal environments benefit from eliminating synchronization overhead when thread safety is not required; configurability allows the library to serve both use cases.
+**Rationale**: Asynchronous processing decouples event producers from state machine execution.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-006
+  **ID**: SYS-HSM-027
 
-The library SHALL support enabling or disabling thread-safety mechanisms according to deployment requirements. When thread safety is disabled, the library SHALL omit synchronization overhead from event submission, timer operations, and transition operations.
+The library SHALL provide an asynchronous event submission operation where the caller returns immediately without waiting for the event to be processed. The submitted event SHALL be queued for later processing by the event-processing context.
 
-### Non-Thread-Safe Structural Configuration
+### FIFO Event Processing Order
 
 **UID**: SWR-HSM-043
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Review
-**Rationale**: Structural configuration occurs during setup before the state machine begins processing events; restricting configuration to a single thread simplifies initialization and avoids unnecessary synchronization overhead.
+**Verification**: Test
+**Rationale**: FIFO ordering preserves causal relationships between events.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-006
+  **ID**: SYS-HSM-028
 
-Structural configuration of states, transitions, and actions SHALL be completed from a single thread before initialization. The library is not required to guarantee correct behavior when structural configuration is performed concurrently from multiple threads.
+The library SHALL process externally submitted events in first-in-first-out order within the external event queue. The library SHALL maintain FIFO ordering unless pending events are explicitly discarded by the application.
 
-### CPU-Efficient Synchronous Wait
+### Internal Event Priority
 
 **UID**: SWR-HSM-044
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Analysis
-**Rationale**: Efficient waiting preserves CPU resources, which is critical on battery-powered and real-time systems where busy-wait loops waste energy and reduce scheduling availability.
+**Verification**: Test
+**Rationale**: Prioritizing internally generated work ensures state machine housekeeping (completion events, automatic actions) finishes before new external events alter the configuration. This is an intentional software-level semantic.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-006
+  **ID**: SYS-HSM-028
 
-The library SHALL implement synchronous transition waiting in a CPU-efficient manner. The wait mechanism SHALL NOT consume processor resources while the transition has not yet completed.
+The library SHALL process internally generated events before the next externally submitted event. Internally generated events include events produced by declarative actions, timer expirations processed during a transition, and events generated as a result of entering a final state. All pending internally generated events, including those generated recursively, SHALL be processed before the next externally submitted event. Internally generated events SHALL be processed in generation order.
 
-## Hierarchical and Parallel States
-
-### Hierarchical State Relationships
+### Deferred Event Processing
 
 **UID**: SWR-HSM-045
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Hierarchical nesting enables complex behavior to be decomposed into manageable layers with shared transitions at the parent level.
+**Rationale**: Preventing nested processing during an active transition avoids inconsistent state configurations.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-007
+  **ID**: SYS-HSM-029
 
-The library SHALL support hierarchical parent-child relationships between states, forming a nested state structure. A child state SHALL be active only when its parent state is active.
+When application-defined behavior triggered by an event submits additional events, the library SHALL defer those events for later processing rather than executing them immediately within the current processing cycle.
 
-### Hierarchical Structure Validation
+### Invalid Operation Error Conditions
 
 **UID**: SWR-HSM-046
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Structural validation catches design errors at setup time rather than producing unexpected behavior at runtime.
+**Rationale**: Defined error conditions prevent undefined behavior from invalid API usage and provide a testable contract.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-007
+  **ID**: SYS-HSM-031
 
-When structure validation is enabled, the library SHALL detect and reject invalid hierarchical configurations. The library SHALL reject circular dependencies, assignment of a child state to multiple parents, and definition of a state as its own parent.
+The library SHALL report an error for the following conditions: transition requests on an uninitialized state machine, structural modifications after initialization, operations with invalid identifier parameters, and event submission when the event queue is full. Additional implementation-specific error conditions MAY be reported.
 
-### Entry Points
+### Error Reporting Mechanism
 
 **UID**: SWR-HSM-047
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Test
-**Rationale**: Entry points enable directed activation into specific substates based on the triggering context.
+**Verification**: Review
+**Rationale**: A consistent error-reporting mechanism enables uniform error handling across all library operations independently of specific error conditions.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-007
+  **ID**: SYS-HSM-031
 
-The library SHALL support entry point substates that determine which child state becomes active when the parent state is entered. When an entry point is defined for a parent state, the library SHALL activate the designated child state upon entry to the parent.
+The library SHALL provide a uniform mechanism for reporting operation failures to the caller. All operations capable of failing SHALL use this common mechanism to communicate failure to the caller.
 
-### Conditional Entry Points
+## Concurrency and Thread Safety
 
-**UID**: SWR-HSM-048
-**Nature**: Functional
-**Criticality**: NonSafety
-**Security**: No
-**Verification**: Test
-**Rationale**: Conditional entry points enable dynamic routing into substates based on runtime conditions without requiring intermediate transition states.
-**Relations**:
-- **Type**: Parent \
-  **ID**: SYS-HSM-007
-
-The library SHALL support conditional entry points where the active child state is selected based on a runtime condition evaluated at the time of parent state entry. When the triggering event is relevant, the library SHALL make it available to the condition evaluation.
-
-### Hierarchical Transition Resolution
+### Thread-Safe Timer Operations
 
 **UID**: SWR-HSM-049
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Hierarchical event propagation is the defining feature of statecharts, allowing parent states to handle events not handled by their children.
+**Rationale**: Timers may be started or stopped from different threads than the event-processing loop.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-007
+  **ID**: SYS-HSM-033
 
-When no transition is defined for an event in the active substate, the library SHALL propagate the event to parent states. The library SHALL attempt to find a matching transition at each successive ancestor level until a match is found or the topmost state is reached.
+The library SHALL guarantee that timer control operations (start, stop, restart, and status query) preserve timer state consistency when invoked concurrently from multiple threads. Each operation SHALL produce a valid timer state upon completion.
 
-### Parallel Region Support
+### Thread-Safe Transition Operations
 
 **UID**: SWR-HSM-050
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Parallel states model independent concurrent concerns within a single state machine without requiring separate state machine instances.
+**Rationale**: The transition and event submission interfaces are the primary entry points for external execution contexts.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-007
+  **ID**: SYS-HSM-032
 
-The library SHALL support parallel (orthogonal) regions where multiple states are simultaneously active within a parent state. Each parallel region SHALL maintain its own active state independently of other regions.
+The library SHALL guarantee that externally submitted transition requests and event submissions operate correctly when invoked concurrently from multiple execution contexts. The library SHALL preserve data integrity and state configuration consistency throughout concurrent access.
 
-### Independent Event Processing in Parallel Regions
+### Restricted-Context Transition Mechanism
 
 **UID**: SWR-HSM-051
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Independent processing ensures that parallel regions behave as logically separate state machines sharing a parent context.
+**Rationale**: Restricted execution contexts (interrupt service routines, signal handlers) cannot safely use dynamic memory allocation.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-007
+  **ID**: SYS-HSM-035
 
-The library SHALL deliver each event to all active parallel regions. Each region SHALL independently process or ignore the event based on its own transition definitions.
+The library SHALL provide a transition mechanism suitable for execution from restricted contexts in which dynamic memory allocation is not permitted. The mechanism SHALL use only pre-allocated resources at invocation time.
 
-### Shallow History
+### Compile-Time Thread Safety Configuration
 
 **UID**: SWR-HSM-052
-**Nature**: Functional
+**Nature**: NonFunctional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Shallow history enables resume-where-you-left-off behavior at one level of nesting without restoring deeper substates.
+**Rationale**: Single-threaded environments benefit from eliminating synchronization overhead.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-007
+  **ID**: SYS-HSM-036
 
-The library SHALL support shallow history states. When re-entering a parent state via a shallow history state, the library SHALL restore the last active direct child state of that parent. The library SHALL record the active direct child state when the parent state is exited.
+The library SHALL support a compile-time configuration option to enable or disable thread-safety mechanisms. When thread safety is disabled, the library SHALL omit synchronization operations from event submission, timer operations, and transition operations. When disabled, the application is responsible for ensuring single-threaded access.
 
-### Deep History
+### Single-Threaded Structural Configuration
 
 **UID**: SWR-HSM-053
-**Nature**: Functional
+**Nature**: NonFunctional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Test
-**Rationale**: Deep history restores the full nested state configuration, enabling seamless resumption of complex multi-level workflows.
+**Verification**: Design
+**Rationale**: Structural configuration occurs during setup before event processing begins.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-007
+  **ID**: SYS-HSM-036
 
-The library SHALL support deep history states. When re-entering a parent state via a deep history state, the library SHALL restore the entire substate hierarchy that was active when the parent was last exited. The library SHALL record the full substate hierarchy when the parent state is exited.
+Structural configuration operations (registration of states, transitions, and actions) SHALL be performed from a single execution context. This constraint applies only during the configuration phase preceding initialization and does not restrict runtime operation.
 
-### History Default Target
+## Hierarchical States
+
+### Parent-Child State Registration
 
 **UID**: SWR-HSM-054
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: A default target provides deterministic behavior on first entry when no prior history exists, preventing undefined state configurations.
+**Rationale**: Hierarchical nesting enables complex behavior to be decomposed into manageable layers.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-007
+  **ID**: SYS-HSM-037
 
-The library SHALL allow a default target state to be specified for a history state. When a transition targets a history state and no history has been recorded, the library SHALL activate the default target state instead.
+The library SHALL support registration of hierarchical parent-child relationships between states. A child state SHALL be active only when its parent state is active.
 
-### History Restoration Behavior
+### Hierarchical Structure Validation
 
 **UID**: SWR-HSM-055
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Application-defined behavior on history restoration allows applications to perform setup that depends on which historical state is being restored.
+**Rationale**: Structural validation catches design errors at configuration time.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-007
+  **ID**: SYS-HSM-038
 
-The library SHALL support optional application-defined behavior associated with restoration through a history state. The library SHALL execute the restoration behavior when a history state activates its recorded target.
+The library SHALL, when structure validation is enabled, detect and reject invalid hierarchical configurations. Minimum validated conditions SHALL include: circular parent-child dependencies, assignment of a child state to multiple parents, definition of a state as its own parent, and composite states without a designated initial substate.
 
-## Timer Management
-
-### Timer Definition and Event Association
+### Entry Point Registration
 
 **UID**: SWR-HSM-056
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Timers provide a time-based event source that enables timeout patterns, periodic polling, and deadline enforcement within the state machine without requiring external scheduling infrastructure.
+**Rationale**: Entry points enable directed activation into specific substates.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-008
+  **ID**: SYS-HSM-039
 
-The library SHALL support uniquely identified timers, each associated with a specified event. When a timer expires, the library SHALL deliver the associated event to the state machine for processing.
+The library SHALL support registration of entry point substates. When an entry point is defined for a parent state, the library SHALL activate the designated child state upon entry to the parent.
 
-### Single-Shot Timers
+### Conditional Entry Point Registration
 
 **UID**: SWR-HSM-057
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Single-shot timers enable one-time deadline and timeout patterns where an event fires exactly once after a specified delay, preventing unintended repeated firings.
+**Rationale**: Conditional entry points enable dynamic routing into substates based on runtime conditions.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-008
+  **ID**: SYS-HSM-040
 
-The library SHALL support single-shot timers that fire once after the specified interval elapses and then stop automatically without further intervention.
+The library SHALL support conditional entry points where the active child state is selected based on a runtime condition callback evaluated at the time of parent state entry. The condition callback SHALL receive the triggering event identifier as input.
 
-### Repeating Timers
+### Hierarchical Event Propagation
 
 **UID**: SWR-HSM-058
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Repeating timers enable periodic patterns such as heartbeats, polling, and watchdog refreshes where the same event must fire at regular intervals until explicitly cancelled.
+**Rationale**: Hierarchical event propagation is the defining feature of statecharts.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-008
+  **ID**: SYS-HSM-041
 
-The library SHALL support repeating timers that fire periodically at the specified interval until explicitly stopped. Each firing SHALL deliver the associated event to the state machine.
+When no applicable transition for an event can be executed in the active substate, the library SHALL evaluate applicable transitions in successive ancestor states until a transition can be executed or the topmost state is reached.
 
-### Timer Lifecycle Control
+### Hierarchical Callback Order
 
 **UID**: SWR-HSM-059
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Full lifecycle control (start, stop, restart) allows applications to manage timer behavior dynamically in response to state changes, user actions, or external conditions.
+**Rationale**: Predictable lifecycle ordering is essential for initialization/cleanup logic in nested states.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-008
+  **ID**: SYS-HSM-042
 
-The library SHALL support starting a timer with a specified interval and mode (single-shot or repeating), stopping a currently running timer, and restarting a timer with its original parameters. Stopping a timer that is not running SHALL have no adverse effect.
+When entering a hierarchical state configuration, the library SHALL execute entry callbacks in top-down order (ancestor before descendant). When exiting, the library SHALL execute exit callbacks in bottom-up order (descendant before ancestor).
 
-### Timer Running Status Query
+## Parallel States
+
+### Parallel Region Registration
 
 **UID**: SWR-HSM-060
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Querying timer status enables conditional logic that depends on whether a timeout is pending, supporting patterns such as conditional timer restart and status reporting.
+**Rationale**: Parallel states model independent concurrent concerns within a single state machine.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-008
+  **ID**: SYS-HSM-043
 
-The library SHALL provide the ability to determine whether a specific timer is currently running. The query SHALL return a definitive running or not-running indication for the specified timer.
+The library SHALL support registration of parallel (orthogonal) regions within a parent state. Each parallel region SHALL maintain its own active state independently of other regions. All regions SHALL become active when the parent state is entered.
 
-## Tooling, Platforms, and Build
-
-### SCXML Input Format
+### Parallel Region Event Delivery
 
 **UID**: SWR-HSM-061
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: SCXML is a W3C standard that enables interoperability with visual editors and other statechart tools, providing a vendor-neutral input format for state machine definitions.
+**Rationale**: Independent processing ensures parallel regions behave as logically separate state machines.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-044
 
-The code generation tool SHALL accept W3C SCXML format as input for defining state machine structure.
+The library SHALL deliver each event to all active parallel regions in a deterministic order (registration order). Each region SHALL evaluate the event according to its own transition definitions independently of other regions. A transition executed by one region SHALL not prevent other regions from evaluating the same event.
 
-### C++ Code Generation
+## History States
+
+### Shallow History Registration and Restoration
 
 **UID**: SWR-HSM-062
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Generated code eliminates manual configuration errors and ensures the implementation matches the model exactly.
+**Rationale**: Shallow history enables resume-where-you-left-off behavior at one level of nesting.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-045
 
-The code generation tool SHALL produce C++ source artifacts that implement the state machine defined by the input SCXML model. The generated artifacts SHALL include all state, event, and timer definitions and the complete structural configuration.
+The library SHALL support registration of shallow history states. When re-entering a parent state via a shallow history state, the library SHALL restore the last active direct child state of that parent.
 
-### PlantUML Diagram Generation
+### Shallow History Recording
+
+**UID**: SWR-HSM-093
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Accurate history requires recording the active child state at the moment the parent is exited.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-045
+
+The library SHALL record the active direct child state when the parent state is exited. The recorded state SHALL be used for subsequent shallow history restoration.
+
+### Shallow History Clearing
+
+**UID**: SWR-HSM-094
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Release and re-initialization represent lifecycle boundaries where accumulated history must be discarded.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-045
+
+The library SHALL clear all recorded shallow history upon state machine release or re-initialization.
+
+### Deep History Registration and Restoration
 
 **UID**: SWR-HSM-063
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Generated diagrams provide always-up-to-date visual documentation of the state machine design without manual diagram maintenance.
+**Rationale**: Deep history restores the full nested state configuration for seamless resumption.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-046
 
-The code generation tool SHALL produce PlantUML state diagram files from SCXML input.
+The library SHALL support registration of deep history states. When re-entering a parent state via a deep history state, the library SHALL restore the entire substate hierarchy that was active when the parent was last exited.
 
-### SCXML Include Support
+### Deep History Recording
+
+**UID**: SWR-HSM-095
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Accurate deep history requires recording the complete active substate hierarchy at the moment the parent is exited.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-046
+
+The library SHALL record the complete active substate hierarchy when the parent state is exited. The recorded hierarchy SHALL be used for subsequent deep history restoration.
+
+### Deep History Clearing
+
+**UID**: SWR-HSM-096
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Release and re-initialization represent lifecycle boundaries where accumulated history must be discarded.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-046
+
+The library SHALL clear all recorded deep history upon state machine release or re-initialization.
+
+### History Default Target
 
 **UID**: SWR-HSM-064
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Include support enables modular SCXML definitions where large state machines can be split across multiple files for maintainability.
+**Rationale**: A default target provides deterministic behavior on first entry when no prior history exists.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-047
 
-The code generation tool SHALL support SCXML file composition via include elements and state source attributes, allowing a state machine definition to be assembled from multiple files.
+The library SHALL allow a default target state to be specified for a history state. When a transition targets a history state and no history has been recorded, the library SHALL activate the default target state instead.
 
-### Automatic Build Integration
+### History Restoration Callback
 
 **UID**: SWR-HSM-065
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Build integration ensures generated code stays in sync with models without manual regeneration steps, reducing the risk of stale artifacts.
+**Rationale**: Application-defined behavior on history restoration allows setup that depends on which historical state is restored. The restoration callback executes in addition to the normal entry callback.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-048
 
-The project SHALL support automatic regeneration of generated artifacts when their source state-machine definitions change.
+The library SHALL support an optional application-defined callback associated with restoration through a history state. The restoration callback SHALL execute when a history state activates its recorded target. The restoration callback SHALL execute before the normal entry callback for the restored state.
 
-### Debug Logging
+## Timer Management
+
+### Timer Registration and Event Association
 
 **UID**: SWR-HSM-066
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Structured logs enable post-mortem analysis of state machine behavior using dedicated tooling.
+**Rationale**: Timers provide a time-based event source enabling timeout patterns within the state machine.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-049
 
-When debug support is enabled, the library SHALL record state machine execution information including state transitions, events, and timer operations in a defined structured log format.
+The library SHALL support registration of timers identified by type-safe timer identifiers. Each timer SHALL be associated with a specified event identifier. When a timer expires, the library SHALL deliver the associated event to the state machine for processing.
 
-### Runtime Debug Enable/Disable
+### Single-Shot Timer Mode
 
 **UID**: SWR-HSM-067
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Runtime control allows selective debugging of specific scenarios without the overhead of always-on logging and without requiring a rebuild or redeployment.
+**Rationale**: Single-shot timers enable one-time deadline and timeout patterns.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-050
 
-The library SHALL support enabling and disabling debug logging at runtime without rebuilding or redeploying.
+The library SHALL support single-shot timers that fire once after the specified interval elapses and then stop automatically without further intervention.
 
-### Configurable Log Destination
+### Repeating Timer Mode
 
 **UID**: SWR-HSM-068
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Configurable destinations enable logging to appropriate locations in different deployment environments (files, consoles, network endpoints).
+**Rationale**: Repeating timers enable periodic patterns such as heartbeats, polling, and watchdog refreshes.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-051
 
-The library SHALL support configuring the debug log destination.
+The library SHALL support repeating timers that fire periodically at the specified interval until explicitly stopped. Each firing SHALL deliver the associated event to the state machine.
 
-### Visual Debugger Compatibility
+### Timer Start Operation
 
 **UID**: SWR-HSM-069
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Visual replay of state machine execution significantly reduces debugging time compared to reading raw logs.
+**Rationale**: Starting a timer initiates the countdown for event delivery.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-052
 
-The debug log format SHALL be compatible with the visual analysis tool for replaying and inspecting state machine execution.
+The library SHALL provide an operation to start a timer with a specified interval and mode (single-shot or repeating).
 
-### Human-Readable Names in Debug Output
+### Timer Stop Operation
 
 **UID**: SWR-HSM-070
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Inspection
-**Rationale**: Readable names in debug output make logs immediately interpretable without cross-referencing identifier definitions.
+**Verification**: Test
+**Rationale**: Stopping a timer cancels pending event delivery.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-052
 
-The library SHALL support resolving state and event identifiers to human-readable names in debug output.
+The library SHALL provide an operation to stop a currently running timer. Stopping a timer that is not running SHALL have no adverse effect. After a timer stop operation completes, the timer SHALL generate no further expiration events. Any expiration event already queued but not yet processed at the time of stop SHALL be discarded.
 
-### Linux Platform Support
+### Timer Restart Operation
 
 **UID**: SWR-HSM-071
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Linux is the primary development and deployment platform for most use cases of the library.
+**Rationale**: Restart enables watchdog-reset patterns without separate stop/start sequences.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-052
 
-The library SHALL support execution on Linux, including full multi-threading and concurrency-safe transitions.
+The library SHALL provide an operation to restart a timer with its original parameters, resetting the countdown from zero. Restart SHALL be equivalent to stop followed by start: any previously queued expiration event SHALL be discarded before the new countdown begins.
 
-### QNX Platform Support
+### Timer Running Status Query
 
 **UID**: SWR-HSM-072
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: QNX is a common RTOS in automotive and industrial systems where hierarchical state machines are heavily used.
+**Rationale**: Querying timer status enables conditional logic that depends on whether a timeout is pending.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-053
 
-The library SHALL support execution on QNX, including multi-threading support.
+The library SHALL provide an operation to determine whether a specific timer is currently running. The query SHALL return a definitive running or not-running indication.
 
-### Windows Platform Support
+## Code Generation
+
+### SCXML Input Parsing
 
 **UID**: SWR-HSM-073
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Windows support enables development and testing on developer workstations and Windows-based embedded systems.
+**Rationale**: SCXML is a W3C standard enabling interoperability with visual editors and other statechart tools.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-054
 
-The library SHALL support execution on Windows, including multi-threading support.
+The code generation tool SHALL parse W3C SCXML format files as input for defining state machine structure. The tool SHALL support the hsmcpp-relevant subset of SCXML elements including states, transitions, parallel regions, and history states.
 
-### FreeRTOS Platform Support
+### SCXML Composition Support
 
 **UID**: SWR-HSM-074
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: FreeRTOS is the most widely deployed RTOS in embedded systems and requires native task-based integration.
+**Rationale**: Composition support enables modular SCXML definitions where large state machines can be split across files.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-058
 
-The library SHALL support execution on FreeRTOS (V10.3.1 and later), including multi-threading and concurrency-safe transitions.
+The code generation tool SHALL support assembling a state machine definition from multiple SCXML source files.
 
-### Arduino Platform Support
+### Generated State-Machine Content
 
 **UID**: SWR-HSM-075
-**Nature**: NonFunctional
+**Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Test
-**Rationale**: Arduino environments are single-threaded cooperative systems that rely on polling loops rather than preemptive scheduling.
+**Verification**: Review
+**Rationale**: Generated code eliminates manual configuration errors and ensures the implementation matches the model.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-055
 
-The library SHALL support execution on Arduino. The Arduino configuration SHALL support concurrency-safe transitions but SHALL NOT require multi-threading.
+The code generation tool SHALL produce C++ source and header files that implement the state machine defined by the input SCXML model. The generated artifacts SHALL include all state, event, and timer identifier definitions and the complete structural configuration (state registration, transition registration, timer bindings).
 
-### Custom Event-Processing Integration
+### Application Extension Mechanism
+
+**UID**: SWR-HSM-097
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Review
+**Rationale**: The base class pattern is the public API contract enabling regeneration without overwriting application logic.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-055
+
+The generated code SHALL use a base class pattern where the generated class provides structure registration and declares virtual callback methods. Applications SHALL derive from the generated class to implement callback behavior. Regeneration of the base class SHALL not require modification of application-derived code.
+
+### SCXML Model Validation
 
 **UID**: SWR-HSM-076
 **Nature**: Functional
 **Criticality**: NonSafety
-**Security**: No
 **Verification**: Test
-**Rationale**: Custom integration enables use with proprietary event loops, RTOSes, or frameworks not covered by built-in platform support.
+**Rationale**: Invalid models must be detected before code generation to prevent generating incorrect state machines.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-056
 
-The library SHALL support integration with application-defined event-processing mechanisms.
+The code generation tool SHALL validate the input SCXML model before generating code. The tool SHALL report errors for structural and semantic violations that would prevent valid state machine execution. Minimum validated conditions SHALL include: undefined state references in transitions, circular hierarchies, and missing initial states in composite states.
 
-### Optional Capabilities
+### PlantUML Diagram Generation
 
 **UID**: SWR-HSM-077
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Generated diagrams provide always-up-to-date visual documentation.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-057
+
+The code generation tool SHALL produce PlantUML state diagram files from SCXML input. The generated diagrams SHALL represent states, transitions, guards, hierarchical relationships, and parallel regions.
+
+### Automatic Regeneration on Model Change
+
+**UID**: SWR-HSM-078
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Automatic regeneration ensures generated code stays in sync with models without manual intervention.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-059
+
+The project SHALL provide build-system integration that automatically invokes the code generation tool when source SCXML files change, ensuring generated artifacts are regenerated during the build process.
+
+## Debugging and Observability
+
+### Structured Debug Log Format
+
+**UID**: SWR-HSM-079
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: A structured format enables post-mortem analysis and tool-based replay.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-060
+
+When debug support is enabled, the library SHALL record state machine execution information in a defined structured log format. The log SHALL capture: state transitions (source, target, event), event submissions, and timer operations (start, stop, expire). Log entries SHALL include sufficient ordering information to reconstruct the execution sequence.
+
+### Compile-Time Debug Exclusion
+
+**UID**: SWR-HSM-080
 **Nature**: NonFunctional
 **Criticality**: NonSafety
-**Security**: No
-**Verification**: Inspection
+**Verification**: Test
+**Rationale**: Embedded deployments may need to completely eliminate debug code to minimize binary size.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-060
+
+The library SHALL support a compile-time option that excludes debug logging implementation from the built binary when disabled.
+
+### Runtime Debug Enable/Disable
+
+**UID**: SWR-HSM-081
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Runtime control allows selective debugging without rebuilding.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-061
+
+The library SHALL provide an API to enable and disable debug logging at runtime without rebuilding. Changes SHALL take effect for the next logged event.
+
+### Configurable Debug Log Destination
+
+**UID**: SWR-HSM-082
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Different deployment environments require different log destinations.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-060
+
+The library SHALL support configuring the debug log output destination. The library SHALL allow applications to provide a custom log output implementation.
+
+### Diagnostic Tool Compatibility
+
+**UID**: SWR-HSM-083
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Visual replay significantly reduces debugging time compared to reading raw logs.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-063
+
+The debug log format SHALL be documented and parseable, enabling compatible diagnostic tools to replay and inspect state machine execution sequences.
+
+### Human-Readable Identifier Names
+
+**UID**: SWR-HSM-084
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Readable names make debug output immediately interpretable.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-060
+
+The library SHALL support registering human-readable string names for state and event identifiers. When debug logging is active, the library SHALL include registered names in log output.
+
+## Platform Support
+
+### Linux Platform Support
+
+**UID**: SWR-HSM-085
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Linux is the primary development and deployment platform.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-065
+
+The library SHALL compile and execute correctly on Linux.
+
+### Linux STD Event-Processing Dispatcher
+
+**UID**: SWR-HSM-098
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: A C++ standard library-based dispatcher provides out-of-box event processing on Linux without external dependencies.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-003
+
+The library SHALL provide an event-processing dispatcher for Linux based on the C++ standard library (std::thread, std::condition_variable).
+
+### QNX Platform Support
+
+**UID**: SWR-HSM-086
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: QNX is a common RTOS in automotive and industrial systems.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-066
+
+The library SHALL compile and execute correctly on QNX.
+
+### QNX STD Event-Processing Dispatcher
+
+**UID**: SWR-HSM-099
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: QNX supports POSIX and C++ standard threading; a std-based dispatcher enables immediate use.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-003
+
+The library SHALL provide an event-processing dispatcher for QNX based on the C++ standard library.
+
+### Windows Platform Support
+
+**UID**: SWR-HSM-087
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Windows support enables development and testing on developer workstations.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-067
+
+The library SHALL compile and execute correctly on Windows.
+
+### Windows STD Event-Processing Dispatcher
+
+**UID**: SWR-HSM-100
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: A C++ standard library-based dispatcher provides out-of-box event processing on Windows.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-003
+
+The library SHALL provide an event-processing dispatcher for Windows based on the C++ standard library.
+
+### FreeRTOS Platform Support
+
+**UID**: SWR-HSM-088
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: FreeRTOS is widely deployed in embedded systems.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-068
+
+The library SHALL compile and execute correctly on FreeRTOS (V10.3.1 and later).
+
+### FreeRTOS Event-Processing Dispatcher
+
+**UID**: SWR-HSM-101
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: FreeRTOS requires a dedicated dispatcher using native task and queue primitives.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-003
+
+The library SHALL provide an event-processing dispatcher for FreeRTOS based on FreeRTOS tasks and queues.
+
+### Arduino Platform Support
+
+**UID**: SWR-HSM-089
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Arduino environments are single-threaded cooperative systems.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-069
+
+The library SHALL compile and execute correctly on Arduino.
+
+### Arduino Event-Processing Dispatcher
+
+**UID**: SWR-HSM-102
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Arduino lacks threading; the dispatcher must operate cooperatively within the Arduino loop() function.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-003
+
+The library SHALL provide an event-processing dispatcher for Arduino that operates cooperatively within a single-threaded execution model.
+
+### Arduino Execution Constraints
+
+**UID**: SWR-HSM-103
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Arduino's constrained environment requires restricted-context compatibility and single-threaded operation guarantees.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-036
+
+The Arduino configuration SHALL support the restricted-context transition mechanism. The Arduino configuration SHALL operate without thread-safety overhead.
+
+### GLib Event-Processing Integration
+
+**UID**: SWR-HSM-090
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: GLib-based applications benefit from native integration with the GLib main loop.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-004
+
+The library SHALL provide an event-processing implementation that integrates with the GLib main event loop.
+
+### Qt Event-Processing Integration
+
+**UID**: SWR-HSM-091
+**Nature**: Functional
+**Criticality**: NonSafety
+**Verification**: Test
+**Rationale**: Qt-based applications benefit from native integration with the Qt event system.
+**Relations**:
+- **Type**: Parent \
+  **ID**: SYS-HSM-004
+
+The library SHALL provide an event-processing implementation that integrates with the Qt event loop.
+
+### Optional Capability Configuration
+
+**UID**: SWR-HSM-092
+**Nature**: NonFunctional
+**Criticality**: NonSafety
+**Verification**: Test
 **Rationale**: Selective capability inclusion minimizes binary size and dependencies on resource-constrained platforms.
 **Relations**:
 - **Type**: Parent \
-  **ID**: SYS-HSM-009
+  **ID**: SYS-HSM-036
 
-The library SHALL support independently enabling or disabling the following capabilities according to deployment requirements: debug logging, structure validation, thread safety, and platform-specific integrations.
+The library SHALL support independently enabling or disabling the following capabilities via build configuration: debug logging, structure validation, and thread safety.

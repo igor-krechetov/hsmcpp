@@ -1142,7 +1142,41 @@ HsmEventStatus HierarchicalStateMachine::Impl::processExternalTransition(const P
         curTransition.onTransition(event.getArgs());
     }
 
-    if (true == onStateEntering(curTransition.destinationState, event.getArgs())) {
+    bool isEntryAllowed = true;
+    std::list<StateID_t> enteredAncestors;
+
+    // enter inactive ancestors of destinationState first (outermost to innermost)
+    {
+        std::list<StateID_t> statesToEnter;
+        StateID_t parentState = INVALID_HSM_STATE_ID;
+        StateID_t curState = curTransition.destinationState;
+
+        while (true == getParentState(curState, parentState)) {
+            // stop at common ancestor
+            if ((parentState == fromState) || (true == isSubstateOf(parentState, fromState))) {
+                break;
+            }
+
+            statesToEnter.push_front(parentState);
+            curState = parentState;
+        }
+
+        for (const StateID_t& stateToEnter : statesToEnter) {
+            if (false == isStateActive(stateToEnter)) {
+                if (true == onStateEntering(stateToEnter, event.getArgs())) {
+                    (void)addActiveState(stateToEnter);
+                    onStateChanged(stateToEnter, event.getArgs());
+                    enteredAncestors.emplace_back(stateToEnter);
+                } else {
+                    // entry was canceled by client callback
+                    isEntryAllowed = false;
+                    break;
+                }
+            }
+        }
+    }
+
+    if ((true == isEntryAllowed) && (true == onStateEntering(curTransition.destinationState, event.getArgs()))) {
         if (true == replaceActiveState(fromState, curTransition.destinationState)) {
             onStateChanged(curTransition.destinationState, event.getArgs());
         }
@@ -1182,6 +1216,11 @@ HsmEventStatus HierarchicalStateMachine::Impl::processExternalTransition(const P
             }
         }
     } else {
+        // rollback: remove states entered above and restore exited states
+        for (const StateID_t& curState : enteredAncestors) {
+            mActiveStates.remove(curState);
+        }
+
         for (const StateID_t& curState : exitedStates) {
             // to prevent infinite loops we don't allow state to cancel transition
             (void)onStateEntering(curState, VariantVector_t());

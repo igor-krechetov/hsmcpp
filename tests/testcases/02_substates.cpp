@@ -611,3 +611,178 @@ TEST_F(ABCHsm, substate_parent_as_initial) {
     // VALIDATION
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::B}));
 }
+TEST_F(ABCHsm, substate_exit_parent_via_child_transition) {
+    TEST_DESCRIPTION("transition registered on a child state must exit parent states when crossing composite boundary");
+    /*
+    @startuml
+    left to right direction
+    title substate_exit_parent_via_child_transition
+
+    A -[#blue,bold]-> P1: E1
+    state P1 {
+        [*] --> B
+        B -[#green,bold]-> D : E2
+    }
+    D -[#magenta,bold]-> P1: E3
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, &ABCHsm::onBExit);
+    registerState<ABCHsm>(AbcState::D, this, &ABCHsm::onD);
+    registerState<ABCHsm>(AbcState::P1, this, &ABCHsm::onP1, &ABCHsm::onP1Enter, &ABCHsm::onP1Exit);
+
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B));
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    // transition is registered on a child state and targets a state outside of the parent
+    registerTransition(AbcState::B, AbcState::D, AbcEvent::E2);
+    registerTransition(AbcState::D, AbcState::P1, AbcEvent::E3);
+
+    initializeHsm();
+
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
+
+    //-------------------------------------------
+    // VALIDATION
+    // both child and parent states must be exited
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::D}));
+    EXPECT_EQ(mStateCounterBExit, 1);
+    EXPECT_EQ(mStateCounterP1Exit, 1);
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E3, TIMEOUT_SYNC_TRANSITION));
+
+    //-------------------------------------------
+    // VALIDATION
+    // parent state must be entered again when re-entering the composite
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
+    EXPECT_EQ(mStateCounterP1, 2);
+    EXPECT_EQ(mStateCounterP1Enter, 2);
+    EXPECT_EQ(mStateCounterBEnter, 2);
+}
+
+TEST_F(ABCHsm, substate_enter_child_directly) {
+    TEST_DESCRIPTION("transition directly into a substate must enter its inactive parent states");
+    /*
+    @startuml
+    left to right direction
+    title substate_enter_child_directly
+
+    A -[#blue,bold]-> P1: E1
+    state P1 {
+        [*] --> B
+    }
+    P1 -[#green,bold]-> D : E2
+    D -[#magenta,bold]-> B: E3
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, &ABCHsm::onBExit);
+    registerState<ABCHsm>(AbcState::D, this, &ABCHsm::onD);
+    registerState<ABCHsm>(AbcState::P1, this, &ABCHsm::onP1, &ABCHsm::onP1Enter, &ABCHsm::onP1Exit);
+
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B));
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::P1, AbcState::D, AbcEvent::E2);
+    registerTransition(AbcState::D, AbcState::B, AbcEvent::E3);
+
+    initializeHsm();
+
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::D}));
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E3, TIMEOUT_SYNC_TRANSITION));
+
+    //-------------------------------------------
+    // VALIDATION
+    // parent must be entered before the target substate
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
+    EXPECT_EQ(mStateCounterP1, 2);
+    EXPECT_EQ(mStateCounterP1Enter, 2);
+    EXPECT_EQ(mStateCounterP1Exit, 1);
+    EXPECT_EQ(mStateCounterBEnter, 2);
+    EXPECT_EQ(mStateCounterBExit, 1);
+}
+
+TEST_F(ABCHsm, substate_exit_parent_via_child_transition_multiple_layers) {
+    TEST_DESCRIPTION(
+        "transition registered on a nested child state must exit all parent states up to the least common ancestor");
+    /*
+    @startuml
+    left to right direction
+    title substate_exit_parent_via_child_transition_multiple_layers
+
+    A -[#blue,bold]-> P1: E1
+    state P1 {
+        [*] --> P2
+        state P2 {
+            [*] --> B
+            B -[#green,bold]-> D : E2
+        }
+    }
+    D -[#magenta,bold]-> P1: E3
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB, &ABCHsm::onBEnter, &ABCHsm::onBExit);
+    registerState<ABCHsm>(AbcState::D, this, &ABCHsm::onD);
+    registerState<ABCHsm>(AbcState::P1, this, &ABCHsm::onP1, &ABCHsm::onP1Enter, &ABCHsm::onP1Exit);
+    registerState<ABCHsm>(AbcState::P2, this, &ABCHsm::onP2, &ABCHsm::onP2Enter, &ABCHsm::onP2Exit);
+
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::P2));
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P2, AbcState::B));
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::B, AbcState::D, AbcEvent::E2);
+    registerTransition(AbcState::D, AbcState::P1, AbcEvent::E3);
+
+    initializeHsm();
+
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::B}));
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
+
+    //-------------------------------------------
+    // VALIDATION
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::D}));
+    EXPECT_EQ(mStateCounterBExit, 1);
+    EXPECT_EQ(mStateCounterP2Exit, 1);
+    EXPECT_EQ(mStateCounterP1Exit, 1);
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E3, TIMEOUT_SYNC_TRANSITION));
+
+    //-------------------------------------------
+    // VALIDATION
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::P2, AbcState::B}));
+    EXPECT_EQ(mStateCounterP1Enter, 2);
+    EXPECT_EQ(mStateCounterP2Enter, 2);
+    EXPECT_EQ(mStateCounterBEnter, 2);
+}

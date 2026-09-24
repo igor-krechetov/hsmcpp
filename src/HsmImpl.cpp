@@ -1297,13 +1297,36 @@ bool HierarchicalStateMachine::Impl::executeExitTransition(const PendingEventInf
              (TransitionType::EXTERNAL_TRANSITION == curTransition.transitionType)) &&
             // exit active states only during regular transitions
             (TransitionBehavior::REGULAR == event.transitionType)) {
-            // it's an outer transition from parent state. we need to find and exit all active substates
+            // find the topmost state to exit: highest ancestor of fromState
+            // which is not an ancestor of destinationState
+            StateID_t exitRoot = curTransition.fromState;
+            bool exitRootItself = true;
+
+            if (true == isSubstateOf(curTransition.fromState, curTransition.destinationState)) {
+                // destination is inside fromState: fromState stays active
+                exitRootItself = false;
+            } else {
+                StateID_t parentState = INVALID_HSM_STATE_ID;
+                StateID_t curState = curTransition.fromState;
+
+                while (true == getParentState(curState, parentState)) {
+                    if ((parentState == curTransition.destinationState) ||
+                        (true == isSubstateOf(parentState, curTransition.destinationState))) {
+                        break;
+                    }
+
+                    exitRoot = parentState;
+                    curState = parentState;
+                }
+            }
+
+            // it's an outer transition. exit all active states in the subtree, innermost first
             for (auto itActiveState = mActiveStates.rbegin(); itActiveState != mActiveStates.rend(); ++itActiveState) {
                 HSM_TRACE_DEBUG("OUTER EXIT: FROM=%s, ACTIVE=%s",
                                 getStateName(curTransition.fromState).c_str(),
                                 getStateName(*itActiveState).c_str());
-                if ((curTransition.fromState == *itActiveState) ||
-                    (true == isSubstateOf(curTransition.fromState, *itActiveState))) {
+                if (((true == exitRootItself) && (exitRoot == *itActiveState)) ||
+                    (true == isSubstateOf(exitRoot, *itActiveState))) {
                     isExitAllowed = onStateExiting(*itActiveState);
 
                     if (true == isExitAllowed) {

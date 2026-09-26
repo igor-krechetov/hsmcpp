@@ -21,14 +21,6 @@ The hsmcpp system SHALL compile and function correctly with C++11.
 
 The hsmcpp system SHALL provide type-safe state, event, and timer identifiers that allow users to define domain-specific identifier sets distinguishable at compile time.
 
-### Independent Event Processing
-
-**UID**: SYS-HSM-003
-**Nature**: Functional
-**Rationale**: Applications use hsmcpp in different execution environments; the product must not require integration with a specific external execution framework.
-
-The hsmcpp system SHALL provide event processing without requiring applications to integrate a specific external event-processing framework or runtime.
-
 ### Application-Specific Execution Environment Integration
 
 **UID**: SYS-HSM-004
@@ -89,11 +81,11 @@ The hsmcpp system SHALL support releasing a state machine from execution and ret
 
 ### State Machine Execution Status
 
-**UID**: SYS-HSM-xxx
+**UID**: SYS-HSM-075
 **Nature**: Functional
-**Rationale**: Applications may need to know if statemachine is running or have finished it's execution.
+**Rationale**: Applications may need to know whether the state machine is running or has finished its execution.
 
-The hsmcpp system SHALL provide an explicit mechanism to query state of the state machine.
+The hsmcpp system SHALL provide an explicit mechanism to query the execution status of the state machine.
 
 ## State Modeling
 
@@ -103,7 +95,7 @@ The hsmcpp system SHALL provide an explicit mechanism to query state of the stat
 **Nature**: Functional
 **Rationale**: States are the fundamental building blocks of a hierarchical state machine.
 
-The hsmcpp system SHALL support definition of uniquely identified states with optional application-defined callbacks associated with state lifecycle events.
+The hsmcpp system SHALL support definition of uniquely identified states.
 
 ### Initial State
 
@@ -181,21 +173,29 @@ The hsmcpp system SHALL execute state lifecycle callbacks according to the hiera
 
 ## Parallel States
 
-### Parallel Region Support
+### Concurrently Active States
 
 **UID**: SYS-HSM-043
 **Nature**: Functional
-**Rationale**: Parallel states model independent concurrent concerns within a single state machine without requiring separate state machine instances.
+**Rationale**: Rather than introducing a distinct "parallel region" construct, hsmcpp treats concurrency as a design outcome: because all transitions whose guard is satisfied for an event are executed, and because multiple entry points may activate together, multiple states can be simultaneously active. This keeps a single transition model instead of separate single/parallel concepts.
 
-The hsmcpp system SHALL support parallel (orthogonal) regions where multiple states are simultaneously active within a parent state.
+The hsmcpp system SHALL support configurations in which multiple states are simultaneously active, arising from executing all satisfied transitions for an event and from activating multiple entry points.
 
-### Independent Event Processing in Parallel Regions
+### Event Delivery to Concurrently Active States
 
 **UID**: SYS-HSM-044
 **Nature**: Functional
-**Rationale**: Independent processing ensures that parallel regions behave as logically separate state machines sharing a parent context.
+**Rationale**: When several states are concurrently active, each must be given the opportunity to react to an event according to its own transitions, so the concurrent branches behave as logically independent parts of the same state machine.
 
-The hsmcpp system SHALL deliver events to all active parallel regions, allowing each region to independently process or ignore each event.
+The hsmcpp system SHALL evaluate an event against all concurrently active states, allowing each to independently process or ignore the event according to its own transitions.
+
+### Idempotent Activation on Convergence
+
+**UID**: SYS-HSM-076
+**Nature**: Functional
+**Rationale**: When concurrent branches converge on a common state, or when a branch re-targets a state that is already active because a sibling branch keeps its source active, the target state must not be activated more than once. Activating it again would re-run its entry logic and, for a composite target, discard the progress its already-active substates have made, producing behaviour that depends on an unrelated branch rather than on application intent.
+
+When a transition targets a state that is already part of the active state configuration, the hsmcpp system SHALL keep that state, together with its entire active substate configuration, active and unchanged, and SHALL NOT treat the target as newly activated.
 
 ## History States
 
@@ -308,6 +308,14 @@ The hsmcpp system SHALL support execution of application-defined callbacks assoc
 The hsmcpp system SHALL support declarative actions associated with state lifecycle events and transitions. Supported actions include timer control, event generation.
 
 ## Event Processing
+
+### Independent Event Processing
+
+**UID**: SYS-HSM-003
+**Nature**: Functional
+**Rationale**: Applications use hsmcpp in different execution environments; the product must not require integration with a specific external execution framework.
+
+The hsmcpp system SHALL provide event processing without requiring applications to integrate a specific external event-processing framework or runtime.
 
 ### Asynchronous Event Processing
 
@@ -457,15 +465,39 @@ The hsmcpp system SHALL provide the ability to start, stop, and restart timers.
 
 The hsmcpp system SHALL provide the ability to query whether a specific timer is currently running.
 
+### Timer Precision
+
+**UID**: SYS-HSM-074
+**Nature**: NonFunctional
+**Rationale**: Timer accuracy is bounded by the timing facilities of the underlying platform and scheduling environment; applications must not assume hard real-time timer guarantees from the product itself.
+
+The hsmcpp system's timer expiration precision SHALL be bounded by the timing facilities of the underlying platform. Guaranteed timer precision SHALL be defined as that provided by the platform's timing facilities.
+
 ## Code Generation
 
 ### SCXML Input Format
 
 **UID**: SYS-HSM-054
 **Nature**: Functional
-**Rationale**: SCXML is a W3C standard that enables interoperability with visual editors and other statechart tools. Part of the SCXML standard (specifically scripting) is not required for hsmcpp.
+**Rationale**: SCXML is a W3C standard that enables interoperability with visual editors and other statechart tools. hsmcpp uses SCXML to define structure only, so functional/executable-content portions of the standard are not required.
 
-The hsmcpp system SHALL accept SCXML models conforming to the hsmcpp-supported SCXML model subset as an input format for defining state-machine structure.
+The hsmcpp system SHALL accept SCXML models as an input format for defining state-machine structure. The system SHALL support the subset of W3C SCXML constructs required to express state-machine structure: state, parallel, initial, final, transition (with event, cond, target, type), onentry, onexit, and history (with type).
+
+### SCXML Structure-Only Interpretation
+
+**UID**: SYS-HSM-071
+**Nature**: Functional
+**Rationale**: hsmcpp uses SCXML purely to describe state-machine structure; SCXML executable content, data model, and external communication features have no equivalent in hsmcpp and are intentionally not interpreted.
+
+The hsmcpp system SHALL ignore SCXML constructs that describe executable content, data model, and external communication (including raise, if, foreach, log, datamodel, data, assign, send, cancel, invoke, and finalize) without failing model processing.
+
+### SCXML Custom Extensions
+
+**UID**: SYS-HSM-072
+**Nature**: Functional
+**Rationale**: hsmcpp repurposes selected SCXML constructs with hsmcpp-specific meaning to bind application callbacks and to support file composition, since the standard constructs do not cover these needs.
+
+The hsmcpp system SHALL support hsmcpp-specific interpretation of the following SCXML constructs: the script element to name application callbacks for state entry, exit, and transition; the invoke element (via srcexpr) to name a state-changed callback; and the state src attribute to compose a model from an external file.
 
 ### Executable State-Machine Generation
 
@@ -509,13 +541,37 @@ The hsmcpp system SHALL support automatic regeneration of generated artifacts wh
 
 ## Debugging and Observability
 
-### Diagnostic Logging
+### Diagnostic Trace Logging
 
 **UID**: SYS-HSM-060
 **Nature**: Functional
-**Rationale**: Structured logs enable post-mortem analysis of state machine behavior using dedicated tooling.
+**Rationale**: Human-readable trace messages provide immediate insight into state machine behavior during development and field diagnostics.
 
-The hsmcpp system SHALL support recording a structured diagnostic log capturing state transitions, events, and timer operations.
+The hsmcpp system SHALL support emitting human-readable diagnostic trace messages describing state machine activity. Trace output SHALL be deliverable to an application-provided output, and a default platform-specific output SHALL be provided.
+
+### Structured Execution Log
+
+**UID**: SYS-HSM-062
+**Nature**: Functional
+**Rationale**: A machine-readable execution log enables offline replay and visual analysis of state machine execution.
+
+The hsmcpp system SHALL support recording a structured execution log capturing state transitions, events, and timer operations in a replayable format.
+
+### Diagnostic Log Replay and Analysis
+
+**UID**: SYS-HSM-063
+**Nature**: Functional
+**Rationale**: Visual replay of state machine execution significantly reduces debugging time compared to reading raw logs.
+
+The hsmcpp system SHALL produce structured execution logs in a format that supports replay and analysis of state-machine execution by compatible diagnostic tools.
+
+### Build-Time Diagnostic Configuration
+
+**UID**: SYS-HSM-064
+**Nature**: Functional
+**Rationale**: Constrained targets need to exclude diagnostic facilities entirely to minimize footprint, while development builds enable them.
+
+The hsmcpp system SHALL allow trace logging and structured execution logging to be independently enabled or disabled at build time.
 
 ### Runtime Diagnostic Control
 
@@ -525,13 +581,15 @@ The hsmcpp system SHALL support recording a structured diagnostic log capturing 
 
 The hsmcpp system SHALL provide the ability to enable and disable diagnostic logging at runtime without rebuilding.
 
-### Diagnostic Log Replay and Analysis
+## Build-Time Configuration
 
-**UID**: SYS-HSM-063
+### Build-Time Feature Configuration
+
+**UID**: SYS-HSM-073
 **Nature**: Functional
-**Rationale**: Visual replay of state machine execution significantly reduces debugging time compared to reading raw logs.
+**Rationale**: Resource-constrained deployments require selecting only the capabilities they need, trading unused features for reduced footprint. Centralizing this as a product-level concern keeps configuration coherent across features.
 
-The hsmcpp system SHALL produce diagnostic logs in a format that supports replay and analysis of state-machine execution by compatible diagnostic tools.
+The hsmcpp system SHALL provide build-time configuration options to enable or disable optional capabilities, including diagnostic trace logging, structured execution logging, structure validation, and thread-safety mechanisms.
 
 ## Platform Support
 

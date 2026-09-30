@@ -1,0 +1,37 @@
+# Doxyfile for hsmcpp — drives requirement traceability.
+#
+# `@requirement <UID>[, <UID>...]` in a doxygen comment on any function, method
+# or class records the requirements that entity implements. The @xrefitem alias
+# below makes doxygen (a) accept the command, (b) render a "Requirements"
+# cross-reference list in the HTML docs, and (c) emit the UIDs into the entity's
+# <detaileddescription> in the XML output, which
+# scripts/requirements/doxygen_to_lobster.py parses into code.lobster.
+#
+# Workflow:  doxygen config/lobster/Doxyfile
+#            python3 scripts/requirements/doxygen_to_lobster.py <xmldir> code.lobster
+
+PROJECT_NAME           = hsmcpp
+OUTPUT_DIRECTORY       = build/doxygen
+INPUT                  = include src
+FILE_PATTERNS          = *.hpp *.h *.cpp
+RECURSIVE              = YES
+
+# Extract everything, including entities without an explicit comment, so a
+# @requirement on an otherwise-undocumented function is still emitted.
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+EXTRACT_PRIVATE        = YES
+
+# The traceability command. Aliased to an xrefitem so it is a first-class
+# doxygen command that appears in the docs and the XML.
+ALIASES                = "requirement=@xrefitem lobster_req \"Requirement\" \"Requirements\" " \
+                         "no_requirement=@xrefitem lobster_norq \"No Requirement\" \"Unrelated to requirements\" "
+
+# XML is what the traceability extractor consumes.
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO

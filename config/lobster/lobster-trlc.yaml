@@ -1,0 +1,24 @@
+# lobster-trlc configuration (LOBSTER 1.0.6 schema).
+#
+# Maps the hsmcpp TRLC model onto LOBSTER requirement items. Inputs are passed
+# on the command line (the .rsl + .trlc files); this file defines the per-type
+# conversion rules that replaced the old separate lobster-trlc.conf DSL.
+#
+# Invoked as:
+#   lobster-trlc --config config/lobster/lobster-trlc.yaml --out reqs.lobster \
+#       requirements/model/hsmcpp.rsl requirements/*.trlc
+
+conversion-rules:
+  - package: HSMCPP
+    record-type: System_Requirement
+    namespace: req
+    description-fields: description
+
+  - package: HSMCPP
+    record-type: Software_Requirement
+    namespace: req
+    description-fields: description
+    tags:
+      # SW requirement traces up to its parent System_Requirement.
+      - field: parent
+        namespace: req

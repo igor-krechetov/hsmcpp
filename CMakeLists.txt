@@ -249,6 +249,10 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
     endif()
 
     if (HSMBUILD_TESTS)
+        # enable_testing() must be called at the top level so CTest generates a
+        # root CTestTestfile.cmake that descends into tests/. Without it `ctest`
+        # reports "No tests were found" even though tests are registered below.
+        enable_testing()
         add_subdirectory(tests)
     endif()
 

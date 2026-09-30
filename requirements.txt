@@ -1,1 +1,18 @@
-strictdoc
+# Requirements-management tooling for hsmcpp.
+#
+# Requirements are authored in TRLC (BMW format) under requirements/ and the
+# traceability/coverage report is produced with the LOBSTER toolchain.
+# See the `req_*` targets in the justfile.
+#
+#   just req_check      validate the TRLC model + requirements
+#   just req_build      validate + render the requirements HTML doc
+#   just req_coverage   run the LOBSTER SYS -> SW -> Tests coverage report
+#   just req_trace      full coverage report including GTest evidence
+
+# TRLC: requirement authoring + validation
+trlc==3.0.1
+
+# LOBSTER: requirements-to-test traceability and coverage reports
+bmw-lobster-core==1.0.6
+bmw-lobster-tool-trlc==1.0.6
+bmw-lobster-tool-gtest==1.0.6

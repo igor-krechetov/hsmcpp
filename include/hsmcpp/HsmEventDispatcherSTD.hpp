@@ -16,6 +16,7 @@ namespace hsmcpp {
 /**
  * @brief HsmEventDispatcherSTD provides platform independent dispatcher implementation based on standard C++ library.
  * @details See @rstref{platforms-dispatcher-std} for details.
+ * @requirement HSMCPP.SWR_HSM_066, HSMCPP.SWR_HSM_102
  */
 class HsmEventDispatcherSTD : public HsmEventDispatcherBase {
 private:
@@ -38,6 +39,7 @@ public:
     /**
      * @brief See IHsmEventDispatcher::emitEvent()
      * @threadsafe{ }
+     * @requirement HSMCPP.SWR_HSM_068
      */
     void emitEvent(const HandlerID_t handlerID) override;
 

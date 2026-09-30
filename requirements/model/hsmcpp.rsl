@@ -1,0 +1,110 @@
+// =============================================================================
+// hsmcpp Requirements Type Model (TRLC / BMW format)
+// =============================================================================
+// Typed schema for the hsmcpp system and software requirements.
+// Derived from the former StrictDoc grammars:
+//   - requirements/system.gra.md   (SYS-HSM-*)
+//   - requirements/software.gra.md  (SWR-HSM-*)
+//
+// Requirement instances live in:
+//   - requirements/system_requirements.trlc
+//   - requirements/software_requirements.trlc
+//   - requirements/terminology.trlc
+//
+// Validated with TRLC 3.0.1 (`trlc requirements/`).
+// =============================================================================
+
+package HSMCPP
+
+// -----------------------------------------------------------------------------
+// Enumerations
+// -----------------------------------------------------------------------------
+
+enum Nature {
+  Functional
+  NonFunctional
+}
+
+enum Criticality {
+  NonSafety
+  SafetyRelevant
+  ContextDependent
+}
+
+enum Verification_Method {
+  Test
+  Review
+  Design
+  Analysis
+}
+
+// -----------------------------------------------------------------------------
+// Terminology
+// -----------------------------------------------------------------------------
+// Structured glossary entries. Requirement text uses natural prose rather than
+// [[ref]] links: terms exist for rendering and validation, not inline linking.
+
+type Term {
+  term        String
+  definition  String
+  context     optional String
+}
+
+checks Term {
+  len(term) >= 2,
+    error "term name is too short", term
+  len(definition) >= 10,
+    error "definition must be meaningful (min 10 chars)", definition
+}
+
+// -----------------------------------------------------------------------------
+// System Requirement  (was system.gra.md)
+// Fields: UID -> record name, TITLE -> summary, Nature, Rationale, STATEMENT.
+// No Criticality/Verification at system level (per original grammar).
+// -----------------------------------------------------------------------------
+
+type System_Requirement {
+  summary       optional String
+  description   Markup_String
+  nature        Nature
+  rationale     optional String
+}
+
+checks System_Requirement {
+  len(description) >= 10,
+    error "system requirement description is too short", description
+  len(description) <= 2000,
+    warning "system requirement description is excessively long (>2000 chars)", description
+  rationale != null implies len(rationale) >= 10,
+    warning "rationale should be meaningful (min 10 chars)", rationale
+}
+
+// -----------------------------------------------------------------------------
+// Software Requirement  (was software.gra.md)
+// Fields: UID -> record name, TITLE -> summary, Nature, Criticality,
+//         Security (optional), Verification, Rationale, STATEMENT.
+// Relation: Parent -> System_Requirement.
+// -----------------------------------------------------------------------------
+
+type Software_Requirement {
+  summary       optional String
+  description   Markup_String
+  nature        Nature
+  criticality   Criticality
+  verification  Verification_Method
+  security      optional Boolean
+  rationale     optional String
+  parent        System_Requirement
+}
+
+checks Software_Requirement {
+  len(description) >= 10,
+    error "SW requirement description is too short", description
+  len(description) <= 3000,
+    warning "SW requirement description is excessively long (>3000 chars)", description
+  // Safety-relevant requirements must be verified by test.
+  criticality != Criticality.NonSafety implies verification == Verification_Method.Test,
+    error "safety-relevant SW requirements must be verified by test", verification
+  rationale != null implies len(rationale) >= 10,
+    warning "rationale should be meaningful (min 10 chars)", rationale
+}

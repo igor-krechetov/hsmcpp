@@ -15,3 +15,5 @@ cache
 test.plantuml
 *.ctu-info
 *.cpp.dump
+strictdoc_*
+.kiro

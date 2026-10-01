@@ -4,8 +4,10 @@
 
 #include "hsm/ABCHsm.hpp"
 #include "hsm/TrafficLightHsm.hpp"
+#include "lobster_gtest.h"
 
 TEST_F(TrafficLightHsm, simple_transition) {
+    LOBSTER_TRACE("HSMCPP.SWR_HSM_040,HSMCPP.SWR_HSM_041");
     TEST_DESCRIPTION("Simple transition between two states");
 
     //-------------------------------------------

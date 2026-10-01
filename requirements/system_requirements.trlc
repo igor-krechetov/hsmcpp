@@ -1,0 +1,560 @@
+// AUTO-GENERATED from StrictDoc markdown by tools/requirements/md_to_trlc.py
+// Do not edit by hand; edit the source or re-run the converter.
+
+package HSMCPP
+
+section "Product Scope and Constraints" {
+  System_Requirement SYS_HSM_001 {
+    summary     = "C++ Standard Compatibility"
+    description = "The hsmcpp system SHALL compile and function correctly with C++11."
+    nature      = Nature.NonFunctional
+    rationale   = "hsmcpp targets embedded and desktop environments; C++11 is the minimum standard widely available on embedded toolchains."
+  }
+
+  System_Requirement SYS_HSM_002 {
+    summary     = "Type-Safe Identifiers"
+    description = "The hsmcpp system SHALL provide type-safe state, event, and timer identifiers that allow users to define domain-specific identifier sets distinguishable at compile time."
+    nature      = Nature.Functional
+    rationale   = "Type-safe identifiers prevent accidental misuse of raw values and enable compile-time verification of state machine structure by users."
+  }
+
+  System_Requirement SYS_HSM_003 {
+    summary     = "Application-Specific Execution Environment Integration"
+    description = "The hsmcpp system SHALL support integration with application-specific execution environments."
+    nature      = Nature.Functional
+    rationale   = "Applications with existing event loops or proprietary frameworks need the ability to integrate hsmcpp into their execution environment."
+  }
+
+}
+section "State-Machine Execution" {
+  System_Requirement SYS_HSM_004 {
+    summary     = "Explicit Initialization"
+    description = "The hsmcpp system SHALL provide an explicit mechanism to transition a configured state machine into execution."
+    nature      = Nature.Functional
+    rationale   = "Explicit initialization separates structure configuration from runtime execution, allowing the full state machine topology to be established and validated before any transitions occur."
+  }
+
+  System_Requirement SYS_HSM_005 {
+    summary     = "Structure Before Execution"
+    description = "The hsmcpp system SHALL require the state-machine structure to be fully established before execution begins."
+    nature      = Nature.Functional
+    rationale   = "Requiring structure to be established before execution enables safe concurrent event processing without topology changes during operation."
+  }
+
+  System_Requirement SYS_HSM_006 {
+    summary     = "Hierarchical Structure Validation"
+    description = "The hsmcpp system SHALL support validation of hierarchical state-machine configurations to detect and report invalid configurations."
+    nature      = Nature.Functional
+    rationale   = "Structural validation catches invalid hierarchical configurations during configuration rather than producing undefined behavior during execution."
+  }
+
+  System_Requirement SYS_HSM_007 {
+    summary     = "Sequential Application Callback Execution"
+    description = "The hsmcpp system SHALL execute application-defined state and transition callbacks for a given state machine within a single execution context."
+    nature      = Nature.Functional
+    rationale   = "Executing all application-defined callbacks sequentially within a single execution context per state machine provides a predictable execution model for application code."
+  }
+
+  System_Requirement SYS_HSM_008 {
+    summary     = "Shared Execution Context"
+    description = "The hsmcpp system SHALL support multiple state machine instances sharing a single execution context."
+    nature      = Nature.Functional
+    rationale   = "Sharing an execution context reduces resource consumption on constrained platforms and simplifies integration with application event loops."
+  }
+
+  System_Requirement SYS_HSM_009 {
+    summary     = "State Machine Release and Re-initialization"
+    description = "The hsmcpp system SHALL support releasing a state machine from execution and returning it to a state that allows re-initialization."
+    nature      = Nature.Functional
+    rationale   = "Applications may need to reset a state machine to its initial configuration in response to error recovery, mode changes, or reconfiguration without creating a new instance."
+  }
+
+  System_Requirement SYS_HSM_010 {
+    summary     = "State Machine Execution Status"
+    description = "The hsmcpp system SHALL provide an explicit mechanism to query the execution status of the state machine."
+    nature      = Nature.Functional
+    rationale   = "Applications may need to know whether the state machine is running or has finished its execution."
+  }
+
+}
+section "State Modeling" {
+  System_Requirement SYS_HSM_011 {
+    summary     = "State Definition"
+    description = "The hsmcpp system SHALL support definition of uniquely identified states."
+    nature      = Nature.Functional
+    rationale   = "States are the fundamental building blocks of a hierarchical state machine."
+  }
+
+  System_Requirement SYS_HSM_012 {
+    summary     = "Initial State"
+    description = "The hsmcpp system SHALL allow the user to designate one state as the initial state, which becomes active upon initialization."
+    nature      = Nature.Functional
+    rationale   = "Every well-formed state machine requires a defined starting state to ensure deterministic behavior upon initialization."
+  }
+
+  System_Requirement SYS_HSM_013 {
+    summary     = "Final State"
+    description = "The hsmcpp system SHALL support final states. When a final state is entered, the system SHALL stop processing further events."
+    nature      = Nature.Functional
+    rationale   = "Final states allow to define exit conditions to allow gracefull termination of applications."
+  }
+
+  System_Requirement SYS_HSM_014 {
+    summary     = "Active State Information"
+    description = "The hsmcpp system SHALL provide the ability to determine which states are currently active and whether a specific state is active."
+    nature      = Nature.Functional
+    rationale   = "Applications need to inspect the current state machine configuration for conditional logic outside the state machine."
+  }
+
+}
+section "Hierarchical States" {
+  System_Requirement SYS_HSM_015 {
+    summary     = "Hierarchical State Relationships"
+    description = "The hsmcpp system SHALL support hierarchical parent-child relationships between states, forming a nested state structure."
+    nature      = Nature.Functional
+    rationale   = "Hierarchical nesting enables complex behavior to be decomposed into manageable layers with shared transitions at the parent level."
+  }
+
+  System_Requirement SYS_HSM_016 {
+    summary     = "Entry Points"
+    description = "The hsmcpp system SHALL support entry points that determine which child state becomes active when a parent state is entered."
+    nature      = Nature.Functional
+    rationale   = "Entry points enable directed activation into specific substates based on the triggering context."
+  }
+
+  System_Requirement SYS_HSM_017 {
+    summary     = "Exit Points"
+    description = "The hsmcpp system SHALL support exit points that determine which outgoing transition from a parent state is taken based on the exit path selected by a child state."
+    nature      = Nature.Functional
+    rationale   = "Exit points enable a composite state to expose multiple distinct exit paths, allowing different transitions from the parent based on how the substate region completed."
+  }
+
+  System_Requirement SYS_HSM_018 {
+    summary     = "Conditional Entry Points"
+    description = "The hsmcpp system SHALL support conditional entry points where the entry substate is selected based on an application-defined condition."
+    nature      = Nature.Functional
+    rationale   = "Conditional entry points enable dynamic routing into substates based on runtime conditions without requiring intermediate transition states."
+  }
+
+  System_Requirement SYS_HSM_019 {
+    summary     = "Hierarchical Transition Resolution"
+    description = "The hsmcpp system SHALL support transition resolution across hierarchical state relationships."
+    nature      = Nature.Functional
+    rationale   = "Hierarchical event propagation is the defining feature of statecharts, allowing parent states to handle events not handled by their children."
+  }
+
+  System_Requirement SYS_HSM_020 {
+    summary     = "Hierarchical State Lifecycle"
+    description = "The hsmcpp system SHALL execute state lifecycle callbacks according to the hierarchical relationships of the active state configuration when entering or exiting hierarchical states."
+    nature      = Nature.Functional
+    rationale   = "Applications rely on predictable lifecycle callback execution when hierarchical state configurations are entered or exited."
+  }
+
+}
+section "Parallel States" {
+  System_Requirement SYS_HSM_021 {
+    summary     = "Concurrently Active States"
+    description = "The hsmcpp system SHALL support configurations in which multiple states are simultaneously active, arising from executing all satisfied transitions for an event and from activating multiple entry points."
+    nature      = Nature.Functional
+    rationale   = "Rather than introducing a distinct \"parallel region\" construct, hsmcpp treats concurrency as a design outcome: because all transitions whose guard is satisfied for an event are executed, and because multiple entry points may activate together, multiple states can be simultaneously active. This keeps a single transition model instead of separate single/parallel concepts."
+  }
+
+  System_Requirement SYS_HSM_022 {
+    summary     = "Event Delivery to Concurrently Active States"
+    description = "The hsmcpp system SHALL evaluate an event against all concurrently active states, allowing each to independently process or ignore the event according to its own transitions."
+    nature      = Nature.Functional
+    rationale   = "When several states are concurrently active, each must be given the opportunity to react to an event according to its own transitions, so the concurrent branches behave as logically independent parts of the same state machine."
+  }
+
+  System_Requirement SYS_HSM_023 {
+    summary     = "Idempotent Activation on Convergence"
+    description = "When a transition targets a state that is already part of the active state configuration, the hsmcpp system SHALL keep that state, together with its entire active substate configuration, active and unchanged, and SHALL NOT treat the target as newly activated."
+    nature      = Nature.Functional
+    rationale   = "When concurrent branches converge on a common state, or when a branch re-targets a state that is already active because a sibling branch keeps its source active, the target state must not be activated more than once. Activating it again would re-run its entry logic and, for a composite target, discard the progress its already-active substates have made, producing behaviour that depends on an unrelated branch rather than on application intent."
+  }
+
+}
+section "History States" {
+  System_Requirement SYS_HSM_024 {
+    summary     = "Shallow History"
+    description = "The hsmcpp system SHALL support shallow history states that remember and restore the last active direct child state of the parent when re-entering via the history state."
+    nature      = Nature.Functional
+    rationale   = "Shallow history enables resume-where-you-left-off behavior at one level of nesting."
+  }
+
+  System_Requirement SYS_HSM_025 {
+    summary     = "Deep History"
+    description = "The hsmcpp system SHALL support deep history states that remember and restore the entire substate hierarchy that was active when the parent was last exited."
+    nature      = Nature.Functional
+    rationale   = "Deep history restores the full nested state configuration, enabling seamless resumption of complex multi-level workflows."
+  }
+
+  System_Requirement SYS_HSM_026 {
+    summary     = "History Default Target"
+    description = "The hsmcpp system SHALL allow a default target state to be specified for a history state. When no history has been recorded, the system SHALL transition to the default target."
+    nature      = Nature.Functional
+    rationale   = "A default target provides deterministic behavior on first entry when no prior history exists."
+  }
+
+  System_Requirement SYS_HSM_027 {
+    summary     = "History Restoration Behavior"
+    description = "The hsmcpp system SHALL support execution of application-defined callbacks when a state is entered via history restoration."
+    nature      = Nature.Functional
+    rationale   = "Applications may need to perform initialization or resource acquisition that differs depending on whether a state is being entered fresh or restored from history."
+  }
+
+}
+section "Transitions" {
+  System_Requirement SYS_HSM_028 {
+    summary     = "Event-Triggered Transitions"
+    description = "The hsmcpp system SHALL support transitions between states triggered by uniquely identified events."
+    nature      = Nature.Functional
+    rationale   = "Event-driven transitions are the core mechanism for state machine progression."
+  }
+
+  System_Requirement SYS_HSM_029 {
+    summary     = "Guarded Transitions"
+    description = "The hsmcpp system SHALL support guarded transitions whose execution depends on runtime condition evaluation."
+    nature      = Nature.Functional
+    rationale   = "Guards allow dynamic routing of transitions based on runtime conditions without proliferating states."
+  }
+
+  System_Requirement SYS_HSM_030 {
+    summary     = "Self-Transitions"
+    description = "The hsmcpp system SHALL support self-transitions in two modes: internal (no state exit/entry) and external (full exit and re-entry of the state)."
+    nature      = Nature.Functional
+    rationale   = "Internal self-transitions allow in-state processing without triggering exit/entry side effects, while external self-transitions reset state context."
+  }
+
+  System_Requirement SYS_HSM_031 {
+    summary     = "Transition Priority"
+    description = "When multiple transitions match the same event from the same state, the hsmcpp system SHALL evaluate them in a deterministic order and execute all transitions whose guard condition is satisfied."
+    nature      = Nature.Functional
+    rationale   = "Deterministic priority resolution ensures predictable behavior when multiple guarded transitions compete for the same event."
+  }
+
+  System_Requirement SYS_HSM_032 {
+    summary     = "Transition-Associated Data"
+    description = "The hsmcpp system SHALL allow arbitrary application data to be associated with a transition request and delivered to all application-defined callbacks triggered by that transition."
+    nature      = Nature.Functional
+    rationale   = "Passing context data through transitions eliminates the need for external shared state between transition triggers and application-defined callbacks."
+  }
+
+  System_Requirement SYS_HSM_033 {
+    summary     = "State Configuration Consistency"
+    description = "The hsmcpp system SHALL maintain a valid active state configuration after every transition request, including transition requests that do not complete successfully."
+    nature      = Nature.Functional
+    rationale   = "Applications must not encounter a partially transitioned or otherwise invalid active state configuration when a transition cannot be completed."
+  }
+
+  System_Requirement SYS_HSM_034 {
+    summary     = "Transition Cancellation"
+    description = "The hsmcpp system SHALL support cancellation of an in-progress transition by application-defined callbacks."
+    nature      = Nature.Functional
+    rationale   = "Applications may need to prevent a transition from completing based on runtime conditions evaluated during the transition, enabling validation and precondition enforcement."
+  }
+
+}
+section "State and Transition Actions" {
+  System_Requirement SYS_HSM_035 {
+    summary     = "State and Transition Callbacks"
+    description = "The hsmcpp system SHALL support execution of application-defined callbacks associated with state lifecycle events and state transitions."
+    nature      = Nature.Functional
+    rationale   = "Applications require the ability to associate custom logic with state lifecycle events and transitions to implement initialization, cleanup, validation, and side-effect behavior."
+  }
+
+  System_Requirement SYS_HSM_036 {
+    summary     = "Declarative State-Associated Actions"
+    description = "The hsmcpp system SHALL support declarative actions associated with state lifecycle events and transitions. Supported actions include timer control, event generation."
+    nature      = Nature.Functional
+    rationale   = "Declarative actions on state lifecycle eliminate boilerplate code for common timeout, watchdog, and cascading state-machine patterns."
+  }
+
+}
+section "Event Processing" {
+  System_Requirement SYS_HSM_037 {
+    summary     = "Independent Event Processing"
+    description = "The hsmcpp system SHALL provide event processing without requiring applications to integrate a specific external event-processing framework or runtime."
+    nature      = Nature.Functional
+    rationale   = "Applications use hsmcpp in different execution environments; the product must not require integration with a specific external execution framework."
+  }
+
+  System_Requirement SYS_HSM_038 {
+    summary     = "Asynchronous Event Processing"
+    description = "The hsmcpp system SHALL support asynchronous event processing where the caller submitting an event returns immediately and the event is processed independently."
+    nature      = Nature.Functional
+    rationale   = "Asynchronous processing decouples event producers from state machine execution, enabling responsive systems that do not block callers."
+  }
+
+  System_Requirement SYS_HSM_039 {
+    summary     = "Synchronous Event Processing"
+    description = "The hsmcpp system SHALL support synchronous event processing where the caller submitting an event blocks until the transition completes or fails and receives the result."
+    nature      = Nature.Functional
+    rationale   = "Synchronous interaction allows callers to wait for completion of a requested state-machine operation before continuing."
+  }
+
+  System_Requirement SYS_HSM_040 {
+    summary     = "FIFO Event Ordering"
+    description = "The hsmcpp system SHALL process queued events in FIFO order unless pending events are explicitly discarded or a higher-priority internal processing rule applies."
+    nature      = Nature.Functional
+    rationale   = "FIFO ordering preserves causal relationships between events in a deterministic manner."
+  }
+
+  System_Requirement SYS_HSM_041 {
+    summary     = "Re-Entrancy Prevention"
+    description = "The hsmcpp system SHALL prevent re-entrant event processing, ensuring that events generated during an active processing cycle are deferred for later processing."
+    nature      = Nature.Functional
+    rationale   = "Nested event processing during an active transition can produce inconsistent state machine configurations."
+  }
+
+  System_Requirement SYS_HSM_042 {
+    summary     = "Event Queue Capacity Handling"
+    description = "The hsmcpp system SHALL report asynchronous event submission failure when the event cannot be accepted for processing."
+    nature      = Nature.Functional
+    rationale   = "Resource-constrained applications require predictable behavior when the state machine cannot accept additional pending events."
+  }
+
+  System_Requirement SYS_HSM_043 {
+    summary     = "Invalid Operation Handling"
+    description = "The hsmcpp system SHALL provide defined error handling for operations that cannot be completed due to invalid parameters, invalid state-machine configuration, or the current state-machine lifecycle state."
+    nature      = Nature.Functional
+    rationale   = "Applications require predictable behavior when API operations cannot be completed because of invalid state-machine configuration, lifecycle state, or operation parameters."
+  }
+
+  System_Requirement SYS_HSM_044 {
+    summary     = "Pending Event Discard"
+    description = "The hsmcpp system SHALL provide the ability to discard all pending events."
+    nature      = Nature.Functional
+    rationale   = "Discarding pending events enables cancel-all-pending-work semantics for high-priority state changes such as error recovery or shutdown."
+  }
+
+  System_Requirement SYS_HSM_045 {
+    summary     = "Transition Possibility Check"
+    description = "The hsmcpp system SHALL provide the ability to determine whether a specified event can trigger a successful transition from the current state without changing state machine state."
+    nature      = Nature.Functional
+    rationale   = "Dry-run checks allow application logic to determine reachability without side effects."
+  }
+
+  System_Requirement SYS_HSM_046 {
+    summary     = "Failed Transition Notification"
+    description = "The hsmcpp system SHALL provide notification to the application when a transition request does not complete successfully."
+    nature      = Nature.Functional
+    rationale   = "Applications need to detect when a requested transition does not complete so that they can perform logging, error handling, or alternative processing."
+  }
+
+}
+section "Concurrency" {
+  System_Requirement SYS_HSM_047 {
+    summary     = "Concurrent Transition Requests"
+    description = "The hsmcpp system SHALL support receiving events from execution contexts other than the context performing state-machine processing."
+    nature      = Nature.Functional
+    rationale   = "Multi-threaded applications frequently produce events from worker threads or network callbacks that must be safely delivered to the state machine."
+  }
+
+  System_Requirement SYS_HSM_048 {
+    summary     = "Concurrent Timer Operations"
+    description = "The hsmcpp system SHALL support concurrency-safe timer control operations."
+    nature      = Nature.Functional
+    rationale   = "Timers may be controlled from different execution contexts than the one running the event-processing loop."
+  }
+
+  System_Requirement SYS_HSM_049 {
+    summary     = "Restricted-Context Transition Requests"
+    description = "The hsmcpp system SHALL support transition requests from execution contexts where dynamic memory allocation is not permitted."
+    nature      = Nature.Functional
+    rationale   = "Embedded systems may require state-machine interaction from execution contexts where dynamic memory allocation is not permitted, such as interrupt service routines or signal handlers."
+  }
+
+  System_Requirement SYS_HSM_050 {
+    summary     = "Configurable Thread Safety"
+    description = "The hsmcpp system SHALL support operation without thread-safety overhead in single-threaded or cooperative execution environments."
+    nature      = Nature.NonFunctional
+    rationale   = "Single-threaded or bare-metal environments benefit from eliminating synchronization overhead when concurrent access is not required."
+  }
+
+}
+section "Timers" {
+  System_Requirement SYS_HSM_051 {
+    summary     = "Timer-to-Event Binding"
+    description = "The hsmcpp system SHALL support timers that generate a specified event upon expiration."
+    nature      = Nature.Functional
+    rationale   = "Timer-to-event binding integrates timeout behavior directly into the state machine model, enabling time-based transitions."
+  }
+
+  System_Requirement SYS_HSM_052 {
+    summary     = "Single-Shot Timers"
+    description = "The hsmcpp system SHALL support single-shot timers that fire once after the specified interval and then stop automatically."
+    nature      = Nature.Functional
+    rationale   = "Single-shot timers model deadlines, timeouts, and delayed transitions."
+  }
+
+  System_Requirement SYS_HSM_053 {
+    summary     = "Repeating Timers"
+    description = "The hsmcpp system SHALL support repeating timers that fire periodically at the specified interval until explicitly stopped."
+    nature      = Nature.Functional
+    rationale   = "Repeating timers model periodic polling, heartbeats, and watchdog refresh patterns."
+  }
+
+  System_Requirement SYS_HSM_054 {
+    summary     = "Timer Lifecycle Control"
+    description = "The hsmcpp system SHALL provide the ability to start, stop, and restart timers."
+    nature      = Nature.Functional
+    rationale   = "Full timer lifecycle control is necessary for implementing timeout extension, cancellation, and reset patterns."
+  }
+
+  System_Requirement SYS_HSM_055 {
+    summary     = "Timer Status Query"
+    description = "The hsmcpp system SHALL provide the ability to query whether a specific timer is currently running."
+    nature      = Nature.Functional
+    rationale   = "Timer status information allows conditional logic to avoid redundant operations."
+  }
+
+  System_Requirement SYS_HSM_056 {
+    summary     = "Timer Precision"
+    description = "The hsmcpp system's timer expiration precision SHALL be bounded by the timing facilities of the underlying platform. Guaranteed timer precision SHALL be defined as that provided by the platform's timing facilities."
+    nature      = Nature.NonFunctional
+    rationale   = "Timer accuracy is bounded by the timing facilities of the underlying platform and scheduling environment; applications must not assume hard real-time timer guarantees from the product itself."
+  }
+
+}
+section "Code Generation" {
+  System_Requirement SYS_HSM_057 {
+    summary     = "SCXML Input Format"
+    description = "The hsmcpp system SHALL accept SCXML models as an input format for defining state-machine structure. The system SHALL support the subset of W3C SCXML constructs required to express state-machine structure: state, parallel, initial, final, transition (with event, cond, target, type), onentry, onexit, and history (with type)."
+    nature      = Nature.Functional
+    rationale   = "SCXML is a W3C standard that enables interoperability with visual editors and other statechart tools. hsmcpp uses SCXML to define structure only, so functional/executable-content portions of the standard are not required."
+  }
+
+  System_Requirement SYS_HSM_058 {
+    summary     = "SCXML Structure-Only Interpretation"
+    description = "The hsmcpp system SHALL ignore SCXML constructs that describe executable content, data model, and external communication (including raise, if, foreach, log, datamodel, data, assign, send, cancel, invoke, and finalize) without failing model processing."
+    nature      = Nature.Functional
+    rationale   = "hsmcpp uses SCXML purely to describe state-machine structure; SCXML executable content, data model, and external communication features have no equivalent in hsmcpp and are intentionally not interpreted."
+  }
+
+  System_Requirement SYS_HSM_059 {
+    summary     = "SCXML Custom Extensions"
+    description = "The hsmcpp system SHALL support hsmcpp-specific interpretation of the following SCXML constructs: the script element to name application callbacks for state entry, exit, and transition; the invoke element (via srcexpr) to name a state-changed callback; and the state src attribute to compose a model from an external file."
+    nature      = Nature.Functional
+    rationale   = "hsmcpp repurposes selected SCXML constructs with hsmcpp-specific meaning to bind application callbacks and to support file composition, since the standard constructs do not cover these needs."
+  }
+
+  System_Requirement SYS_HSM_060 {
+    summary     = "Executable State-Machine Generation"
+    description = "The hsmcpp system SHALL provide automated generation of source code implementing a state machine defined by a supported SCXML model."
+    nature      = Nature.Functional
+    rationale   = "Generated source code eliminates manual state-machine structure registration and maintains consistency between the model and implementation."
+  }
+
+  System_Requirement SYS_HSM_061 {
+    summary     = "Model Validation"
+    description = "The hsmcpp system SHALL provide validation of state-machine models and SHALL report structural or configuration errors that prevent valid state-machine execution or generation."
+    nature      = Nature.Functional
+    rationale   = "Invalid state-machine models must be detected before they are used for execution or code generation."
+  }
+
+  System_Requirement SYS_HSM_062 {
+    summary     = "Diagram Generation"
+    description = "The hsmcpp system SHALL provide generation of state diagram visualizations from SCXML models."
+    nature      = Nature.Functional
+    rationale   = "Generated diagrams provide always-up-to-date visual documentation of the state machine design."
+  }
+
+  System_Requirement SYS_HSM_063 {
+    summary     = "Model Composition"
+    description = "The hsmcpp system SHALL support composition of state machine models from multiple source files."
+    nature      = Nature.Functional
+    rationale   = "Composition enables modular state machine definitions where large models can be split across multiple files for maintainability."
+  }
+
+  System_Requirement SYS_HSM_064 {
+    summary     = "Automatic Regeneration"
+    description = "The hsmcpp system SHALL support automatic regeneration of generated artifacts when their source models change."
+    nature      = Nature.Functional
+    rationale   = "Automatic regeneration ensures generated artifacts stay in sync with source models without manual intervention during the build process."
+  }
+
+}
+section "Debugging and Observability" {
+  System_Requirement SYS_HSM_065 {
+    summary     = "Diagnostic Trace Logging"
+    description = "The hsmcpp system SHALL support emitting human-readable diagnostic trace messages describing state machine activity. Trace output SHALL be deliverable to an application-provided output, and a default platform-specific output SHALL be provided."
+    nature      = Nature.Functional
+    rationale   = "Human-readable trace messages provide immediate insight into state machine behavior during development and field diagnostics."
+  }
+
+  System_Requirement SYS_HSM_066 {
+    summary     = "Structured Execution Log"
+    description = "The hsmcpp system SHALL support recording a structured execution log capturing state transitions, events, and timer operations in a replayable format."
+    nature      = Nature.Functional
+    rationale   = "A machine-readable execution log enables offline replay and visual analysis of state machine execution."
+  }
+
+  System_Requirement SYS_HSM_067 {
+    summary     = "Diagnostic Log Replay and Analysis"
+    description = "The hsmcpp system SHALL produce structured execution logs in a format that supports replay and analysis of state-machine execution by compatible diagnostic tools."
+    nature      = Nature.Functional
+    rationale   = "Visual replay of state machine execution significantly reduces debugging time compared to reading raw logs."
+  }
+
+  System_Requirement SYS_HSM_068 {
+    summary     = "Build-Time Diagnostic Configuration"
+    description = "The hsmcpp system SHALL allow trace logging and structured execution logging to be independently enabled or disabled at build time."
+    nature      = Nature.Functional
+    rationale   = "Constrained targets need to exclude diagnostic facilities entirely to minimize footprint, while development builds enable them."
+  }
+
+  System_Requirement SYS_HSM_069 {
+    summary     = "Runtime Diagnostic Control"
+    description = "The hsmcpp system SHALL provide the ability to enable and disable diagnostic logging at runtime without rebuilding."
+    nature      = Nature.Functional
+    rationale   = "Runtime control allows selective debugging of specific scenarios without the overhead of always-on logging."
+  }
+
+}
+section "Build-Time Configuration" {
+  System_Requirement SYS_HSM_070 {
+    summary     = "Build-Time Feature Configuration"
+    description = "The hsmcpp system SHALL provide build-time configuration options to enable or disable optional capabilities, including diagnostic trace logging, structured execution logging, structure validation, and thread-safety mechanisms."
+    nature      = Nature.Functional
+    rationale   = "Resource-constrained deployments require selecting only the capabilities they need, trading unused features for reduced footprint. Centralizing this as a product-level concern keeps configuration coherent across features."
+  }
+
+}
+section "Platform Support" {
+  System_Requirement SYS_HSM_071 {
+    summary     = "Linux Platform Support"
+    description = "The hsmcpp system SHALL support execution on Linux."
+    nature      = Nature.Functional
+    rationale   = "Linux is the primary development and deployment platform for most hsmcpp use cases."
+  }
+
+  System_Requirement SYS_HSM_072 {
+    summary     = "QNX Platform Support"
+    description = "The hsmcpp system SHALL support execution on QNX."
+    nature      = Nature.Functional
+    rationale   = "QNX is a common RTOS in automotive and industrial systems where hierarchical state machines are heavily used."
+  }
+
+  System_Requirement SYS_HSM_073 {
+    summary     = "Windows Platform Support"
+    description = "The hsmcpp system SHALL support execution on Windows."
+    nature      = Nature.Functional
+    rationale   = "Windows support enables development and testing on developer workstations and Windows-based embedded systems."
+  }
+
+  System_Requirement SYS_HSM_074 {
+    summary     = "FreeRTOS Platform Support"
+    description = "The hsmcpp system SHALL support execution on FreeRTOS (V10.3.1 and later)."
+    nature      = Nature.Functional
+    rationale   = "FreeRTOS is a widely deployed RTOS in embedded systems."
+  }
+
+  System_Requirement SYS_HSM_075 {
+    summary     = "Arduino Platform Support"
+    description = "The hsmcpp system SHALL support execution on Arduino."
+    nature      = Nature.Functional
+    rationale   = "Arduino environments are single-threaded cooperative systems commonly used for embedded state-machine applications."
+  }
+
+}

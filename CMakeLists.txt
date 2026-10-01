@@ -81,6 +81,11 @@ set(HSM_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 set(HSM_INCLUDES_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/include/hsmcpp/")
 
 configure_file(./include/hsmcpp/version.hpp.in version.hpp @ONLY)
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/version.in
+    ${CMAKE_BINARY_DIR}/version
+    @ONLY
+)
 
 set (LIBRARY_SRC ${HSM_SRC_ROOT}/hsm.cpp
                  ${HSM_SRC_ROOT}/HsmImpl.cpp
@@ -249,6 +254,10 @@ elseif (HSMBUILD_TARGET STREQUAL "library")
     endif()
 
     if (HSMBUILD_TESTS)
+        # enable_testing() must be called at the top level so CTest generates a
+        # root CTestTestfile.cmake that descends into tests/. Without it `ctest`
+        # reports "No tests were found" even though tests are registered below.
+        enable_testing()
         add_subdirectory(tests)
     endif()
 

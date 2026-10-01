@@ -2,6 +2,30 @@ set(TEST_BIN_NAME_TEMPLATE hsmUnitTests)
 
 installGoogleTest()
 
+# GoogleTest test discovery so `ctest` (and `just test`) can find and run the
+# unit tests. Without this the test executables are built but never registered,
+# so `ctest` reports "No tests were found". (enable_testing() is called at the
+# top level in the root CMakeLists.txt.)
+include(GoogleTest)
+
+# Register a built GTest executable with CTest.
+#
+# Two registrations per binary:
+#   1. gtest_discover_tests  -> one CTest entry per test case (normal `just test`
+#      reporting, granular pass/fail).
+#   2. add_test <target>_trace -> runs the WHOLE binary once with GoogleTest's
+#      native XML output into ${GTEST_XML_DIR}/<target>.xml. This native XML
+#      (unlike `ctest --output-junit`) preserves the LOBSTER_TRACE RecordProperty
+#      entries that lobster-gtest needs for requirement traceability.
+set(GTEST_XML_DIR ${CMAKE_BINARY_DIR}/gtest-xml)
+function(registerUnitTest _target)
+    gtest_discover_tests(${_target}
+                         DISCOVERY_MODE PRE_TEST
+                         DISCOVERY_TIMEOUT 60)
+    add_test(NAME ${_target}_trace
+             COMMAND ${_target} --gtest_output=xml:${GTEST_XML_DIR}/${_target}.xml)
+endfunction()
+
 # Check for memory leaks
 # add_compile_options(-fsanitize=leak,address,undefined -fno-omit-frame-pointer -fno-common -O1)
 # link_libraries(-fsanitize=leak,address,undefined)
@@ -49,6 +73,7 @@ if (HSMBUILD_DISPATCHER_GLIB)
     target_include_directories(${TEST_BIN_GLIB} PRIVATE ${HSMCPP_GLIB_INCLUDE})
     target_link_libraries(${TEST_BIN_GLIB} PRIVATE ${HSMCPP_GLIB_LIB} gmock_main)
     target_compile_options(${TEST_BIN_GLIB} PRIVATE ${HSMCPP_GLIB_CXX_FLAGS})
+    registerUnitTest(${TEST_BIN_GLIB})
 endif()
 
 # ================================================
@@ -61,6 +86,7 @@ if (HSMBUILD_DISPATCHER_GLIBMM)
     target_include_directories(${TEST_BIN_GLIBMM} PRIVATE ${HSMCPP_GLIBMM_INCLUDE})
     target_link_libraries(${TEST_BIN_GLIBMM} PRIVATE ${HSMCPP_GLIBMM_LIB} gmock_main)
     target_compile_options(${TEST_BIN_GLIBMM} PRIVATE ${HSMCPP_GLIBMM_CXX_FLAGS})
+    registerUnitTest(${TEST_BIN_GLIBMM})
 endif()
 
 # ================================================
@@ -73,6 +99,7 @@ if (HSMBUILD_DISPATCHER_STD)
     target_include_directories(${TEST_BIN_STD} PRIVATE ${HSMCPP_STD_INCLUDE})
     target_link_libraries(${TEST_BIN_STD} PRIVATE ${HSMCPP_STD_LIB} gmock_main)
     target_compile_options(${TEST_BIN_STD} PRIVATE ${HSMCPP_STD_CXX_FLAGS})
+    registerUnitTest(${TEST_BIN_STD})
 
     if (NOT WIN32)
         # this tool uses Linux specific mallinfo() API and requires glib 2.33+
@@ -103,6 +130,7 @@ if (HSMBUILD_DISPATCHER_QT)
     target_link_libraries(${TEST_BIN_QT} PRIVATE ${HSMCPP_QT_LIB} gmock_main)
     target_compile_options(${TEST_BIN_QT} PRIVATE ${HSMCPP_QT_CXX_FLAGS})
     deployQtApp(${TEST_BIN_QT})
+    registerUnitTest(${TEST_BIN_QT})
 endif()
 
 # ================================================

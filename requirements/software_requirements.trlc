@@ -1,0 +1,1275 @@
+// AUTO-GENERATED from StrictDoc markdown by tools/requirements/md_to_trlc.py
+// Do not edit by hand; edit the source or re-run the converter.
+
+package HSMCPP
+
+section "Product Scope and Constraints" {
+  Software_Requirement SWR_HSM_001 {
+    summary     = "C++ Standard Compatibility"
+    description = "The library SHALL compile and function correctly with C++11 and supported later C++ standard revisions."
+    nature      = Nature.NonFunctional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "C++11 is the minimum standard widely available on embedded toolchains; forward compatibility ensures adoption on newer platforms."
+    parent      = SYS_HSM_001
+  }
+
+  Software_Requirement SWR_HSM_002 {
+    summary     = "Type-Safe State Identification"
+    description = "The library SHALL provide a type-safe state identifier type that the compiler can distinguish from unrelated integer or enumeration types. The library SHALL allow users to define domain-specific state identifier sets."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Type-safe identifiers prevent accidental misuse of raw numeric values and enable compile-time checking."
+    parent      = SYS_HSM_002
+  }
+
+  Software_Requirement SWR_HSM_003 {
+    summary     = "Type-Safe Event Identification"
+    description = "The library SHALL provide a type-safe event identifier type that the compiler can distinguish from unrelated integer or enumeration types. The library SHALL allow users to define domain-specific event identifier sets."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    parent      = SYS_HSM_002
+  }
+
+  Software_Requirement SWR_HSM_004 {
+    summary     = "Type-Safe Timer Identification"
+    description = "The library SHALL provide a type-safe timer identifier type that the compiler can distinguish from unrelated integer or enumeration types. The library SHALL allow users to define domain-specific timer identifier sets."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    parent      = SYS_HSM_002
+  }
+
+  section "Built-In Event Processing" {
+    Software_Requirement SWR_HSM_005 {
+      summary     = "Application-Provided Event-Processing Integration"
+      description = "The library SHALL provide a software interface allowing an application-provided event-processing implementation. Adding a custom event-processing implementation SHALL be possible without modifying library source code."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Custom integration enables use with proprietary event loops, RTOSes, or frameworks not covered by built-in support."
+      parent      = SYS_HSM_003
+    }
+
+  }
+}
+section "State-Machine Execution" {
+  Software_Requirement SWR_HSM_006 {
+    summary     = "Initialization"
+    description = "The library SHALL provide an explicit initialization operation that transitions a configured state machine into an executing state. After successful initialization, the state machine SHALL be in its designated initial state."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Explicit initialization separates structure configuration from runtime execution."
+    parent      = SYS_HSM_004
+  }
+
+  Software_Requirement SWR_HSM_007 {
+    summary     = "Event Processing Precondition"
+    description = "Event processing SHALL begin only after initialization completes successfully."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Deferring event processing until initialization completes prevents events from being processed against an incompletely established structure."
+    parent      = SYS_HSM_004
+  }
+
+  Software_Requirement SWR_HSM_008 {
+    summary     = "Structure Immutability After Initialization"
+    description = "The library SHALL require that the complete state machine structure (states, transitions, and actions) is fully configured before initialization. The library SHALL reject structural modifications attempted after initialization with a defined error indication."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Immutable structure after initialization enables safe concurrent event processing without locks on topology data."
+    parent      = SYS_HSM_005
+  }
+
+  Software_Requirement SWR_HSM_009 {
+    summary     = "Callback Serialization Per Instance"
+    description = "The library SHALL serialize execution of application-defined callbacks for a given state machine instance, ensuring at most one callback executes at any time."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Serialized callback execution provides a predictable execution model for each state machine instance."
+    parent      = SYS_HSM_007
+  }
+
+  Software_Requirement SWR_HSM_010 {
+    summary     = "Multiple Instances Per Event-Processing Context"
+    description = "The library SHALL support multiple state machine instances sharing a single event-processing context. Each state machine instance SHALL process events independently while sharing the underlying event-processing infrastructure."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Sharing an event-processing context reduces resource consumption on constrained platforms."
+    parent      = SYS_HSM_008
+  }
+
+  Software_Requirement SWR_HSM_011 {
+    summary     = "Release and Re-initialization"
+    description = "The library SHALL provide a release operation that terminates execution of a state machine and returns it to a state in which re-initialization is possible. After release, event processing SHALL resume only after successful re-initialization."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Release allows applications to reset a state machine without destroying the instance."
+    parent      = SYS_HSM_009
+  }
+
+}
+section "State Modeling" {
+  Software_Requirement SWR_HSM_012 {
+    summary     = "State Registration"
+    description = "The library SHALL support registration of uniquely identified states. Each state SHALL be identifiable by its type-safe state identifier."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "States are the fundamental building blocks of a hierarchical state machine."
+    parent      = SYS_HSM_011
+  }
+
+  Software_Requirement SWR_HSM_013 {
+    summary     = "Initial State Designation"
+    description = "The library SHALL allow the user to designate one state as the initial state during configuration. The designated initial state SHALL become active upon successful initialization of the state machine."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Every well-formed state machine requires a defined starting state."
+    parent      = SYS_HSM_012
+  }
+
+  Software_Requirement SWR_HSM_014 {
+    summary     = "Final State Support"
+    description = "The library SHALL support designating one or multiple states as a final state. When a final state becomes active, the library SHALL stop processing further events and transition the state machine to a terminated lifecycle state."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Final states signal state machine completion and terminate event processing."
+    parent      = SYS_HSM_013
+  }
+
+  Software_Requirement SWR_HSM_015 {
+    summary     = "Active State Query"
+    description = "The library SHALL provide the ability to query which states are currently active. The library SHALL provide the ability to query whether a specified state identifier is currently active."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Applications need to inspect the current state machine configuration for conditional logic."
+    parent      = SYS_HSM_014
+  }
+
+}
+section "Hierarchical States" {
+  Software_Requirement SWR_HSM_016 {
+    summary     = "Parent-Child State Registration"
+    description = "The library SHALL support registration of hierarchical parent-child relationships between states. A child state SHALL be active only when its parent state is active."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Hierarchical nesting enables complex behavior to be decomposed into manageable layers."
+    parent      = SYS_HSM_015
+  }
+
+  Software_Requirement SWR_HSM_017 {
+    summary     = "Parent-Child Structural Validation"
+    description = "The library SHALL, when structure validation is enabled, detect and reject invalid parent-child configurations. Validated conditions SHALL include: circular parent-child dependencies, assignment of a child state to multiple parents, and definition of a state as its own parent."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Structural validation catches design errors at configuration time before they cause undefined behavior during execution."
+    parent      = SYS_HSM_006
+  }
+
+  Software_Requirement SWR_HSM_018 {
+    summary     = "Composite Initial Substate Validation"
+    description = "The library SHALL, when structure validation is enabled, reject composite states that do not designate an initial substate."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A composite state without a designated initial substate produces undefined entry behavior; rejecting such configurations at validation time prevents runtime ambiguity."
+    parent      = SYS_HSM_006
+  }
+
+  Software_Requirement SWR_HSM_019 {
+    summary     = "Transition Target Validation"
+    description = "The library SHALL, when structure validation is enabled, reject transitions whose source and target states do not share a common parent scope, transitions whose target is a substate nested within a composite state, and transitions that name an entry point as the target. A history state MAY be named as a transition target."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Transitions must respect the hierarchical boundary: a composite state is entered at its own level and resolves its active child implicitly through its initial substate or a declared entry point. Allowing a transition to name an interior substate or entry point directly would bypass this resolution and create ambiguous entry semantics. History states are the sole exception because their purpose is explicit substate restoration."
+    parent      = SYS_HSM_006
+  }
+
+  Software_Requirement SWR_HSM_020 {
+    summary     = "Entry Point Registration"
+    description = "The library SHALL support registration of entry point substates. When an entry point is defined for a parent state, the library SHALL activate the designated child state upon entry to the parent."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Entry points enable directed activation into specific substates."
+    parent      = SYS_HSM_016
+  }
+
+  Software_Requirement SWR_HSM_021 {
+    summary     = "Conditional Entry Point Registration"
+    description = "The library SHALL support conditional entry points where the entry point is activated based on a runtime condition callback evaluated at the time of parent state entry. The condition callback SHALL take no event argument; it evaluates only application-defined state."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Conditional entry points enable dynamic routing into substates based on runtime conditions."
+    parent      = SYS_HSM_018
+  }
+
+  Software_Requirement SWR_HSM_022 {
+    summary     = "Event-Filtered Entry Points"
+    description = "The library SHALL support entry points filtered by event, where an entry point is eligible for activation only when the event that triggered the transition into the parent state matches the entry point's configured event."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Selecting which substate to activate based on the event that entered the parent lets one composite state route entry differently per triggering event without intermediate states."
+    parent      = SYS_HSM_016
+  }
+
+  Software_Requirement SWR_HSM_023 {
+    summary     = "Combined Event and Condition Entry Points"
+    description = "The library SHALL support entry points that define both an event filter and a condition callback. Such an entry point SHALL be eligible for activation only when both the event matches and the condition callback returns its expected value."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Some entry decisions depend on both the triggering event and runtime state; supporting both filters on one entry point avoids duplicating states."
+    parent      = SYS_HSM_016
+  }
+
+  Software_Requirement SWR_HSM_024 {
+    summary     = "Unconditional Entry Points"
+    description = "An entry point that defines neither an event filter nor a condition callback SHALL always be eligible for activation when its parent state is entered."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "An entry point with neither an event filter nor a condition is the default activation path and must always apply."
+    parent      = SYS_HSM_016
+  }
+
+  Software_Requirement SWR_HSM_025 {
+    summary     = "Entry Point Resolution Rules"
+    description = "When a parent state defines multiple entry points, the library SHALL resolve activation as follows: (1) evaluate entry points that define an event filter and/or a condition, and activate all whose filters are satisfied, without activating entry points that define neither; (2) if no filtered entry point is satisfied, activate all entry points that define neither an event filter nor a condition; (3) if no entry point defines an event filter or condition, activate all entry points. Within each case, eligible entry points SHALL be activated in registration order."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "When multiple entry points are defined, a deterministic resolution order is required so entry behavior is predictable and reproducible."
+    parent      = SYS_HSM_016
+  }
+
+  Software_Requirement SWR_HSM_026 {
+    summary     = "Hierarchical Event Propagation"
+    description = "When no applicable transition for an event can be executed in the active substate, the library SHALL evaluate applicable transitions in successive ancestor states until a transition can be executed or the topmost state is reached."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Hierarchical event propagation is the defining feature of statecharts."
+    parent      = SYS_HSM_019
+  }
+
+  Software_Requirement SWR_HSM_027 {
+    summary     = "Hierarchical Callback Order"
+    description = "When entering a hierarchical state configuration, the library SHALL execute entry callbacks in top-down order (ancestor before descendant). When exiting, the library SHALL execute exit callbacks in bottom-up order (descendant before ancestor)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Predictable lifecycle ordering is essential for initialization/cleanup logic in nested states."
+    parent      = SYS_HSM_020
+  }
+
+}
+section "Parallel States" {
+  Software_Requirement SWR_HSM_028 {
+    summary     = "Concurrent State Activation"
+    description = "The library SHALL allow multiple states to be simultaneously active as a result of executing all satisfied transitions for a single event and of activating multiple eligible entry points. The library SHALL maintain the active state of each concurrently active branch independently."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "hsmcpp has no explicit parallel-region construct; concurrent activity emerges from executing every satisfied transition for an event and from activating multiple eligible entry points. This keeps a single transition model."
+    parent      = SYS_HSM_021
+  }
+
+  Software_Requirement SWR_HSM_029 {
+    summary     = "Event Delivery to Concurrently Active States"
+    description = "The library SHALL evaluate each event against all concurrently active states in a deterministic order (registration order). Each active state SHALL evaluate the event according to its own transition definitions independently of the others. A transition executed by one active state SHALL leave the other active states free to evaluate the same event."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Each concurrently active branch must get the chance to react to an event on its own terms so branches behave as logically independent parts of one state machine."
+    parent      = SYS_HSM_022
+  }
+
+  Software_Requirement SWR_HSM_030 {
+    summary     = "Idempotent State Entry on Convergence"
+    description = "When a transition targets a state that is already part of the active state configuration, the library SHALL execute that transition's guard condition, source-state exit callback, and transition callback, but SHALL NOT execute the target state's entry callback or its state-changed callback. The target state SHALL remain active and its active substate configuration SHALL be left unchanged."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Concurrent branches may converge on a common target (a diamond that re-joins), and a branch may re-target a state that is already active because a sibling branch keeps its shared source active (SWR-HSM-051 restoration). In both cases the target must be entered at most once so that repeated arrivals do not re-run entry logic. The transition still executes on its own edge so its guard, source-exit, and transition callbacks are observable; only the target's activation is suppressed."
+    parent      = SYS_HSM_023
+  }
+
+  Software_Requirement SWR_HSM_031 {
+    summary     = "Preservation of Active Substates on Re-Target"
+    description = "When a transition targets an already-active composite state, the library SHALL leave the composite state and its entire active substate configuration active and unchanged, and SHALL NOT re-enter, re-initialize, or reset any state within that subtree. This requirement does not govern an external self-transition, which resets the target by performing a full exit and re-entry."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "When the already-active target is a composite state, suppressing only the target's own entry callback is not sufficient: re-drilling into its initial substate would discard the substate progress the branch made independently (for example, an inner state that has already advanced past its initial substate). The suppression must cover the target and its entire active substate subtree so that a re-target caused by an unrelated branch never rewinds internal progress. This restatement of SWR-HSM-030 for composite targets does not apply to an external self-transition (SWR-HSM-044), which deliberately restarts the target through full exit and re-entry."
+    parent      = SYS_HSM_023
+  }
+
+}
+section "History States" {
+  Software_Requirement SWR_HSM_032 {
+    summary     = "Shallow History Registration and Restoration"
+    description = "The library SHALL support registration of shallow history states. When re-entering a parent state via a shallow history state, the library SHALL restore the last active direct child state of that parent."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Shallow history enables resume-where-you-left-off behavior at one level of nesting."
+    parent      = SYS_HSM_024
+  }
+
+  Software_Requirement SWR_HSM_033 {
+    summary     = "Shallow History Recording"
+    description = "The recorded shallow history of a parent state SHALL always reflect the direct child state that was active immediately before the most recent deactivation of that child, independently of whether the parent itself was exited. The recorded child SHALL be used for subsequent shallow history restoration."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Accurate history requires that the recorded child always reflect the most recently active direct child, because a parent's active child can change while the parent remains continuously active (for example, driven by events unrelated to the parent) and not only at the moment the parent is exited. Recording only on parent exit would miss substate progress made during the parent's active lifetime. The intended implementation updates the recording whenever the parent's active direct child changes."
+    parent      = SYS_HSM_024
+  }
+
+  Software_Requirement SWR_HSM_034 {
+    summary     = "Shallow History Clearing"
+    description = "The library SHALL clear all recorded shallow history upon state machine release or re-initialization."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Release and re-initialization represent lifecycle boundaries where accumulated history must be discarded."
+    parent      = SYS_HSM_024
+  }
+
+  Software_Requirement SWR_HSM_035 {
+    summary     = "Deep History Registration and Restoration"
+    description = "The library SHALL support registration of deep history states. When re-entering a parent state via a deep history state, the library SHALL restore the entire substate hierarchy that was active when the parent was last exited."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Deep history restores the full nested state configuration for seamless resumption."
+    parent      = SYS_HSM_025
+  }
+
+  Software_Requirement SWR_HSM_036 {
+    summary     = "Deep History Recording"
+    description = "The recorded deep history of a parent state SHALL always reflect the complete active substate hierarchy that was active immediately before the most recent deactivation of that hierarchy, independently of whether the parent itself was exited. The recorded hierarchy SHALL be used for subsequent deep history restoration."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Accurate deep history requires that the recorded hierarchy always reflect the most recently active substate configuration, because the substate configuration can change while the parent remains continuously active and not only at the moment the parent is exited. Recording only on parent exit would miss substate progress made during the parent's active lifetime. The intended implementation updates the recording whenever any substate within the parent's subtree is activated or deactivated."
+    parent      = SYS_HSM_025
+  }
+
+  Software_Requirement SWR_HSM_037 {
+    summary     = "Deep History Clearing"
+    description = "The library SHALL clear all recorded deep history upon state machine release or re-initialization."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Release and re-initialization represent lifecycle boundaries where accumulated history must be discarded."
+    parent      = SYS_HSM_025
+  }
+
+  Software_Requirement SWR_HSM_038 {
+    summary     = "History Default Target"
+    description = "The library SHALL allow a default target state to be specified for a history state. When a transition targets a history state and no history has been recorded, the library SHALL activate the default target state instead."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A default target provides deterministic behavior on first entry when no prior history exists."
+    parent      = SYS_HSM_026
+  }
+
+  Software_Requirement SWR_HSM_039 {
+    summary     = "History State Callback"
+    description = "The library SHALL support an optional application-defined callback associated with a history state. The callback SHALL execute whenever the history state is activated, regardless of whether it activates a recorded target or its default target. The callback SHALL execute before the normal entry callback for the activated state."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Application-defined behavior on history activation allows setup that depends on entering through a history state. The callback executes in addition to the normal entry callback and applies whether history was recorded or the default target is used."
+    parent      = SYS_HSM_027
+  }
+
+}
+section "Transitions" {
+  Software_Requirement SWR_HSM_040 {
+    summary     = "Event-Triggered Transition Registration"
+    description = "The library SHALL support registration of transitions between states triggered by type-safe event identifiers. Each transition SHALL specify a source state, a target state, and a triggering event."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Event-driven transitions are the core mechanism for state machine progression."
+    parent      = SYS_HSM_028
+  }
+
+  Software_Requirement SWR_HSM_041 {
+    summary     = "Guard Condition Registration"
+    description = "The library SHALL support associating a guard condition callback with a transition. The guard callback SHALL return a boolean result. The transition SHALL execute only when the guard result matches the configured expected value."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Guards allow dynamic routing of transitions based on runtime conditions."
+    parent      = SYS_HSM_029
+  }
+
+  Software_Requirement SWR_HSM_042 {
+    summary     = "Otherwise Transitions"
+    description = "The library SHALL support registration of otherwise transitions that execute when no guarded transition for the same event from the same source state is satisfied. Otherwise transitions SHALL be evaluated after all guarded transitions have been evaluated and rejected."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Otherwise transitions provide deterministic fallback routing when no guarded transition is satisfied."
+    parent      = SYS_HSM_029
+  }
+
+  Software_Requirement SWR_HSM_043 {
+    summary     = "Internal Self-Transitions"
+    description = "The library SHALL support internal self-transitions that do not trigger state exit or entry callbacks."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Internal self-transitions allow in-state processing without triggering exit/entry side effects."
+    parent      = SYS_HSM_030
+  }
+
+  Software_Requirement SWR_HSM_044 {
+    summary     = "External Self-Transitions"
+    description = "The library SHALL support external self-transitions that perform full exit and re-entry of the state, including execution of exit and entry callbacks."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "External self-transitions reset state context by performing full exit and re-entry."
+    parent      = SYS_HSM_030
+  }
+
+  Software_Requirement SWR_HSM_045 {
+    summary     = "Deterministic Transition Priority"
+    description = "When multiple transitions from the same state match the same event, the library SHALL evaluate guard conditions in registration order and SHALL execute the first transition whose guard condition is satisfied. Registration order SHALL be the defined priority mechanism."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Deterministic priority resolution ensures predictable behavior with multiple guarded transitions. Registration order is the intentional API-level priority mechanism."
+    parent      = SYS_HSM_031
+  }
+
+  Software_Requirement SWR_HSM_046 {
+    summary     = "Synchronous Transition with Timeout"
+    description = "The library SHALL provide a synchronous transition operation that blocks the caller until the transition completes or fails. If the transition does not complete within a configurable timeout period, the operation SHALL return a timeout indication. A timeout indication SHALL indicate that the transition outcome is not available to the caller at the time the operation returns."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Synchronous transitions simplify sequencing logic where the caller must know the outcome."
+    parent      = SYS_HSM_039
+  }
+
+  Software_Requirement SWR_HSM_047 {
+    summary     = "Pending Event Discard on Transition"
+    description = "The library SHALL provide the ability to discard all pending events (both externally submitted and internally generated) before processing a newly requested transition."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Discarding pending events enables cancel-all-pending-work semantics for high-priority state changes."
+    parent      = SYS_HSM_044
+  }
+
+  Software_Requirement SWR_HSM_048 {
+    summary     = "Transition Possibility Query"
+    description = "The library SHALL provide an operation to determine whether a specified event can cause a successful transition from the current active state configuration without changing state machine state. The operation SHALL evaluate guard conditions only and SHALL be side-effect-free with respect to callbacks, active state configuration, and conditional entry points."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Dry-run checks allow application logic to determine reachability without side effects."
+    parent      = SYS_HSM_045
+  }
+
+  Software_Requirement SWR_HSM_049 {
+    summary     = "Failed Transition Notification"
+    description = "The library SHALL invoke an application-defined callback when a transition request does not result in a successful state change. The callback SHALL distinguish between transition rejection (no transition matched the event from the current state after guard evaluation) and transition cancellation (a matching transition was selected but cancelled by application-defined callback behavior)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Failed transition notifications enable logging, error handling, and defensive programming."
+    parent      = SYS_HSM_046
+  }
+
+  Software_Requirement SWR_HSM_050 {
+    summary     = "Transition Data Passing"
+    description = "The library SHALL support associating application-defined data with a transition request. The associated data SHALL be delivered to every callback executed as part of that transition - including the guard condition, exit, transition, entry, and state-changed callbacks - and SHALL retain the value provided at submission time."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Passing context data through transitions eliminates the need for external shared state."
+    parent      = SYS_HSM_032
+  }
+
+  Software_Requirement SWR_HSM_051 {
+    summary     = "State Configuration Consistency"
+    description = "When a transition is cancelled by application-defined behavior after the source state has been exited, the library SHALL restore the source state as active by re-entering it, executing its entry callback and state-changed callback as if it had been entered by a normal transition. When cancellation occurs before the source state is exited, the source state SHALL remain active with no additional callbacks. When the source state is still active because a concurrent branch shares it, restoration SHALL NOT re-enter it. Externally visible side effects performed by callbacks that executed before the cancellation SHALL remain in effect (the library does not undo them)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Applications must never observe an inconsistent state configuration."
+    parent      = SYS_HSM_033
+  }
+
+  Software_Requirement SWR_HSM_052 {
+    summary     = "Event Queue Capacity Handling"
+    description = "The library SHALL return an error indication when an asynchronous event submission cannot be accepted because the event queue has reached its capacity limit. The default event queue capacity SHALL be 10 pending events."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Resource-constrained applications require predictable feedback when the queue is full."
+    parent      = SYS_HSM_042
+  }
+
+  Software_Requirement SWR_HSM_053 {
+    summary     = "Configurable Event Queue Capacity"
+    description = "The library SHALL allow the event queue capacity to be configured per dispatcher."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Different applications and dispatchers have different memory budgets and throughput needs, so the pending-event capacity must be adjustable."
+    parent      = SYS_HSM_042
+  }
+
+}
+section "Transition Execution Model" {
+  Software_Requirement SWR_HSM_054 {
+    summary     = "Transition Callback Sequence"
+    description = "For a non-hierarchical transition from source state S to target state T, the library SHALL execute applicable steps in the following order: (1) evaluate the transition guard condition, (2) source state exit callback, (3) transition callback, (4) target state entry callback, (5) target state state-changed callback. Guard evaluation SHALL complete before the source state exit callback executes; when the guard is not satisfied, no exit, transition, entry, or state-changed callback SHALL execute for that transition."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A defined callback execution sequence is essential for deterministic behavior, testability, and safety traceability."
+    parent      = SYS_HSM_035
+  }
+
+  Software_Requirement SWR_HSM_055 {
+    summary     = "Exit Callback Cancellation"
+    description = "The library SHALL allow a state exit callback to cancel the in-progress transition by returning a cancellation indication. When an exit callback cancels, no further callbacks in the transition sequence SHALL execute, the source state SHALL remain active, and no compensating callbacks SHALL be invoked for the cancellation."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Exit cancellation enables states to refuse departure if preconditions are not met."
+    parent      = SYS_HSM_034
+  }
+
+  Software_Requirement SWR_HSM_056 {
+    summary     = "Entry Callback Cancellation"
+    description = "The library SHALL allow a state entry callback to cancel the in-progress transition by returning a cancellation indication. When an entry callback cancels, the library SHALL stop the remaining callback sequence and restore the source state as active by re-entering it. Side effects of callbacks already executed before the cancellation are not undone."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Entry cancellation enables validation logic that rejects transitions at the target state."
+    parent      = SYS_HSM_034
+  }
+
+  Software_Requirement SWR_HSM_057 {
+    summary     = "Independent Cancellation Among Concurrent Transitions"
+    description = "When a single event triggers execution of multiple transitions, cancellation of one transition by application-defined callback behavior SHALL affect only that transition. The remaining transitions SHALL continue to be executed independently."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "When a single event triggers multiple satisfied transitions (concurrent activation), cancelling one branch must not affect the others, so each branch resolves independently."
+    parent      = SYS_HSM_034
+  }
+
+  Software_Requirement SWR_HSM_058 {
+    summary     = "State Entry Callback"
+    description = "The library SHALL execute an application-defined entry callback when a state is entered as part of a transition. The entry callback SHALL receive any data associated with the triggering transition."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Entry callbacks enable initialization logic tied to becoming active."
+    parent      = SYS_HSM_035
+  }
+
+  Software_Requirement SWR_HSM_059 {
+    summary     = "State Exit Callback"
+    description = "The library SHALL execute an application-defined exit callback when a state is exited as part of a transition."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Exit callbacks enable cleanup logic and resource release."
+    parent      = SYS_HSM_035
+  }
+
+  Software_Requirement SWR_HSM_060 {
+    summary     = "State-Changed Callback"
+    description = "The library SHALL execute an application-defined state-changed callback after a state has become fully active. The state-changed callback SHALL receive any data associated with the triggering transition."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Post-activation callback provides a safe point for operations that depend on the state being fully entered."
+    parent      = SYS_HSM_035
+  }
+
+  Software_Requirement SWR_HSM_061 {
+    summary     = "Transition Callback"
+    description = "The library SHALL support an application-defined callback associated with a transition. The transition callback SHALL receive any data associated with the triggering transition. The transition callback is non-cancellable."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Transition callbacks enable side effects associated with the act of transitioning."
+    parent      = SYS_HSM_035
+  }
+
+  Software_Requirement SWR_HSM_062 {
+    summary     = "Application-Defined Actions"
+    description = "The library SHALL treat application-defined behavior as actions. An application-defined callback SHALL be one action type; declarative timer control and declarative event generation SHALL be additional action types. The library SHALL support binding callback actions using at least: class member function pointers, free function pointers, and lambda/functor objects."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Review
+    rationale   = "A single unified \"action\" concept keeps the model coherent: callbacks, timer control, and event generation are all action types that can be attached to the same lifecycle and transition points, rather than separate mechanisms."
+    parent      = SYS_HSM_035
+  }
+
+}
+section "Declarative State-Associated Actions" {
+  Software_Requirement SWR_HSM_063 {
+    summary     = "Timer Control Actions"
+    description = "The library SHALL support timer control actions (start, stop, restart of a specified timer) that can be attached to state entry, state exit, and transitions."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Declarative timer control eliminates boilerplate for common timeout, watchdog, and reset patterns."
+    parent      = SYS_HSM_036
+  }
+
+  Software_Requirement SWR_HSM_064 {
+    summary     = "Event Generation Actions"
+    description = "The library SHALL support event generation actions that generate a specified event and can be attached to state entry, state exit, and transitions."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Declarative event generation enables transient states and cascading patterns without imperative code."
+    parent      = SYS_HSM_036
+  }
+
+  Software_Requirement SWR_HSM_065 {
+    summary     = "Multiple Actions Per Attachment Point"
+    description = "The library SHALL support attaching multiple actions to a single state entry, state exit, or transition. Multiple actions attached to the same point SHALL be executed in their defined order."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Real state machines frequently need several effects at one lifecycle point (e.g. stop one timer and start another on entry); a single-action limit would force artificial intermediate states."
+    parent      = SYS_HSM_036
+  }
+
+}
+section "Event Processing" {
+  Software_Requirement SWR_HSM_066 {
+    summary     = "Built-In Event Processing"
+    description = "The library SHALL provide at least one event-processing implementation sufficient to execute a state machine without requiring integration with an external event-processing framework."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Decoupling the state machine from any particular execution environment allows the same logic to run on different platforms."
+    parent      = SYS_HSM_037
+  }
+
+  Software_Requirement SWR_HSM_067 {
+    summary     = "Asynchronous Event Submission"
+    description = "The library SHALL provide an asynchronous event submission operation where the caller returns immediately without waiting for the event to be processed. The submitted event SHALL be queued for later processing by the event-processing context."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Asynchronous processing decouples event producers from state machine execution."
+    parent      = SYS_HSM_038
+  }
+
+  Software_Requirement SWR_HSM_068 {
+    summary     = "FIFO Event Processing Order"
+    description = "The library SHALL process externally submitted events in first-in-first-out order within the external event queue. The library SHALL maintain FIFO ordering unless pending events are explicitly discarded by the application."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "FIFO ordering preserves causal relationships between events."
+    parent      = SYS_HSM_040
+  }
+
+  Software_Requirement SWR_HSM_069 {
+    summary     = "Internal Event Priority"
+    description = "The library SHALL process internally generated events before the next externally submitted event. Internally generated events include events produced by declarative actions, timer expirations processed during a transition, and events generated as a result of entering a final state. All pending internally generated events, including those generated recursively, SHALL be processed before the next externally submitted event. Internally generated events SHALL be processed in generation order."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Prioritizing internally generated work ensures state machine housekeeping (completion events, automatic actions) finishes before new external events alter the configuration. This is an intentional software-level semantic."
+    parent      = SYS_HSM_040
+  }
+
+  Software_Requirement SWR_HSM_070 {
+    summary     = "Deferred Event Processing"
+    description = "When application-defined behavior triggered by an event submits additional events, the library SHALL defer those events for later processing rather than executing them immediately within the current processing cycle."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Preventing nested processing during an active transition avoids inconsistent state configurations."
+    parent      = SYS_HSM_041
+  }
+
+  Software_Requirement SWR_HSM_071 {
+    summary     = "Invalid Operation Error Conditions"
+    description = "The library SHALL report an error when a transition or event submission is requested on a state machine that has not been successfully initialized."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Reporting an error when a transition is requested before initialization prevents processing against an unestablished structure."
+    parent      = SYS_HSM_043
+  }
+
+  Software_Requirement SWR_HSM_072 {
+    summary     = "Error on Post-Initialization Structural Modification"
+    description = "The library SHALL report an error when a structural modification is attempted after initialization."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Structural changes after initialization would break the immutability guarantee (SWR-HSM-008); reporting an error makes the violation observable."
+    parent      = SYS_HSM_043
+  }
+
+  Software_Requirement SWR_HSM_073 {
+    summary     = "Error on Invalid Identifier Parameters"
+    description = "The library SHALL report an error when an operation is invoked with an invalid or unregistered identifier parameter."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Operations referencing unregistered or invalid state, event, or timer identifiers must fail observably rather than silently."
+    parent      = SYS_HSM_043
+  }
+
+  Software_Requirement SWR_HSM_074 {
+    summary     = "Error Reporting Mechanism"
+    description = "The library SHALL provide a uniform mechanism for reporting operation failures to the caller. All operations capable of failing SHALL use this common mechanism to communicate failure to the caller."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Review
+    rationale   = "A consistent error-reporting mechanism enables uniform error handling across all library operations independently of specific error conditions."
+    parent      = SYS_HSM_043
+  }
+
+}
+section "Concurrency and Thread Safety" {
+  Software_Requirement SWR_HSM_075 {
+    summary     = "Thread-Safe Timer Operations"
+    description = "The library SHALL guarantee that timer control operations (start, stop, restart, and status query) preserve timer state consistency when invoked concurrently from multiple threads. Each operation SHALL produce a valid timer state upon completion."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Timers may be started or stopped from different threads than the event-processing loop."
+    parent      = SYS_HSM_048
+  }
+
+  Software_Requirement SWR_HSM_076 {
+    summary     = "Thread-Safe Transition Operations"
+    description = "The library SHALL guarantee that externally submitted transition requests and event submissions operate correctly when invoked concurrently from multiple execution contexts. The library SHALL preserve data integrity and state configuration consistency throughout concurrent access."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "The transition and event submission interfaces are the primary entry points for external execution contexts."
+    parent      = SYS_HSM_047
+  }
+
+  Software_Requirement SWR_HSM_077 {
+    summary     = "Restricted-Context Transition Mechanism"
+    description = "The library SHALL provide a transition mechanism suitable for execution from restricted contexts in which dynamic memory allocation is not permitted. The mechanism SHALL use only pre-allocated resources at invocation time."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Restricted execution contexts (interrupt service routines, signal handlers) cannot safely use dynamic memory allocation."
+    parent      = SYS_HSM_049
+  }
+
+  Software_Requirement SWR_HSM_078 {
+    summary     = "Compile-Time Thread Safety Configuration"
+    description = "The library SHALL support a compile-time configuration option to enable or disable thread-safety mechanisms. When thread safety is disabled, the library SHALL omit synchronization operations from event submission, timer operations, and transition operations. When disabled, the application is responsible for ensuring single-threaded access."
+    nature      = Nature.NonFunctional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Single-threaded environments benefit from eliminating synchronization overhead."
+    parent      = SYS_HSM_050
+  }
+
+  Software_Requirement SWR_HSM_079 {
+    summary     = "Single-Threaded Structural Configuration"
+    description = "Structural configuration operations (registration of states, transitions, and actions) SHALL be performed from a single execution context. This constraint applies only during the configuration phase preceding initialization and does not restrict runtime operation."
+    nature      = Nature.NonFunctional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Design
+    rationale   = "Structural configuration occurs during setup before event processing begins."
+    parent      = SYS_HSM_050
+  }
+
+}
+section "Timer Management" {
+  Software_Requirement SWR_HSM_080 {
+    summary     = "Timer Registration and Event Association"
+    description = "The library SHALL support registration of timers identified by type-safe timer identifiers. Each timer SHALL be associated with a specified event identifier. When a timer expires, the library SHALL deliver the associated event to the state machine for processing."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Timers provide a time-based event source enabling timeout patterns within the state machine."
+    parent      = SYS_HSM_051
+  }
+
+  Software_Requirement SWR_HSM_081 {
+    summary     = "Single-Shot Timer Mode"
+    description = "The library SHALL support single-shot timers that fire once after the specified interval elapses and then stop automatically without further intervention."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Single-shot timers enable one-time deadline and timeout patterns."
+    parent      = SYS_HSM_052
+  }
+
+  Software_Requirement SWR_HSM_082 {
+    summary     = "Repeating Timer Mode"
+    description = "The library SHALL support repeating timers that fire periodically at the specified interval until explicitly stopped. Each firing SHALL deliver the associated event to the state machine."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Repeating timers enable periodic patterns such as heartbeats, polling, and watchdog refreshes."
+    parent      = SYS_HSM_053
+  }
+
+  Software_Requirement SWR_HSM_083 {
+    summary     = "Timer Start Operation"
+    description = "The library SHALL provide an operation to start a timer with a specified interval and mode (single-shot or repeating)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Starting a timer initiates the countdown for event delivery."
+    parent      = SYS_HSM_054
+  }
+
+  Software_Requirement SWR_HSM_084 {
+    summary     = "Timer Stop Operation"
+    description = "The library SHALL provide an operation to stop a currently running timer. Stopping a timer that is not running SHALL have no adverse effect. After a timer stop operation completes, the timer SHALL generate no further expiration events. Any expiration event already queued but not yet processed at the time of stop SHALL be discarded."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Stopping a timer cancels pending event delivery."
+    parent      = SYS_HSM_054
+  }
+
+  Software_Requirement SWR_HSM_085 {
+    summary     = "Timer Restart Operation"
+    description = "The library SHALL provide an operation to restart a timer with its original parameters, resetting the countdown from zero. Restart SHALL be equivalent to stop followed by start: any previously queued expiration event SHALL be discarded before the new countdown begins."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Restart enables watchdog-reset patterns without separate stop/start sequences."
+    parent      = SYS_HSM_054
+  }
+
+  Software_Requirement SWR_HSM_086 {
+    summary     = "Timer Running Status Query"
+    description = "The library SHALL provide an operation to determine whether a specific timer is currently running. The query SHALL return a definitive running or not-running indication."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Querying timer status enables conditional logic that depends on whether a timeout is pending."
+    parent      = SYS_HSM_055
+  }
+
+}
+section "Code Generation" {
+  Software_Requirement SWR_HSM_087 {
+    summary     = "SCXML Input Parsing"
+    description = "The code generation tool SHALL parse W3C SCXML format files as input for defining state machine structure. The tool SHALL support the hsmcpp-relevant subset of SCXML elements including states, transitions, parallel regions, and history states."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "SCXML is a W3C standard enabling interoperability with visual editors and other statechart tools."
+    parent      = SYS_HSM_057
+  }
+
+  Software_Requirement SWR_HSM_088 {
+    summary     = "SCXML Composition Support"
+    description = "The code generation tool SHALL support assembling a state machine definition from multiple SCXML source files."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Composition support enables modular SCXML definitions where large state machines can be split across files."
+    parent      = SYS_HSM_063
+  }
+
+  Software_Requirement SWR_HSM_089 {
+    summary     = "Generated State-Machine Content"
+    description = "The code generation tool SHALL produce C++ source and header files that implement the state machine defined by the input SCXML model. The generated artifacts SHALL include all state, event, and timer identifier definitions and the complete structural configuration (state registration, transition registration, timer bindings)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Review
+    rationale   = "Generated code eliminates manual configuration errors and ensures the implementation matches the model."
+    parent      = SYS_HSM_060
+  }
+
+  Software_Requirement SWR_HSM_090 {
+    summary     = "Application Extension Mechanism"
+    description = "The generated code SHALL use a base class pattern where the generated class provides structure registration and declares virtual callback methods. Applications SHALL derive from the generated class to implement callback behavior. Regeneration of the base class SHALL preserve application-derived code without requiring changes to it."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Review
+    rationale   = "The base class pattern is the public API contract enabling regeneration without overwriting application logic."
+    parent      = SYS_HSM_060
+  }
+
+  Software_Requirement SWR_HSM_091 {
+    summary     = "SCXML Model Validation"
+    description = "The code generation tool SHALL validate the input SCXML model before generating code. The tool SHALL report errors for structural and semantic violations that would prevent valid state machine execution. Minimum validated conditions SHALL include: undefined state references in transitions, circular hierarchies, and missing initial states in composite states."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Invalid models must be detected before code generation to prevent generating incorrect state machines."
+    parent      = SYS_HSM_061
+  }
+
+  Software_Requirement SWR_HSM_092 {
+    summary     = "PlantUML Diagram Generation"
+    description = "The code generation tool SHALL produce PlantUML state diagram files from SCXML input. The generated diagrams SHALL represent states, transitions, guards, hierarchical relationships, and parallel regions."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Generated diagrams provide always-up-to-date visual documentation."
+    parent      = SYS_HSM_062
+  }
+
+  Software_Requirement SWR_HSM_093 {
+    summary     = "Automatic Regeneration on Model Change"
+    description = "The project SHALL provide CMake integration that automatically invokes the code generation tool when source SCXML files change, ensuring generated artifacts are regenerated during the build."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Automatic regeneration ensures generated code stays in sync with models without manual intervention."
+    parent      = SYS_HSM_064
+  }
+
+}
+section "Debugging and Observability" {
+  Software_Requirement SWR_HSM_094 {
+    summary     = "Diagnostic Trace Messages"
+    description = "When trace logging is enabled, the library SHALL emit human-readable trace messages describing state machine activity, including state transitions, event processing, and timer operations."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Human-readable trace messages give immediate insight into state machine activity during development and field diagnostics."
+    parent      = SYS_HSM_065
+  }
+
+  Software_Requirement SWR_HSM_095 {
+    summary     = "Application-Provided Trace Output"
+    description = "The library SHALL allow the application to provide a callback that is invoked for each trace message with the message text as a string argument. When no callback is provided, the library SHALL use a default platform-specific trace output."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Applications need trace output to flow to their own logging infrastructure rather than a fixed sink."
+    parent      = SYS_HSM_065
+  }
+
+  Software_Requirement SWR_HSM_096 {
+    summary     = "Structured Execution Log Format"
+    description = "When structured execution logging is enabled, the library SHALL record state machine execution information in a defined structured format. The log SHALL capture state transitions (source, target, event), event submissions, and timer operations (start, stop, expire), with sufficient ordering information to reconstruct the execution sequence."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A machine-readable log enables offline replay and visual analysis distinct from human-readable traces."
+    parent      = SYS_HSM_066
+  }
+
+  Software_Requirement SWR_HSM_097 {
+    summary     = "Diagnostic Tool Compatibility"
+    description = "The structured execution log format SHALL be documented and parseable, enabling compatible diagnostic tools to replay and inspect state machine execution sequences."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A documented, parseable format lets diagnostic tools replay and inspect execution."
+    parent      = SYS_HSM_067
+  }
+
+  Software_Requirement SWR_HSM_098 {
+    summary     = "Build-Time Logging Configuration"
+    description = "The library SHALL provide independent CMake configuration options that enable or disable trace logging and structured execution logging at build time. When a logging type is disabled, its implementation SHALL be excluded from the built binary."
+    nature      = Nature.NonFunctional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Constrained targets must be able to exclude logging code to minimize footprint; trace and structured logging are controlled independently."
+    parent      = SYS_HSM_068
+  }
+
+  Software_Requirement SWR_HSM_099 {
+    summary     = "Runtime Debug Enable/Disable"
+    description = "The library SHALL provide an API to enable and disable logging at runtime without rebuilding. Changes SHALL take effect for the next logged event."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Runtime control allows selective debugging without rebuilding."
+    parent      = SYS_HSM_069
+  }
+
+  Software_Requirement SWR_HSM_100 {
+    summary     = "Human-Readable Identifier Names"
+    description = "The library SHALL support registering human-readable string names for state and event identifiers. When logging is active, the library SHALL include registered names in log output."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Readable names make log output immediately interpretable."
+    parent      = SYS_HSM_065
+  }
+
+}
+section "Platform Support" {
+  Software_Requirement SWR_HSM_101 {
+    summary     = "Linux Platform Support"
+    description = "The library SHALL compile and execute correctly on Linux."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Linux is the primary development and deployment platform."
+    parent      = SYS_HSM_071
+  }
+
+  Software_Requirement SWR_HSM_102 {
+    summary     = "Linux STD Event-Processing Dispatcher"
+    description = "The library SHALL provide an event-processing dispatcher for Linux based on the C++ standard library (std::thread, std::condition_variable)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A C++ standard library-based dispatcher provides out-of-box event processing on Linux without external dependencies."
+    parent      = SYS_HSM_037
+  }
+
+  Software_Requirement SWR_HSM_103 {
+    summary     = "QNX Platform Support"
+    description = "The library SHALL compile and execute correctly on QNX."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "QNX is a common RTOS in automotive and industrial systems."
+    parent      = SYS_HSM_072
+  }
+
+  Software_Requirement SWR_HSM_104 {
+    summary     = "QNX STD Event-Processing Dispatcher"
+    description = "The library SHALL provide an event-processing dispatcher for QNX based on the C++ standard library."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "QNX supports POSIX and C++ standard threading; a std-based dispatcher enables immediate use."
+    parent      = SYS_HSM_037
+  }
+
+  Software_Requirement SWR_HSM_105 {
+    summary     = "Windows Platform Support"
+    description = "The library SHALL compile and execute correctly on Windows."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Windows support enables development and testing on developer workstations."
+    parent      = SYS_HSM_073
+  }
+
+  Software_Requirement SWR_HSM_106 {
+    summary     = "Windows STD Event-Processing Dispatcher"
+    description = "The library SHALL provide an event-processing dispatcher for Windows based on the C++ standard library."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A C++ standard library-based dispatcher provides out-of-box event processing on Windows."
+    parent      = SYS_HSM_037
+  }
+
+  Software_Requirement SWR_HSM_107 {
+    summary     = "FreeRTOS Platform Support"
+    description = "The library SHALL compile and execute correctly on FreeRTOS (V10.3.1 and later)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "FreeRTOS is widely deployed in embedded systems."
+    parent      = SYS_HSM_074
+  }
+
+  Software_Requirement SWR_HSM_108 {
+    summary     = "FreeRTOS Event-Processing Dispatcher"
+    description = "The library SHALL provide an event-processing dispatcher for FreeRTOS based on FreeRTOS tasks and queues."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "FreeRTOS requires a dedicated dispatcher using native task and queue primitives."
+    parent      = SYS_HSM_037
+  }
+
+  Software_Requirement SWR_HSM_109 {
+    summary     = "Arduino Platform Support"
+    description = "The library SHALL compile and execute correctly on Arduino."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Arduino environments are single-threaded cooperative systems."
+    parent      = SYS_HSM_075
+  }
+
+  Software_Requirement SWR_HSM_110 {
+    summary     = "Arduino Event-Processing Dispatcher"
+    description = "The library SHALL provide an event-processing dispatcher for Arduino that operates cooperatively within a single-threaded execution model."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Arduino lacks threading; the dispatcher must operate cooperatively within the Arduino loop() function."
+    parent      = SYS_HSM_037
+  }
+
+  Software_Requirement SWR_HSM_111 {
+    summary     = "Arduino Execution Constraints"
+    description = "The Arduino configuration SHALL support the restricted-context transition mechanism. The Arduino configuration SHALL operate without thread-safety overhead."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Arduino's constrained environment requires restricted-context compatibility and single-threaded operation guarantees."
+    parent      = SYS_HSM_050
+  }
+
+  Software_Requirement SWR_HSM_112 {
+    summary     = "GLib Event-Processing Integration"
+    description = "The library SHALL provide an event-processing implementation that integrates with the GLib main event loop."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "GLib-based applications benefit from native integration with the GLib main loop."
+    parent      = SYS_HSM_003
+  }
+
+  Software_Requirement SWR_HSM_113 {
+    summary     = "Qt Event-Processing Integration"
+    description = "The library SHALL provide an event-processing implementation that integrates with the Qt event loop."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Qt-based applications benefit from native integration with the Qt event system."
+    parent      = SYS_HSM_003
+  }
+
+  Software_Requirement SWR_HSM_114 {
+    summary     = "Optional Capability Configuration"
+    description = "The library SHALL support independently enabling or disabling the following capabilities via CMake configuration: trace logging, structured execution logging, structure validation, and thread safety."
+    nature      = Nature.NonFunctional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Selective capability inclusion minimizes binary size and dependencies on resource-constrained platforms."
+    parent      = SYS_HSM_070
+  }
+
+}
+section "Exit Points" {
+  Software_Requirement SWR_HSM_115 {
+    summary     = "Exit Point Support"
+    description = "The library SHALL support exit point pseudo-states within a composite state. Activation of a specific exit point by a child state SHALL select the corresponding outgoing transition from the parent state."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Exit points let a composite state expose distinct completion paths so the parent's outgoing transition depends on how the substate region finished."
+    parent      = SYS_HSM_017
+  }
+
+}
+section "SCXML Subset and Interpretation" {
+  Software_Requirement SWR_HSM_116 {
+    summary     = "Supported SCXML Constructs"
+    description = "The code generation tool SHALL parse and interpret the following SCXML constructs: scxml (initial, xmlns), state (id, initial), parallel (id), transition (event, cond, target, type), initial, final (id), onentry, onexit, and history (id, type)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "The code generator must accept the specific SCXML constructs hsmcpp uses to express structure."
+    parent      = SYS_HSM_057
+  }
+
+  Software_Requirement SWR_HSM_117 {
+    summary     = "Ignored SCXML Constructs"
+    description = "The code generation tool SHALL ignore SCXML executable-content, data-model, and external-communication constructs (including raise, if, elseif, else, foreach, log, datamodel, data, assign, donedata, content, param, send, cancel, invoke type/typeexpr, and finalize) without failing model processing."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "SCXML executable content, data model, and external communication have no hsmcpp equivalent and must be skipped without failing parsing."
+    parent      = SYS_HSM_058
+  }
+
+  Software_Requirement SWR_HSM_118 {
+    summary     = "Custom SCXML Extensions"
+    description = "The code generation tool SHALL interpret the following constructs with hsmcpp-specific meaning: the script element (within onentry, onexit, and transition) as a named application callback; the invoke element srcexpr attribute as a named state-changed callback; and the state src attribute (and xi:include) as external-file composition."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "hsmcpp assigns hsmcpp-specific meaning to selected SCXML constructs to bind callbacks and compose files."
+    parent      = SYS_HSM_059
+  }
+
+}
+section "Timers Non-Functional" {
+  Software_Requirement SWR_HSM_119 {
+    summary     = "Timer Precision Bound"
+    description = "Timer expiration precision SHALL be bounded by the timing facilities of the platform dispatcher in use. The delivered precision SHALL be that provided by the underlying platform timing facility."
+    nature      = Nature.NonFunctional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Analysis
+    rationale   = "Timer accuracy depends on the platform dispatcher's timing facilities; the library adds no precision guarantee of its own."
+    parent      = SYS_HSM_056
+  }
+
+}
+section "State Machine Status" {
+  Software_Requirement SWR_HSM_120 {
+    summary     = "Execution Status Query"
+    description = "The library SHALL provide an operation to query the current execution status of the state machine, distinguishing at least the uninitialized, running, and terminated conditions."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Applications need to know whether the state machine is running or has terminated (e.g. after reaching a final state)."
+    parent      = SYS_HSM_010
+  }
+
+}
+section "Default Logging Implementations" {
+  Software_Requirement SWR_HSM_121 {
+    summary     = "Linux Default Trace Output"
+    description = "The default trace output on Linux SHALL write to the standard console output (stdout)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Each platform needs an out-of-box trace sink appropriate to its environment."
+    parent      = SYS_HSM_065
+  }
+
+  Software_Requirement SWR_HSM_122 {
+    summary     = "Windows Default Trace Output"
+    description = "The default trace output on Windows SHALL write to the standard console output (stdout)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Windows development builds benefit from console trace output out of the box."
+    parent      = SYS_HSM_065
+  }
+
+  Software_Requirement SWR_HSM_123 {
+    summary     = "QNX Default Trace Output"
+    description = "The default trace output on QNX SHALL write to the QNX system logging facility (slog)."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "QNX provides a system logging facility (slog) that is the natural default sink."
+    parent      = SYS_HSM_065
+  }
+
+}

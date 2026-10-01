@@ -10,13 +10,15 @@ gcc --version
 gcov --version
 lcov --version
 
-# NOTE: "version" is intentionally NOT in --ignore-errors. A gcov version
-# mismatch means the build and test CI jobs used different GCC major versions
-# (the .gcno was built with one compiler, gcov here is another). That must fail
-# loudly rather than silently discarding all coverage. The real fix is keeping
-# both CI jobs on the same runner image (see build.yml / test.yml).
+# NOTE: only tokens valid in lcov 1.14 are used here (gcov, source). The test
+# CI job runs on ubuntu-22.04, which ships lcov 1.14 - the 2.0-only tokens
+# "mismatch" and "version" are rejected with "unknown argument for
+# --ignore-errors". "version" is omitted on purpose anyway: a gcov version
+# mismatch means the build and test jobs used different GCC major versions and
+# must fail loudly, not silently discard coverage. The real guard against that
+# is keeping both CI jobs on the same runner image (see build.yml / test.yml).
 LCOV_CAPTURE_FLAGS=(--rc geninfo_unexecuted_blocks=1 \
-                    --ignore-errors mismatch,gcov,source)
+                    --ignore-errors gcov,source)
 
 echo "Run Tests (STD)"
 chmod +x ./tests/hsmUnitTestsSTD

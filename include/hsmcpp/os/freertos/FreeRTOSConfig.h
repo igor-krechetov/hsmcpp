@@ -73,6 +73,8 @@
 
 /* Run time stats gathering configuration options. */
 // unsigned long ulGetRunTimeCounterValue( void ); /* Prototype of function that returns run time counter. */
+
+/// @no_requirement FreeRTOS callback
 void vConfigureTimerForRunTimeStats( void );    /* Prototype of function that initialises the run time counter. */
 #define configGENERATE_RUN_TIME_STATS             1
 
@@ -118,6 +120,7 @@ void vConfigureTimerForRunTimeStats( void );    /* Prototype of function that in
     #define sbSEND_COMPLETED( pxStreamBuffer )    vGenerateCoreBInterrupt( pxStreamBuffer )
 #endif /* configINCLUDE_MESSAGE_BUFFER_AMP_DEMO */
 
+/// @no_requirement FreeRTOS callback
 extern void vAssertCalled( const char * const pcFileName,
                            unsigned long ulLine );
 
@@ -162,9 +165,13 @@ extern void vAssertCalled( const char * const pcFileName,
 /* networking definitions */
 #define configMAC_ISR_SIMULATOR_PRIORITY    ( configMAX_PRIORITIES - 1 )
 
-/* Prototype for the function used to print out.  In this case it prints to the
+/**
+ * Prototype for the function used to print out.  In this case it prints to the
  * console before the network is connected then a UDP port after the network has
- * connected. */
+ * connected.
+ *
+ * @no_requirement FreeRTOS callback
+ */
 extern void vLoggingPrintf( const char * pcFormatString,
                             ... );
 

@@ -19,6 +19,7 @@ INSTANTIATE_TEST_CASE_P(state_actions,
                                                           hsmcpp::StateActionTrigger::ON_STATE_EXIT)));
 
 TEST_P(ParamFixtureStateActions1, state_actions_simple) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_064,HSMCPP.SWR_HSM_065");
     TEST_DESCRIPTION("Validate that one or multiple state actions can be executed on state entry and exit");
     /*
     @startuml
@@ -93,6 +94,7 @@ TEST_P(ParamFixtureStateActions1, state_actions_simple) {
 }
 
 TEST_F(ABCHsm, state_actions_args) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_064");
     TEST_DESCRIPTION("transition actions should support arguments");
     /*
     @startuml

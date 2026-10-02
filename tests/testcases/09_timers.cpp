@@ -6,6 +6,7 @@
 #include "hsm/ABCHsm.hpp"
 
 TEST_F(ABCHsm, timers_onentry) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_063,HSMCPP.SWR_HSM_080");
     TEST_DESCRIPTION("Validate that timer actions can be executed on state entry");
 
     //-------------------------------------------
@@ -43,6 +44,7 @@ TEST_F(ABCHsm, timers_onentry) {
 }
 
 TEST_F(ABCHsm, timers_onexit) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_063");
     TEST_DESCRIPTION("Validate that timer actions can be executed on state exit");
     /*
     @startuml
@@ -92,6 +94,7 @@ TEST_F(ABCHsm, timers_onexit) {
 }
 
 TEST_F(ABCHsm, timers_multiple_actions) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_063,HSMCPP.SWR_HSM_065");
     TEST_DESCRIPTION("Validate that timer actions can be executed on state entry");
     /*
     @startuml
@@ -163,6 +166,7 @@ TEST_F(ABCHsm, timers_multiple_actions) {
 }
 
 TEST_F(ABCHsm, timers_singleshot) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_081");
     TEST_DESCRIPTION("Validate support for single shot timer");
 
     //-------------------------------------------
@@ -200,6 +204,7 @@ TEST_F(ABCHsm, timers_singleshot) {
 }
 
 TEST_F(ABCHsm, timers_repeating) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_082");
     TEST_DESCRIPTION("Validate support for repeating timers");
 
     //-------------------------------------------
@@ -240,6 +245,7 @@ TEST_F(ABCHsm, timers_repeating) {
 }
 
 TEST_F(ABCHsm, timers_repeating_delay) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_082");
     TEST_DESCRIPTION("Repeating timer event should be fired after equal intervals");
 
     /*
@@ -335,6 +341,7 @@ TEST_F(ABCHsm, timers_repeating_delay) {
 }
 
 TEST_F(ABCHsm, timers_stop) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_084");
     TEST_DESCRIPTION("Validate stop timer action");
 
     /*
@@ -395,6 +402,7 @@ TEST_F(ABCHsm, timers_stop) {
 }
 
 TEST_F(ABCHsm, timers_restart) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_085");
     TEST_DESCRIPTION("Validate restart timer action");
     /*
     @startuml
@@ -467,7 +475,8 @@ TEST_F(ABCHsm, timers_restart) {
 }
 
 TEST_F(ABCHsm, timers_delete_running) {
-    TEST_DESCRIPTION("Delete HSM instance while timer is still running");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_127");
+    TEST_DESCRIPTION("robustness test - deleting the HSM instance while repeating timer is still running must not crash");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -504,6 +513,7 @@ TEST_F(ABCHsm, timers_delete_running) {
 }
 
 TEST_F(ABCHsm, timers_start_from_code) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_083");
     TEST_DESCRIPTION("Validate support for starting timers from code");
 
     //-------------------------------------------
@@ -532,8 +542,9 @@ TEST_F(ABCHsm, timers_start_from_code) {
 }
 
 TEST_F(ABCHsm, timers_start_higher_priority) {
-    TEST_DESCRIPTION("If during a running timer a new timer with a shorter elapse period is started HSM should "
-                     "correctly schedule it");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_138");
+    TEST_DESCRIPTION("If during a running timer a new timer with a shorter elapse period is started, HSM should "
+                     "correctly schedule it (the shorter fires first)");
 
     /*
     @startuml
@@ -599,6 +610,7 @@ TEST_F(ABCHsm, timers_start_higher_priority) {
 }
 
 TEST_F(ABCHsm, timers_stop_from_code) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_084");
     TEST_DESCRIPTION("Validate support for stopping timers from code");
 
     //-------------------------------------------
@@ -629,7 +641,8 @@ TEST_F(ABCHsm, timers_stop_from_code) {
 }
 
 TEST_F(ABCHsm, timers_restart_from_code) {
-    TEST_DESCRIPTION("Validate support for stopping timers from code");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_085");
+    TEST_DESCRIPTION("Validate support for restarting timers from code");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -661,6 +674,7 @@ TEST_F(ABCHsm, timers_restart_from_code) {
 }
 
 TEST_F(ABCHsm, timers_is_running) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_086");
     TEST_DESCRIPTION("HSM should provide a way to check if timer is running");
 
     //-------------------------------------------
@@ -692,6 +706,7 @@ TEST_F(ABCHsm, timers_is_running) {
 }
 
 TEST_F(ABCHsm, timers_singleshot_is_running) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_081,HSMCPP.SWR_HSM_086");
     TEST_DESCRIPTION("single shot timers should become inactive after they expire");
 
     //-------------------------------------------

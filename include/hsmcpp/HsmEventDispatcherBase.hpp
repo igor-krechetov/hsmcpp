@@ -24,6 +24,7 @@ namespace hsmcpp {
  * @details Class contains all platform/framework independent logic for dispatchers. Even though it's not mandatory to use
  * HsmEventDispatcherBase when implementing your own dispatcher, it's highly probable that this class will be a better choice
  * than directly subclassing from IHsmEventDispatcher.
+ * @requirement HSMCPP.SWR_HSM_005
  */
 class HsmEventDispatcherBase : public IHsmEventDispatcher {
 protected:
@@ -68,6 +69,7 @@ public:
     /**
      * @brief See IHsmEventDispatcher::enqueueEvent()
      * @concurrencysafe{ }
+     * @requirement HSMCPP.SWR_HSM_052
      */
     bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) override;
 
@@ -132,6 +134,7 @@ protected:
     /**
      * @brief Default constructor.
      * @param eventsCacheSize size of the queue preallocated for delayed events
+     * @requirement HSMCPP.SWR_HSM_053, HSMCPP.SWR_HSM_130
      */
     // cppcheck-suppress misra-c2012-17.8 ; false positive. setting default parameter value is not parameter modification
     explicit HsmEventDispatcherBase(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);

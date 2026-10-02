@@ -2,17 +2,10 @@
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/ABCHsm.hpp"
 
-// Notation
-// B        : regular state
-// ->       : transition
-// B + C    : transition to 2 states at the same time
-// *A       : initial active state
-// [...]    : parent state
-// #C       : entry point
-// !#C      : entry point with a false condition
-// {Cx}     : transition from state C was blocked
+// Notation legend for the parallel test titles has moved to tests/README.md.
 
 TEST_F(ABCHsm, parallel_transition_01) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_028");
     TEST_DESCRIPTION("*A -> B + C");
 
     //-------------------------------------------
@@ -37,6 +30,7 @@ TEST_F(ABCHsm, parallel_transition_01) {
 }
 
 TEST_F(ABCHsm, parallel_transition_02) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_028");
     TEST_DESCRIPTION("*A -> B + [#C]");
 
     //-------------------------------------------
@@ -62,8 +56,10 @@ TEST_F(ABCHsm, parallel_transition_02) {
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B, AbcState::P1, AbcState::C}));
 }
 
-TEST_F(ABCHsm, parallel_transition_05) {
-    TEST_DESCRIPTION("*A -> B + [C]");
+TEST_F(ABCHsm, DISABLED_parallel_transition_05) {
+    // TODO: invalid test (see SWR_HSM_018). composite states without entry points should be considered a structure failure
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_131,HSMCPP.SWR_HSM_028");
+    TEST_DESCRIPTION("*A -> B + P1[C]");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -89,6 +85,7 @@ TEST_F(ABCHsm, parallel_transition_05) {
 }
 
 TEST_F(ABCHsm, parallel_transition_03) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_025,HSMCPP.SWR_HSM_028");
     TEST_DESCRIPTION("*A -> B + [!#C, #D]");
 
     //-------------------------------------------
@@ -117,6 +114,7 @@ TEST_F(ABCHsm, parallel_transition_03) {
 }
 
 TEST_F(ABCHsm, parallel_transition_04) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_028");
     TEST_DESCRIPTION("Parallel outer transitions");
     /*
     @startuml
@@ -163,6 +161,7 @@ TEST_F(ABCHsm, parallel_transition_04) {
 }
 
 TEST_F(ABCHsm, parallel_transition_outer) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_028");
     TEST_DESCRIPTION("It should be possible to transition out of a parent state even if it has multiple active substates");
 
     /*
@@ -224,6 +223,7 @@ TEST_F(ABCHsm, parallel_transition_outer) {
 }
 
 TEST_F(ABCHsm, parallel_transition_06) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_025");
     TEST_DESCRIPTION("*A -> B + [!#C]");
 
     //-------------------------------------------
@@ -249,7 +249,14 @@ TEST_F(ABCHsm, parallel_transition_06) {
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 }
 
-TEST_F(ABCHsm, parallel_transition_07) {
+TEST_F(ABCHsm, DISABLED_parallel_transition_07) {
+    // entering P1 whose entry point is itself a
+    // composite P2, where P2 has only a plain substate C (no entry point), yields {B}.
+    // The P1 branch is dropped because nested entry-point resolution fails at P2.
+    // Best-guess: SWR_HSM_025 (entry-point resolution) applied recursively - when
+    // entry-point resolution cannot reach a leaf state, the branch is abandoned.
+
+    // TODO: invalid testcase (see SWR_HSM_018). should not pass structure validation
     TEST_DESCRIPTION("*A -> B + [#[C]]");
 
     //-------------------------------------------
@@ -277,7 +284,11 @@ TEST_F(ABCHsm, parallel_transition_07) {
 }
 
 TEST_F(ABCHsm, parallel_transition_08) {
-    TEST_DESCRIPTION("*A -> B + C -> A: check that transitions are not applied recursively");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_029");
+    TEST_DESCRIPTION("*A -> B + C -> A: check that transitions are not applied recursively. "
+                     "Verifies that the set of transitions for one event is resolved against "
+                     "the pre-event configuration. Transitions B->A and C->A "
+                     "registered for E1 do not fire during the *A->B+C transition triggered by the same E1.");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -305,6 +316,7 @@ TEST_F(ABCHsm, parallel_transition_08) {
 }
 
 TEST_F(ABCHsm, parallel_transition_09) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_028");
     TEST_DESCRIPTION("A -> [*#B + *#C]>e2  -e2-> D");
 
     //-------------------------------------------
@@ -353,6 +365,7 @@ TEST_F(ABCHsm, parallel_transition_09) {
 }
 
 TEST_F(ABCHsm, parallel_transition_10_internal_priority) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_026");
     TEST_DESCRIPTION("[*A -e1-> B + C] -e1-> D: internal transitions have priority over external ones");
     /*
     @startuml
@@ -403,6 +416,7 @@ TEST_F(ABCHsm, parallel_transition_10_internal_priority) {
 }
 
 TEST_F(ABCHsm, parallel_transition_canceled_01) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_057");
     TEST_DESCRIPTION("A -> [*#B + *#C] -> D {Cx}");
 
     //-------------------------------------------
@@ -442,6 +456,7 @@ TEST_F(ABCHsm, parallel_transition_canceled_01) {
 }
 
 TEST_F(ABCHsm, parallel_transition_canceled_02) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_057");
     TEST_DESCRIPTION("A -> / *B -> D + xE / *C -> F /");
 
     //-------------------------------------------
@@ -495,6 +510,7 @@ TEST_F(ABCHsm, parallel_transition_canceled_02) {
 }
 
 TEST_F(ABCHsm, parallel_transition_mult2one_01) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_030");
     TEST_DESCRIPTION("A -> *B + *C -> A");
 
     //-------------------------------------------
@@ -524,6 +540,7 @@ TEST_F(ABCHsm, parallel_transition_mult2one_01) {
 }
 
 TEST_F(ABCHsm, parallel_transition_mult2one_02) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_030,HSMCPP.SWR_HSM_031");
     TEST_DESCRIPTION("A -> *B + [*C] -> A");
 
     /*
@@ -593,6 +610,7 @@ INSTANTIATE_TEST_CASE_P(parallel,
                                                                                         {AbcEvent::INVALID, AbcEvent::E2}}));
 
 TEST_P(ParamFixtureParallel1, parallel_substate_final) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_014");
     TEST_DESCRIPTION("Final HSM should wait for all parallel states to finish before exiting final state");
 
     /*
@@ -707,6 +725,7 @@ INSTANTIATE_TEST_CASE_P(parallel,
                             {AbcEvent::INVALID, AbcEvent::INVALID, AbcEvent::E1, AbcEvent::E2}}));
 
 TEST_P(ParamFixtureParallel2, parallel_substate_final_multiple) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_014");
     TEST_DESCRIPTION(
         "If there are multiple final states registered, HSM will wait for all of child states to "
         "deactivate, but will only process the last activated final state");
@@ -845,6 +864,7 @@ TEST_P(ParamFixtureParallel2, parallel_substate_final_multiple) {
 }
 
 TEST_F(ABCHsm, parallel_callbacks) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_028");
     TEST_DESCRIPTION("*A -> B + C -> A: check that all callbacks are correctly executed");
     /*
     @startuml
@@ -915,10 +935,11 @@ TEST_F(ABCHsm, parallel_callbacks) {
     ASSERT_EQ(mTransitionCounterE2, 2);
 }
 
-TEST_F(ABCHsm, parallel_selftransition) {
+TEST_F(ABCHsm, parallel_selftransition_priority_01) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_133");
     TEST_DESCRIPTION(
-        "*A -> A + B: when we have both a regular and self-transition self-transition will"
-        " be excecuted first before exiting state");
+        "*A -> A + B: when a state has both a regular and internal self-transition, self-transition will"
+        " be excecuted first before exiting a state");
     /*
     @startuml
     left to right direction
@@ -959,7 +980,13 @@ TEST_F(ABCHsm, parallel_selftransition) {
     EXPECT_EQ(mTransitionCounterE1, 2);
 }
 
+TEST_F(ABCHsm, DISABLED_parallel_selftransition_priority_02) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_133");
+    // TODO: do parallel_selftransition but with external self transition. test when all 3 types are available
+}
+
 TEST_F(ABCHsm, parallel_selftransition_multiple) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_028");
     TEST_DESCRIPTION("*A -> A + A: check that multiple self transitions are correctly handled");
     /*
     @startuml

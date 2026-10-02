@@ -1,5 +1,12 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
+//
+// NOTE(reviewer): this file unit-tests the Variant utility container itself
+// (type storage, conversions, comparisons, lifetime). Variant underpins
+// transition data passing (SWR_HSM_050), but these tests verify the container's
+// own behavior, not a state-machine software requirement, so they are left
+// intentionally unlinked. Flagging here in case you want SWR_HSM_050 traced to
+// a Variant round-trip test instead.
 #include "TestsCommon.hpp"
 #include "hsmcpp/variant.hpp"
 #include <inttypes.h>

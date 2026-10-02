@@ -6,6 +6,9 @@
 namespace hsmcpp
 {
 
+/**
+ * @no_requirement Common platform abstraction primitive.
+ */
 class InterruptsFreeSection
 {
 public:

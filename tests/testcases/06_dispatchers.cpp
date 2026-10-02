@@ -1,5 +1,13 @@
 // Copyright (C) 2021 Igor Krechetov
 // Distributed under MIT license. See file LICENSE for details
+//
+// NOTE(reviewer): most tests in this file exercise DISPATCHER lifecycle and
+// robustness (create/destroy ordering, releasing with pending events, not owning
+// the dispatcher, surviving destruction mid-callback). These are crash/robustness
+// guarantees for infrastructure, not HSM behavioral requirements. Only tests that
+// exercise specific HSM behaviors have TEST_REQUIREMENTS; the rest are left with
+// explanatory comments since they test implementation robustness rather than
+// specified HSM semantics.
 #include <chrono>
 #include <thread>
 
@@ -70,6 +78,7 @@ struct TestStruct {
 
 
 TEST(dispatchers, release_sync) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_011");
     TEST_DESCRIPTION("HSM should wait for ongoing events dispatching to stop before finishing release()");
 
     //-------------------------------------------
@@ -123,6 +132,11 @@ TEST(dispatchers, release_sync) {
 #ifndef TEST_HSM_FREERTOS
 
 TEST(dispatchers, stresstest_create_destroy_hsm_later) {
+    // NOTE(best-guess, no TEST_REQUIREMENTS): stress test verifying that HSM can be safely
+    // destroyed via dispatcher's enqueueAction while events are pending. Best-guess:
+    // SWR_HSM_127 (safe destruction) - a running HSM can be destroyed without undefined
+    // behavior. The test validates the dispatcher's deferred-deletion mechanism rather
+    // than a specific HSM behavioral requirement.
     TEST_DESCRIPTION("check that it's possible to destroy HSM and disconnect from dispatcher when there are pending events");
     // The idea behild this test is to make sure that HSM is not deleted while being inside one of it's callbacks
     // To prevent such situation an enqueueAction() method of dispatcher is used to delay HSM destruction
@@ -224,6 +238,10 @@ TEST(dispatchers, stresstest_create_destroy_hsm_later) {
 #endif // TEST_HSM_FREERTOS
 
 TEST(dispatchers, stresstest_create_destroy_dispatcher) {
+    // NOTE(best-guess, no TEST_REQUIREMENTS): stress test verifying that a dispatcher can
+    // be safely destroyed while events are still pending. This is dispatcher lifecycle
+    // robustness testing, not HSM behavioral requirement testing. No specific SWR
+    // covers dispatcher destruction semantics.
     TEST_DESCRIPTION("check that it's possible to destroy dispatcher when there are pending events");
 
     //-------------------------------------------
@@ -278,6 +296,9 @@ TEST(dispatchers, stresstest_create_destroy_dispatcher) {
 }
 
 TEST(dispatchers, destroy_without_starting) {
+    // NOTE(best-guess, no TEST_REQUIREMENTS): verifies a dispatcher can be safely destroyed
+    // without ever being started. This is dispatcher lifecycle robustness testing, not
+    // HSM behavioral requirement testing. No specific SWR covers this scenario.
     TEST_DESCRIPTION("check that it's safe to destroy dispatcher without starting");
 
     //-------------------------------------------
@@ -310,6 +331,9 @@ TEST(dispatchers, destroy_without_starting) {
 }
 
 TEST(dispatchers, stop) {
+    // NOTE(best-guess, no TEST_REQUIREMENTS): verifies that a running dispatcher can be
+    // stopped, and events emitted after stop are not processed. This is dispatcher
+    // lifecycle testing. No specific SWR covers dispatcher stop semantics.
     TEST_DESCRIPTION("check that it's possible to stop running dispatcher");
 
     //-------------------------------------------
@@ -350,6 +374,11 @@ TEST(dispatchers, stop) {
 }
 
 TEST(dispatchers, create_hsm_from_callback) {
+    // NOTE(best-guess, no TEST_REQUIREMENTS): verifies that a new HSM can be created and
+    // initialized inside another HSM's callback without deadlock. Best-guess: relates
+    // to SWR_HSM_010 (multiple instances per event-processing context) - multiple HSMs
+    // sharing a dispatcher should work. The test validates deadlock-free nested
+    // initialization rather than a specific behavioral requirement.
     TEST_DESCRIPTION("check that it's possible create a statemachine inside another HSM callback");
 
     //-------------------------------------------
@@ -388,6 +417,11 @@ TEST(dispatchers, create_hsm_from_callback) {
 }
 
 TEST(dispatchers, instance_ownership) {
+    // NOTE(best-guess, no TEST_REQUIREMENTS): verifies that HSM does not take ownership of
+    // the dispatcher, and transitions fail gracefully if the dispatcher is deleted.
+    // This validates the non-owning relationship between HSM and dispatcher. No
+    // specific SWR covers dispatcher ownership semantics, but this relates to the
+    // general HSM lifecycle design.
     TEST_DESCRIPTION("HSM should not own instance of dispatcher and should not crash if this instance is deleted");
 
     //-------------------------------------------

@@ -7,7 +7,12 @@
 
 namespace hsmcpp {
 
-/// Arduino is single threaded so this is just a simple wrapper for a bool flag
+/**
+ * @brief AtomicFlag implementation for Arduino
+ * @details Arduino is single threaded so this is just a simple wrapper for a bool flag
+ *
+ * @requirement HSMCPP.SWR_HSM_109
+ */
 class AtomicFlag {
 public:
     AtomicFlag() = default;

@@ -16,6 +16,7 @@ namespace hsmcpp {
 /**
  * @brief HsmEventDispatcherGLib provides dispatcher implementation based on glib library.
  * @details Events queue is implemented by using glib IO channel. See @rstref{platforms-dispatcher-glib} for details.
+ * @requirement HSMCPP.SWR_HSM_112
  */
 class HsmEventDispatcherGLib : public HsmEventDispatcherBase {
 private:

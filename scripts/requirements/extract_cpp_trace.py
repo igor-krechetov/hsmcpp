@@ -7,11 +7,14 @@ Two modes:
     markers and emit an implementation trace file (schema lobster-imp-trace),
     attaching each marker to the nearest enclosing function above it.
 
-  * --tests:         scan GoogleTest sources for LOBSTER_TRACE("<UID>") tags
-    and emit an activity trace file (schema lobster-act-trace). This reads the
-    SAME macro that lobster-gtest reads at runtime from the GTest XML, so the
-    static (no-build) report and the runtime (post-run) report come from one
-    single tag with no drift.
+  * --tests:         scan GoogleTest sources for every TEST/TEST_F/TEST_P case
+    and emit an activity trace file (schema lobster-act-trace). A test's
+    TEST_REQUIREMENTS("<UID>") tags give its requirement links; a TEST_EXCLUDE(
+    "reason") marks it intentionally unlinked; a case with neither is still
+    emitted (with no link) so unconnected tests surface in the coverage report.
+    This reads the SAME macros that lobster-gtest reads at runtime from the
+    GTest XML, so the static (no-build) report and the runtime (post-run) report
+    come from one single tag with no drift.
 
 Both accept full TRLC UIDs (e.g. HSMCPP.SWR_HSM_040). This is a lightweight,
 build-free alternative to the official lobster-cpp (which needs a custom
@@ -38,9 +41,13 @@ except ImportError:  # LOBSTER 0.x layout
 
 TRACE_RE = re.compile(r"//\s*lobster-trace:\s*(.+)")
 EXCLUDE_RE = re.compile(r"//\s*lobster-exclude:\s*(.+)")
-# A GTest body tag: LOBSTER_TRACE("A") or LOBSTER_TRACE("A,B,C") — comma-separated,
+# A GTest body tag: TEST_REQUIREMENTS("A") or TEST_REQUIREMENTS("A,B,C") — comma-separated,
 # matching how lobster-gtest splits the lobster-tracing property at runtime.
-GTEST_TRACE_RE = re.compile(r'LOBSTER_TRACE\(\s*"([^"]+)"\s*\)')
+GTEST_TRACE_RE = re.compile(r'TEST_REQUIREMENTS\(\s*"([^"]+)"\s*\)')
+# TEST_EXCLUDE("reason") — explicitly declares the test is intentionally not
+# linked to any requirement; the reason becomes a LOBSTER justification so the
+# test shows as JUSTIFIED (not a gap) in the coverage report.
+GTEST_EXCLUDE_RE = re.compile(r'TEST_EXCLUDE\(\s*"([^"]*)"\s*\)')
 GTEST_CASE_RE = re.compile(
     r"^\s*(?:TEST|TEST_F|TEST_P|TYPED_TEST)\s*\(\s*(\w+)\s*,\s*(\w+)\s*\)")
 # A function/method definition line: "... name(...) ... {" (best-effort).
@@ -155,50 +162,51 @@ def extract(paths):
     return items
 
 
-def enclosing_test(lines, idx):
-    """Walk up from line idx to the nearest GTest case macro. Returns
-    (suite, test, line_no) or (None, None, idx+1)."""
-    for j in range(idx, -1, -1):
-        m = GTEST_CASE_RE.match(lines[j])
-        if m:
-            return m.group(1), m.group(2), j + 1
-    return None, None, idx + 1
-
-
 def extract_tests(paths):
-    """Emit one Activity per traced GoogleTest case. Multiple LOBSTER_TRACE
-    calls in one test — and comma-separated UIDs within one call — are merged
-    into a single item with multiple tracing targets, matching how lobster-gtest
-    splits the runtime lobster-tracing property on commas."""
+    """Emit one Activity per GoogleTest case — INCLUDING tests that carry no
+    requirement link, so the coverage report surfaces unconnected tests as
+    gaps instead of hiding them.
+
+    For each test case:
+      * every TEST_REQUIREMENTS("UID,...") in its body adds requirement targets
+        (comma-separated UIDs are split, matching lobster-gtest's runtime split);
+      * a TEST_EXCLUDE("reason") adds a justification (just_up), so the test
+        shows as JUSTIFIED (intentionally not linked) rather than a gap;
+      * a case with neither is emitted with no target and no justification, so
+        LOBSTER flags it as missing an up-reference (an unconnected test).
+    """
     items = []
     for path in iter_files(paths):
         try:
             lines = open(path, encoding="UTF-8", errors="replace").read().splitlines()
         except OSError:
             continue
-        by_test = {}  # (suite,test,line) -> Activity
-        for i, line in enumerate(lines):
-            m = GTEST_TRACE_RE.search(line)
-            if not m:
-                continue
-            suite, test, test_line = enclosing_test(lines, i)
-            if not test:
-                continue
-            key = (path, suite, test, test_line)
-            act = by_test.get(key)
-            if act is None:
-                act = Activity(
-                    tag       = Tracing_Tag(namespace="gtest",
-                                            tag="%s.%s" % (suite, test)),
-                    location  = File_Reference(filename=path, line=test_line),
-                    framework = "GoogleTest",
-                    kind      = "Test",
-                )
-                by_test[key] = act
-                items.append(act)
-            for uid in re.split(r"[,\s]+", m.group(1).strip()):
-                if uid:
-                    act.add_tracing_target(Tracing_Tag.from_text("req", uid))
+        # Index every test case first, then attribute each LOBSTER_* tag to the
+        # case whose body it falls in (between this case macro and the next).
+        cases = [(i, m.group(1), m.group(2))
+                 for i, line in enumerate(lines)
+                 for m in [GTEST_CASE_RE.match(line)] if m]
+        for ci, (idx, suite, test) in enumerate(cases):
+            end = cases[ci + 1][0] if ci + 1 < len(cases) else len(lines)
+            act = Activity(
+                tag       = Tracing_Tag(namespace="gtest",
+                                        tag="%s.%s" % (suite, test)),
+                location  = File_Reference(filename=path, line=idx + 1),
+                framework = "GoogleTest",
+                kind      = "Test",
+            )
+            for j in range(idx, end):
+                mt = GTEST_TRACE_RE.search(lines[j])
+                if mt:
+                    for uid in re.split(r"[,\s]+", mt.group(1).strip()):
+                        if uid:
+                            act.add_tracing_target(
+                                Tracing_Tag.from_text("req", uid))
+                me = GTEST_EXCLUDE_RE.search(lines[j])
+                if me:
+                    reason = me.group(1).strip() or "excluded from requirement tracing"
+                    act.just_up.append(reason)
+            items.append(act)
     return items
 
 

@@ -5,6 +5,7 @@
 #include <thread>
 
 TEST_F(ABCHsm, callbacks_class_pointers) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_062");
     TEST_DESCRIPTION("test that all callbacks work when specified as class members");
     /*
     @startuml
@@ -53,6 +54,7 @@ TEST_F(ABCHsm, callbacks_class_pointers) {
 }
 
 TEST_F(ABCHsm, callbacks_lambdas) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_062");
     TEST_DESCRIPTION("test that all callbacks work when specified as lambda functions");
 
     //-------------------------------------------
@@ -126,6 +128,7 @@ TEST_F(ABCHsm, callbacks_lambdas) {
 }
 
 TEST_F(ABCHsm, callbacks_entering_substates) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_058");
     TEST_DESCRIPTION("when entering a state with substates, HSM should only call it's onEnter, onState callbacks");
 
     //-------------------------------------------
@@ -156,7 +159,10 @@ TEST_F(ABCHsm, callbacks_entering_substates) {
 }
 
 TEST_F(ABCHsm, callbacks_exiting_substates) {
-    TEST_DESCRIPTION("when exiting a state with substates, HSM should only call it's onExit callbacks");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_027,HSMCPP.SWR_HSM_059");
+    TEST_DESCRIPTION("when exiting a composite state P1 (with active child B), "
+                     "HSM should call B's onExit and P1's onExit exactly once each "
+                     "without invoking any other state callbacks");
     // *A -e1-> P1{*B} -e2-> A
 
     //-------------------------------------------
@@ -202,6 +208,7 @@ TEST_F(ABCHsm, callbacks_exiting_substates) {
 }
 
 TEST_F(ABCHsm, callbacks_initial_state) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_006");
     TEST_DESCRIPTION("all callbacks of the initial HSM state should be called correctly");
     /*
     @startuml

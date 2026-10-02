@@ -4,10 +4,9 @@
 
 #include "hsm/ABCHsm.hpp"
 #include "hsm/TrafficLightHsm.hpp"
-#include "lobster_gtest.h"
 
 TEST_F(TrafficLightHsm, simple_transition) {
-    LOBSTER_TRACE("HSMCPP.SWR_HSM_040,HSMCPP.SWR_HSM_041");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_040,HSMCPP.SWR_HSM_041");
     TEST_DESCRIPTION("Simple transition between two states");
 
     //-------------------------------------------
@@ -26,6 +25,7 @@ TEST_F(TrafficLightHsm, simple_transition) {
 }
 
 TEST_F(TrafficLightHsm, transition_check) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_048");
     TEST_DESCRIPTION("Checking that transition is possible before executing it");
 
     //-------------------------------------------
@@ -48,6 +48,7 @@ TEST_F(TrafficLightHsm, transition_check) {
 }
 
 TEST_F(TrafficLightHsm, transition_with_args) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_050");
     TEST_DESCRIPTION("Test if args are correctly passed to transition action handler");
 
     //-------------------------------------------
@@ -85,6 +86,7 @@ TEST_F(TrafficLightHsm, transition_with_args) {
 }
 
 TEST_F(TrafficLightHsm, transition_failed_notification) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_049");
     TEST_DESCRIPTION("Clients can receive notifications about failed transitions");
 
     //-------------------------------------------
@@ -109,6 +111,7 @@ TEST_F(TrafficLightHsm, transition_failed_notification) {
 }
 
 TEST_F(TrafficLightHsm, transition_non_existent) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_049");
     TEST_DESCRIPTION("Check that non registered transitions don't change HSM state");
 
     //-------------------------------------------
@@ -133,6 +136,7 @@ TEST_F(TrafficLightHsm, transition_non_existent) {
 }
 
 TEST_F(TrafficLightHsm, transition_cancel_on_exit) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_055");
     TEST_DESCRIPTION("It should be possible to cancel transition if OnExit handler returns FALSE");
 
     //-------------------------------------------
@@ -164,6 +168,7 @@ TEST_F(TrafficLightHsm, transition_cancel_on_exit) {
 }
 
 TEST_F(TrafficLightHsm, transition_cancel_on_enter) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_056");
     TEST_DESCRIPTION("It should be possible to cancel transition if onEnter handler returns FALSE");
 
     //-------------------------------------------
@@ -199,6 +204,7 @@ TEST_F(TrafficLightHsm, transition_cancel_on_enter) {
 }
 
 TEST_F(TrafficLightHsm, transition_self_internal) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_043");
     TEST_DESCRIPTION(
         "Internal self transition should not trigger any state handlers. Only transition handler must be excecuted");
 
@@ -235,6 +241,7 @@ TEST_F(TrafficLightHsm, transition_self_internal) {
 }
 
 TEST_F(ABCHsm, transition_self_internal_multiple) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_026,HSMCPP.SWR_HSM_043");
     TEST_DESCRIPTION("If both parent and child have same self-transition defined then only child's transition should be executed");
 
     //-------------------------------------------
@@ -272,6 +279,7 @@ TEST_F(ABCHsm, transition_self_internal_multiple) {
 }
 
 TEST_F(TrafficLightHsm, transition_self_external) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_044");
     TEST_DESCRIPTION(
         "External self transition should result in exiting an reentering current state with all state callbacks correctly "
         "executed");
@@ -309,6 +317,7 @@ TEST_F(TrafficLightHsm, transition_self_external) {
 }
 
 TEST_F(ABCHsm, transition_self_external_deep) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_044");
     TEST_DESCRIPTION("Correctly exit child subscates when doing external self transition on parent state");
 
     //-------------------------------------------
@@ -385,6 +394,7 @@ TEST_F(ABCHsm, transition_self_external_deep) {
 }
 
 TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_069");
     TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be canceled");
 
     //-------------------------------------------
@@ -405,6 +415,7 @@ TEST_F(TrafficLightHsm, transition_entrypoint_raicecondition) {
 }
 
 TEST_F(TrafficLightHsm, transition_conditional_simple_true) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_041");
     TEST_DESCRIPTION("checks a simple conditional transition (condition satisfied)");
 
     //-------------------------------------------
@@ -438,6 +449,7 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_true) {
 }
 
 TEST_F(TrafficLightHsm, transition_conditional_simple_false) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_041");
     TEST_DESCRIPTION("checks a simple conditional transition (condition not satisfied)");
 
     //-------------------------------------------
@@ -478,6 +490,7 @@ TEST_F(TrafficLightHsm, transition_conditional_simple_false) {
 }
 
 TEST_F(TrafficLightHsm, transition_conditional_multiple) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_041,HSMCPP.SWR_HSM_045");
     TEST_DESCRIPTION(
         "checks a conditional transition when same event is used for two different transitions from the same state");
 
@@ -529,6 +542,7 @@ TEST_F(TrafficLightHsm, transition_conditional_multiple) {
 // TODO: test multiple transitions when one of the transitions blocks execution
 
 TEST_F(ABCHsm, transition_sync_deadlock) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_132");
     TEST_DESCRIPTION("It's not allowed to do sync transitions from inside callbacks");
 
     //-------------------------------------------

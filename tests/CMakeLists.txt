@@ -15,7 +15,7 @@ include(GoogleTest)
 #      reporting, granular pass/fail).
 #   2. add_test <target>_trace -> runs the WHOLE binary once with GoogleTest's
 #      native XML output into ${GTEST_XML_DIR}/<target>.xml. This native XML
-#      (unlike `ctest --output-junit`) preserves the LOBSTER_TRACE RecordProperty
+#      (unlike `ctest --output-junit`) preserves the TEST_REQUIREMENTS RecordProperty
 #      entries that lobster-gtest needs for requirement traceability.
 set(GTEST_XML_DIR ${CMAKE_BINARY_DIR}/gtest-xml)
 function(registerUnitTest _target)

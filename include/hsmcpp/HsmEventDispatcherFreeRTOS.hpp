@@ -19,6 +19,7 @@ namespace hsmcpp {
  * @details Events dispatching is done using a custom Task. See @rstref{platforms-dispatcher-freertos} for details.
  *
  * @warning Dispatcher methods should be called only from Tasks. Dispatcher instance should never be deleted from an ISR.
+ * @requirement HSMCPP.SWR_HSM_108
  */
 class HsmEventDispatcherFreeRTOS : public HsmEventDispatcherBase {
 public:

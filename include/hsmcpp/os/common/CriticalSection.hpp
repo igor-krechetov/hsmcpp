@@ -10,6 +10,9 @@ namespace hsmcpp {
 class Mutex;
 class InterruptsFreeSection;
 
+/**
+ * @no_requirement Common platform abstraction primitive.
+ */
 class CriticalSection {
 public:
     explicit CriticalSection(Mutex& sync);

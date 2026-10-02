@@ -9,6 +9,9 @@
 namespace hsmcpp
 {
 
+/**
+ * @requirement HSMCPP.SWR_HSM_109
+ */
 class ConditionVariable {
 public:
     ConditionVariable() = default;

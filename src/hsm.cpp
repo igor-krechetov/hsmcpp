@@ -19,9 +19,6 @@ void HierarchicalStateMachine::setInitialState(const StateID_t initialState) {
     mImpl->setInitialState(initialState);
 }
 
-/**
- * @requirement HSMCPP.SWR_HSM_006, HSMCPP.SWR_HSM_007
- */
 bool HierarchicalStateMachine::initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher) {
     return mImpl->initialize(dispatcher);
 }

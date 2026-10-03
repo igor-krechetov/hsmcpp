@@ -26,6 +26,7 @@ namespace hsmcpp {
  * creating/deleting multiple ones (they will anyway handle events sequentially since they use same Glib main loop).
  *
  * See @rstref{platforms-dispatcher-glibmm} for details.
+ * @requirement HSMCPP.SWR_HSM_112
  */
 class HsmEventDispatcherGLibmm : public HsmEventDispatcherBase {
 public:

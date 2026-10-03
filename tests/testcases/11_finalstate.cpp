@@ -6,6 +6,7 @@
 #include "hsm/ABCHsm.hpp"
 
 TEST_F(ABCHsm, finalstate_simple_exitpoint) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_014");
     TEST_DESCRIPTION("HSM should automatically generate event when entering final state");
     /*
     @startuml
@@ -56,6 +57,7 @@ TEST_F(ABCHsm, finalstate_simple_exitpoint) {
 }
 
 TEST_F(ABCHsm, finalstate_forward_event) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_014");
     TEST_DESCRIPTION("HSM will trigger same event as exit event if final state didn't have any event registered");
     /*
     @startuml
@@ -115,6 +117,7 @@ INSTANTIATE_TEST_CASE_P(finalstate,
                                                           AbcState::D)));
 
 TEST_P(ParamFixtureFinalState1, finalstate_multiple_final) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_014");
     TEST_DESCRIPTION("HSM should support multiple path to a final state");
     /*
     @startuml
@@ -179,6 +182,7 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_final) {
 }
 
 TEST_P(ParamFixtureFinalState1, finalstate_multiple_exitpoints) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_115");
     TEST_DESCRIPTION("HSM should support multiple exit points");
     /*
     @startuml
@@ -247,6 +251,7 @@ TEST_P(ParamFixtureFinalState1, finalstate_multiple_exitpoints) {
 }
 
 TEST_F(ABCHsm, finalstate_blocked_final) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_014");
     TEST_DESCRIPTION("HSM should stay in a final state if there are no matching external transitions");
     /*
     @startuml
@@ -300,6 +305,7 @@ TEST_F(ABCHsm, finalstate_blocked_final) {
 }
 
 TEST_F(ABCHsm, finalstate_blocked_exitpoint) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_115");
     TEST_DESCRIPTION("HSM should stay in a final state (with defined event) if there are no matching external transitions");
     /*
     @startuml
@@ -353,6 +359,7 @@ TEST_F(ABCHsm, finalstate_blocked_exitpoint) {
 }
 
 TEST_F(ABCHsm, finalstate_transition_args) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_014,HSMCPP.SWR_HSM_050");
     TEST_DESCRIPTION("final state should forward transition arguments when rasing exit event");
     /*
     @startuml
@@ -411,6 +418,7 @@ TEST_F(ABCHsm, finalstate_transition_args) {
 }
 
 TEST_F(ABCHsm, finalstate_no_transition) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_014,HSMCPP.SWR_HSM_049");
     TEST_DESCRIPTION("HSM will be stuck in a final state if no one handles it's substate exit transition");
     /*
     @startuml
@@ -470,6 +478,7 @@ TEST_F(ABCHsm, finalstate_no_transition) {
 }
 
 TEST_F(ABCHsm, finalstate_toplevel) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_014");
     TEST_DESCRIPTION(
         "HSM will not generate event if final state has no parent (top level final state). "
         "Defined events will be ignored");
@@ -526,6 +535,7 @@ INSTANTIATE_TEST_CASE_P(finalstate,
                                                           AbcState::C)));
 
 TEST_P(ParamFixtureFinalState2, finalstate_exitpoint_multiple_path) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_115");
     TEST_DESCRIPTION("Check that multiple paths to a single exit point are supported");
     /*
     @startuml
@@ -598,6 +608,7 @@ INSTANTIATE_TEST_CASE_P(finalstate,
                                                           AbcState::D)));
 
 TEST_P(ParamFixtureFinalState3, finalstate_both_types) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_014,HSMCPP.SWR_HSM_115");
     TEST_DESCRIPTION("Both exitpoints and final states can exist in the same parent state");
     /*
     @startuml

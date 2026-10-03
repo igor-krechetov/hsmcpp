@@ -30,6 +30,7 @@ enum class HsmEventStatus { PENDING, DONE_OK, DONE_FAILED, CANCELED };
 
 enum class TransitionBehavior { REGULAR, ENTRYPOINT, FORCED };
 
+/// @no_requirement internal data structure
 struct StateCallbacks {
     HsmStateChangedCallback_t onStateChanged = nullptr;
     HsmStateEnterCallback_t onEntering = nullptr;
@@ -47,6 +48,7 @@ struct StateCallbacks {
     StateCallbacks& operator=(StateCallbacks&& src) noexcept;
 };
 
+/// @no_requirement internal data structure
 struct StateEntryPoint {
     StateID_t state = INVALID_HSM_STATE_ID;
     EventID_t onEvent = INVALID_HSM_EVENT_ID;
@@ -54,6 +56,7 @@ struct StateEntryPoint {
     bool expectedConditionValue = true;
 };
 
+/// @no_requirement internal data structure
 struct TransitionInfo {
     StateID_t fromState = INVALID_HSM_STATE_ID;
     StateID_t destinationState = INVALID_HSM_STATE_ID;
@@ -78,6 +81,7 @@ struct TransitionInfo {
                    const bool conditionValue);
 };
 
+/// @no_requirement internal data structure
 struct PendingEventInfo {
     TransitionBehavior transitionType = TransitionBehavior::REGULAR;
     EventID_t id = INVALID_HSM_EVENT_ID;
@@ -104,6 +108,7 @@ struct PendingEventInfo {
     const VariantVector_t& getArgs() const;
 };
 
+/// @no_requirement internal data structure
 struct HistoryInfo {
     HistoryType type = HistoryType::SHALLOW;
     StateID_t defaultTarget = INVALID_HSM_STATE_ID;
@@ -121,6 +126,7 @@ struct HistoryInfo {
 
 };
 
+/// @no_requirement internal data structure
 struct StateActionInfo {
     StateAction action;
     VariantVector_t actionArgs;

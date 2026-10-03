@@ -16,7 +16,7 @@ namespace hsmcpp {
 /**
  * @brief HsmEventDispatcherSTD provides platform independent dispatcher implementation based on standard C++ library.
  * @details See @rstref{platforms-dispatcher-std} for details.
- * @requirement HSMCPP.SWR_HSM_066, HSMCPP.SWR_HSM_102
+ * @requirement HSMCPP.SWR_HSM_066, HSMCPP.SWR_HSM_102, HSMCPP.SWR_HSM_104, HSMCPP.SWR_HSM_106
  */
 class HsmEventDispatcherSTD : public HsmEventDispatcherBase {
 private:

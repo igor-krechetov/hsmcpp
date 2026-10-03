@@ -25,7 +25,10 @@ EXTRACT_PRIVATE        = YES
 # The traceability command. Aliased to an xrefitem so it is a first-class
 # doxygen command that appears in the docs and the XML.
 ALIASES                = "requirement=@xrefitem lobster_req \"Requirement\" \"Requirements\" " \
-                         "no_requirement=@xrefitem lobster_norq \"No Requirement\" \"Unrelated to requirements\" "
+                         "no_requirement=@xrefitem lobster_norq \"No Requirement\" \"Unrelated to requirements\" " \
+                         "implements=@xrefitem lobster_implements \"Implements\" \"Implements interface\" " \
+                         "requirements_container=@xrefitem lobster_reqcont \"Requirements Container\" \"Requirements container (members traced individually)\" " \
+                         "requirement_wrapper=@xrefitem lobster_reqwrap \"Requirement Wrapper\" \"Inherits requirements from a sibling method\" "
 
 # XML is what the traceability extractor consumes.
 GENERATE_XML           = YES

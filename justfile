@@ -76,7 +76,7 @@ req_build mode="req":
     trlc requirements/
     if [ "{{mode}}" = "full" ]; then
         # STATIC traceability for the DOC: doxygen resolves the code entities
-        # carrying @requirement, and a source scan reads the LOBSTER_TRACE test
+        # carrying @requirement, and a source scan reads the TEST_REQUIREMENTS test
         # tags. Both are design intent (no execution) — exactly what the doc
         # reflects. Execution evidence is `just req_trace` (LOBSTER report).
         doxygen config/lobster/Doxyfile
@@ -124,7 +124,7 @@ req_coverage: (req_build "full") test_trace
 # INTERNAL
 
 # Runtime coverage with EXECUTION EVIDENCE: build + run the suite, then read the
-# LOBSTER_TRACE tags from the GTest XML (proof the test actually ran) via
+# TEST_REQUIREMENTS tags from the GTest XML (proof the test actually ran) via
 # lobster-gtest, and feed that into the same report.
 test_trace: build
     #!/usr/bin/env bash
@@ -133,7 +133,7 @@ test_trace: build
     mkdir -p "$OUT"
 
     # Produce GoogleTest's NATIVE xml per dispatcher binary (preserves the
-    # LOBSTER_TRACE RecordProperty entries that `ctest --output-junit` drops). Driven
+    # TEST_REQUIREMENTS RecordProperty entries that `ctest --output-junit` drops). Driven
     # through ctest via the per-binary `<target>_trace` tests registered in
     # tests/CMakeLists.txt, so ctest remains the test driver.
     mkdir -p {{BUILD_DIR}}/gtest-xml

@@ -6,6 +6,9 @@
 namespace hsmcpp
 {
 
+/**
+ * @requirement HSMCPP.SWR_HSM_109
+ */
 class Mutex
 {
 public:

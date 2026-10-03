@@ -4,7 +4,8 @@
 #include "hsm/TrafficLightHsm.hpp"
 
 TEST_F(ABCHsm, substate_entrypoint) {
-    TEST_DESCRIPTION("");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_020");
+    TEST_DESCRIPTION("transition into a parent state activates the designated unconditional entry-point substate");
     /*
     @startuml
     left to right direction
@@ -42,6 +43,7 @@ TEST_F(ABCHsm, substate_entrypoint) {
 }
 
 TEST_F(ABCHsm, substate_entrypoints_multiple_behavioral) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_022");
     TEST_DESCRIPTION("hsm must support multiple exclusive conditional entry points");
     /*
     @startuml
@@ -91,6 +93,7 @@ TEST_F(ABCHsm, substate_entrypoints_multiple_behavioral) {
 }
 
 TEST_F(ABCHsm, substate_entrypoints_multiple_various) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_025");
     TEST_DESCRIPTION("if state contains both conditional and non-conditional entry points then all of them will be processed");
     /*
     @startuml
@@ -156,6 +159,7 @@ TEST_F(ABCHsm, substate_entrypoints_multiple_various) {
 }
 
 TEST_F(ABCHsm, substate_entrypoints_behavioral_with_conditions) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_023");
     TEST_DESCRIPTION("entry point transitions can have both event filter and condition defined");
     /*
     @startuml
@@ -204,6 +208,7 @@ TEST_F(ABCHsm, substate_entrypoints_behavioral_with_conditions) {
 }
 
 TEST_F(ABCHsm, substate_entrypoints_conditional) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_021");
     TEST_DESCRIPTION("entry point transitions can have conditions callbacks defined without event filters");
     /*
     @startuml
@@ -252,6 +257,7 @@ TEST_F(ABCHsm, substate_entrypoints_conditional) {
 }
 
 TEST_F(ABCHsm, substate_entrypoints_block_conditional_transition) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_131");
     TEST_DESCRIPTION("if state doesnt have matching entry points for ongoing transition, then transition will be canceled");
     /*
     @startuml
@@ -324,6 +330,7 @@ TEST_F(ABCHsm, substate_entrypoints_block_conditional_transition) {
 }
 
 TEST_F(ABCHsm, substate_entrypoints_substate) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_020");
     TEST_DESCRIPTION("entry point of a substate could be another state with substates");
     /*
     @startuml
@@ -373,6 +380,7 @@ TEST_F(ABCHsm, substate_entrypoints_substate) {
 }
 
 TEST_F(ABCHsm, substate_exit_single) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_016");
     TEST_DESCRIPTION("exit state throug external parent transition");
     /*
     @startuml
@@ -422,6 +430,7 @@ TEST_F(ABCHsm, substate_exit_single) {
 }
 
 TEST_F(ABCHsm, substate_exit_multiple_layers) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_016");
     TEST_DESCRIPTION("Validate that exiting from multiple depth states on a top level transition is correctly handled");
     /*
     @startuml
@@ -506,6 +515,7 @@ TEST_F(ABCHsm, substate_exit_multiple_layers) {
 }
 
 TEST_F(ABCHsm, substate_safe_registration) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_017");
     TEST_DESCRIPTION(
         "If HSM is compiled with safety check then it should prevent cyclic and multiple inclusions of substates. "
         "This test will fail if HSM_ENABLE_SAFE_STRUCTURE is not defined");
@@ -543,6 +553,7 @@ TEST_F(ABCHsm, substate_safe_registration) {
 }
 
 TEST_F(ABCHsm, substate_error_no_entrypoint) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_018");
     TEST_DESCRIPTION("transition to a state should fail if no entry point was defined");
     /*
     @startuml
@@ -579,7 +590,11 @@ TEST_F(ABCHsm, substate_error_no_entrypoint) {
 }
 
 TEST_F(ABCHsm, substate_parent_as_initial) {
-    TEST_DESCRIPTION("when parent state is set as initial it should automatically transition into substate on startup");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_020,HSMCPP.SWR_HSM_013");
+    TEST_DESCRIPTION("When a composite parent is set as the initial state, "
+                     "initialization drills down through nested entry points to "
+                     "reach a leaf substate. The initial state becoming active "
+                     "triggers entry-point resolution recursively.");
     /*
     @startuml
     left to right direction

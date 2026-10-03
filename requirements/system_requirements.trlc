@@ -76,6 +76,13 @@ section "State-Machine Execution" {
     rationale   = "Applications may need to know whether the state machine is running or has finished its execution."
   }
 
+  System_Requirement SYS_HSM_076 {
+    summary     = "Safe Destruction of a Running State Machine"
+    description = "The hsmcpp system SHALL allow a running state machine to be destroyed safely, without producing undefined behavior."
+    nature      = Nature.Functional
+    rationale   = "Applications destroy state machines during shutdown, error recovery or reconfiguration, often while the machine is still executing; destruction must release the machine cleanly rather than leaving events or callbacks acting on freed state."
+  }
+
 }
 section "State Modeling" {
   System_Requirement SYS_HSM_011 {
@@ -177,16 +184,16 @@ section "Parallel States" {
 section "History States" {
   System_Requirement SYS_HSM_024 {
     summary     = "Shallow History"
-    description = "The hsmcpp system SHALL support shallow history states that remember and restore the last active direct child state of the parent when re-entering via the history state."
+    description = "The hsmcpp system SHALL support shallow history states that remember and restore all active direct child states of the parent when re-entering via the history state."
     nature      = Nature.Functional
-    rationale   = "Shallow history enables resume-where-you-left-off behavior at one level of nesting."
+    rationale   = "Shallow history enables resume-where-you-left-off behavior at one level of nesting. A parent with parallel regions can have more than one active direct child, so restoring only a single child would lose the configuration of the other concurrent regions."
   }
 
   System_Requirement SYS_HSM_025 {
     summary     = "Deep History"
-    description = "The hsmcpp system SHALL support deep history states that remember and restore the entire substate hierarchy that was active when the parent was last exited."
+    description = "The hsmcpp system SHALL support deep history states that remember and restore the entire substate hierarchy that was active when the parent was last deactivated, including all concurrently active substates across parallel regions."
     nature      = Nature.Functional
-    rationale   = "Deep history restores the full nested state configuration, enabling seamless resumption of complex multi-level workflows."
+    rationale   = "Deep history restores the full nested state configuration, enabling seamless resumption of complex multi-level workflows. The restored configuration includes every active substate, so parents with parallel regions resume all of their concurrently active branches."
   }
 
   System_Requirement SYS_HSM_026 {
@@ -416,6 +423,13 @@ section "Timers" {
     rationale   = "Timer accuracy is bounded by the timing facilities of the underlying platform and scheduling environment; applications must not assume hard real-time timer guarantees from the product itself."
   }
 
+  System_Requirement SYS_HSM_077 {
+    summary     = "Multiple Concurrent Timers"
+    description = "The hsmcpp system SHALL support multiple timers running concurrently, each identified by a distinct timer identifier and controlled independently of the others."
+    nature      = Nature.Functional
+    rationale   = "Real applications track several independent time-based conditions at once, such as a heartbeat alongside a watchdog timeout; each must run and be controlled on its own without interfering with the others."
+  }
+
 }
 section "Code Generation" {
   System_Requirement SYS_HSM_057 {
@@ -505,10 +519,10 @@ section "Debugging and Observability" {
   }
 
   System_Requirement SYS_HSM_069 {
-    summary     = "Runtime Diagnostic Control"
-    description = "The hsmcpp system SHALL provide the ability to enable and disable diagnostic logging at runtime without rebuilding."
+    summary     = "Runtime Execution-Log Control"
+    description = "The hsmcpp system SHALL provide the ability to enable and disable recording of the structured execution log at runtime without rebuilding."
     nature      = Nature.Functional
-    rationale   = "Runtime control allows selective debugging of specific scenarios without the overhead of always-on logging."
+    rationale   = "Runtime control of the structured execution log (SYS_HSM_066) allows selective recording of specific scenarios without the overhead of always-on logging."
   }
 
 }

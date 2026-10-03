@@ -77,6 +77,8 @@ using VariantPair_t = std::pair<Variant, Variant>;  ///< Provides a way to store
  *      std::cout << "v > 2.0: " << (v > 2.0) << std::endl; // output: v > 2.0: 1
  * }
  * \endcode
+ *
+ * @requirement HSMCPP.SWR_HSM_124
  */
 class Variant {
 private:

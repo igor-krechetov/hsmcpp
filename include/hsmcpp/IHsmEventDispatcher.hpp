@@ -65,6 +65,8 @@ using ActionHandlerFunc_t = std::function<void()>;
  *  \li registerEnqueuedEventHandler()
  *  \li unregisterEnqueuedEventHandler()
  *  \li enqueueEvent()
+ *
+ * @requirement HSMCPP.SWR_HSM_005
  */
 class IHsmEventDispatcher {
 public:

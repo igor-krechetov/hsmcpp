@@ -10,6 +10,9 @@ namespace hsmcpp
 
 class Mutex;
 
+/**
+ * @no_requirement Common platform abstraction primitive.
+ */
 class UniqueLock
 {
 public:

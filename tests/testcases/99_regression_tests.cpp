@@ -6,6 +6,7 @@
 #include "hsm/ABCHsm.hpp"
 
 TEST_F(ABCHsm, issue_pr_8__invalid_std_timers) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_082");
     TEST_DESCRIPTION("Invalid restart logic for STD timers");
     // NOTE: based on https://github.com/igor-krechetov/hsmcpp/pull/8
     /*

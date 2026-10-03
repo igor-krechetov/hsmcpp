@@ -110,7 +110,7 @@ def build_data(with_trace=True):
 
     # Static traceability: attach the code entities and tests that declare they
     # cover each software requirement (from the doxygen @requirement extraction
-    # and the LOBSTER_TRACE source scan). This is DESIGN INTENT, not execution.
+    # and the TEST_REQUIREMENTS source scan). This is DESIGN INTENT, not execution.
     if with_trace:
         code_by_req, tests_by_req = load_static_links()
     else:

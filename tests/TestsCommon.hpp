@@ -74,6 +74,19 @@ bool compareStateLists(const std::list<HsmStateEnum>& l1, const std::list<HsmSta
 // ======================================================
 #define TEST_DESCRIPTION(desc) ::testing::Test::RecordProperty("description", desc)
 
+// TEST_REQUIREMENTS / TEST_EXCLUDE embed LOBSTER requirement-tracing metadata
+// into the GTest XML output via RecordProperty() calls (zero runtime cost, no
+// change to test logic). lobster-gtest reads that XML to build trace evidence.
+#define TEST_REQUIREMENTS(prop)                                      \
+    ::testing::Test::RecordProperty("lobster-tracing", (prop)),      \
+        ::testing::Test::RecordProperty("lobster-tracing-file", __FILE__), \
+        ::testing::Test::RecordProperty("lobster-tracing-line", __LINE__)
+
+#define TEST_EXCLUDE(reason)                                         \
+    ::testing::Test::RecordProperty("lobster-exclude", (reason)),    \
+        ::testing::Test::RecordProperty("lobster-tracing-file", __FILE__), \
+        ::testing::Test::RecordProperty("lobster-tracing-line", __LINE__)
+
 #define EXPECT_EQ_IF(cond, val1, val2) \
   if (cond) {                          \
     EXPECT_EQ((val1), (val2));         \

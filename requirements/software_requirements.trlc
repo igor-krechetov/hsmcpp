@@ -58,11 +58,11 @@ section "Product Scope and Constraints" {
 section "State-Machine Execution" {
   Software_Requirement SWR_HSM_006 {
     summary     = "Initialization"
-    description = "The library SHALL provide an explicit initialization operation that transitions a configured state machine into an executing state. After successful initialization, the state machine SHALL be in its designated initial state."
+    description = "The library SHALL provide an explicit initialization operation that transitions a configured state machine into an executing state. The operation SHALL require a working event-processing implementation to be provided, and SHALL fail if none is provided. After successful initialization, the state machine SHALL be in its designated initial state."
     nature      = Nature.Functional
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
-    rationale   = "Explicit initialization separates structure configuration from runtime execution."
+    rationale   = "Explicit initialization separates structure configuration from runtime execution. A working event-processing implementation is required because the state machine cannot execute or receive events without one."
     parent      = SYS_HSM_004
   }
 
@@ -73,6 +73,26 @@ section "State-Machine Execution" {
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
     rationale   = "Deferring event processing until initialization completes prevents events from being processed against an incompletely established structure."
+    parent      = SYS_HSM_004
+  }
+
+  Software_Requirement SWR_HSM_125 {
+    summary     = "Immutable Event-Processing Implementation After Initialization"
+    description = "The library SHALL NOT allow the event-processing implementation of a state machine to be changed after that state machine has been initialized."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Binding the event-processing implementation for the lifetime of an initialized state machine avoids undefined behavior from events in flight being handed to a different engine mid-execution."
+    parent      = SYS_HSM_004
+  }
+
+  Software_Requirement SWR_HSM_126 {
+    summary     = "Event-Processing Implementation Query"
+    description = "The library SHALL provide an interface to obtain the event-processing implementation currently associated with an initialized state machine."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Exposing the associated event-processing implementation lets the application manage its lifetime and share it across state machine instances without tracking it separately."
     parent      = SYS_HSM_004
   }
 
@@ -114,6 +134,16 @@ section "State-Machine Execution" {
     verification = Verification_Method.Test
     rationale   = "Release allows applications to reset a state machine without destroying the instance."
     parent      = SYS_HSM_009
+  }
+
+  Software_Requirement SWR_HSM_127 {
+    summary     = "Safe Destruction"
+    description = "The library SHALL allow a state machine instance to be destroyed while it is running, without producing undefined behavior. Destruction SHALL release the instance's resources and SHALL ensure that no queued events or callbacks continue to act on the destroyed instance."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Applications destroy state machines during shutdown or error recovery while they may still be executing; safe destruction prevents use-after-free and dangling event or callback access."
+    parent      = SYS_HSM_076
   }
 
 }
@@ -260,6 +290,16 @@ section "Hierarchical States" {
     parent      = SYS_HSM_016
   }
 
+  Software_Requirement SWR_HSM_131 {
+    summary     = "Transition Cancellation When No Entry Point Is Eligible"
+    description = "When a transition enters a parent state that defines entry points but none of them is eligible for activation, the library SHALL cancel the transition and leave the active state configuration unchanged."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "If a parent declares entry points but none applies to the current context, there is no deterministic substate to activate, so completing the transition would leave the state machine in an ill-defined configuration; cancelling instead keeps behavior predictable."
+    parent      = SYS_HSM_016
+  }
+
   Software_Requirement SWR_HSM_026 {
     summary     = "Hierarchical Event Propagation"
     description = "When no applicable transition for an event can be executed in the active substate, the library SHALL evaluate applicable transitions in successive ancestor states until a transition can be executed or the topmost state is reached."
@@ -325,22 +365,32 @@ section "Parallel States" {
 }
 section "History States" {
   Software_Requirement SWR_HSM_032 {
-    summary     = "Shallow History Registration and Restoration"
-    description = "The library SHALL support registration of shallow history states. When re-entering a parent state via a shallow history state, the library SHALL restore the last active direct child state of that parent."
+    summary     = "Shallow History Registration"
+    description = "The library SHALL support registration of shallow history states for a composite state."
     nature      = Nature.Functional
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
-    rationale   = "Shallow history enables resume-where-you-left-off behavior at one level of nesting."
+    rationale   = "Shallow history must be declared as part of the state machine structure before it can influence re-entry behavior."
+    parent      = SYS_HSM_024
+  }
+
+  Software_Requirement SWR_HSM_136 {
+    summary     = "Shallow History Restoration"
+    description = "When re-entering a composite state via a shallow history state, the library SHALL restore all direct child states of that composite that were active immediately before its most recent deactivation."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Shallow history enables resume-where-you-left-off behavior at one level of nesting. A composite with parallel regions can have more than one active direct child, so restoring only a single child would lose the other concurrent regions."
     parent      = SYS_HSM_024
   }
 
   Software_Requirement SWR_HSM_033 {
     summary     = "Shallow History Recording"
-    description = "The recorded shallow history of a parent state SHALL always reflect the direct child state that was active immediately before the most recent deactivation of that child, independently of whether the parent itself was exited. The recorded child SHALL be used for subsequent shallow history restoration."
+    description = "The recorded shallow history of a parent state SHALL always reflect all direct child states that were active immediately before the most recent deactivation of those children, independently of whether the parent itself was exited. The recorded children SHALL be used for subsequent shallow history restoration."
     nature      = Nature.Functional
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
-    rationale   = "Accurate history requires that the recorded child always reflect the most recently active direct child, because a parent's active child can change while the parent remains continuously active (for example, driven by events unrelated to the parent) and not only at the moment the parent is exited. Recording only on parent exit would miss substate progress made during the parent's active lifetime. The intended implementation updates the recording whenever the parent's active direct child changes."
+    rationale   = "Accurate history requires that the recorded children always reflect the most recently active direct children, because a parent's active children can change while the parent remains continuously active (for example, driven by events unrelated to the parent) and not only at the moment the parent is exited. A parent with parallel regions can have more than one active direct child, so all of them must be recorded. Recording only on parent exit, or recording a single child, would lose substate progress. The intended implementation updates the recording whenever the parent's active direct children change."
     parent      = SYS_HSM_024
   }
 
@@ -355,12 +405,22 @@ section "History States" {
   }
 
   Software_Requirement SWR_HSM_035 {
-    summary     = "Deep History Registration and Restoration"
-    description = "The library SHALL support registration of deep history states. When re-entering a parent state via a deep history state, the library SHALL restore the entire substate hierarchy that was active when the parent was last exited."
+    summary     = "Deep History Registration"
+    description = "The library SHALL support registration of deep history states for a composite state."
     nature      = Nature.Functional
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
-    rationale   = "Deep history restores the full nested state configuration for seamless resumption."
+    rationale   = "Deep history must be declared as part of the state machine structure before it can influence re-entry behavior."
+    parent      = SYS_HSM_025
+  }
+
+  Software_Requirement SWR_HSM_137 {
+    summary     = "Deep History Restoration"
+    description = "When re-entering a composite state via a deep history state, the library SHALL restore the entire substate hierarchy that was active when the composite was last deactivated, including all concurrently active substates across parallel regions."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Deep history restores the full nested state configuration for seamless resumption of complex multi-level workflows. The restored hierarchy includes every active substate, so a composite with parallel regions resumes all of its concurrently active branches."
     parent      = SYS_HSM_025
   }
 
@@ -391,6 +451,16 @@ section "History States" {
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
     rationale   = "A default target provides deterministic behavior on first entry when no prior history exists."
+    parent      = SYS_HSM_026
+  }
+
+  Software_Requirement SWR_HSM_134 {
+    summary     = "History Entry Without Default Target"
+    description = "When a transition targets a history state for which no history has been recorded and no default target state has been defined, the library SHALL enter the history state's parent and resolve its active child through the parent's entry point."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "When neither recorded history nor a default target is available, the history state has no explicit target to activate. Falling back to the parent's normal entry resolution yields deterministic behavior consistent with entering the parent directly, rather than leaving the activated child undefined."
     parent      = SYS_HSM_026
   }
 
@@ -466,6 +536,16 @@ section "Transitions" {
     parent      = SYS_HSM_031
   }
 
+  Software_Requirement SWR_HSM_133 {
+    summary     = "Self-Transition Execution Priority"
+    description = "When a state has multiple transitions that match the same event, including a combination of self-transitions and a regular (non-self) transition, the library SHALL execute them in the following priority order: internal self-transitions first, then external self-transitions, then regular transitions."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Self-transitions represent in-state processing or state reset that must take effect relative to the current state before a regular transition relocates the active configuration. Fixing the order internal-self then external-self then regular makes the combined behavior deterministic when several transition kinds match one event."
+    parent      = SYS_HSM_031
+  }
+
   Software_Requirement SWR_HSM_046 {
     summary     = "Synchronous Transition with Timeout"
     description = "The library SHALL provide a synchronous transition operation that blocks the caller until the transition completes or fails. If the transition does not complete within a configurable timeout period, the operation SHALL return a timeout indication. A timeout indication SHALL indicate that the transition outcome is not available to the caller at the time the operation returns."
@@ -516,6 +596,16 @@ section "Transitions" {
     parent      = SYS_HSM_032
   }
 
+  Software_Requirement SWR_HSM_124 {
+    summary     = "Transition Data Supported Types"
+    description = "The library SHALL support associating transition data of the following types: signed integers of 1, 2, 4 and 8 bytes; unsigned integers of 1, 2, 4 and 8 bytes; double-precision floating-point values; boolean values; character strings; byte arrays; and the composite types list, vector, map and pair whose elements are themselves supported data values. The library SHALL additionally support an opaque application-defined (custom) type that is carried through the transition without interpretation."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Defining the concrete set of supported data types bounds what applications may pass through a transition and what the Variant container must represent. The signed/unsigned integer widths, double, bool, string, byte array, the list/vector/map/pair composites and the custom escape hatch correspond to the types the Variant class exposes."
+    parent      = SYS_HSM_032
+  }
+
   Software_Requirement SWR_HSM_051 {
     summary     = "State Configuration Consistency"
     description = "When a transition is cancelled by application-defined behavior after the source state has been exited, the library SHALL restore the source state as active by re-entering it, executing its entry callback and state-changed callback as if it had been entered by a normal transition. When cancellation occurs before the source state is exited, the source state SHALL remain active with no additional callbacks. When the source state is still active because a concurrent branch shares it, restoration SHALL NOT re-enter it. Externally visible side effects performed by callbacks that executed before the cancellation SHALL remain in effect (the library does not undo them)."
@@ -528,11 +618,21 @@ section "Transitions" {
 
   Software_Requirement SWR_HSM_052 {
     summary     = "Event Queue Capacity Handling"
-    description = "The library SHALL return an error indication when an asynchronous event submission cannot be accepted because the event queue has reached its capacity limit. The default event queue capacity SHALL be 10 pending events."
+    description = "The library SHALL return an error indication when an asynchronous event submission cannot be accepted because the event queue has reached its capacity limit."
     nature      = Nature.Functional
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
     rationale   = "Resource-constrained applications require predictable feedback when the queue is full."
+    parent      = SYS_HSM_042
+  }
+
+  Software_Requirement SWR_HSM_130 {
+    summary     = "Default Event Queue Capacity"
+    description = "The library SHALL use a default event queue capacity of 10 pending events when the application does not configure a capacity."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A defined default provides predictable out-of-the-box behavior for applications that do not tune the pending-event capacity."
     parent      = SYS_HSM_042
   }
 
@@ -585,6 +685,16 @@ section "Transition Execution Model" {
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
     rationale   = "When a single event triggers multiple satisfied transitions (concurrent activation), cancelling one branch must not affect the others, so each branch resolves independently."
+    parent      = SYS_HSM_034
+  }
+
+  Software_Requirement SWR_HSM_135 {
+    summary     = "History Transition Cancellation"
+    description = "When a transition that restores a history state is cancelled before completion, the library SHALL apply the same cancellation strategy as for a regular transition and restore the source state as active."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A history restoration is executed through the same transition machinery as a regular transition, so its cancellation must leave the state machine in a consistent configuration rather than a partially restored one. Reusing the established restore-the-source strategy keeps cancellation behavior uniform regardless of whether the transition targets a plain state or a history state."
     parent      = SYS_HSM_034
   }
 
@@ -719,6 +829,16 @@ section "Event Processing" {
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
     rationale   = "Preventing nested processing during an active transition avoids inconsistent state configurations."
+    parent      = SYS_HSM_041
+  }
+
+  Software_Requirement SWR_HSM_132 {
+    summary     = "Synchronous Transition Refused Within Execution Context"
+    description = "When a synchronous transition is requested from within the state machine's own execution context, such as from inside a state or transition callback, the library SHALL NOT block waiting for that transition to complete; it SHALL cancel the synchronous request and report failure to the caller."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A synchronous transition waits for the processing cycle to complete, but a callback runs inside that very cycle, so waiting from within it would block the processing thread against itself and deadlock. Refusing the request and returning failure keeps the state machine responsive instead of hanging."
     parent      = SYS_HSM_041
   }
 
@@ -886,6 +1006,16 @@ section "Timer Management" {
     parent      = SYS_HSM_055
   }
 
+  Software_Requirement SWR_HSM_138 {
+    summary     = "Multiple Concurrent Timers"
+    description = "The library SHALL support multiple timers running concurrently. Each timer SHALL be identified by a distinct type-safe timer identifier, and start, stop, restart, and status-query operations on one timer SHALL affect only the timer named by that identifier and SHALL NOT disturb any other running timer."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Applications commonly need several independent timers active at once (for example a heartbeat and a watchdog). Keying each timer by its own identifier and isolating lifecycle operations to that identifier lets concurrent timers coexist without interfering with one another."
+    parent      = SYS_HSM_077
+  }
+
 }
 section "Code Generation" {
   Software_Requirement SWR_HSM_087 {
@@ -1011,12 +1141,12 @@ section "Debugging and Observability" {
   }
 
   Software_Requirement SWR_HSM_099 {
-    summary     = "Runtime Debug Enable/Disable"
-    description = "The library SHALL provide an API to enable and disable logging at runtime without rebuilding. Changes SHALL take effect for the next logged event."
+    summary     = "Runtime Execution-Log Enable/Disable"
+    description = "The library SHALL provide an API to enable and disable recording of the structured execution log at runtime without rebuilding. When enabled, the library SHALL begin recording to the configured log destination; when disabled, it SHALL stop recording and close the log. Changes SHALL take effect for the next logged event."
     nature      = Nature.Functional
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
-    rationale   = "Runtime control allows selective debugging without rebuilding."
+    rationale   = "Runtime control of the execution-log recording allows selective debugging without rebuilding."
     parent      = SYS_HSM_069
   }
 
@@ -1181,6 +1311,26 @@ section "Exit Points" {
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
     rationale   = "Exit points let a composite state expose distinct completion paths so the parent's outgoing transition depends on how the substate region finished."
+    parent      = SYS_HSM_017
+  }
+
+  Software_Requirement SWR_HSM_128 {
+    summary     = "Exit Point Without Registered Event"
+    description = "When an exit point is activated and no event was registered for it, the library SHALL exit the parent state using the same event that activated the exit point."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Reusing the triggering event lets a composite state propagate the completion cause outward unchanged when no explicit remapping is needed."
+    parent      = SYS_HSM_017
+  }
+
+  Software_Requirement SWR_HSM_129 {
+    summary     = "Exit Point With Registered Event"
+    description = "When an exit point is activated and an event was registered for it, the library SHALL exit the parent state using the registered event instead of the event that activated the exit point."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A registered exit-point event lets a composite state remap its internal completion cause to a distinct outward event, decoupling the parent's outgoing transition from the substate's internal event vocabulary."
     parent      = SYS_HSM_017
   }
 

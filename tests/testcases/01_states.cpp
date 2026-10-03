@@ -3,6 +3,7 @@
 #include "hsm/TrafficLightHsm.hpp"
 
 TEST_F(TrafficLightHsm, initial_state) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_006,HSMCPP.SWR_HSM_013");
     TEST_DESCRIPTION("after creation FSM should be in it's initial state");
 
     //-------------------------------------------
@@ -19,6 +20,7 @@ TEST_F(TrafficLightHsm, initial_state) {
 }
 
 TEST_F(TrafficLightHsm, register_states) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_012");
     TEST_DESCRIPTION("simple test to check registration of two states and transition between them");
 
     //-------------------------------------------
@@ -40,6 +42,7 @@ TEST_F(TrafficLightHsm, register_states) {
 }
 
 TEST_F(TrafficLightHsm, register_state_without_action) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_012");
     TEST_DESCRIPTION("states without actions should be allowed");
 
     //-------------------------------------------
@@ -60,6 +63,7 @@ TEST_F(TrafficLightHsm, register_state_without_action) {
 }
 
 TEST_F(TrafficLightHsm, register_same_state_twice) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_012");
     TEST_DESCRIPTION("registering same state twice should overwrite previous actions");
 
     //-------------------------------------------
@@ -80,6 +84,7 @@ TEST_F(TrafficLightHsm, register_same_state_twice) {
 }
 
 TEST_F(TrafficLightHsm, err_register_without_handler) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_062");
     TEST_DESCRIPTION("registering an action without a handler should be ignored");
     //-------------------------------------------
     // PRECONDITIONS
@@ -99,7 +104,8 @@ TEST_F(TrafficLightHsm, err_register_without_handler) {
 }
 
 TEST_F(TrafficLightHsm, state_args_test) {
-    TEST_DESCRIPTION("");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_050,HSMCPP.SWR_HSM_058");
+    TEST_DESCRIPTION("arguments passed to transitionSync() are delivered unchanged to the entered state's onState/onEnter callback");
 
     //-------------------------------------------
     // PRECONDITIONS

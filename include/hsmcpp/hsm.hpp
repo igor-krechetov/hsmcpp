@@ -30,6 +30,8 @@ class IHsmEventDispatcher;
  *      \li register state and transition callbacks
  *      \li trigger state transitions
  *      \li interact with HSM timers
+ *
+ * @requirements_container
  */
 class HierarchicalStateMachine {
 public:
@@ -39,6 +41,8 @@ public:
      * @details Initial state can be modified later with setInitialState().
      *
      * @param initialState The initial state of the HSM.
+     *
+     * @requirement HSMCPP.SWR_HSM_013
      */
     explicit HierarchicalStateMachine(const StateID_t initialState);
 
@@ -46,6 +50,7 @@ public:
      * @brief Destructor.
 
      * @notthreadsafe{Internally uses release().}
+     * @requirement HSMCPP.SWR_HSM_127
      */
     virtual ~HierarchicalStateMachine();
 
@@ -56,6 +61,8 @@ public:
      * @param initialState The initial state of the HSM.
      *
      * @concurrencysafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_013
      */
     void setInitialState(const StateID_t initialState);
 
@@ -76,6 +83,8 @@ public:
      *
      * @notthreadsafe{Internally uses IHsmEventDispatcher::registerEventHandler() and IHsmEventDispatcher::start(). Usually must
      * be called from the same thread where dispatcher was created.}
+     *
+     * @requirement HSMCPP.SWR_HSM_006, HSMCPP.SWR_HSM_007
      */
     virtual bool initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher);
 
@@ -85,6 +94,8 @@ public:
      * @return dispatcher used by HSM or nullptr (if HSM was not initialized or release() was called).
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_126
      */
     std::weak_ptr<IHsmEventDispatcher> dispatcher() const;
 
@@ -95,6 +106,8 @@ public:
      * @retval false HSM is not initialized
      *
      * @concurrencysafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_120
      */
     bool isInitialized() const;
 
@@ -112,6 +125,14 @@ public:
      * @notthreadsafe{Usually must be called on the same thread as initialize(). Releases reference to dispatcher. In case
      * HierarchicalStateMachine object is the only one owning IHsmEventDispatcher reference, then you need to check the
      * limitations for deleting dispatcher instance. See the documentation for the used dispatcher.}
+     *
+     * @requirement HSMCPP.SWR_HSM_011
+     *
+     * NOTE(best-guess): release() also drives the "clear recorded history on
+     * release" part of SWR_HSM_034 (shallow) and SWR_HSM_037 (deep), but the
+     * actual history clearing happens inside Impl, not here. Linked only to
+     * SWR_HSM_011 (release/re-initialization) with certainty; please review
+     * whether 034/037 should also point at this entity or at the Impl logic.
      */
     void release();
 
@@ -125,6 +146,8 @@ public:
      * @param onFailedTransition The callback function to be called when transition fails.
      *
      * @concurrencysafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_049
      */
     void registerFailedTransitionCallback(HsmTransitionFailedCallback_t onFailedTransition);
 
@@ -147,6 +170,14 @@ public:
      * @param onExiting (optional) callback function to be called before exiting the state.
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_012
+     *
+     * NOTE(best-guess): this is also the registration entry point for the
+     * state-changed (SWR_HSM_060), entry (SWR_HSM_058) and exit (SWR_HSM_059)
+     * callbacks, but those requirements concern the *execution* of those
+     * callbacks during a transition, which lives in Impl. Linked here only to
+     * SWR_HSM_012 (state registration) with certainty.
      */
     void registerState(const StateID_t state,
                        HsmStateChangedCallback_t onStateChanged = nullptr,
@@ -180,6 +211,8 @@ public:
      * @param onExiting (optional) callback function to be called before exiting the state.
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_014
      */
     void registerFinalState(const StateID_t state,
                             const EventID_t event = INVALID_HSM_EVENT_ID,
@@ -215,6 +248,17 @@ public:
      * @param transitionCallback transition callback function to be called when the history state is entered.
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_032, HSMCPP.SWR_HSM_035, HSMCPP.SWR_HSM_038, HSMCPP.SWR_HSM_039
+     *
+     * NOTE(best-guess): this is the *registration* API. It covers shallow
+     * history registration (SWR_HSM_032), deep history registration
+     * (SWR_HSM_035, selected via the HistoryType argument), the default target
+     * (SWR_HSM_038, the defaultTarget argument) and the history callback
+     * registration (SWR_HSM_039, the transitionCallback argument). The
+     * restoration/recording/clearing halves (and SWR_HSM_033 / SWR_HSM_036 /
+     * SWR_HSM_037) are runtime behavior in Impl. Please confirm whether
+     * 032/035/038/039 belong on this registration entity.
      */
     // TODO: check structure and return FALSE?
     void registerHistory(const StateID_t parent,
@@ -254,6 +298,13 @@ public:
      * @retval false registering substate is not allowed
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_016
+     *
+     * NOTE(best-guess): the structural-validation checks described in
+     * SWR_HSM_017 and SWR_HSM_018 are performed inside Impl::registerSubstate
+     * when HSM_ENABLE_SAFE_STRUCTURE is set; linked here only to SWR_HSM_016
+     * (parent-child registration) with certainty.
      */
     bool registerSubstate(const StateID_t parent, const StateID_t substate);
 
@@ -277,6 +328,16 @@ public:
      * @retval false registering substate is not allowed
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_020, HSMCPP.SWR_HSM_021, HSMCPP.SWR_HSM_022, HSMCPP.SWR_HSM_023, HSMCPP.SWR_HSM_024
+     *
+     * NOTE(best-guess): this single API registers entry points in all supported
+     * flavors: plain (SWR_HSM_020), condition-only (SWR_HSM_021,
+     * conditionCallback), event-filtered (SWR_HSM_022, onEvent), combined
+     * event+condition (SWR_HSM_023), and unconditional (SWR_HSM_024, neither
+     * argument supplied). The *resolution order* among multiple entry points
+     * (SWR_HSM_025) is runtime behavior in Impl, not registration, so it is
+     * intentionally not linked here. Please confirm this grouping.
      */
     bool registerSubstateEntryPoint(const StateID_t parent,
                                     const StateID_t substate,
@@ -309,6 +370,8 @@ public:
      * @param event ID of the event to send when timer expires.
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_080
      */
     void registerTimer(const TimerID_t timerID, const EventID_t event);
 
@@ -326,6 +389,17 @@ public:
      * @retval false action registration failed due to invalid arguments
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_062, HSMCPP.SWR_HSM_063, HSMCPP.SWR_HSM_064, HSMCPP.SWR_HSM_065
+     *
+     * NOTE(best-guess): registerStateAction is the API for declarative
+     * state-associated actions: the action concept (SWR_HSM_062), timer control
+     * actions (SWR_HSM_063) and event generation actions (SWR_HSM_064) are
+     * selected via the StateAction argument, and multiple actions per trigger
+     * point (SWR_HSM_065) are supported by calling it repeatedly. The
+     * actionTrigger argument covers entry/exit/transition attachment. The
+     * *execution* of these actions is in Impl. Please confirm 062/063/064/065
+     * belong on this entity.
      */
     template <typename... Args>
     bool registerStateAction(const StateID_t state,
@@ -346,6 +420,16 @@ public:
      * @param expectedConditionValue (optional) expected value from the condition callback function to allow transition.
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_040, HSMCPP.SWR_HSM_041
+     *
+     * NOTE(best-guess): the conditionCallback + expectedConditionValue arguments
+     * are also the registration mechanism behind guarded "otherwise" fallback
+     * transitions (SWR_HSM_042) and the registration-order priority of guarded
+     * transitions (SWR_HSM_045), but those are runtime-selection behaviors
+     * realized in Impl. Linked here with certainty only to SWR_HSM_040
+     * (event-triggered transition registration) and SWR_HSM_041 (guard condition
+     * registration).
      */
     void registerTransition(const StateID_t fromState,
                             const StateID_t toState,
@@ -386,6 +470,11 @@ public:
      * @param expectedConditionValue The expected value returned by the condition callback (default: true).
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_043, HSMCPP.SWR_HSM_044
+     *
+     * NOTE: internal (SWR_HSM_043) vs external (SWR_HSM_044) self-transition is
+     * selected via the TransitionType argument.
      */
     void registerSelfTransition(const StateID_t state,
                                 const EventID_t onEvent,
@@ -419,6 +508,8 @@ public:
      * @return ID of the last active state.
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_015
      */
     StateID_t getLastActiveState() const;
 
@@ -426,6 +517,8 @@ public:
      * @brief Get the list of currently active states.
      *
      * @return list of currently active states.
+     *
+     * @requirement HSMCPP.SWR_HSM_015
      */
     const std::list<StateID_t>& getActiveStates() const;
 
@@ -435,6 +528,8 @@ public:
      *
      * @param state ID of the state to check
      * @return True if the state is active, false otherwise.
+     *
+     * @requirement HSMCPP.SWR_HSM_015
      */
     bool isStateActive(const StateID_t state) const;
 
@@ -448,6 +543,8 @@ public:
      * @param args (optional) arguments to pass to the callbacks
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_067
      */
     template <typename... Args>
     void transition(const EventID_t event, Args&&... args);
@@ -474,6 +571,8 @@ public:
      * @retval false (if sync=true) no matching transitions were found, transition was canceled or timeoutMs expired
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_046, HSMCPP.SWR_HSM_047, HSMCPP.SWR_HSM_067, HSMCPP.SWR_HSM_050
      */
     template <typename... Args>
     bool transitionEx(const EventID_t event, const bool clearQueue, const bool sync, const int timeoutMs, Args&&... args);
@@ -481,12 +580,16 @@ public:
     /**
      * @brief Trigger a transition in the HSM with arguments passed as a vector.
      * @copydetails transition()
+     *
+     * @requirement HSMCPP.SWR_HSM_067
      */
     void transitionWithArgsArray(const EventID_t event, VariantVector_t&& args);
 
     /**
      * @brief Trigger a transition in the HSM with arguments passed as a vector.
      * @copydetails transitionEx()
+     *
+     * @requirement HSMCPP.SWR_HSM_046, HSMCPP.SWR_HSM_047, HSMCPP.SWR_HSM_067
      */
     bool transitionExWithArgsArray(const EventID_t event,
                                    const bool clearQueue,
@@ -510,6 +613,8 @@ public:
      * @retval false no matching transitions were found, transition was canceled or timeoutMs expired
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_046
      */
     template <typename... Args>
     bool transitionSync(const EventID_t event, const int timeoutMs, Args&&... args);
@@ -523,6 +628,8 @@ public:
      * @param args (optional) arguments to pass to the callbacks
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_047
      */
     template <typename... Args>
     void transitionWithQueueClear(const EventID_t event, Args&&... args);
@@ -543,6 +650,8 @@ public:
      * @retval false failed to add event to queue because it's not supported by dispatcher or queue limit was reached
      *
      * @concurrencysafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_077
      */
     bool transitionInterruptSafe(const EventID_t event);
 
@@ -562,6 +671,8 @@ public:
      * @return True if a transition is possible, false otherwise.
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_048
      */
     template <typename... Args>
     bool isTransitionPossible(const EventID_t event, Args&&... args);
@@ -576,6 +687,14 @@ public:
      *                      false - timer will keep running until stopTimer() is called or dispatcher is destroyed
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_083, HSMCPP.SWR_HSM_081, HSMCPP.SWR_HSM_082
+     *
+     * NOTE(best-guess): startTimer is the start operation (SWR_HSM_083). The
+     * isSingleShot argument selects single-shot (SWR_HSM_081) vs repeating
+     * (SWR_HSM_082) mode, so this entity is the registration point for both
+     * modes; the actual firing behavior lives in the dispatcher. Please confirm
+     * 081/082.
      */
     void startTimer(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot);
 
@@ -588,6 +707,8 @@ public:
      * @param timerID       id of running timer
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_085
      */
     void restartTimer(const TimerID_t timerID);
 
@@ -601,6 +722,8 @@ public:
      * @param timerID id of running or expired timer
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_084
      */
     void stopTimer(const TimerID_t timerID);
 
@@ -613,6 +736,8 @@ public:
      * @retval false timer is not running
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_086
      */
     bool isTimerRunning(const TimerID_t timerID);
 
@@ -628,6 +753,8 @@ public:
      * @retval false failed to open log file
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_099
      */
     bool enableHsmDebugging();
 
@@ -643,6 +770,8 @@ public:
      * @retval false failed to open log file
      *
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
+     *
+     * @requirement HSMCPP.SWR_HSM_099
      */
     bool enableHsmDebugging(const std::string& dumpPath);
 
@@ -652,6 +781,8 @@ public:
      * Does nothing if enableHsmDebugging() was not called.
      *
      * @threadsafe{ Internally just calls std::filebuf::close(). }
+     *
+     * @requirement HSMCPP.SWR_HSM_099
      */
     void disableHsmDebugging();
 
@@ -668,6 +799,15 @@ protected:
      * @return name of the state with requested ID or an ID converted to string
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_100
+     *
+     * NOTE(best-guess): the default implementations only stringify the numeric
+     * ID. SWR_HSM_100 ("human-readable identifier names") is really satisfied by
+     * the generated getStateName()/getEventName() overrides (scxml2gen) plus the
+     * logging that includes those names. These base virtuals are the extension
+     * point the requirement hangs on; please confirm the link belongs here vs
+     * the generated code / logging path.
      */
     virtual std::string getStateName(const StateID_t state) const;
 
@@ -683,17 +823,33 @@ protected:
      * @return name of the event with requested ID or an ID converted to string
      *
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_100
      */
     virtual std::string getEventName(const EventID_t event) const;
 
 private:
+    /**
+     * @brief Pack variadic call arguments into a VariantVector_t.
+     * @details Shared helper used to collect the application-provided data of a call
+     * into a Variant vector.
+     * @requirement HSMCPP.SWR_HSM_050, HSMCPP.SWR_HSM_062, HSMCPP.SWR_HSM_063, HSMCPP.SWR_HSM_064, HSMCPP.SWR_HSM_065
+     */
     template <typename... Args>
     void makeVariantList(VariantVector_t& vList, Args&&... args);
 
+    /**
+     * @brief Implementation detail of registerStateAction().
+     * @requirement HSMCPP.SWR_HSM_062, HSMCPP.SWR_HSM_063, HSMCPP.SWR_HSM_064, HSMCPP.SWR_HSM_065
+     */
     bool registerStateActionImpl(const StateID_t state,
                                  const StateActionTrigger actionTrigger,
                                  const StateAction action,
                                  const VariantVector_t& args);
+    /**
+     * @brief Implementation detail of isTransitionPossible().
+     * @requirement HSMCPP.SWR_HSM_048
+     */
     bool isTransitionPossibleImpl(const EventID_t event, const VariantVector_t& args);
 
 private:

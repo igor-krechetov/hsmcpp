@@ -15,6 +15,7 @@ namespace hsmcpp
 /**
  * @brief HsmEventDispatcherQt provides dispatcher implementation based on Qt framework.
  * @details See @rstref{platforms-dispatcher-qt} for details.
+ * @requirement HSMCPP.SWR_HSM_113
  */
 class HsmEventDispatcherQt: public QObject
                           , public HsmEventDispatcherBase

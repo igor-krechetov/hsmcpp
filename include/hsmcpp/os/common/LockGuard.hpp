@@ -1,18 +1,16 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2022 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_COMMON_LOCKGUARD_HPP
 #define HSMCPP_OS_COMMON_LOCKGUARD_HPP
 
-namespace hsmcpp
-{
+namespace hsmcpp {
 
 class Mutex;
 
 /**
  * @no_requirement Common platform abstraction primitive.
  */
-class LockGuard
-{
+class LockGuard {
 public:
     explicit LockGuard(Mutex& sync);
     ~LockGuard();
@@ -27,6 +25,6 @@ private:
     Mutex& mSync;
 };
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_OS_COMMON_LOCKGUARD_HPP
+#endif  // HSMCPP_OS_COMMON_LOCKGUARD_HPP

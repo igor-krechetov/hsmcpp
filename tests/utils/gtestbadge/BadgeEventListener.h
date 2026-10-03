@@ -89,7 +89,12 @@ public:
     ///< param name="disabled">The number of disabled tests.</param>
     ///< param name="iIcon">The id of a badge icon.</param>
     ///< returns>Returns true if the badge was properly saved. Returns false otherwise.</returns>
-    static bool generateBadge(const std::string& iFilename, int success, int failures, int disabled, const std::string& title, const SYSTEM_ICON& iIcon);
+    static bool generateBadge(const std::string& iFilename,
+                              int success,
+                              int failures,
+                              int disabled,
+                              const std::string& title,
+                              const SYSTEM_ICON& iIcon);
 
     ///< summary>Generate a test badge based on the given test results.</summary>
     ///< param name="iFilename">The file path to save the image.</param>

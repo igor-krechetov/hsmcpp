@@ -19,7 +19,7 @@ section "Product Scope and Constraints" {
     description = "The library SHALL provide a type-safe state identifier type that the compiler can distinguish from unrelated integer or enumeration types. The library SHALL allow users to define domain-specific state identifier sets."
     nature      = Nature.Functional
     criticality = Criticality.NonSafety
-    verification = Verification_Method.Test
+    verification = Verification_Method.Review
     rationale   = "Type-safe identifiers prevent accidental misuse of raw numeric values and enable compile-time checking."
     parent      = SYS_HSM_002
   }
@@ -29,7 +29,7 @@ section "Product Scope and Constraints" {
     description = "The library SHALL provide a type-safe event identifier type that the compiler can distinguish from unrelated integer or enumeration types. The library SHALL allow users to define domain-specific event identifier sets."
     nature      = Nature.Functional
     criticality = Criticality.NonSafety
-    verification = Verification_Method.Test
+    verification = Verification_Method.Review
     parent      = SYS_HSM_002
   }
 
@@ -38,7 +38,7 @@ section "Product Scope and Constraints" {
     description = "The library SHALL provide a type-safe timer identifier type that the compiler can distinguish from unrelated integer or enumeration types. The library SHALL allow users to define domain-specific timer identifier sets."
     nature      = Nature.Functional
     criticality = Criticality.NonSafety
-    verification = Verification_Method.Test
+    verification = Verification_Method.Review
     parent      = SYS_HSM_002
   }
 

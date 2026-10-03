@@ -200,6 +200,12 @@ tr.sec-row .chev{{display:inline-block;width:1rem;color:var(--accent)}}
 .trace-code{{color:#8bd49c;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;word-break:break-all}}
 .trace-test{{color:#c39bd3;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;word-break:break-all}}
 .gap{{color:var(--warn);font-size:.8rem}}
+.stat.gapcard{{border-left-color:var(--warn)}}.stat.gapcard .n{{color:var(--warn)}}
+#swfilters{{display:none;gap:1rem;align-items:center}}
+body.tab-sw #swfilters{{display:flex}}
+#swfilters label{{display:flex;align-items:center;gap:.35rem;color:var(--muted);font-size:.85rem;cursor:pointer}}
+#swfilters label:hover{{color:var(--text)}}
+#swfilters input[type=checkbox]{{accent-color:var(--accent);cursor:pointer}}
 </style></head><body>
 <h1>hsmcpp Requirements Specification</h1>
 <p class="sub">Generated from TRLC (BMW format) &mdash; {n_sys} system &middot; {n_sw} software requirements.{trace_note}</p>
@@ -208,11 +214,13 @@ tr.sec-row .chev{{display:inline-block;width:1rem;color:var(--accent)}}
  <div class="stat"><div class="n">{n_sw}</div><div class="l">Software Requirements</div></div>
  <div class="stat"><div class="n">{n_terms}</div><div class="l">Glossary Terms</div></div>
  <div class="stat"><div class="n">{cov}%</div><div class="l">SYS with SW child</div></div>
+ {trace_cards}
 </div>
 <div class="controls">
  <input type="search" id="q" placeholder="Search requirements...">
  <select id="fnat"><option value="">All natures</option><option>Functional</option><option>NonFunctional</option></select>
  <button id="expand">Expand all</button><button id="collapse">Collapse all</button>
+ {trace_filters}
 </div>
 <div class="tabs">
  <div class="tab active" data-t="sys">System</div>
@@ -270,10 +278,7 @@ function renderTree(items, rowFn, cols){{
 }}
 
 function jump(t,id){{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.sec').forEach(x=>x.classList.remove('active'));
-  document.querySelector(`.tab[data-t="${{t}}"]`).classList.add('active');
-  document.getElementById('s-'+t).classList.add('active');
+  selectTab(t);
   const r=document.querySelector(`#s-${{t}} tr[data-id="${{id}}"]`);
   if(r){{ // make sure its section is expanded
     r.style.display=''; r.style.background='rgba(79,156,249,.2)';
@@ -309,20 +314,31 @@ function setAll(collapse){{
 function apply(){{
   const q=document.getElementById('q').value.toLowerCase();
   const nat=document.getElementById('fnat').value;
-  const m=r=>(!q||JSON.stringify(r).toLowerCase().includes(q))&&(!nat||r.nature===nat);
-  document.getElementById('b-sys').innerHTML=renderTree(D.sys.filter(m), rowSys, SYS_COLS);
-  document.getElementById('b-sw').innerHTML=renderTree(D.sw.filter(m), rowSw, SW_COLS);
+  const noCodeEl=document.getElementById('fnocode');
+  const noTestEl=document.getElementById('fnotest');
+  const noCode=noCodeEl&&noCodeEl.checked;
+  const noTest=noTestEl&&noTestEl.checked;
+  const base=r=>(!q||JSON.stringify(r).toLowerCase().includes(q))&&(!nat||r.nature===nat);
+  const swMatch=r=>base(r)
+    &&(!noCode||!(r.code&&r.code.length))
+    &&(!noTest||!(r.tests&&r.tests.length));
+  document.getElementById('b-sys').innerHTML=renderTree(D.sys.filter(base), rowSys, SYS_COLS);
+  document.getElementById('b-sw').innerHTML=renderTree(D.sw.filter(swMatch), rowSw, SW_COLS);
   document.getElementById('b-term').innerHTML=D.terms.filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q)).map(rowTerm).join('');
 }}
-document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{{
+function selectTab(t){{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.sec').forEach(x=>x.classList.remove('active'));
-  t.classList.add('active');document.getElementById('s-'+t.dataset.t).classList.add('active');
-}}));
+  document.querySelector(`.tab[data-t="${{t}}"]`).classList.add('active');
+  document.getElementById('s-'+t).classList.add('active');
+  document.body.classList.toggle('tab-sw', t==='sw');
+}}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>selectTab(t.dataset.t)));
 document.getElementById('q').addEventListener('input',apply);
 document.getElementById('fnat').addEventListener('change',apply);
 document.getElementById('expand').addEventListener('click',()=>setAll(false));
 document.getElementById('collapse').addEventListener('click',()=>setAll(true));
+['fnocode','fnotest'].forEach(id=>{{const el=document.getElementById(id);if(el)el.addEventListener('change',apply);}});
 apply();
 </script></body></html>
 """
@@ -334,6 +350,20 @@ def render(out: Path, with_trace=True):
     n_sw = len(data["sw"])
     covered = len({w["parent"] for w in data["sw"]} & {s["id"] for s in data["sys"]})
     cov = round(covered / n_sys * 100) if n_sys else 0
+    sw_with_code = sum(1 for w in data["sw"] if w.get("code"))
+    sw_with_test = sum(1 for w in data["sw"] if w.get("tests"))
+    trace_cards = (
+        f'<div class="stat gapcard"><div class="n">{sw_with_code}/{n_sw}</div>'
+        f'<div class="l">SW with Code link</div></div>\n'
+        f' <div class="stat gapcard"><div class="n">{sw_with_test}/{n_sw}</div>'
+        f'<div class="l">SW with test link</div></div>'
+    ) if with_trace else ""
+    trace_filters = (
+        '<span id="swfilters">'
+        '<label><input type="checkbox" id="fnocode">Not linked with code</label>'
+        '<label><input type="checkbox" id="fnotest">Not linked with tests</label>'
+        '</span>'
+    ) if with_trace else ""
     doc = TEMPLATE.format(
         n_sys=n_sys, n_sw=n_sw, n_terms=len(data["terms"]), cov=cov,
         data_json=json.dumps(data),
@@ -343,6 +373,8 @@ def render(out: Path, with_trace=True):
         trace_th=("<th>Implemented by</th><th>Verified by</th>"
                   if with_trace else ""),
         trace_js=("true" if with_trace else "false"),
+        trace_cards=trace_cards,
+        trace_filters=trace_filters,
     )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(doc)

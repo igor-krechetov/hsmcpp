@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 //
 // NOTE(reviewer): most tests in this file exercise DISPATCHER lifecycle and
@@ -14,11 +14,10 @@
 #include "TestsCommon.hpp"
 #include "hsm/ABCHsm.hpp"
 
-class TestHsm: public HierarchicalStateMachine {
+class TestHsm : public HierarchicalStateMachine {
 public:
     TestHsm(const hsmcpp::StateID_t initialState, const std::string& data)
-        : HierarchicalStateMachine(initialState)
-    {
+        : HierarchicalStateMachine(initialState) {
         mData.push_back(data);
     }
 
@@ -75,7 +74,6 @@ public:
 struct TestStruct {
     char a[100] = {0};
 };
-
 
 TEST(dispatchers, release_sync) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_011");
@@ -189,7 +187,7 @@ TEST(dispatchers, stresstest_create_destroy_hsm_later) {
             waitState->wait_for(lk, std::chrono::milliseconds(1000));
         }
 
-        dispatcher->enqueueAction([hsm, iterationsCount, &objectsDeleted, &waitCleanup](){
+        dispatcher->enqueueAction([hsm, iterationsCount, &objectsDeleted, &waitCleanup]() {
             ++objectsDeleted;
 
             if (objectsDeleted == iterationsCount) {
@@ -235,7 +233,7 @@ TEST(dispatchers, stresstest_create_destroy_hsm_later) {
     EXPECT_EQ(objectsDeleted, iterationsCount);
 }
 
-#endif // TEST_HSM_FREERTOS
+#endif  // TEST_HSM_FREERTOS
 
 TEST(dispatchers, stresstest_create_destroy_dispatcher) {
     // NOTE(best-guess, no TEST_REQUIREMENTS): stress test verifying that a dispatcher can

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/TrafficLightHsm.hpp"
 
@@ -105,7 +105,8 @@ TEST_F(TrafficLightHsm, err_register_without_handler) {
 
 TEST_F(TrafficLightHsm, state_args_test) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_050,HSMCPP.SWR_HSM_058");
-    TEST_DESCRIPTION("arguments passed to transitionSync() are delivered unchanged to the entered state's onState/onEnter callback");
+    TEST_DESCRIPTION(
+        "arguments passed to transitionSync() are delivered unchanged to the entered state's onState/onEnter callback");
 
     //-------------------------------------------
     // PRECONDITIONS

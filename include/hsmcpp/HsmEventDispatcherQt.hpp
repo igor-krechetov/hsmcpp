@@ -1,25 +1,23 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_HSMEVENTDISPATCHERQT_HPP
 #define HSMCPP_HSMEVENTDISPATCHERQT_HPP
 
-#include "HsmEventDispatcherBase.hpp"
-#include <QObject>
 #include <QEvent>
+#include <QObject>
 #include <QTimer>
 
-namespace hsmcpp
-{
+#include "HsmEventDispatcherBase.hpp"
+
+namespace hsmcpp {
 
 /**
  * @brief HsmEventDispatcherQt provides dispatcher implementation based on Qt framework.
  * @details See @rstref{platforms-dispatcher-qt} for details.
  * @requirement HSMCPP.SWR_HSM_113
  */
-class HsmEventDispatcherQt: public QObject
-                          , public HsmEventDispatcherBase
-{
+class HsmEventDispatcherQt : public QObject, public HsmEventDispatcherBase {
     Q_OBJECT
 
 public:
@@ -42,7 +40,7 @@ public:
     /**
      * @copydoc IHsmEventDispatcher::stop()
      * @notthreadsafe{TODO: Current timers implementation is not thread-safe}
-    */
+     */
     void stop() override;
 
     /**
@@ -51,7 +49,7 @@ public:
      */
     void emitEvent(const HandlerID_t handlerID) override;
 
-// Timers
+    // Timers
 protected:
     void unregisterAllTimerHandlers();
 
@@ -65,7 +63,7 @@ protected:
     /**
      * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
      * @details Uses default GLib content.
-    */
+     */
     explicit HsmEventDispatcherQt(const size_t eventsCacheSize);
 
     /**
@@ -82,9 +80,9 @@ protected:
 
 private:
     static QEvent::Type mQtDispatchEventType;
-    std::map<TimerID_t, QTimer*> mNativeTimerHandlers; // protected by mRunningTimersSync
+    std::map<TimerID_t, QTimer*> mNativeTimerHandlers;  // protected by mRunningTimersSync
 };
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_HSMEVENTDISPATCHERQT_HPP
+#endif  // HSMCPP_HSMEVENTDISPATCHERQT_HPP

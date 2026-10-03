@@ -6,12 +6,12 @@
 using namespace hsmcpp;
 
 namespace States {
-    const hsmcpp::StateID_t OFF = 0;
-    const hsmcpp::StateID_t ON = 1;
-}
+const hsmcpp::StateID_t OFF = 0;
+const hsmcpp::StateID_t ON = 1;
+}  // namespace States
 
 namespace Events {
-    const hsmcpp::EventID_t SWITCH = 0;
+const hsmcpp::EventID_t SWITCH = 0;
 }
 
 int main(const int argc, const char** argv) {

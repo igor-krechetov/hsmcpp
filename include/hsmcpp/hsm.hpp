@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_HSM_HPP
@@ -85,6 +85,9 @@ public:
      * be called from the same thread where dispatcher was created.}
      *
      * @requirement HSMCPP.SWR_HSM_006, HSMCPP.SWR_HSM_007
+     * @requirement HSMCPP.SWR_HSM_125 calling initialize twice will fail; there is no set method to change dispatcher
+     * @requirement HSMCPP.SWR_HSM_010 it's allowed to pass same dispatcher to multiple HSMs
+     * TODO: implement HSMCPP.SWR_HSM_017, SWR_HSM_018, SWR_HSM_019
      */
     virtual bool initialize(const std::weak_ptr<IHsmEventDispatcher>& dispatcher);
 
@@ -172,6 +175,7 @@ public:
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
      *
      * @requirement HSMCPP.SWR_HSM_012
+     * @requirement HSMCPP.SWR_HSM_017 internally does structure validation
      *
      * NOTE(best-guess): this is also the registration entry point for the
      * state-changed (SWR_HSM_060), entry (SWR_HSM_058) and exit (SWR_HSM_059)
@@ -300,6 +304,7 @@ public:
      * @notthreadsafe{Calling thing API from multiple threads can cause data races and will result in undefined behavior}
      *
      * @requirement HSMCPP.SWR_HSM_016
+     * @requirement HSMCPP.SWR_HSM_017 internally does structure validation
      *
      * NOTE(best-guess): the structural-validation checks described in
      * SWR_HSM_017 and SWR_HSM_018 are performed inside Impl::registerSubstate
@@ -864,7 +869,8 @@ template <class HsmHandlerClass>
 void HierarchicalStateMachine::registerFailedTransitionCallback(HsmHandlerClass* handler,
                                                                 HsmTransitionFailedCallbackPtr_t(HsmHandlerClass,
                                                                                                  onFailedTransition)) {
-    registerFailedTransitionCallback(std::bind(onFailedTransition, handler, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    registerFailedTransitionCallback(
+        std::bind(onFailedTransition, handler, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 }
 
 template <class HsmHandlerClass>
@@ -989,7 +995,12 @@ void HierarchicalStateMachine::registerTransition(const StateID_t fromState,
         }
     }
 
-    registerTransition(fromState, toState, onEvent, std::move(funcTransitionCallback), std::move(funcConditionCallback), expectedConditionValue);
+    registerTransition(fromState,
+                       toState,
+                       onEvent,
+                       std::move(funcTransitionCallback),
+                       std::move(funcConditionCallback),
+                       expectedConditionValue);
 }
 
 template <class HsmHandlerClass>
@@ -1013,7 +1024,12 @@ void HierarchicalStateMachine::registerSelfTransition(const StateID_t state,
         }
     }
 
-    registerSelfTransition(state, onEvent, type, std::move(funcTransitionCallback), std::move(funcConditionCallback), expectedConditionValue);
+    registerSelfTransition(state,
+                           onEvent,
+                           type,
+                           std::move(funcTransitionCallback),
+                           std::move(funcConditionCallback),
+                           expectedConditionValue);
 }
 
 template <typename... Args>

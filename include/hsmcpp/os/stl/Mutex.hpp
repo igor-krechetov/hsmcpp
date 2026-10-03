@@ -1,31 +1,26 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2022 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_STL_MUTEX_HPP
 #define HSMCPP_OS_STL_MUTEX_HPP
 
 #include <mutex>
 
-namespace hsmcpp
-{
+namespace hsmcpp {
 
-class Mutex
-{
+class Mutex {
 public:
     Mutex() = default;
     ~Mutex() = default;
 
-    inline void lock()
-    {
+    inline void lock() {
         mSync.lock();
     }
 
-    inline void unlock()
-    {
+    inline void unlock() {
         mSync.unlock();
     }
 
-    inline std::mutex& nativeHandle()
-    {
+    inline std::mutex& nativeHandle() {
         return mSync;
     }
 
@@ -37,6 +32,6 @@ private:
     std::mutex mSync;
 };
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_OS_STL_MUTEX_HPP
+#endif  // HSMCPP_OS_STL_MUTEX_HPP

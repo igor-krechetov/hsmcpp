@@ -1,10 +1,10 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2022 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsmcpp/HsmEventDispatcherFreeRTOS.hpp"
 
 #include "hsmcpp/logging.hpp"
-#include "hsmcpp/os/InterruptsFreeSection.hpp"
 #include "hsmcpp/os/ConditionVariable.hpp"
+#include "hsmcpp/os/InterruptsFreeSection.hpp"
 #include "hsmcpp/os/freertos/FreeRtosPort.hpp"
 
 #if (INCLUDE_xTaskGetCurrentTaskHandle != 1)

@@ -1,22 +1,20 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include <chrono>
 #include <thread>
 
 #include "hsm/ABCHsm.hpp"
 
-class ParamFixtureStateActions1 : public ABCHsm,
-                                  public ::testing::WithParamInterface<std::tuple<hsmcpp::StateActionTrigger,
-                                                                                  hsmcpp::StateActionTrigger>> {};
+class ParamFixtureStateActions1
+    : public ABCHsm,
+      public ::testing::WithParamInterface<std::tuple<hsmcpp::StateActionTrigger, hsmcpp::StateActionTrigger>> {};
 
-INSTANTIATE_TEST_CASE_P(state_actions,
-                        ParamFixtureStateActions1,
-                        ::testing::Values(std::make_tuple(hsmcpp::StateActionTrigger::ON_STATE_ENTRY,
-                                                          hsmcpp::StateActionTrigger::ON_STATE_EXIT),
-                                          std::make_tuple(hsmcpp::StateActionTrigger::ON_STATE_ENTRY,
-                                                          hsmcpp::StateActionTrigger::ON_STATE_ENTRY),
-                                          std::make_tuple(hsmcpp::StateActionTrigger::ON_STATE_EXIT,
-                                                          hsmcpp::StateActionTrigger::ON_STATE_EXIT)));
+INSTANTIATE_TEST_CASE_P(
+    state_actions,
+    ParamFixtureStateActions1,
+    ::testing::Values(std::make_tuple(hsmcpp::StateActionTrigger::ON_STATE_ENTRY, hsmcpp::StateActionTrigger::ON_STATE_EXIT),
+                      std::make_tuple(hsmcpp::StateActionTrigger::ON_STATE_ENTRY, hsmcpp::StateActionTrigger::ON_STATE_ENTRY),
+                      std::make_tuple(hsmcpp::StateActionTrigger::ON_STATE_EXIT, hsmcpp::StateActionTrigger::ON_STATE_EXIT)));
 
 TEST_P(ParamFixtureStateActions1, state_actions_simple) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_064,HSMCPP.SWR_HSM_065");
@@ -59,34 +57,28 @@ TEST_P(ParamFixtureStateActions1, state_actions_simple) {
                         hsmcpp::StateActionTrigger::ON_STATE_ENTRY,
                         StateAction::TRANSITION,
                         static_cast<int>(AbcEvent::E2));
-    registerStateAction(AbcState::B,
-                        trigger1,
-                        StateAction::TRANSITION,
-                        static_cast<int>(AbcEvent::E3));
-    registerStateAction(AbcState::B,
-                        trigger2,
-                        StateAction::TRANSITION,
-                        static_cast<int>(AbcEvent::E4));
-    setSyncMode(false);// to avoid being blocked in A state
+    registerStateAction(AbcState::B, trigger1, StateAction::TRANSITION, static_cast<int>(AbcEvent::E3));
+    registerStateAction(AbcState::B, trigger2, StateAction::TRANSITION, static_cast<int>(AbcEvent::E4));
+    setSyncMode(false);  // to avoid being blocked in A state
     initializeHsm();
     setSyncMode(true);
 
     //-------------------------------------------
     // ACTIONS
     transition(AbcEvent::E1);
-    ASSERT_TRUE(waitAsyncOperation(false));// wait for state B to activate
+    ASSERT_TRUE(waitAsyncOperation(false));  // wait for state B to activate
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
     unblockNextStep();
 
-    ASSERT_TRUE(waitAsyncOperation(false));// wait for state C to activate
+    ASSERT_TRUE(waitAsyncOperation(false));  // wait for state C to activate
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
     unblockNextStep();
 
-    ASSERT_TRUE(waitAsyncOperation(false));// wait for state D to activate
+    ASSERT_TRUE(waitAsyncOperation(false));  // wait for state D to activate
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::D}));
     unblockNextStep();
 
-    ASSERT_TRUE(waitAsyncOperation());// wait for state E to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for state E to activate
 
     //-------------------------------------------
     // VALIDATION
@@ -130,7 +122,7 @@ TEST_F(ABCHsm, state_actions_args) {
     //-------------------------------------------
     // ACTIONS
     transition(AbcEvent::E1);
-    ASSERT_TRUE(waitAsyncOperation());// wait for state C to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for state C to activate
 
     //-------------------------------------------
     // VALIDATION

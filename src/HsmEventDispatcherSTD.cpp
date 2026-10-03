@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #include "hsmcpp/HsmEventDispatcherSTD.hpp"
@@ -144,7 +144,8 @@ void HsmEventDispatcherSTD::doDispatching() {
                 mEmitEvent.wait(lck, [=]() {
                     // cppcheck-suppress misra-c2012-15.5 ; false-positive. "return" statement belongs to lambda function
                     // NOTE: it's assumed that calling empty() is thread-safe. Even if due to a race condition we get
-                    //       wrong value it will only cause a small delay in event processing, but won't cause any critical issues
+                    //       wrong value it will only cause a small delay in event processing, but won't cause any critical
+                    //       issues
                     return (false == mPendingEvents.empty()) || (false == mEnqueuedEvents.empty()) || (true == mStopDispatcher);
                 });
                 HSM_TRACE_DEBUG("woke up. pending events=%lu", mPendingEvents.size());
@@ -183,8 +184,8 @@ void HsmEventDispatcherSTD::handleTimers() {
 
             TimerID_t waitingTimerId = itTimeout->first;
             const int waitDurationMs = std::chrono::duration_cast<std::chrono::milliseconds>(itTimeout->second.elapseAfter -
-                                                                                         std::chrono::steady_clock::now())
-                                       .count();
+                                                                                             std::chrono::steady_clock::now())
+                                           .count();
 
             // unlock after itTimeout value is not needed anymore
             mRunningTimersSync.unlock();

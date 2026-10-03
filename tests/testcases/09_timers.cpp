@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include <chrono>
 #include <thread>
@@ -70,18 +70,13 @@ TEST_F(ABCHsm, timers_onexit) {
     registerTransition<ABCHsm>(AbcState::B, AbcState::C, AbcEvent::E2);
 
     registerTimer(timer1, AbcEvent::E2);
-    registerStateAction(AbcState::A,
-                        StateActionTrigger::ON_STATE_EXIT,
-                        StateAction::START_TIMER,
-                        timer1,
-                        timer1Duration,
-                        true);
+    registerStateAction(AbcState::A, StateActionTrigger::ON_STATE_EXIT, StateAction::START_TIMER, timer1, timer1Duration, true);
     initializeHsm();
 
     transition(AbcEvent::E1);
-    ASSERT_TRUE(waitAsyncOperation(false));// wait for B to activate and block HSM
+    ASSERT_TRUE(waitAsyncOperation(false));  // wait for B to activate and block HSM
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
-    unblockNextStep();// allow HSM to continue
+    unblockNextStep();  // allow HSM to continue
 
     //-------------------------------------------
     // ACTIONS
@@ -144,21 +139,21 @@ TEST_F(ABCHsm, timers_multiple_actions) {
     initializeHsm();
 
     transition(AbcEvent::E1);
-    ASSERT_TRUE(waitAsyncOperation(false));// wait for B to activate and block HSM
+    ASSERT_TRUE(waitAsyncOperation(false));  // wait for B to activate and block HSM
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
-    unblockNextStep();// allow HSM to continue
+    unblockNextStep();  // allow HSM to continue
 
     //-------------------------------------------
     // ACTIONS
     std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration));
-    ASSERT_TRUE(waitAsyncOperation(50, false));// wait for C to activate and block HSM
+    ASSERT_TRUE(waitAsyncOperation(50, false));  // wait for C to activate and block HSM
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
-    unblockNextStep();// allow HSM to continue
+    unblockNextStep();  // allow HSM to continue
 
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
 
     std::this_thread::sleep_for(std::chrono::milliseconds(timer2Duration - timer1Duration));
-    ASSERT_TRUE(waitAsyncOperation(50, true));// wait for D to activate
+    ASSERT_TRUE(waitAsyncOperation(50, true));  // wait for D to activate
 
     //-------------------------------------------
     // VALIDATION
@@ -298,10 +293,14 @@ TEST_F(ABCHsm, timers_repeating_delay) {
     registerState<ABCHsm>(AbcState::B);
 
     registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
-    registerSelfTransition(AbcState::B, AbcEvent::E2, hsmcpp::TransitionType::INTERNAL_TRANSITION,
-        [&](const VariantVector_t& args){
+    registerSelfTransition(
+        AbcState::B,
+        AbcEvent::E2,
+        hsmcpp::TransitionType::INTERNAL_TRANSITION,
+        [&](const VariantVector_t& args) {
             const auto eventTriggerTime = std::chrono::steady_clock::now();
-            const int iterationDuration = std::chrono::duration_cast<std::chrono::milliseconds>(eventTriggerTime - timerStartTime).count();
+            const int iterationDuration =
+                std::chrono::duration_cast<std::chrono::milliseconds>(eventTriggerTime - timerStartTime).count();
 
             // NOTE: this is not precise since timer event is dispatched on a different thread.
             //       so need to account for iterationDuration being reduced by 1-2ms
@@ -332,7 +331,8 @@ TEST_F(ABCHsm, timers_repeating_delay) {
     //-------------------------------------------
     // ACTIONS
     // timer will expire 2-3 times depending on thread scheduling
-    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration * timer1Repeat + static_cast<int>(timer1Duration * 0.5)));
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(timer1Duration * timer1Repeat + static_cast<int>(timer1Duration * 0.5)));
 
     //-------------------------------------------
     // VALIDATION
@@ -391,7 +391,7 @@ TEST_F(ABCHsm, timers_stop) {
 
     //-------------------------------------------
     // ACTIONS
-    ASSERT_TRUE(waitAsyncOperation());// wait for C to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for C to activate
     // std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration * 3));
 
     //-------------------------------------------
@@ -437,12 +437,7 @@ TEST_F(ABCHsm, timers_restart) {
     registerTimer(timer1, AbcEvent::E3);
     registerTimer(timer2, AbcEvent::E2);
 
-    registerStateAction(AbcState::A,
-                        StateActionTrigger::ON_STATE_EXIT,
-                        StateAction::START_TIMER,
-                        timer1,
-                        timer1Duration,
-                        true);
+    registerStateAction(AbcState::A, StateActionTrigger::ON_STATE_EXIT, StateAction::START_TIMER, timer1, timer1Duration, true);
     registerStateAction(AbcState::B,
                         StateActionTrigger::ON_STATE_ENTRY,
                         StateAction::START_TIMER,
@@ -543,8 +538,9 @@ TEST_F(ABCHsm, timers_start_from_code) {
 
 TEST_F(ABCHsm, timers_start_higher_priority) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_138");
-    TEST_DESCRIPTION("If during a running timer a new timer with a shorter elapse period is started, HSM should "
-                     "correctly schedule it (the shorter fires first)");
+    TEST_DESCRIPTION(
+        "If during a running timer a new timer with a shorter elapse period is started, HSM should "
+        "correctly schedule it (the shorter fires first)");
 
     /*
     @startuml

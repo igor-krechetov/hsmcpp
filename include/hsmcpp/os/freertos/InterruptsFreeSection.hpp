@@ -1,15 +1,13 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2022 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_FREERTOS_INTERRUPTSFREESECTION_HPP
 #define HSMCPP_OS_FREERTOS_INTERRUPTSFREESECTION_HPP
 
 #include <FreeRTOS.h>
 
-namespace hsmcpp
-{
+namespace hsmcpp {
 
-class InterruptsFreeSection
-{
+class InterruptsFreeSection {
 public:
     InterruptsFreeSection();
     ~InterruptsFreeSection();
@@ -24,6 +22,6 @@ private:
     UBaseType_t mSavedInterruptStatus;
 };
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_OS_FREERTOS_INTERRUPTSFREESECTION_HPP
+#endif  // HSMCPP_OS_FREERTOS_INTERRUPTSFREESECTION_HPP

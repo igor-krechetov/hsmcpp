@@ -1,22 +1,23 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2022 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_FREERTOS_CONDITIONVARIABLE_HPP
 #define HSMCPP_OS_FREERTOS_CONDITIONVARIABLE_HPP
 
 #include <FreeRTOS.h>
 #include <semphr.h>
+
 #include <functional>
+
 #include "hsmcpp/os/common/UniqueLock.hpp"
 
 #if (configUSE_MUTEXES != 1)
- #error configUSE_MUTEXES feature is required
+  #error configUSE_MUTEXES feature is required
 #endif
 #if (configSUPPORT_DYNAMIC_ALLOCATION != 1)
- #error configSUPPORT_DYNAMIC_ALLOCATION feature is required
-#endif 
+  #error configSUPPORT_DYNAMIC_ALLOCATION feature is required
+#endif
 
-namespace hsmcpp
-{
+namespace hsmcpp {
 
 class ConditionVariable {
 public:
@@ -35,6 +36,6 @@ private:
     SemaphoreHandle_t mHandle = nullptr;
 };
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_OS_FREERTOS_CONDITIONVARIABLE_HPP
+#endif  // HSMCPP_OS_FREERTOS_CONDITIONVARIABLE_HPP

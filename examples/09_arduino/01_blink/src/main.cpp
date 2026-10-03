@@ -1,7 +1,8 @@
-// Copyright (C) 2023 Igor Krechetov
+// Copyright (C) 2023 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #include <Arduino.h>
+
 #include <hsmcpp.hpp>
 #include <memory>
 
@@ -44,21 +45,23 @@
   <Arduino> is path to your sketchbook location (see File > Preferences > Sketchbook location).
 
   To generate BlinkHsmBase class run this command from inside your sketch folder:
-  python3 <Arduino>/libraries/hsmcpp/tools/scxml2gen.py -code -scxml ./blink.scxml -class_name BlinkHsm -class_suffix Base -template_hpp <Arduino>/libraries/hsmcpp/tools/template.hpp -template_cpp <Arduino>/libraries/hsmcpp/tools/template.cpp -dest_dir ./
+  python3 <Arduino>/libraries/hsmcpp/tools/scxml2gen.py -code -scxml ./blink.scxml -class_name BlinkHsm -class_suffix Base
+  -template_hpp <Arduino>/libraries/hsmcpp/tools/template.hpp -template_cpp <Arduino>/libraries/hsmcpp/tools/template.cpp
+  -dest_dir ./
 */
 
 // Implementation of state machine callbacks.
 class BlinkHSM : public BlinkHsmBase {
 protected:
-  void onOff(const hsmcpp::VariantVector_t &args) override {
-    // turn the LED off by making the voltage LOW
-    digitalWrite(LED_BUILTIN, LOW);
-  }
+    void onOff(const hsmcpp::VariantVector_t &args) override {
+        // turn the LED off by making the voltage LOW
+        digitalWrite(LED_BUILTIN, LOW);
+    }
 
-  void onOn(const hsmcpp::VariantVector_t &args) override {
-    // turn the LED on (HIGH is the voltage level)
-    digitalWrite(LED_BUILTIN, HIGH);
-  }
+    void onOn(const hsmcpp::VariantVector_t &args) override {
+        // turn the LED on (HIGH is the voltage level)
+        digitalWrite(LED_BUILTIN, HIGH);
+    }
 };
 
 // global instances of state machine and dispatcher
@@ -66,24 +69,24 @@ BlinkHSM *gHSM = nullptr;
 std::shared_ptr<hsmcpp::HsmEventDispatcherArduino> gDispatcher;
 
 void setup() {
-  // initialize digital pin LED_BUILTIN as an output.
-  pinMode(LED_BUILTIN, OUTPUT);
+    // initialize digital pin LED_BUILTIN as an output.
+    pinMode(LED_BUILTIN, OUTPUT);
 
-  // Create instance of the state machine
-  // Usually you would want the instance of your state machine to live for
-  // signifficant period of time (or forever). Because of this, it should be
-  // created dynamically to use heap memory instead of stack.
-  gHSM = new BlinkHSM();
-  // Create event dispatcher
-  gDispatcher = hsmcpp::HsmEventDispatcherArduino::create();
-  // initialize state machine
-  gHSM->initialize(gDispatcher);
+    // Create instance of the state machine
+    // Usually you would want the instance of your state machine to live for
+    // signifficant period of time (or forever). Because of this, it should be
+    // created dynamically to use heap memory instead of stack.
+    gHSM = new BlinkHSM();
+    // Create event dispatcher
+    gDispatcher = hsmcpp::HsmEventDispatcherArduino::create();
+    // initialize state machine
+    gHSM->initialize(gDispatcher);
 
-  // call HSM transition to start blinking
-  gHSM->transition(BlinkHsmEvents::START);
+    // call HSM transition to start blinking
+    gHSM->transition(BlinkHsmEvents::START);
 }
 
 void loop() {
-  // tell dispatcher to process pending events and transitions
-  gDispatcher->dispatchEvents();
+    // tell dispatcher to process pending events and transitions
+    gDispatcher->dispatchEvents();
 }

@@ -30,7 +30,50 @@ except ImportError:  # LOBSTER 0.x layout
     from lobster.location import File_Reference
     from lobster.io import lobster_write
 
-UID_SPLIT = re.compile(r"[,\s]+")
+WS_SPLIT = re.compile(r"\s+")
+
+
+def parse_requirement_body(text):
+    """Parse an @requirement xrefsect body into its UIDs, supporting two
+    per-line notations:
+
+      * Multi-UID list    : "<uid1>, <uid2>, ..., <uidN>"  (comma-separated)
+      * UID + justification: "<uid> <free-text justification...>"
+
+    Doxygen concatenates consecutive @requirement lines into ONE xrefsect body
+    separated by newlines, and a single logical entry may itself use either
+    notation, so the body is parsed LINE BY LINE and the per-line UIDs unioned.
+
+    Per line, the two notations are disambiguated by comma vs whitespace:
+      * If the line is comma-separated, it is the LIST form: each comma segment
+        contributes one UID (the segment's first whitespace-free token). This
+        covers "uid1, uid2" and a lone "uid," with a trailing comma.
+      * Otherwise, if the line has a single token, that token is the UID.
+      * Otherwise (one token followed by free text, no comma) it is the
+        JUSTIFICATION form: the first token is the UID and the rest is
+        free-text justification kept in the doxygen comment only — parsed so it
+        is not mistaken for a UID, then discarded (never emitted to LOBSTER).
+
+    UIDs are treated generically (any whitespace/comma-free token); nothing
+    here is tied to a specific requirement package or naming scheme. Returns a
+    de-duplicated list of UID strings (justification text is dropped)."""
+    uids = []
+    for raw_line in (text or "").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        segs = [s.strip() for s in line.split(",")]
+        segs = [s for s in segs if s]
+        if len(segs) > 1 and all(WS_SPLIT.search(s) is None for s in segs):
+            # List form: every comma segment is a single bare UID.
+            uids.extend(segs)
+        else:
+            # Single UID (optionally with a trailing comma), or UID + free-text
+            # justification: the first whitespace/comma-free token is the UID,
+            # the remainder is justification kept only in the doxygen comment.
+            uids.append(WS_SPLIT.split(segs[0], maxsplit=1)[0] if segs else "")
+    # De-duplicate, preserving first-seen order.
+    return list(dict.fromkeys(uids))
 
 
 def all_text(el):
@@ -41,7 +84,11 @@ def all_text(el):
 def requirement_uids(desc_el):
     """Collect UIDs from every @requirement xrefsect under a description
     element. The alias emits <xrefsect><xreftitle>Requirement</xreftitle>
-    <xrefdescription><para>UID, UID</para></xrefdescription></xrefsect>."""
+    <xrefdescription><para>BODY</para></xrefdescription></xrefsect>, where BODY
+    is one of the two notations handled by parse_requirement_body:
+      * "<uid1>, <uid2>, ..."     (comma-separated list)
+      * "<uid> <justification>"   (single UID + free-text, justification dropped)
+    """
     uids = []
     if desc_el is None:
         return uids
@@ -52,9 +99,7 @@ def requirement_uids(desc_el):
         body = xrefsect.find("xrefdescription")
         if body is None:
             continue
-        for tok in UID_SPLIT.split(all_text(body).strip()):
-            if tok:
-                uids.append(tok)
+        uids.extend(parse_requirement_body(all_text(body)))
     return uids
 
 
@@ -167,9 +212,18 @@ def collect_class_tags(paths):
     method_uids = {}
     class_implements = {}
     container_classes = set()
+    namespaces = set()
     for path in paths:
         root = ET.parse(path).getroot()
         for cdef in root.iter("compounddef"):
+            # Record namespace scopes so member names can be rendered qualified
+            # by class but WITHOUT the namespace prefix, generically (no literal
+            # project namespace baked into the script).
+            if cdef.get("kind") == "namespace":
+                nsname = cdef.findtext("compoundname")
+                if nsname:
+                    namespaces.add(nsname)
+                continue
             if cdef.get("kind") not in ("class", "struct"):
                 continue
             cname_el = cdef.find("compoundname")
@@ -209,12 +263,27 @@ def collect_class_tags(paths):
                     if u not in method_uids[key]:
                         method_uids[key].append(u)
     return name_to_uids, name_to_just, method_uids, class_implements, \
-        container_classes
+        container_classes, namespaces
+
+
+def strip_namespace(qualified, namespaces):
+    """Drop a leading 'namespace::' prefix from a qualified name, so a member
+    renders qualified by its CLASS scope only (e.g. 'hsmcpp::Foo::bar' ->
+    'Foo::bar'). Generic: tries the longest matching known namespace first, so
+    nested namespaces are handled. Returns the name unchanged if no namespace
+    prefixes it."""
+    best = ""
+    for ns in namespaces:
+        if qualified.startswith(ns + "::") and len(ns) > len(best):
+            best = ns
+    if best:
+        return qualified[len(best) + 2:]
+    return qualified
 
 
 def parse_compound(path, emit_all=False, enclosing_uids=None,
                    enclosing_just=None, method_uids=None, class_implements=None,
-                   container_classes=None):
+                   container_classes=None, namespaces=None):
     """Extract Implementation items from one doxygen compound XML file.
 
     emit_all=False : only entities carrying @requirement / @no_requirement.
@@ -252,6 +321,7 @@ def parse_compound(path, emit_all=False, enclosing_uids=None,
     method_uids = method_uids or {}
     class_implements = class_implements or {}
     container_classes = container_classes or set()
+    namespaces = namespaces or set()
     items = []
     root = ET.parse(path).getroot()
     for cdef in root.iter("compounddef"):
@@ -298,12 +368,26 @@ def parse_compound(path, emit_all=False, enclosing_uids=None,
                 class_just = None
             elif class_uids or just or emit_all:
                 fn, ln = location_of(cdef, path)
-                items.append(make_impl(cname, "Class", class_uids, fn, ln, just))
+                items.append(make_impl(strip_namespace(cname, namespaces),
+                                       "Class", class_uids, fn, ln, just))
 
-        # Member-level tags (functions / methods), inheriting class tags.
+        # Member-level tags, inheriting class tags. Besides functions/methods
+        # we also trace data-definition members that can carry a @requirement:
+        # type aliases (typedef / `using`), enums and variables/constants. The
+        # @implements and @requirement_wrapper inheritance below is method-only
+        # (it maps same-named interface methods), so it is gated on functions.
+        TRACED_MEMBER_KINDS = {
+            "function": "Function",
+            "typedef": "Type",
+            "enum": "Type",
+            "variable": "Variable",
+        }
         for mdef in cdef.iter("memberdef"):
-            if mdef.get("kind") not in ("function",):
+            mkind = mdef.get("kind")
+            item_kind = TRACED_MEMBER_KINDS.get(mkind)
+            if item_kind is None:
                 continue
+            is_function = mkind == "function"
             own = requirement_uids(mdef.find("detaileddescription"))
             own += requirement_uids(mdef.find("inbodydescription"))
             own += requirement_uids(mdef.find("briefdescription"))
@@ -315,10 +399,11 @@ def parse_compound(path, emit_all=False, enclosing_uids=None,
             # Constructors and destructors are named after their own class, so
             # map the impl class's ctor/dtor name to the interface's ctor/dtor
             # name before looking up (e.g. Impl -> HierarchicalStateMachine,
-            # ~Impl -> ~HierarchicalStateMachine).
+            # ~Impl -> ~HierarchicalStateMachine). Methods only.
             inherited_from_iface = []
             mname_el = mdef.find("name")
-            if impl_iface and mname_el is not None and mname_el.text:
+            if is_function and impl_iface and mname_el is not None \
+                    and mname_el.text:
                 mname = mname_el.text
                 impl_short = cname.rsplit("::", 1)[-1]
                 iface_short = impl_iface.rsplit("::", 1)[-1]
@@ -335,11 +420,13 @@ def parse_compound(path, emit_all=False, enclosing_uids=None,
             # sibling's effective UIDs are its own @requirement in this class
             # (method_uids[cname::sibling]) plus, if this class @implements an
             # interface, the sibling's mirrored interface UIDs
-            # (method_uids[impl_iface::sibling]). Resolution is same-class only.
+            # (method_uids[impl_iface::sibling]). Resolution is same-class only,
+            # methods only.
             inherited_from_wrapper = []
-            wrap = (wrapper_target(mdef.find("detaileddescription"))
-                    or wrapper_target(mdef.find("inbodydescription"))
-                    or wrapper_target(mdef.find("briefdescription")))
+            wrap = wrapper_target(mdef.find("detaileddescription")) \
+                or wrapper_target(mdef.find("inbodydescription")) \
+                or wrapper_target(mdef.find("briefdescription")) \
+                if is_function else None
             if wrap:
                 inherited_from_wrapper = list(method_uids.get(
                     "%s::%s" % (cname, wrap), []))
@@ -348,7 +435,7 @@ def parse_compound(path, emit_all=False, enclosing_uids=None,
                         if u not in inherited_from_wrapper:
                             inherited_from_wrapper.append(u)
             # Effective requirements = class requirements UNION interface-method
-            # UIDs UNION wrapper-sibling UIDs UNION method's own, de-duplicated.
+            # UIDs UNION wrapper-sibling UIDs UNION member's own, de-duplicated.
             uids = list(dict.fromkeys(
                 class_uids + inherited_from_iface
                 + inherited_from_wrapper + own))
@@ -359,10 +446,22 @@ def parse_compound(path, emit_all=False, enclosing_uids=None,
                 continue
             qn = mdef.find("qualifiedname")
             nm = mdef.find("name")
-            name = (qn.text if qn is not None and qn.text
-                    else (nm.text if nm is not None else "?"))
+            short = nm.text if nm is not None and nm.text else "?"
+            # Prefer a fully-qualified name so the report distinguishes
+            # same-named members in different scopes (e.g. the public class vs
+            # its ::Impl). doxygen often omits <qualifiedname> for class
+            # methods, so fall back to building it from the enclosing compound
+            # name. The namespace prefix is then stripped so the link reads as
+            # "Class::member" / "Class::Nested::member".
+            if qn is not None and qn.text:
+                qualified = qn.text
+            elif cname and cname != "?":
+                qualified = "%s::%s" % (cname, short)
+            else:
+                qualified = short
+            name = strip_namespace(qualified, namespaces)
             fn, ln = location_of(mdef, path)
-            items.append(make_impl(name, "Function", uids, fn, ln, just))
+            items.append(make_impl(name, item_kind, uids, fn, ln, just))
     return items
 
 
@@ -384,14 +483,15 @@ def main():
     # justifications, per-method UIDs and @implements targets so members, nested
     # types and implementing classes can inherit the right tags.
     enclosing_uids, enclosing_just, method_uids, class_implements, \
-        container_classes = collect_class_tags(paths)
+        container_classes, namespaces = collect_class_tags(paths)
     for path in paths:
         for impl in parse_compound(path, emit_all=emit_all,
                                    enclosing_uids=enclosing_uids,
                                    enclosing_just=enclosing_just,
                                    method_uids=method_uids,
                                    class_implements=class_implements,
-                                   container_classes=container_classes):
+                                   container_classes=container_classes,
+                                   namespaces=namespaces):
             key = impl.tag.key()
             if key in seen:      # same entity can appear in file + class xml
                 continue

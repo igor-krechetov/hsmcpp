@@ -1,13 +1,13 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2022 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_STL_CONDITIONVARIABLE_HPP
 #define HSMCPP_OS_STL_CONDITIONVARIABLE_HPP
 
-#include "hsmcpp/os/common/UniqueLock.hpp"
 #include <functional>
 
-namespace hsmcpp
-{
+#include "hsmcpp/os/common/UniqueLock.hpp"
+
+namespace hsmcpp {
 
 /**
  * @requirement HSMCPP.SWR_HSM_109
@@ -28,11 +28,10 @@ private:
 private:
 };
 
-inline void ConditionVariable::notify()
-{
+inline void ConditionVariable::notify() {
     // mVariable.notify_all();
 }
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_OS_STL_CONDITIONVARIABLE_HPP
+#endif  // HSMCPP_OS_STL_CONDITIONVARIABLE_HPP

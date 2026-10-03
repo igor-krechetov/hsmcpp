@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #include "HsmImpl.hpp"
@@ -21,8 +21,8 @@
   #include <cstdlib>
   #include <cstring>
 
-  #include "hsmcpp/os/Mutex.hpp"
   #include "hsmcpp/os/CriticalSection.hpp"
+  #include "hsmcpp/os/Mutex.hpp"
 
 // WIN, access
   #ifdef WIN32
@@ -427,6 +427,8 @@ bool HierarchicalStateMachine::Impl::transitionExWithArgsArray(const EventID_t e
     bool status = false;
     auto dispatcherPtr = mDispatcher.lock();
 
+    // TODO: validate that sync transitions called from within a callback dont deadlock
+
     // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
         PendingEventInfo eventInfo;
@@ -815,7 +817,8 @@ bool HierarchicalStateMachine::Impl::isSubstateOf(const StateID_t parent, const 
 
                 if (parent != curState) {
                     // check left siblings
-                    for (auto itSibling = itParent; (itSibling != mSubstates.begin()) && (itSibling->first == itParent->first); --itSibling) {
+                    for (auto itSibling = itParent; (itSibling != mSubstates.begin()) && (itSibling->first == itParent->first);
+                         --itSibling) {
                         if (itSibling->second == parent) {
                             stopSearch = true;
                             break;
@@ -823,7 +826,8 @@ bool HierarchicalStateMachine::Impl::isSubstateOf(const StateID_t parent, const 
                     }
 
                     // check right siblings
-                    for (auto itSibling = itParent; (itSibling != mSubstates.end()) && (itSibling->first == itParent->first); ++itSibling) {
+                    for (auto itSibling = itParent; (itSibling != mSubstates.end()) && (itSibling->first == itParent->first);
+                         ++itSibling) {
                         if (itSibling->second == parent) {
                             stopSearch = true;
                             break;

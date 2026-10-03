@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_HSMEVENTDISPATCHERGLIB_HPP
@@ -115,7 +115,7 @@ private:
     bool mDispatchingIterationRunning = false;
     std::mutex mDispatchingSync;
     std::condition_variable mDispatchingDoneEvent;
-    std::map<TimerID_t, GSource*> mNativeTimerHandlers; // protected by mRunningTimersSync
+    std::map<TimerID_t, GSource*> mNativeTimerHandlers;  // protected by mRunningTimersSync
 };
 
 }  // namespace hsmcpp

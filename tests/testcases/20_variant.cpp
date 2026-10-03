@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 //
 // NOTE(reviewer): this file unit-tests the Variant utility container itself
@@ -7,9 +7,10 @@
 // own behavior, not a state-machine software requirement, so they are left
 // intentionally unlinked. Flagging here in case you want SWR_HSM_050 traced to
 // a Variant round-trip test instead.
+#include <inttypes.h>
+
 #include "TestsCommon.hpp"
 #include "hsmcpp/variant.hpp"
-#include <inttypes.h>
 
 constexpr int gIndexValue = 0;
 constexpr int gIndexValueLess = 1;
@@ -26,7 +27,9 @@ struct CustomType {
     int b = 0;
     bool* wasDeleted = nullptr;
 
-    CustomType(const std::string& v1, const int v2) : a(v1), b(v2){}
+    CustomType(const std::string& v1, const int v2)
+        : a(v1)
+        , b(v2) {}
     CustomType(const CustomType& src) {
         a = src.a;
         b = src.b;
@@ -55,7 +58,7 @@ void makeVariantList(VariantVector_t& vList, Args&&... args) {
     (void)make_variant;
 }
 
-template<typename T>
+template <typename T>
 std::string getTypeNameFromTuple(const int index, const T& container) {
     const auto& types = std::get<gIndexTypeName>(container);
 
@@ -66,7 +69,7 @@ std::string getTypeNameFromTuple(const int index, const T& container) {
     return "";
 }
 
-template<typename T>
+template <typename T>
 Variant::Type getTypeFromTuple(const int index, const T& container) {
     const auto& types = std::get<gIndexType>(container);
 
@@ -77,7 +80,7 @@ Variant::Type getTypeFromTuple(const int index, const T& container) {
     return Variant::Type::UNKNOWN;
 }
 
-template<typename T>
+template <typename T>
 bool isComparableType(const int index, const T& container) {
     const auto& comparable = std::get<gIndexValueComparable>(container);
 
@@ -88,9 +91,11 @@ bool isComparableType(const int index, const T& container) {
     return false;
 }
 
-template<typename T>
+template <typename T>
 Variant constructVariantFromTuple(const int index, const T& container) {
-    #define CONSTRUCT_VARIANT_FROM_TUPLE_CASE(i)    case i:     return Variant(std::get<i>(container));
+#define CONSTRUCT_VARIANT_FROM_TUPLE_CASE(i) \
+  case i:                                    \
+    return Variant(std::get<i>(container));
 
     switch (index) {
         CONSTRUCT_VARIANT_FROM_TUPLE_CASE(0)
@@ -117,9 +122,11 @@ Variant constructVariantFromTuple(const int index, const T& container) {
     return Variant();
 }
 
-template<typename T>
+template <typename T>
 Variant makeVariantFromTuple(const int index, const T& container) {
-    #define MAKE_VARIANT_FROM_TUPLE_CASE(i)     case i:     return Variant::make(std::get<i>(container));
+#define MAKE_VARIANT_FROM_TUPLE_CASE(i) \
+  case i:                               \
+    return Variant::make(std::get<i>(container));
 
     switch (index) {
         MAKE_VARIANT_FROM_TUPLE_CASE(0)
@@ -146,9 +153,12 @@ Variant makeVariantFromTuple(const int index, const T& container) {
     return Variant();
 }
 
-template<typename T>
+template <typename T>
 void assignNewVariantValue(Variant& outV, const int index, const T& container) {
-    #define ASSIGN_NEW_VARIANT_VALUE_CASE(i)     case i:    outV = std::get<i>(container); break;
+#define ASSIGN_NEW_VARIANT_VALUE_CASE(i) \
+  case i:                                \
+    outV = std::get<i>(container);       \
+    break;
 
     switch (index) {
         ASSIGN_NEW_VARIANT_VALUE_CASE(0)
@@ -173,9 +183,11 @@ void assignNewVariantValue(Variant& outV, const int index, const T& container) {
     }
 }
 
-template<typename T>
+template <typename T>
 bool isCorrectType(const int index, const Variant& v, const T& container) {
-    #define IS_CORRECT_TYPE_CASE(i)       case i:     return std::get<i>(container)(v);
+#define IS_CORRECT_TYPE_CASE(i) \
+  case i:                       \
+    return std::get<i>(container)(v);
 
     switch (index) {
         IS_CORRECT_TYPE_CASE(0)
@@ -202,9 +214,12 @@ bool isCorrectType(const int index, const Variant& v, const T& container) {
     return false;
 }
 
-template<typename TFuncs, typename TValues>
+template <typename TFuncs, typename TValues>
 void checkVariantValue(const int index, const Variant& v, const TFuncs& functions, const TValues& values) {
-    #define CHECK_VARIANT_VALUE_CASE(i)         case i:     std::get<i>(functions)(v, std::get<i>(values)); break;
+#define CHECK_VARIANT_VALUE_CASE(i)                 \
+  case i:                                           \
+    std::get<i>(functions)(v, std::get<i>(values)); \
+    break;
 
     switch (index) {
         CHECK_VARIANT_VALUE_CASE(0)
@@ -232,27 +247,61 @@ void checkVariantValue(const int index, const Variant& v, const TFuncs& function
 std::string variantTypeToStr(const Variant::Type t) {
     std::string res;
 
-    switch(t) {
-        case Variant::Type::BYTE_1:         res = "BYTE_1"; break;
-        case Variant::Type::BYTE_2:         res = "BYTE_2"; break;
-        case Variant::Type::BYTE_4:         res = "BYTE_4"; break;
-        case Variant::Type::BYTE_8:         res = "BYTE_8"; break;
-        case Variant::Type::UBYTE_1:        res = "UBYTE_1"; break;
-        case Variant::Type::UBYTE_2:        res = "UBYTE_2"; break;
-        case Variant::Type::UBYTE_4:        res = "UBYTE_4"; break;
-        case Variant::Type::UBYTE_8:        res = "UBYTE_8"; break;
-        case Variant::Type::DOUBLE:         res = "DOUBLE"; break;
-        case Variant::Type::BOOL:           res = "BOOL"; break;
-        case Variant::Type::STRING:         res = "STRING"; break;
-        case Variant::Type::BYTEARRAY:      res = "BYTEARRAY"; break;
-        case Variant::Type::LIST:           res = "LIST"; break;
-        case Variant::Type::VECTOR:         res = "VECTOR"; break;
-        case Variant::Type::MAP:     res = "MAP"; break;
-        case Variant::Type::PAIR:           res = "PAIR"; break;
-        case Variant::Type::CUSTOM:         res = "CUSTOM"; break;
+    switch (t) {
+        case Variant::Type::BYTE_1:
+            res = "BYTE_1";
+            break;
+        case Variant::Type::BYTE_2:
+            res = "BYTE_2";
+            break;
+        case Variant::Type::BYTE_4:
+            res = "BYTE_4";
+            break;
+        case Variant::Type::BYTE_8:
+            res = "BYTE_8";
+            break;
+        case Variant::Type::UBYTE_1:
+            res = "UBYTE_1";
+            break;
+        case Variant::Type::UBYTE_2:
+            res = "UBYTE_2";
+            break;
+        case Variant::Type::UBYTE_4:
+            res = "UBYTE_4";
+            break;
+        case Variant::Type::UBYTE_8:
+            res = "UBYTE_8";
+            break;
+        case Variant::Type::DOUBLE:
+            res = "DOUBLE";
+            break;
+        case Variant::Type::BOOL:
+            res = "BOOL";
+            break;
+        case Variant::Type::STRING:
+            res = "STRING";
+            break;
+        case Variant::Type::BYTEARRAY:
+            res = "BYTEARRAY";
+            break;
+        case Variant::Type::LIST:
+            res = "LIST";
+            break;
+        case Variant::Type::VECTOR:
+            res = "VECTOR";
+            break;
+        case Variant::Type::MAP:
+            res = "MAP";
+            break;
+        case Variant::Type::PAIR:
+            res = "PAIR";
+            break;
+        case Variant::Type::CUSTOM:
+            res = "CUSTOM";
+            break;
         case Variant::Type::UNKNOWN:
         default:
-            res ="UNKNOWN";
+            res = "UNKNOWN";
             break;
     }
 
@@ -285,73 +334,127 @@ CustomType customTypeValue = {"abc", 17};
 
 // =================================================================================================================
 const auto allTypeValues = std::make_tuple(
-                std::make_tuple(i8, i16, i32, i64, ui8, ui16, ui32, ui64, d, b, s1, s2, binary2, listInt, listStr, vectorBool, mapIntStr, pairIntStr, customTypeValue),
-                // lesser value
-                std::make_tuple(i8 - 1, i16 - 1, i32 - 1, i64 - 1, ui8 - 1, ui16 - 1, ui32 - 1, ui64 - 1, d - 1.0,
-                                false, std::string("a"), "d",
-                                ByteArray_t{4, 5, 0},
-                                VariantList_t{Variant(1), Variant(2)},
-                                VariantList_t{Variant("aa"), Variant("bb")},
-                                VariantVector_t{Variant(false), Variant(true)},
-                                VariantMap_t{{Variant(1), Variant("aa")}, {Variant(2), Variant("bb")}},
-                                VariantPair_t{Variant(-3), Variant("a")},
-                                CustomType{"a", 3}),
-                // greater value
-                std::make_tuple(i8 + 1, i16 + 1, i32 + 1, i64 + 1, ui8 + 1, ui16 + 1, ui32 + 1, ui64 + 1, d + 1.0,
-                                true, s1 + "aaa", "dfgaaa",
-                                ByteArray_t{4, 5, 0, 6, 2, 7},
-                                VariantList_t{Variant(1), Variant(2), Variant(3), Variant(4)},
-                                VariantList_t{Variant("aa"), Variant("bb"), Variant("cc"), Variant("dd")},
-                                VariantVector_t{Variant(false), Variant(true), Variant(false), Variant(true)},
-                                VariantMap_t{{Variant(1), Variant("aa")}, {Variant(2), Variant("bb")}, {Variant(3), Variant("cc")}, {Variant(4), Variant("dd")}},
-                                VariantPair_t{Variant(102), Variant("abc")},
-                                CustomType{"abcde", 71}),
-                // is comparable
-                std::vector<bool>{true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,true,true,true,true},
-                std::vector<std::string>{
-                    "int8_t",
-                    "int16_t",
-                    "int32_t",
-                    "int64_t",
-                    "uint8_t",
-                    "uint16_t",
-                    "uint32_t",
-                    "uint64_t",
-                    "double",
-                    "bool",
-                    "std_string",
-                    "char_ptr",
-                    "std_vector__char",
-                    "VariantList_t__int",
-                    "VariantList_t__str",
-                    "VariantVector_t__bool",
-                    "VariantMap_t__int_str",
-                    "VariantPair_t__int_str",
-                    "CustomType"
-                },
-                std::vector<Variant::Type>{
-                    Variant::Type::BYTE_1,
-                    Variant::Type::BYTE_2,
-                    Variant::Type::BYTE_4,
-                    Variant::Type::BYTE_8,
-                    Variant::Type::UBYTE_1,
-                    Variant::Type::UBYTE_2,
-                    Variant::Type::UBYTE_4,
-                    Variant::Type::UBYTE_8,
-                    Variant::Type::DOUBLE,
-                    Variant::Type::BOOL,
-                    Variant::Type::STRING,
-                    Variant::Type::STRING,
-                    Variant::Type::BYTEARRAY,
-                    Variant::Type::LIST,
-                    Variant::Type::LIST,
-                    Variant::Type::VECTOR,
-                    Variant::Type::MAP,
-                    Variant::Type::PAIR,
-                    Variant::Type::CUSTOM
-                },
-                std::make_tuple(
-                    [](const Variant& v) { return v.isSignedNumeric(); },
+    std::make_tuple(i8,
+                    i16,
+                    i32,
+                    i64,
+                    ui8,
+                    ui16,
+                    ui32,
+                    ui64,
+                    d,
+                    b,
+                    s1,
+                    s2,
+                    binary2,
+                    listInt,
+                    listStr,
+                    vectorBool,
+                    mapIntStr,
+                    pairIntStr,
+                    customTypeValue),
+    // lesser value
+    std::make_tuple(i8 - 1,
+                    i16 - 1,
+                    i32 - 1,
+                    i64 - 1,
+                    ui8 - 1,
+                    ui16 - 1,
+                    ui32 - 1,
+                    ui64 - 1,
+                    d - 1.0,
+                    false,
+                    std::string("a"),
+                    "d",
+                    ByteArray_t{4, 5, 0},
+                    VariantList_t{Variant(1), Variant(2)},
+                    VariantList_t{Variant("aa"), Variant("bb")},
+                    VariantVector_t{Variant(false), Variant(true)},
+                    VariantMap_t{{Variant(1), Variant("aa")}, {Variant(2), Variant("bb")}},
+                    VariantPair_t{Variant(-3), Variant("a")},
+                    CustomType{"a", 3}),
+    // greater value
+    std::make_tuple(i8 + 1,
+                    i16 + 1,
+                    i32 + 1,
+                    i64 + 1,
+                    ui8 + 1,
+                    ui16 + 1,
+                    ui32 + 1,
+                    ui64 + 1,
+                    d + 1.0,
+                    true,
+                    s1 + "aaa",
+                    "dfgaaa",
+                    ByteArray_t{4, 5, 0, 6, 2, 7},
+                    VariantList_t{Variant(1), Variant(2), Variant(3), Variant(4)},
+                    VariantList_t{Variant("aa"), Variant("bb"), Variant("cc"), Variant("dd")},
+                    VariantVector_t{Variant(false), Variant(true), Variant(false), Variant(true)},
+                    VariantMap_t{{Variant(1), Variant("aa")},
+                                 {Variant(2), Variant("bb")},
+                                 {Variant(3), Variant("cc")},
+                                 {Variant(4), Variant("dd")}},
+                    VariantPair_t{Variant(102), Variant("abc")},
+                    CustomType{"abcde", 71}),
+    // is comparable
+    std::vector<bool>{true,
+                      true,
+                      true,
+                      true,
+                      true,
+                      true,
+                      true,
+                      true,
+                      true,
+                      false,
+                      true,
+                      true,
+                      true,
+                      true,
+                      true,
+                      true,
+                      true,
+                      true,
+                      true},
+    std::vector<std::string>{"int8_t",
+                             "int16_t",
+                             "int32_t",
+                             "int64_t",
+                             "uint8_t",
+                             "uint16_t",
+                             "uint32_t",
+                             "uint64_t",
+                             "double",
+                             "bool",
+                             "std_string",
+                             "char_ptr",
+                             "std_vector__char",
+                             "VariantList_t__int",
+                             "VariantList_t__str",
+                             "VariantVector_t__bool",
+                             "VariantMap_t__int_str",
+                             "VariantPair_t__int_str",
+                             "CustomType"},
+    std::vector<Variant::Type>{Variant::Type::BYTE_1,
+                               Variant::Type::BYTE_2,
+                               Variant::Type::BYTE_4,
+                               Variant::Type::BYTE_8,
+                               Variant::Type::UBYTE_1,
+                               Variant::Type::UBYTE_2,
+                               Variant::Type::UBYTE_4,
+                               Variant::Type::UBYTE_8,
+                               Variant::Type::DOUBLE,
+                               Variant::Type::BOOL,
+                               Variant::Type::STRING,
+                               Variant::Type::STRING,
+                               Variant::Type::BYTEARRAY,
+                               Variant::Type::LIST,
+                               Variant::Type::LIST,
+                               Variant::Type::VECTOR,
+                               Variant::Type::MAP,
+                               Variant::Type::PAIR,
+                               Variant::Type::CUSTOM},
+    std::make_tuple([](const Variant& v) { return v.isSignedNumeric(); },
                     [](const Variant& v) { return v.isSignedNumeric(); },
                     [](const Variant& v) { return v.isSignedNumeric(); },
                     [](const Variant& v) { return v.isSignedNumeric(); },
@@ -369,109 +472,99 @@ const auto allTypeValues = std::make_tuple(
                     [](const Variant& v) { return v.isVector(); },
                     [](const Variant& v) { return v.isMap(); },
                     [](const Variant& v) { return v.isPair(); },
-                    [](const Variant& v) { return v.isCustomType(); }
-                ),
-                std::make_tuple(
-                    [](const Variant& v, const int8_t& expected) { EXPECT_EQ(v.toInt64(), expected); },
-                    [](const Variant& v, const int16_t& expected) { EXPECT_EQ(v.toInt64(), expected); },
-                    [](const Variant& v, const int32_t& expected) { EXPECT_EQ(v.toInt64(), expected); },
-                    [](const Variant& v, const int64_t& expected) { EXPECT_EQ(v.toInt64(), expected); },
-                    [](const Variant& v, const uint8_t& expected) { EXPECT_EQ(v.toUInt64(), expected); },
-                    [](const Variant& v, const uint16_t& expected) { EXPECT_EQ(v.toUInt64(), expected); },
-                    [](const Variant& v, const uint32_t& expected) { EXPECT_EQ(v.toUInt64(), expected); },
-                    [](const Variant& v, const uint64_t& expected) { EXPECT_EQ(v.toUInt64(), expected); },
-                    [](const Variant& v, const double& expected) { EXPECT_DOUBLE_EQ(v.toDouble(), expected); },
-                    [](const Variant& v, const bool& expected) { EXPECT_EQ(v.toBool(), expected); },
-                    [](const Variant& v, const std::string& expected) { EXPECT_EQ(v.toString(), expected); },
-                    [](const Variant& v, const char* expected) { EXPECT_EQ(v.toString(), expected); },
-                    [](const Variant& v, const ByteArray_t& expected) {
-                        ByteArray_t binaryData = v.toByteArray();
-                        ASSERT_EQ(binaryData.size(), expected.size());
+                    [](const Variant& v) { return v.isCustomType(); }),
+    std::make_tuple(
+        [](const Variant& v, const int8_t& expected) { EXPECT_EQ(v.toInt64(), expected); },
+        [](const Variant& v, const int16_t& expected) { EXPECT_EQ(v.toInt64(), expected); },
+        [](const Variant& v, const int32_t& expected) { EXPECT_EQ(v.toInt64(), expected); },
+        [](const Variant& v, const int64_t& expected) { EXPECT_EQ(v.toInt64(), expected); },
+        [](const Variant& v, const uint8_t& expected) { EXPECT_EQ(v.toUInt64(), expected); },
+        [](const Variant& v, const uint16_t& expected) { EXPECT_EQ(v.toUInt64(), expected); },
+        [](const Variant& v, const uint32_t& expected) { EXPECT_EQ(v.toUInt64(), expected); },
+        [](const Variant& v, const uint64_t& expected) { EXPECT_EQ(v.toUInt64(), expected); },
+        [](const Variant& v, const double& expected) { EXPECT_DOUBLE_EQ(v.toDouble(), expected); },
+        [](const Variant& v, const bool& expected) { EXPECT_EQ(v.toBool(), expected); },
+        [](const Variant& v, const std::string& expected) { EXPECT_EQ(v.toString(), expected); },
+        [](const Variant& v, const char* expected) { EXPECT_EQ(v.toString(), expected); },
+        [](const Variant& v, const ByteArray_t& expected) {
+            ByteArray_t binaryData = v.toByteArray();
+            ASSERT_EQ(binaryData.size(), expected.size());
 
-                        for (int i = 0; i < expected.size(); ++i) {
-                            EXPECT_EQ(binaryData[i], expected[i]);
-                        }
-                    },
-                    [](const Variant& v, const VariantList_t& expected) { /*EXPECT_EQ(v.getList<int64_t>(), expected);*/ },
-                    [](const Variant& v, const VariantList_t& expected) { /*EXPECT_EQ(v.getList<std::string>(), expected);*/ },
-                    [](const Variant& v, const VariantVector_t& expected) { /*EXPECT_EQ(v.getVector<bool>(), expected);*/ },
-                    [](const Variant& v, const VariantMap_t& expected) { /*EXPECT_EQ(v.getMap<int64_t, std::string>(), expected);*/ },
-                    [](const Variant& v, const VariantPair_t& expected) { /*EXPECT_EQ(v.getMap<int64_t, std::string>(), expected);*/ },
-                    [](const Variant& v, const CustomType& expected) {
-                        auto vData = v.getCustomType<CustomType>();
+            for (int i = 0; i < expected.size(); ++i) {
+                EXPECT_EQ(binaryData[i], expected[i]);
+            }
+        },
+        [](const Variant& v, const VariantList_t& expected) { /*EXPECT_EQ(v.getList<int64_t>(), expected);*/ },
+        [](const Variant& v, const VariantList_t& expected) { /*EXPECT_EQ(v.getList<std::string>(), expected);*/ },
+        [](const Variant& v, const VariantVector_t& expected) { /*EXPECT_EQ(v.getVector<bool>(), expected);*/ },
+        [](const Variant& v, const VariantMap_t& expected) { /*EXPECT_EQ(v.getMap<int64_t, std::string>(), expected);*/ },
+        [](const Variant& v, const VariantPair_t& expected) { /*EXPECT_EQ(v.getMap<int64_t, std::string>(), expected);*/ },
+        [](const Variant& v, const CustomType& expected) {
+            auto vData = v.getCustomType<CustomType>();
 
-                        if (vData) {
-                            EXPECT_EQ(vData->a, expected.a);
-                            EXPECT_EQ(vData->b, expected.b);
-                        }
-                    }
-                )
-            );
+            if (vData) {
+                EXPECT_EQ(vData->a, expected.a);
+                EXPECT_EQ(vData->b, expected.b);
+            }
+        }));
 constexpr int allTypeValuesSize = std::tuple_size<std::tuple_element<0, decltype(allTypeValues)>::type>::value;
 
 // =================================================================================================================
 constexpr int typeValidationArgsSize = 11;
-const auto typeValidationArgs = std::make_tuple(
-    std::vector<std::function<bool(const Variant&)>> {
-        [](const Variant& v){ return v.isNumeric(); },
-        [](const Variant& v){ return v.isSignedNumeric(); },
-        [](const Variant& v){ return v.isUnsignedNumeric(); },
-        [](const Variant& v){ return v.isBool(); },
-        [](const Variant& v){ return v.isString(); },
-        [](const Variant& v){ return v.isByteArray(); },
-        [](const Variant& v){ return v.isVector(); },
-        [](const Variant& v){ return v.isList(); },
-        [](const Variant& v){ return v.isMap(); },
-        [](const Variant& v){ return v.isPair(); },
-        [](const Variant& v){ return v.isCustomType(); }
-    },
-    std::vector<std::string> {
-        "isNumeric",
-        "isSignedNumeric",
-        "isUnsignedNumeric",
-        "isBool",
-        "isString",
-        "isByteArray",
-        "isVector",
-        "isList",
-        "isMap",
-        "isPair",
-        "isCustomType"
-    },
-    std::vector<std::vector<Variant::Type>>{
-        {// isNumeric
-            Variant::Type::BYTE_1,
-            Variant::Type::BYTE_2,
-            Variant::Type::BYTE_4,
-            Variant::Type::BYTE_8,
-            Variant::Type::UBYTE_1,
-            Variant::Type::UBYTE_2,
-            Variant::Type::UBYTE_4,
-            Variant::Type::UBYTE_8,
-            Variant::Type::DOUBLE
-        },
-        {// isSignedNumeric
-            Variant::Type::BYTE_1,
-            Variant::Type::BYTE_2,
-            Variant::Type::BYTE_4,
-            Variant::Type::BYTE_8,
-            Variant::Type::DOUBLE
-        },
-        {// isUnsignedNumeric
-            Variant::Type::UBYTE_1,
-            Variant::Type::UBYTE_2,
-            Variant::Type::UBYTE_4,
-            Variant::Type::UBYTE_8
-        },
-        { Variant::Type::BOOL },
-        { Variant::Type::STRING },
-        { Variant::Type::BYTEARRAY },
-        { Variant::Type::VECTOR },
-        { Variant::Type::LIST },
-        { Variant::Type::MAP },
-        { Variant::Type::PAIR },
-        { Variant::Type::CUSTOM }
-    });
+const auto typeValidationArgs =
+    std::make_tuple(std::vector<std::function<bool(const Variant&)>>{[](const Variant& v) { return v.isNumeric(); },
+                                                                     [](const Variant& v) { return v.isSignedNumeric(); },
+                                                                     [](const Variant& v) { return v.isUnsignedNumeric(); },
+                                                                     [](const Variant& v) { return v.isBool(); },
+                                                                     [](const Variant& v) { return v.isString(); },
+                                                                     [](const Variant& v) { return v.isByteArray(); },
+                                                                     [](const Variant& v) { return v.isVector(); },
+                                                                     [](const Variant& v) { return v.isList(); },
+                                                                     [](const Variant& v) { return v.isMap(); },
+                                                                     [](const Variant& v) { return v.isPair(); },
+                                                                     [](const Variant& v) {
+                                                                         return v.isCustomType();
+                                                                     }},
+                    std::vector<std::string>{"isNumeric",
+                                             "isSignedNumeric",
+                                             "isUnsignedNumeric",
+                                             "isBool",
+                                             "isString",
+                                             "isByteArray",
+                                             "isVector",
+                                             "isList",
+                                             "isMap",
+                                             "isPair",
+                                             "isCustomType"},
+                    std::vector<std::vector<Variant::Type>>{{// isNumeric
+                                                             Variant::Type::BYTE_1,
+                                                             Variant::Type::BYTE_2,
+                                                             Variant::Type::BYTE_4,
+                                                             Variant::Type::BYTE_8,
+                                                             Variant::Type::UBYTE_1,
+                                                             Variant::Type::UBYTE_2,
+                                                             Variant::Type::UBYTE_4,
+                                                             Variant::Type::UBYTE_8,
+                                                             Variant::Type::DOUBLE},
+                                                            {// isSignedNumeric
+                                                             Variant::Type::BYTE_1,
+                                                             Variant::Type::BYTE_2,
+                                                             Variant::Type::BYTE_4,
+                                                             Variant::Type::BYTE_8,
+                                                             Variant::Type::DOUBLE},
+                                                            {// isUnsignedNumeric
+                                                             Variant::Type::UBYTE_1,
+                                                             Variant::Type::UBYTE_2,
+                                                             Variant::Type::UBYTE_4,
+                                                             Variant::Type::UBYTE_8},
+                                                            {Variant::Type::BOOL},
+                                                            {Variant::Type::STRING},
+                                                            {Variant::Type::BYTEARRAY},
+                                                            {Variant::Type::VECTOR},
+                                                            {Variant::Type::LIST},
+                                                            {Variant::Type::MAP},
+                                                            {Variant::Type::PAIR},
+                                                            {Variant::Type::CUSTOM}});
 
 // =================================================================================================================
 constexpr int gIndexConversionFunc = 0;
@@ -481,61 +574,60 @@ constexpr int gIndexConversionExpected = 3;
 
 const auto typeConversionArgs = std::make_tuple(
     // methods to validate
-    std::make_tuple(
-        [](const Variant& v){ return v.toInt64(); },
-        [](const Variant& v){ return v.toUInt64(); },
-        [](const Variant& v){ return v.toDouble(); },
-        [](const Variant& v){ return v.toBool(); },
-        [](const Variant& v){ return v.toString(); },
-        [](const Variant& v){ return v.toByteArray(); },
-        [](const Variant& v){ return v.getVector(); },
-        [](const Variant& v){ return v.getList(); },
-        [](const Variant& v){ return v.getMap(); },
-        [](const Variant& v){ return v.getPair(); }
-    ),
-    std::vector<std::string> {
-        "toInt64",
-        "toUInt64",
-        "toDouble",
-        "toBool",
-        "toString",
-        "toByteArray",
-        "getVector",
-        "getList",
-        "getMap",
-        "getPair"
-    },
+    std::make_tuple([](const Variant& v) { return v.toInt64(); },
+                    [](const Variant& v) { return v.toUInt64(); },
+                    [](const Variant& v) { return v.toDouble(); },
+                    [](const Variant& v) { return v.toBool(); },
+                    [](const Variant& v) { return v.toString(); },
+                    [](const Variant& v) { return v.toByteArray(); },
+                    [](const Variant& v) { return v.getVector(); },
+                    [](const Variant& v) { return v.getList(); },
+                    [](const Variant& v) { return v.getMap(); },
+                    [](const Variant& v) { return v.getPair(); }),
+    std::vector<std::string>{"toInt64",
+                             "toUInt64",
+                             "toDouble",
+                             "toBool",
+                             "toString",
+                             "toByteArray",
+                             "getVector",
+                             "getList",
+                             "getMap",
+                             "getPair"},
     // test data
-    std::vector<Variant> {
-        Variant(static_cast<int8_t>(0)),
-        Variant(i8),
-        Variant(i16),
-        Variant(i32),
-        Variant(i64),
-        Variant(ui8),
-        Variant(ui16),
-        Variant(ui32),
-        Variant(ui64),
-        Variant(d),
-        Variant(b),
-        Variant("-17"),
-        Variant("true"),
-        Variant("True"),
-        Variant(ByteArray_t{0x61, 0x00, 0x62, 0x00}),
-        Variant(listStr),
-        Variant(Variant::make(std::vector<int16_t>{1, 2, 3})),
-        Variant(mapIntStr),
-        Variant(pairIntStr),
-        Variant(customTypeValue)},
+    std::vector<Variant>{Variant(static_cast<int8_t>(0)),
+                         Variant(i8),
+                         Variant(i16),
+                         Variant(i32),
+                         Variant(i64),
+                         Variant(ui8),
+                         Variant(ui16),
+                         Variant(ui32),
+                         Variant(ui64),
+                         Variant(d),
+                         Variant(b),
+                         Variant("-17"),
+                         Variant("true"),
+                         Variant("True"),
+                         Variant(ByteArray_t{0x61, 0x00, 0x62, 0x00}),
+                         Variant(listStr),
+                         Variant(Variant::make(std::vector<int16_t>{1, 2, 3})),
+                         Variant(mapIntStr),
+                         Variant(pairIntStr),
+                         Variant(customTypeValue)},
     // expected values after conversion
-    std::vector<std::function<bool(const int, const void*)>> {
+    std::vector<std::function<bool(const int, const void*)>>{
         [](const int valueIndex, const void* convertedValuePtr) {
             const int64_t convertedValue = *reinterpret_cast<const int64_t*>(convertedValuePtr);
-            const std::vector<int64_t> expected{ 0, i8, i16, i32, i64, ui8, ui16, ui32, ui64, static_cast<uint64_t>(d), b, -17, 0, 0, 0, 0, 0, 0, 0, 0 };
+            const std::vector<int64_t> expected{0, i8,  i16, i32, i64, ui8, ui16, ui32, ui64, static_cast<uint64_t>(d),
+                                                b, -17, 0,   0,   0,   0,   0,    0,    0,    0};
             const bool res = ((valueIndex < expected.size()) ? (expected[valueIndex] == convertedValue) : false);
 
             if (false == res) {
-                printf("ERROR: [%d] expected (%" PRId64 ") but got (%" PRId64 ")\n", valueIndex, expected[valueIndex], convertedValue);
+                printf("ERROR: [%d] expected (%" PRId64 ") but got (%" PRId64 ")\n",
+                       valueIndex,
+                       expected[valueIndex],
+                       convertedValue);
             }
 
             return res;
@@ -547,23 +639,38 @@ const auto typeConversionArgs = std::make_tuple(
                                                  static_cast<uint64_t>(i16),
                                                  static_cast<uint64_t>(i32),
                                                  static_cast<uint64_t>(i64),
-                                                 ui8, ui16, ui32, ui64,
+                                                 ui8,
+                                                 ui16,
+                                                 ui32,
+                                                 ui64,
                                                  static_cast<uint64_t>(d),
                                                  static_cast<uint64_t>(b),
-                                                 static_cast<uint64_t>(-17), 0, 0,
-                                                 0, 0, 0, 0, 0, 0 };
+                                                 static_cast<uint64_t>(-17),
+                                                 0,
+                                                 0,
+                                                 0,
+                                                 0,
+                                                 0,
+                                                 0,
+                                                 0,
+                                                 0};
             const bool res = ((valueIndex < expected.size()) ? (expected[valueIndex] == convertedValue) : false);
 
             if (false == res) {
-                printf("ERROR: [%d] expected (%" PRIu64 ") but got (%" PRIu64 ")\n", valueIndex, expected[valueIndex], convertedValue);
+                printf("ERROR: [%d] expected (%" PRIu64 ") but got (%" PRIu64 ")\n",
+                       valueIndex,
+                       expected[valueIndex],
+                       convertedValue);
             }
 
             return res;
         },
         [](const int valueIndex, const void* convertedValuePtr) {
             const double convertedValue = *reinterpret_cast<const double*>(convertedValuePtr);
-            const std::vector<double> expected{ 0.0, i8, i16, i32, i64, ui8, ui16, ui32, ui64, d, b, -17.0, 0, 0, 0, 0, 0, 0, 0, 0 };
-            const bool res = ((valueIndex < expected.size()) ? (std::abs(expected[valueIndex] - convertedValue) < 0.00001) : false);
+            const std::vector<double> expected{0.0, i8,    i16, i32, i64, ui8, ui16, ui32, ui64, d,
+                                               b,   -17.0, 0,   0,   0,   0,   0,    0,    0,    0};
+            const bool res =
+                ((valueIndex < expected.size()) ? (std::abs(expected[valueIndex] - convertedValue) < 0.00001) : false);
 
             if (false == res) {
                 printf("ERROR: [%d] expected (%f) but got (%f)\n", valueIndex, expected[valueIndex], convertedValue);
@@ -573,42 +680,50 @@ const auto typeConversionArgs = std::make_tuple(
         },
         [](const int valueIndex, const void* convertedValuePtr) {
             const bool convertedValue = *reinterpret_cast<const bool*>(convertedValuePtr);
-            const std::vector<bool> expected{ false, true, true, true, true, true, true, true, true, true, b, true, true, false, false, false, false, false, false, false };
+            const std::vector<bool> expected{false, true, true, true,  true,  true,  true,  true,  true,  true,
+                                             b,     true, true, false, false, false, false, false, false, false};
             const bool res = ((valueIndex < expected.size()) ? (expected[valueIndex] == convertedValue) : false);
 
             if (false == res) {
-                printf("ERROR: [%d] expected (%s) but got (%s)\n", valueIndex, BOOL2STR(expected[valueIndex]), BOOL2STR(convertedValue));
+                printf("ERROR: [%d] expected (%s) but got (%s)\n",
+                       valueIndex,
+                       BOOL2STR(expected[valueIndex]),
+                       BOOL2STR(convertedValue));
             }
 
             return res;
         },
         [](const int valueIndex, const void* convertedValuePtr) {
             const std::string convertedValue = *reinterpret_cast<const std::string*>(convertedValuePtr);
-            const std::vector<std::string> expected{
-                "0",
-                std::to_string(i8),
-                std::to_string(i16),
-                std::to_string(i32),
-                std::to_string(i64),
-                std::to_string(ui8),
-                std::to_string(ui16),
-                std::to_string(ui32),
-                std::to_string(ui64),
-                std::to_string(d),
-                BOOL2STR(b),
-                "-17",
-                "true",
-                "True",
-                std::string("a\0b", 4),
-                "aa, bb, cc",
-                "1, 2, 3",
-                "1=[aa], 2=[bb], 3=[cc]",
-                "(7, ab)",
-                ""};
+            const std::vector<std::string> expected{"0",
+                                                    std::to_string(i8),
+                                                    std::to_string(i16),
+                                                    std::to_string(i32),
+                                                    std::to_string(i64),
+                                                    std::to_string(ui8),
+                                                    std::to_string(ui16),
+                                                    std::to_string(ui32),
+                                                    std::to_string(ui64),
+                                                    std::to_string(d),
+                                                    BOOL2STR(b),
+                                                    "-17",
+                                                    "true",
+                                                    "True",
+                                                    std::string("a\0b", 4),
+                                                    "aa, bb, cc",
+                                                    "1, 2, 3",
+                                                    "1=[aa], 2=[bb], 3=[cc]",
+                                                    "(7, ab)",
+                                                    ""};
             const bool res = ((valueIndex < expected.size()) ? (expected[valueIndex] == convertedValue) : false);
 
             if (false == res) {
-                printf("ERROR: [%d] expected \"%s\" (%zu) but got \"%s\" (%zu)\n", valueIndex, expected[valueIndex].c_str(), expected[valueIndex].size(), convertedValue.c_str(), convertedValue.size());
+                printf("ERROR: [%d] expected \"%s\" (%zu) but got \"%s\" (%zu)\n",
+                       valueIndex,
+                       expected[valueIndex].c_str(),
+                       expected[valueIndex].size(),
+                       convertedValue.c_str(),
+                       convertedValue.size());
             }
 
             return res;
@@ -625,16 +740,16 @@ const auto typeConversionArgs = std::make_tuple(
                 {0x10, 0x00},
                 {0x20, 0x00, 0x00, 0x00},
                 {0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-                {0xCD, 0xCC, 0xCC, 0xCC, 0xCC, 0xDC, 0x5E, 0x40},// double
-                {0x00},// bool
-                {0x2D, 0x31, 0x37},// str
-                {0x74, 0x72, 0x75, 0x65},// str
-                {0x54, 0x72, 0x75, 0x65},// str
-                {0x61, 0x00, 0x62, 0x00},// bytes
-                {0x61,0x61, 0x62,0x62, 0x63,0x63},// list<str>
-                {0x01,0x00, 0x02,0x00, 0x03,0x00},// vector<int16>
-                {},// map
-                {0x07,0x00,0x00,0x00, 0x61,0x62},// pair<int32, str>
+                {0xCD, 0xCC, 0xCC, 0xCC, 0xCC, 0xDC, 0x5E, 0x40},  // double
+                {0x00},                                            // bool
+                {0x2D, 0x31, 0x37},                                // str
+                {0x74, 0x72, 0x75, 0x65},                          // str
+                {0x54, 0x72, 0x75, 0x65},                          // str
+                {0x61, 0x00, 0x62, 0x00},                          // bytes
+                {0x61, 0x61, 0x62, 0x62, 0x63, 0x63},              // list<str>
+                {0x01, 0x00, 0x02, 0x00, 0x03, 0x00},              // vector<int16>
+                {},                                                // map
+                {0x07, 0x00, 0x00, 0x00, 0x61, 0x62},              // pair<int32, str>
                 {},
             };
             bool res = false;
@@ -644,9 +759,13 @@ const auto typeConversionArgs = std::make_tuple(
 
                 if (false == res) {
                     printf("ERROR: [%d] Expected (", valueIndex);
-                    std::for_each(expected[valueIndex].begin(), expected[valueIndex].end(), [](char c){ printf("%02X ", 0x000000FF & static_cast<int>(c)); });
+                    std::for_each(expected[valueIndex].begin(), expected[valueIndex].end(), [](char c) {
+                        printf("%02X ", 0x000000FF & static_cast<int>(c));
+                    });
                     printf(") but got (");
-                    std::for_each(convertedValue.begin(), convertedValue.end(), [](char c){ printf("%02X ", 0x000000FF & static_cast<int>(c)); });
+                    std::for_each(convertedValue.begin(), convertedValue.end(), [](char c) {
+                        printf("%02X ", 0x000000FF & static_cast<int>(c));
+                    });
                     printf(")\n");
                 }
             }
@@ -654,8 +773,10 @@ const auto typeConversionArgs = std::make_tuple(
             return res;
         },
         [](const int valueIndex, const void* convertedValuePtr) {
-            const std::shared_ptr<VariantVector_t> convertedValue = *reinterpret_cast<const std::shared_ptr<VariantVector_t>*>(convertedValuePtr);
-            std::vector<bool> expected{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false };
+            const std::shared_ptr<VariantVector_t> convertedValue =
+                *reinterpret_cast<const std::shared_ptr<VariantVector_t>*>(convertedValuePtr);
+            std::vector<bool> expected{false, false, false, false, false, false, false, false, false, false,
+                                       false, false, false, false, false, false, true,  false, false, false};
             bool res = false;
 
             if (valueIndex < expected.size()) {
@@ -668,8 +789,10 @@ const auto typeConversionArgs = std::make_tuple(
             return res;
         },
         [](const int valueIndex, const void* convertedValuePtr) {
-            const std::shared_ptr<VariantList_t> convertedValue = *reinterpret_cast<const std::shared_ptr<VariantList_t>*>(convertedValuePtr);
-            std::vector<bool> expected{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false };
+            const std::shared_ptr<VariantList_t> convertedValue =
+                *reinterpret_cast<const std::shared_ptr<VariantList_t>*>(convertedValuePtr);
+            std::vector<bool> expected{false, false, false, false, false, false, false, false, false, false,
+                                       false, false, false, false, false, true,  false, false, false, false};
             bool res = false;
 
             if (valueIndex < expected.size()) {
@@ -682,8 +805,10 @@ const auto typeConversionArgs = std::make_tuple(
             return res;
         },
         [](const int valueIndex, const void* convertedValuePtr) {
-            const std::shared_ptr<VariantMap_t> convertedValue = *reinterpret_cast<const std::shared_ptr<VariantMap_t>*>(convertedValuePtr);
-            std::vector<bool> expected{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false };
+            const std::shared_ptr<VariantMap_t> convertedValue =
+                *reinterpret_cast<const std::shared_ptr<VariantMap_t>*>(convertedValuePtr);
+            std::vector<bool> expected{false, false, false, false, false, false, false, false, false, false,
+                                       false, false, false, false, false, false, false, true,  false, false};
             bool res = false;
 
             if (valueIndex < expected.size()) {
@@ -696,8 +821,10 @@ const auto typeConversionArgs = std::make_tuple(
             return res;
         },
         [](const int valueIndex, const void* convertedValuePtr) {
-            const std::shared_ptr<VariantPair_t> convertedValue = *reinterpret_cast<const std::shared_ptr<VariantPair_t>*>(convertedValuePtr);
-            std::vector<bool> expected{ false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, false };
+            const std::shared_ptr<VariantPair_t> convertedValue =
+                *reinterpret_cast<const std::shared_ptr<VariantPair_t>*>(convertedValuePtr);
+            std::vector<bool> expected{false, false, false, false, false, false, false, false, false, false,
+                                       false, false, false, false, false, false, false, false, true,  false};
             bool res = false;
 
             if (valueIndex < expected.size()) {
@@ -709,23 +836,23 @@ const auto typeConversionArgs = std::make_tuple(
 
             return res;
         },
-    }
-);
+    });
 
-constexpr int typeConversionArgsSize = std::tuple_size<std::tuple_element<gIndexConversionFunc, decltype(typeConversionArgs)>::type>::value;
+constexpr int typeConversionArgsSize =
+    std::tuple_size<std::tuple_element<gIndexConversionFunc, decltype(typeConversionArgs)>::type>::value;
 
 bool convertAndValidateValue(const int funcIndex, const Variant& v, const int valueIndex) {
-    #define CONVERTANDVALIDATEVALUE_CASE(i)        case i:                                                          \
-                                                   {                                                                \
-                                                       const auto convertFunc = std::get<i>(convertFuncsList);      \
-                                                       const auto convertedValue = convertFunc(v);                  \
-                                                       return validateFunc(valueIndex, &convertedValue);            \
-                                                   }
+#define CONVERTANDVALIDATEVALUE_CASE(i)                     \
+  case i: {                                                 \
+    const auto convertFunc = std::get<i>(convertFuncsList); \
+    const auto convertedValue = convertFunc(v);             \
+    return validateFunc(valueIndex, &convertedValue);       \
+  }
 
     const auto& convertFuncsList = std::get<gIndexConversionFunc>(typeConversionArgs);
     const auto validateFunc = std::get<gIndexConversionExpected>(typeConversionArgs)[funcIndex];
 
-    switch(funcIndex) {
+    switch (funcIndex) {
         CONVERTANDVALIDATEVALUE_CASE(0)
         CONVERTANDVALIDATEVALUE_CASE(1)
         CONVERTANDVALIDATEVALUE_CASE(2)
@@ -768,7 +895,6 @@ INSTANTIATE_TEST_CASE_P(variant,
                         [](const ::testing::TestParamInfo<FixtureVariantAllTypes::ParamType>& info) {
                             return std::get<gIndexConversionName>(typeConversionArgs)[info.param];
                         });
-
 
 // =================================================================================================================
 TEST_P(FixtureVariantAllTypes, constructors) {
@@ -966,7 +1092,23 @@ TEST(variant, variadic_arguments) {
     VariantVector_t result;
     VariantVector_t resultByValue;
 
-    makeVariantList(result, i8, i16, i32, i64, ui8, ui16, ui32, ui64, d, b, s1, s2, listInt, vectorBool, mapIntStr, customTypeValue);
+    makeVariantList(result,
+                    i8,
+                    i16,
+                    i32,
+                    i64,
+                    ui8,
+                    ui16,
+                    ui32,
+                    ui64,
+                    d,
+                    b,
+                    s1,
+                    s2,
+                    listInt,
+                    vectorBool,
+                    mapIntStr,
+                    customTypeValue);
     makeVariantList(resultByValue, 1, 2.3, "aaa", false, true);
 
     //-------------------------------------------
@@ -1003,9 +1145,9 @@ TEST(variant, variadic_arguments) {
     EXPECT_EQ(result[i++].toBool(), b);
     EXPECT_EQ(result[i++].toString(), s1);
     EXPECT_STREQ(result[i++].toString().c_str(), s2);
-    ++i; // listInt
-    ++i; // vectorBool
-    ++i; // mapIntStr
+    ++i;  // listInt
+    ++i;  // vectorBool
+    ++i;  // mapIntStr
     EXPECT_EQ(result[i++].getCustomType<CustomType>()->a, customTypeValue.a);
 
     i = 0;
@@ -1086,7 +1228,7 @@ TEST_P(FixtureVariantTypeConversion, convert) {
 
     //-------------------------------------------
     // ACTIONS
-    for (int i = 0 ; i < values.size(); ++i) {
+    for (int i = 0; i < values.size(); ++i) {
         EXPECT_TRUE(convertAndValidateValue(indexType, Variant(values[i]), i));
     }
 
@@ -1133,7 +1275,7 @@ TEST_P(FixtureVariantTypeCheck, isXXX) {
 
     //-------------------------------------------
     // ACTIONS
-    for (int i = 0 ; i < allTypeValuesSize; ++i) {
+    for (int i = 0; i < allTypeValuesSize; ++i) {
         v = makeVariantFromTuple(i, std::get<gIndexValue>(allTypeValues));
 
         if (supportedTypes.end() != std::find(supportedTypes.begin(), supportedTypes.end(), v.getType())) {
@@ -1207,17 +1349,17 @@ TEST(variant, vector) {
     ASSERT_EQ(v1Ptr->size(), intVector.size());
     ASSERT_EQ(v2Ptr->size(), strVector.size());
 
-    EXPECT_TRUE(std::equal(v1Ptr->begin(), v1Ptr->end(), intVector.begin(), [](const Variant& left, const int right){
+    EXPECT_TRUE(std::equal(v1Ptr->begin(), v1Ptr->end(), intVector.begin(), [](const Variant& left, const int right) {
         return left.toInt64() == right;
     }));
 
-    EXPECT_TRUE(std::equal(v2Ptr->begin(), v2Ptr->end(), strVector.begin(), [](const Variant& left, const std::string& right){
+    EXPECT_TRUE(std::equal(v2Ptr->begin(), v2Ptr->end(), strVector.begin(), [](const Variant& left, const std::string& right) {
         return left.toString() == right;
     }));
 
     // validate converting to std::vector
-    EXPECT_EQ(intVector, v1.toVector<int>([](const Variant& v){ return v.toInt64(); }));
-    EXPECT_EQ(strVector, v2.toVector<std::string>([](const Variant& v){ return v.toString(); }));
+    EXPECT_EQ(intVector, v1.toVector<int>([](const Variant& v) { return v.toInt64(); }));
+    EXPECT_EQ(strVector, v2.toVector<std::string>([](const Variant& v) { return v.toString(); }));
 }
 
 TEST(variant, list) {
@@ -1253,17 +1395,17 @@ TEST(variant, list) {
     ASSERT_EQ(v1Ptr->size(), intList.size());
     ASSERT_EQ(v2Ptr->size(), strList.size());
 
-    EXPECT_TRUE(std::equal(v1Ptr->begin(), v1Ptr->end(), intList.begin(), [](const Variant& left, const int right){
+    EXPECT_TRUE(std::equal(v1Ptr->begin(), v1Ptr->end(), intList.begin(), [](const Variant& left, const int right) {
         return left.toInt64() == right;
     }));
 
-    EXPECT_TRUE(std::equal(v2Ptr->begin(), v2Ptr->end(), strList.begin(), [](const Variant& left, const std::string& right){
+    EXPECT_TRUE(std::equal(v2Ptr->begin(), v2Ptr->end(), strList.begin(), [](const Variant& left, const std::string& right) {
         return left.toString() == right;
     }));
 
     // validate converting to std::list
-    EXPECT_EQ(intList, v1.toList<int>([](const Variant& v){ return v.toInt64(); }));
-    EXPECT_EQ(strList, v2.toList<std::string>([](const Variant& v){ return v.toString(); }));
+    EXPECT_EQ(intList, v1.toList<int>([](const Variant& v) { return v.toInt64(); }));
+    EXPECT_EQ(strList, v2.toList<std::string>([](const Variant& v) { return v.toString(); }));
 }
 
 TEST(variant, map) {
@@ -1284,13 +1426,17 @@ TEST(variant, map) {
     auto v1Ptr = v1.getMap();
 
     ASSERT_NE(v1Ptr.get(), nullptr);
-    EXPECT_TRUE(std::equal(v1Ptr->begin(), v1Ptr->end(), mapIntStr.begin(), [](const std::pair<Variant,Variant>& left, const std::pair<int, std::string>& right){
-        return (left.first.toInt64() == right.first) && (left.second.toString() == right.second);
-    }));
+    EXPECT_TRUE(std::equal(v1Ptr->begin(),
+                           v1Ptr->end(),
+                           mapIntStr.begin(),
+                           [](const std::pair<Variant, Variant>& left, const std::pair<int, std::string>& right) {
+                               return (left.first.toInt64() == right.first) && (left.second.toString() == right.second);
+                           }));
 
     // validate converting to std::map
-    EXPECT_EQ(mapIntStr, (v1.toMap<int, std::string>([](const Variant& k){ return k.toInt64(); },
-                                                     [](const Variant& v){ return v.toString(); })));
+    EXPECT_EQ(mapIntStr,
+              (v1.toMap<int, std::string>([](const Variant& k) { return k.toInt64(); },
+                                          [](const Variant& v) { return v.toString(); })));
 }
 
 TEST(variant, pair_conversion) {
@@ -1309,8 +1455,9 @@ TEST(variant, pair_conversion) {
     ASSERT_TRUE(v0.isPair());
 
     // validate converting to std::pair
-    EXPECT_EQ(intStrPair, (v0.toPair<int, std::string>([](const Variant& first){ return first.toInt64(); },
-                                                       [](const Variant& second){ return second.toString(); })));
+    EXPECT_EQ(intStrPair,
+              (v0.toPair<int, std::string>([](const Variant& first) { return first.toInt64(); },
+                                           [](const Variant& second) { return second.toString(); })));
 }
 
 TEST(variant, pair_constructors) {
@@ -1323,12 +1470,12 @@ TEST(variant, pair_constructors) {
 
     //-------------------------------------------
     // ACTIONS
-    Variant v0 = Variant(intStrPairVariant);// from VariantPair_t
-    Variant v1 = Variant(intStrPair.first, intStrPair.second);// from int, str
-    Variant v2 = Variant(intStrPairVariant.first, intStrPairVariant.second);// from Variant, Variant
-    Variant v3 = Variant::make(intStrPairVariant);// from VariantPair_t
-    Variant v4 = Variant::make(intStrPair.first, intStrPair.second);// from int, str
-    Variant v5 = Variant::make(intStrPairVariant.first, intStrPairVariant.second);// from Variant, Variant
+    Variant v0 = Variant(intStrPairVariant);                                        // from VariantPair_t
+    Variant v1 = Variant(intStrPair.first, intStrPair.second);                      // from int, str
+    Variant v2 = Variant(intStrPairVariant.first, intStrPairVariant.second);        // from Variant, Variant
+    Variant v3 = Variant::make(intStrPairVariant);                                  // from VariantPair_t
+    Variant v4 = Variant::make(intStrPair.first, intStrPair.second);                // from int, str
+    Variant v5 = Variant::make(intStrPairVariant.first, intStrPairVariant.second);  // from Variant, Variant
 
     //-------------------------------------------
     // VALIDATION

@@ -27,14 +27,13 @@
 // NOTE: copied from Posix_GCC example from https://github.com/FreeRTOS
 
 // FreeRTOS kernel includes
-#include "FreeRTOS.h"
 #include <unistd.h>
 
-StackType_t uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
+#include "FreeRTOS.h"
 
+StackType_t uxTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
 
-void vAssertCalled(const char * const pcFileName, unsigned long ulLine)
-{
+void vAssertCalled(const char* const pcFileName, unsigned long ulLine) {
     // static BaseType_t xPrinted = pdFALSE;
     // volatile uint32_t ulSetToNonZeroInDebuggerToContinue = 0;
 
@@ -44,7 +43,6 @@ void vAssertCalled(const char * const pcFileName, unsigned long ulLine)
     // /* Parameters are not used. */
     // (void) ulLine;
     // (void) pcFileName;
-
 
     // taskENTER_CRITICAL();
     // {
@@ -71,8 +69,7 @@ void vAssertCalled(const char * const pcFileName, unsigned long ulLine)
     // taskEXIT_CRITICAL();
 }
 
-void vApplicationMallocFailedHook(void)
-{
+void vApplicationMallocFailedHook(void) {
     /* vApplicationMallocFailedHook() will only be called if
      * configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h.  It is a hook
      * function that will get called if a call to pvPortMalloc() fails.
@@ -85,11 +82,10 @@ void vApplicationMallocFailedHook(void)
      * (although it does not provide information on how the remaining heap might be
      * fragmented).  See http://www.freertos.org/a00111.html for more
      * information. */
-    vAssertCalled( __FILE__, __LINE__ );
+    vAssertCalled(__FILE__, __LINE__);
 }
 
-void vApplicationIdleHook(void)
-{
+void vApplicationIdleHook(void) {
     /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
      * to 1 in FreeRTOSConfig.h.  It will be called on each iteration of the idle
      * task.  It is essential that code added to this hook function never attempts
@@ -100,24 +96,20 @@ void vApplicationIdleHook(void)
      * because it is the responsibility of the idle task to clean up memory
      * allocated by the kernel to any task that has since deleted itself. */
 
-
     usleep(15000);
     // traceOnEnter();
 }
 // /*-----------------------------------------------------------*/
-void vApplicationTickHook(void)
-{
+void vApplicationTickHook(void) {
     /* This function will be called by each tick interrupt if
-    * configUSE_TICK_HOOK is set to 1 in FreeRTOSConfig.h.  User code can be
-    * added here, but the tick hook is called from an interrupt context, so
-    * code must not attempt to block, and only the interrupt safe FreeRTOS API
-    * functions can be used (those that end in FromISR()). */
-
+     * configUSE_TICK_HOOK is set to 1 in FreeRTOSConfig.h.  User code can be
+     * added here, but the tick hook is called from an interrupt context, so
+     * code must not attempt to block, and only the interrupt safe FreeRTOS API
+     * functions can be used (those that end in FromISR()). */
 }
 
 // /*-----------------------------------------------------------*/
-void vApplicationDaemonTaskStartupHook(void)
-{
+void vApplicationDaemonTaskStartupHook(void) {
     /* This function will be called once only, when the daemon task starts to
      * execute    (sometimes called the timer task).  This is useful if the
      * application includes initialisation code that would benefit from executing
@@ -129,15 +121,14 @@ void vApplicationDaemonTaskStartupHook(void)
 // /* configUSE_STATIC_ALLOCATION is set to 1, so the application must provide an
 //  * implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
 //  * used by the Idle task. */
-void vApplicationGetIdleTaskMemory( StaticTask_t ** ppxIdleTaskTCBBuffer,
-                                    StackType_t ** ppxIdleTaskStackBuffer,
-                                    uint32_t * pulIdleTaskStackSize )
-{
-/* If the buffers to be provided to the Idle task are declared inside this
- * function then they must be declared static - otherwise they will be allocated on
- * the stack and so not exists after this function exits. */
+void vApplicationGetIdleTaskMemory(StaticTask_t** ppxIdleTaskTCBBuffer,
+                                   StackType_t** ppxIdleTaskStackBuffer,
+                                   uint32_t* pulIdleTaskStackSize) {
+    /* If the buffers to be provided to the Idle task are declared inside this
+     * function then they must be declared static - otherwise they will be allocated on
+     * the stack and so not exists after this function exits. */
     static StaticTask_t xIdleTaskTCB;
-    static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+    static StackType_t uxIdleTaskStack[configMINIMAL_STACK_SIZE];
 
     /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
      * state will be stored. */
@@ -156,13 +147,12 @@ void vApplicationGetIdleTaskMemory( StaticTask_t ** ppxIdleTaskTCBBuffer,
 // /* configUSE_STATIC_ALLOCATION and configUSE_TIMERS are both set to 1, so the
 //  * application must provide an implementation of vApplicationGetTimerTaskMemory()
 //  * to provide the memory that is used by the Timer service task. */
-void vApplicationGetTimerTaskMemory( StaticTask_t ** ppxTimerTaskTCBBuffer,
-                                     StackType_t ** ppxTimerTaskStackBuffer,
-                                     uint32_t * pulTimerTaskStackSize )
-{
-/* If the buffers to be provided to the Timer task are declared inside this
- * function then they must be declared static - otherwise they will be allocated on
- * the stack and so not exists after this function exits. */
+void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer,
+                                    StackType_t** ppxTimerTaskStackBuffer,
+                                    uint32_t* pulTimerTaskStackSize) {
+    /* If the buffers to be provided to the Timer task are declared inside this
+     * function then they must be declared static - otherwise they will be allocated on
+     * the stack and so not exists after this function exits. */
     static StaticTask_t xTimerTaskTCB;
 
     /* Pass out a pointer to the StaticTask_t structure in which the Timer

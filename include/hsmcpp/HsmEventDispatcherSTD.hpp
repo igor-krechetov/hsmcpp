@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_HSMEVENTDISPATCHERSTD_HPP
@@ -22,7 +22,8 @@ class HsmEventDispatcherSTD : public HsmEventDispatcherBase {
 private:
     struct RunningTimerInfo {
         std::chrono::time_point<std::chrono::steady_clock> startedAt;  ///< time when timer was started (monotonic, ms)
-        std::chrono::time_point<std::chrono::steady_clock> elapseAfter;  ///< time when timer should elapse next (monotonic , ms)
+        std::chrono::time_point<std::chrono::steady_clock>
+            elapseAfter;  ///< time when timer should elapse next (monotonic , ms)
     };
 
 public:
@@ -81,7 +82,7 @@ protected:
      * @details Internally calls stop() and join().
      *
      * @threadsafe{ }
-    */
+     */
     virtual ~HsmEventDispatcherSTD();
 
     /**
@@ -112,7 +113,7 @@ private:
     ConditionVariable mEmitEvent;
     ConditionVariable mTimerEvent;
     bool mNotifiedTimersThread = false;
-    std::map<TimerID_t, RunningTimerInfo> mRunningTimers; // protected by mRunningTimersSync
+    std::map<TimerID_t, RunningTimerInfo> mRunningTimers;  // protected by mRunningTimersSync
 };
 
 }  // namespace hsmcpp

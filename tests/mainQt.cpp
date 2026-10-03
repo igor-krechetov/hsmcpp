@@ -2,9 +2,9 @@
 #include <gtest/gtest.h>
 
 #include <QCoreApplication>
+#include <chrono>
 #include <future>
 #include <thread>
-#include <chrono>
 
 #include "TestsCommon.hpp"
 

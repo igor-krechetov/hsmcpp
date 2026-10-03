@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Igor Krechetov
+// Copyright (C) 2023 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_SRC_HSMIMPLTYPES_HPP
@@ -123,7 +123,6 @@ struct HistoryInfo {
     HistoryInfo(HistoryInfo&& src) noexcept;
     HistoryInfo& operator=(const HistoryInfo& src) = default;
     HistoryInfo& operator=(HistoryInfo&& src) noexcept;
-
 };
 
 /// @no_requirement internal data structure

@@ -1,4 +1,4 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2022 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_POSIX_INTERRUPTSFREESECTION_HPP
 #define HSMCPP_OS_POSIX_INTERRUPTSFREESECTION_HPP
@@ -7,11 +7,9 @@
 // cppcheck-suppress misra-c2012-21.5
 #include <signal.h>
 
-namespace hsmcpp
-{
+namespace hsmcpp {
 
-class InterruptsFreeSection
-{
+class InterruptsFreeSection {
 public:
     InterruptsFreeSection();
     ~InterruptsFreeSection();
@@ -26,6 +24,6 @@ private:
     sigset_t mOriginalSigMask = {0};
 };
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_OS_POSIX_INTERRUPTSFREESECTION_HPP
+#endif  // HSMCPP_OS_POSIX_INTERRUPTSFREESECTION_HPP

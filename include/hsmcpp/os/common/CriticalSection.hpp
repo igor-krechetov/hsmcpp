@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Igor Krechetov
+// Copyright (C) 2023 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_COMMON_CRITICALSECTION_HPP
 #define HSMCPP_OS_COMMON_CRITICALSECTION_HPP

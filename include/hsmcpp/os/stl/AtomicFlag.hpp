@@ -1,13 +1,13 @@
-// Copyright (C) 2023 Igor Krechetov
+// Copyright (C) 2023 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_STL_ATOMICFLAG_HPP
 #define HSMCPP_OS_STL_ATOMICFLAG_HPP
 
 #include <atomic>
 
-#include "hsmcpp/os/UniqueLock.hpp"
 #include "hsmcpp/os/ConditionVariable.hpp"
 #include "hsmcpp/os/Mutex.hpp"
+#include "hsmcpp/os/UniqueLock.hpp"
 
 namespace hsmcpp {
 

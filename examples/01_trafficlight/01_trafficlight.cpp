@@ -12,17 +12,17 @@
 using namespace hsmcpp;
 
 namespace TrafficLightState {
-    const hsmcpp::StateID_t OFF = 0;
-    const hsmcpp::StateID_t STARTING = 1;
-    const hsmcpp::StateID_t RED = 2;
-    const hsmcpp::StateID_t YELLOW = 3;
-    const hsmcpp::StateID_t GREEN = 4;
+const hsmcpp::StateID_t OFF = 0;
+const hsmcpp::StateID_t STARTING = 1;
+const hsmcpp::StateID_t RED = 2;
+const hsmcpp::StateID_t YELLOW = 3;
+const hsmcpp::StateID_t GREEN = 4;
 }  // namespace TrafficLightState
 
 namespace TrafficLightEvent {
-    const hsmcpp::EventID_t TURN_ON = 0;
-    const hsmcpp::EventID_t TURN_OFF = 1;
-    const hsmcpp::EventID_t NEXT_STATE = 2;
+const hsmcpp::EventID_t TURN_ON = 0;
+const hsmcpp::EventID_t TURN_OFF = 1;
+const hsmcpp::EventID_t NEXT_STATE = 2;
 }  // namespace TrafficLightEvent
 
 class TrafficLight : public hsmcpp::HierarchicalStateMachine {

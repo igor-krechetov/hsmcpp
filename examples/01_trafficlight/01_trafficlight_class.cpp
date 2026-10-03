@@ -4,20 +4,20 @@
 #include "hsmcpp/hsm.hpp"
 
 namespace TrafficLightState {
-    const hsmcpp::StateID_t OFF = 0;
+const hsmcpp::StateID_t OFF = 0;
 
-    const hsmcpp::StateID_t OPERABLE = 1;
-    const hsmcpp::StateID_t INITIALIZING = 2;
-    const hsmcpp::StateID_t RED = 3;
-    const hsmcpp::StateID_t YELLOW = 4;
-    const hsmcpp::StateID_t GREEN = 5;
+const hsmcpp::StateID_t OPERABLE = 1;
+const hsmcpp::StateID_t INITIALIZING = 2;
+const hsmcpp::StateID_t RED = 3;
+const hsmcpp::StateID_t YELLOW = 4;
+const hsmcpp::StateID_t GREEN = 5;
 }  // namespace TrafficLightState
 
 namespace TrafficLightEvent {
-    const hsmcpp::EventID_t POWER_ON = 0;
-    const hsmcpp::EventID_t POWER_OFF = 1;
-    const hsmcpp::EventID_t INIT_DONE = 2;
-    const hsmcpp::EventID_t NEXT_STATE = 3;
+const hsmcpp::EventID_t POWER_ON = 0;
+const hsmcpp::EventID_t POWER_OFF = 1;
+const hsmcpp::EventID_t INIT_DONE = 2;
+const hsmcpp::EventID_t NEXT_STATE = 3;
 }  // namespace TrafficLightEvent
 
 class TrafficLight : public hsmcpp::HierarchicalStateMachine {

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include <thread>
 
@@ -242,7 +242,8 @@ TEST_F(TrafficLightHsm, transition_self_internal) {
 
 TEST_F(ABCHsm, transition_self_internal_multiple) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_026,HSMCPP.SWR_HSM_043");
-    TEST_DESCRIPTION("If both parent and child have same self-transition defined then only child's transition should be executed");
+    TEST_DESCRIPTION(
+        "If both parent and child have same self-transition defined then only child's transition should be executed");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -252,11 +253,19 @@ TEST_F(ABCHsm, transition_self_internal_multiple) {
     registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onSyncA, &ABCHsm::onAEnter, &ABCHsm::onAExit);
 
     registerSubstateEntryPoint(AbcState::P1, AbcState::A);
-    registerSelfTransition<ABCHsm>(AbcState::P1, AbcEvent::E1, TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE2Transition);
-    registerSelfTransition<ABCHsm>(AbcState::A, AbcEvent::E1, TransitionType::INTERNAL_TRANSITION, this, &ABCHsm::onE1Transition);
+    registerSelfTransition<ABCHsm>(AbcState::P1,
+                                   AbcEvent::E1,
+                                   TransitionType::INTERNAL_TRANSITION,
+                                   this,
+                                   &ABCHsm::onE2Transition);
+    registerSelfTransition<ABCHsm>(AbcState::A,
+                                   AbcEvent::E1,
+                                   TransitionType::INTERNAL_TRANSITION,
+                                   this,
+                                   &ABCHsm::onE1Transition);
 
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());// wait for state A to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for state A to activate
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A}));
 
     //-------------------------------------------
@@ -550,9 +559,8 @@ TEST_F(ABCHsm, transition_sync_deadlock) {
     bool bTransitionResult = true;
 
     registerState(AbcState::A);
-    registerState(AbcState::B, [&](const hsmcpp::VariantVector_t& args){
-        bTransitionResult = transitionSync(AbcEvent::E2, 100);
-    });
+    registerState(AbcState::B,
+                  [&](const hsmcpp::VariantVector_t& args) { bTransitionResult = transitionSync(AbcEvent::E2, 100); });
     registerState(AbcState::C);
 
     registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
@@ -571,7 +579,6 @@ TEST_F(ABCHsm, transition_sync_deadlock) {
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::C}));
 }
-
 
 // NOTE: test is obsolete with introduction of parallel feature
 // TEST_F(TrafficLightHsm, transition_conditional_multiple_valid)

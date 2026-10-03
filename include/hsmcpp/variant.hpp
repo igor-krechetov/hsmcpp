@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_VARIANT_HPP
@@ -32,9 +32,9 @@ using VariantPair_t = std::pair<Variant, Variant>;  ///< Provides a way to store
   /** @brief Assigns _val_type value to current variant object and changing it's type to _internal_type. */ \
   Variant& operator=(const _val_type v);
 
-#define DEF_MAKE_DOC(_internal_type)                                            \
-  /** @brief Creates a Variant object with a value of type _internal_type. */   \
-  /** @param v The value to assign to the Variant object.  */                   \
+#define DEF_MAKE_DOC(_internal_type)                                          \
+  /** @brief Creates a Variant object with a value of type _internal_type. */ \
+  /** @param v The value to assign to the Variant object.  */                 \
   /** @return Newly constructed Variant object.            */
 
 // cppcheck-suppress misra-c2012-20.7 ; parentheses are not needed
@@ -548,9 +548,10 @@ public:
      * std::map<int, std::string> intStrData = {{1, "aa"}, {2, "bb"}, {3, "cc"}};
      * Variant v = Variant::make(intStrData);
      *
-     * std::map<int, std::string> intStrDataConverted = v.toMap<int, std::string>([](const Variant& key){ return key.toInt64(); },
-     *                                                                            [](const Variant& value){ return value.toString(); }));
-     * \endcode
+     * std::map<int, std::string> intStrDataConverted = v.toMap<int, std::string>([](const Variant& key){ return key.toInt64();
+     * },
+     *                                                                            [](const Variant& value){ return
+     * value.toString(); })); \endcode
      *
      * @param converterKey functor which will be called for each map key to convert it from Variant to requested type
      * @param converterValue functor which will be called for each map value to convert it from Variant to requested type
@@ -574,9 +575,10 @@ public:
      * std::pair<int, std::string> intStrData = {1, "aa"};
      * Variant v = Variant::make(intStrData);
      *
-     * std::pair<int, std::string> intStrDataConverted = v.toPair<int, std::string>([](const Variant& first){ return first.toInt64(); },
-     *                                                                              [](const Variant& second){ return second.toString(); }));
-     * \endcode
+     * std::pair<int, std::string> intStrDataConverted = v.toPair<int, std::string>([](const Variant& first){ return
+     * first.toInt64(); },
+     *                                                                              [](const Variant& second){ return
+     * second.toString(); })); \endcode
      *
      * @param converterFirst functor which will be called for first pair element to convert it from Variant to requested type
      * @param converterSecond functor which will be called for second pair element to convert it from Variant to requested type

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP
 #define HSMCPP_TESTS_HSM_TRAFFICLIGHTHSM_HPP

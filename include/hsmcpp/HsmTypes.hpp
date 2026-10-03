@@ -1,9 +1,9 @@
-// Copyright (C) 2023 Igor Krechetov
+// Copyright (C) 2023 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 /**
  * @file
  * Contains definitions of global types used by HSM.
-*/
+ */
 
 #ifndef HSMCPP_HSMTYPES_HPP
 #define HSMCPP_HSMTYPES_HPP
@@ -15,12 +15,26 @@
 namespace hsmcpp {
 
 using HandlerID_t = int32_t;  ///< Handler ID returned by dispatchers for events, timers and enqueued events handlers
-/** Type representing timer ID. Used to identify timer when calling timer related API of HierarchicalStateMachine class. */
+/**
+ * Type representing timer ID. Used to identify timer when calling timer related API of HierarchicalStateMachine class.
+ * @requirement HSMCPP.SWR_HSM_004
+ */
 using TimerID_t = int32_t;
-using EventID_t = int32_t;  ///< Type representing HSM event ID. Used when working with HierarchicalStateMachine class.
-using StateID_t = int32_t;  ///< Type representing HSM state ID. Used when working with HierarchicalStateMachine class.
 
-/** This macro can be used to indicate to sync API of HierarchicalStateMachine to wait indefinitely for an operation to finish. */
+/**
+ * Type representing HSM event ID. Used when working with HierarchicalStateMachine class.
+ * @requirement HSMCPP.SWR_HSM_003
+ */
+using EventID_t = int32_t;
+
+/**
+ * Type representing HSM state ID. Used when working with HierarchicalStateMachine class.
+ * @requirement HSMCPP.SWR_HSM_002
+ */
+using StateID_t = int32_t;
+
+/** This macro can be used to indicate to sync API of HierarchicalStateMachine to wait indefinitely for an operation to finish.
+ */
 constexpr int HSM_WAIT_INDEFINITELY = 0;
 
 /** Generic value for an invalid ID. Not supposed to be used directly. */
@@ -58,12 +72,14 @@ using HsmStateChangedCallback_t = std::function<void(const VariantVector_t&)>;
  *
  * @param VariantVector_t \c args value provided in HierarchicalStateMachine::transition() or similar API
  *
- * @return Callback should return TRUE to allow current transition. Returning FALSE will cause ongoing transition to be canceled.
+ * @return Callback should return TRUE to allow current transition. Returning FALSE will cause ongoing transition to be
+ * canceled.
  */
 using HsmStateEnterCallback_t = std::function<bool(const VariantVector_t&)>;
 /**
  * Function type for HierarchicalStateMachine state exiting callbacks.
- * @return Callback should return TRUE to allow current transition. Returning FALSE will cause ongoing transition to be canceled.
+ * @return Callback should return TRUE to allow current transition. Returning FALSE will cause ongoing transition to be
+ * canceled.
  */
 using HsmStateExitCallback_t = std::function<bool(void)>;
 /**
@@ -87,7 +103,8 @@ using HsmTransitionFailedCallback_t = std::function<void(const std::list<StateID
 // cppcheck-suppress misra-c2012-20.7
 #define HsmStateExitCallbackPtr_t(_class, _func) bool (_class::*_func)()
 // cppcheck-suppress misra-c2012-20.7
-#define HsmTransitionFailedCallbackPtr_t(_class, _func) void (_class::*_func)(const std::list<StateID_t>&, const EventID_t, const VariantVector_t&)
+#define HsmTransitionFailedCallbackPtr_t(_class, _func) \
+  void (_class::*_func)(const std::list<StateID_t>&, const EventID_t, const VariantVector_t&)
 
 /**
  * @enum HistoryType

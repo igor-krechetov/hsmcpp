@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #include "hsmcpp/HsmEventDispatcherQt.hpp"
@@ -21,8 +21,7 @@ QEvent::Type HsmEventDispatcherQt::mQtDispatchEventType = QEvent::None;
 
 HsmEventDispatcherQt::HsmEventDispatcherQt(const size_t eventsCacheSize)
     : HsmEventDispatcherBase(eventsCacheSize)
-    , QObject(nullptr) {
-}
+    , QObject(nullptr) {}
 
 HsmEventDispatcherQt::~HsmEventDispatcherQt() {
     HSM_TRACE_CALL_DEBUG();
@@ -31,7 +30,8 @@ HsmEventDispatcherQt::~HsmEventDispatcherQt() {
 }
 
 std::shared_ptr<HsmEventDispatcherQt> HsmEventDispatcherQt::create(const size_t eventsCacheSize) {
-    return std::shared_ptr<HsmEventDispatcherQt>(new HsmEventDispatcherQt(eventsCacheSize), &HsmEventDispatcherBase::handleDelete);
+    return std::shared_ptr<HsmEventDispatcherQt>(new HsmEventDispatcherQt(eventsCacheSize),
+                                                 &HsmEventDispatcherBase::handleDelete);
 }
 
 bool HsmEventDispatcherQt::deleteSafe() {

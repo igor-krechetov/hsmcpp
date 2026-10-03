@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Igor Krechetov
+# Copyright (C) 2021 Ihor Krechetov
 # Distributed under MIT license. See file LICENSE for details
 
 # Based on https://stackoverflow.com/questions/52689047/moving-qslider-to-mouse-click-position

@@ -4,18 +4,18 @@
 #include <thread>
 
 namespace States {
-    const hsmcpp::StateID_t IDLE = 0;
-    const hsmcpp::StateID_t OFF = 1;
-    const hsmcpp::StateID_t ON = 2;
-}
+const hsmcpp::StateID_t IDLE = 0;
+const hsmcpp::StateID_t OFF = 1;
+const hsmcpp::StateID_t ON = 2;
+}  // namespace States
 
 namespace Events {
-    const hsmcpp::EventID_t START = 0;
-    const hsmcpp::EventID_t ON_TIMER1 = 1;
-}
+const hsmcpp::EventID_t START = 0;
+const hsmcpp::EventID_t ON_TIMER1 = 1;
+}  // namespace Events
 
 namespace Timers {
-    const hsmcpp::TimerID_t TIMER1 = 1;
+const hsmcpp::TimerID_t TIMER1 = 1;
 }
 
 using TimersHSM_t = hsmcpp::HierarchicalStateMachine;

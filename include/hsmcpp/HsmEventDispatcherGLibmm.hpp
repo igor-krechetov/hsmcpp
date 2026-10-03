@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_HSMEVENTDISPATCHERGLIBMM_HPP
@@ -113,7 +113,7 @@ private:
     Glib::RefPtr<Glib::MainContext> mMainContext;
     std::unique_ptr<Glib::Dispatcher> mDispatcher;
     sigc::connection mDispatcherConnection;
-    std::map<TimerID_t, sigc::connection> mNativeTimerHandlers; // protected by mRunningTimersSync
+    std::map<TimerID_t, sigc::connection> mNativeTimerHandlers;  // protected by mRunningTimersSync
 };
 
 }  // namespace hsmcpp

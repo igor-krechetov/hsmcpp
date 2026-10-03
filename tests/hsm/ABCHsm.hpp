@@ -1,43 +1,43 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_TESTS_HSM_ABCHSM_HPP
 #define HSMCPP_TESTS_HSM_ABCHSM_HPP
 
+#include "BaseAsyncHsm.hpp"
 #include "TestsCommon.hpp"
 #include "hsmcpp/hsm.hpp"
-#include "BaseAsyncHsm.hpp"
 
 #undef HSM_TRACE_CLASS
 #define HSM_TRACE_CLASS "ABCHsm"
 
 namespace AbcState {
-    const hsmcpp::StateID_t A = 0;
-    const hsmcpp::StateID_t B = 1;
-    const hsmcpp::StateID_t C = 2;
-    const hsmcpp::StateID_t D = 3;
-    const hsmcpp::StateID_t E = 4;
-    const hsmcpp::StateID_t F = 5;
-    const hsmcpp::StateID_t H = 6;
-    const hsmcpp::StateID_t H2 = 7;
-    const hsmcpp::StateID_t P1 = 8;
-    const hsmcpp::StateID_t P2 = 9;
-    const hsmcpp::StateID_t P3 = 10;
-    const hsmcpp::StateID_t P4 = 11;
-    const hsmcpp::StateID_t F1 = 12;
-    const hsmcpp::StateID_t F2 = 13;
-    const hsmcpp::StateID_t F3 = 14;
-}
+const hsmcpp::StateID_t A = 0;
+const hsmcpp::StateID_t B = 1;
+const hsmcpp::StateID_t C = 2;
+const hsmcpp::StateID_t D = 3;
+const hsmcpp::StateID_t E = 4;
+const hsmcpp::StateID_t F = 5;
+const hsmcpp::StateID_t H = 6;
+const hsmcpp::StateID_t H2 = 7;
+const hsmcpp::StateID_t P1 = 8;
+const hsmcpp::StateID_t P2 = 9;
+const hsmcpp::StateID_t P3 = 10;
+const hsmcpp::StateID_t P4 = 11;
+const hsmcpp::StateID_t F1 = 12;
+const hsmcpp::StateID_t F2 = 13;
+const hsmcpp::StateID_t F3 = 14;
+}  // namespace AbcState
 
 namespace AbcEvent {
-    const hsmcpp::EventID_t E1 = 0;
-    const hsmcpp::EventID_t E2 = 1;
-    const hsmcpp::EventID_t E3 = 2;
-    const hsmcpp::EventID_t E4 = 3;
-    const hsmcpp::EventID_t EXIT1 = 3;
-    const hsmcpp::EventID_t EXIT2 = 4;
+const hsmcpp::EventID_t E1 = 0;
+const hsmcpp::EventID_t E2 = 1;
+const hsmcpp::EventID_t E3 = 2;
+const hsmcpp::EventID_t E4 = 3;
+const hsmcpp::EventID_t EXIT1 = 3;
+const hsmcpp::EventID_t EXIT2 = 4;
 
-    const hsmcpp::EventID_t INVALID = INVALID_ID;
-}
+const hsmcpp::EventID_t INVALID = INVALID_ID;
+}  // namespace AbcEvent
 
 class ABCHsm : public testing::Test, public BaseAsyncHsm, public HierarchicalStateMachine {
 public:

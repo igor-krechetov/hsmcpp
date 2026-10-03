@@ -1,15 +1,15 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2022 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_STL_CONDITIONVARIABLE_HPP
 #define HSMCPP_OS_STL_CONDITIONVARIABLE_HPP
 
-#include "hsmcpp/os/common/UniqueLock.hpp"
-#include "Mutex.hpp"
 #include <condition_variable>
 #include <functional>
 
-namespace hsmcpp
-{
+#include "Mutex.hpp"
+#include "hsmcpp/os/common/UniqueLock.hpp"
+
+namespace hsmcpp {
 
 class ConditionVariable {
 public:
@@ -28,11 +28,10 @@ private:
     std::condition_variable mVariable;
 };
 
-inline void ConditionVariable::notify()
-{
+inline void ConditionVariable::notify() {
     mVariable.notify_all();
 }
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_OS_STL_CONDITIONVARIABLE_HPP
+#endif  // HSMCPP_OS_STL_CONDITIONVARIABLE_HPP

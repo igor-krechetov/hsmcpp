@@ -1,8 +1,9 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
-#include "hsm/ABCHsm.hpp"
 #include <chrono>
 #include <thread>
+
+#include "hsm/ABCHsm.hpp"
 
 TEST_F(ABCHsm, callbacks_class_pointers) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_062");
@@ -160,9 +161,10 @@ TEST_F(ABCHsm, callbacks_entering_substates) {
 
 TEST_F(ABCHsm, callbacks_exiting_substates) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_027,HSMCPP.SWR_HSM_059");
-    TEST_DESCRIPTION("when exiting a composite state P1 (with active child B), "
-                     "HSM should call B's onExit and P1's onExit exactly once each "
-                     "without invoking any other state callbacks");
+    TEST_DESCRIPTION(
+        "when exiting a composite state P1 (with active child B), "
+        "HSM should call B's onExit and P1's onExit exactly once each "
+        "without invoking any other state callbacks");
     // *A -e1-> P1{*B} -e2-> A
 
     //-------------------------------------------

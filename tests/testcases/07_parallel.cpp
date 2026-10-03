@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/ABCHsm.hpp"
 
@@ -285,10 +285,11 @@ TEST_F(ABCHsm, DISABLED_parallel_transition_07) {
 
 TEST_F(ABCHsm, parallel_transition_08) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_029");
-    TEST_DESCRIPTION("*A -> B + C -> A: check that transitions are not applied recursively. "
-                     "Verifies that the set of transitions for one event is resolved against "
-                     "the pre-event configuration. Transitions B->A and C->A "
-                     "registered for E1 do not fire during the *A->B+C transition triggered by the same E1.");
+    TEST_DESCRIPTION(
+        "*A -> B + C -> A: check that transitions are not applied recursively. "
+        "Verifies that the set of transitions for one event is resolved against "
+        "the pre-event configuration. Transitions B->A and C->A "
+        "registered for E1 do not fire during the *A->B+C transition triggered by the same E1.");
 
     //-------------------------------------------
     // PRECONDITIONS
@@ -689,7 +690,7 @@ TEST_P(ParamFixtureParallel1, parallel_substate_final) {
     registerTransition<ABCHsm>(AbcState::P1, AbcState::C, eventTransition, this, &ABCHsm::onSyncE3Transition);
 
     initializeHsm();
-    ASSERT_TRUE(waitAsyncOperation());  // wait for A to activate
+    ASSERT_TRUE(waitAsyncOperation());            // wait for A to activate
     ASSERT_TRUE(waitAsyncOperation(300, false));  // wait for B to activate
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::A, AbcState::B}));
     ASSERT_EQ(mStateCounterA, 1);

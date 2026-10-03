@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Igor Krechetov
+# Copyright (C) 2021 Ihor Krechetov
 # Distributed under MIT license. See file LICENSE for details
 
 # This Python file uses the following encoding: utf-8

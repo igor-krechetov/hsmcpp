@@ -1,6 +1,7 @@
-// Copyright (C) 2023 Igor Krechetov
+// Copyright (C) 2023 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "BaseAsyncHsm.hpp"
+
 #include "hsmcpp/os/UniqueLock.hpp"
 
 #undef HSM_TRACE_CLASS

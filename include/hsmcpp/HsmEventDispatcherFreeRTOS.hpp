@@ -1,4 +1,4 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2022 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_HSMEVENTDISPATCHERFREERTOS_HPP
@@ -115,7 +115,7 @@ private:
 
     configSTACK_DEPTH_TYPE mStackDepth = configMINIMAL_STACK_SIZE;
     UBaseType_t mPriority = tskIDLE_PRIORITY;
-    std::map<TimerID_t, TimerHandle_t> mNativeTimerHandlers; // protected by InterruptsFreeSection class
+    std::map<TimerID_t, TimerHandle_t> mNativeTimerHandlers;  // protected by InterruptsFreeSection class
 };
 
 }  // namespace hsmcpp

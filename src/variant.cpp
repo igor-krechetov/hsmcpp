@@ -1,10 +1,11 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #include "hsmcpp/variant.hpp"
 
-#include <cstring>
 #include <math.h>
+
+#include <cstring>
 
 #include "hsmcpp/os/os.hpp"
 
@@ -103,7 +104,7 @@ Variant::Variant(const char* v)
 
 Variant::Variant(const char* binaryData, const size_t bytesCount)
     // cppcheck-suppress misra-c2012-10.4 : false-positive. thinks that ':' is arithmetic operation
-    : Variant(ByteArray_t(binaryData, &binaryData[bytesCount])) {} // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    : Variant(ByteArray_t(binaryData, &binaryData[bytesCount])) {}  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
 // =================================================================================================================
 // Assign operators
@@ -387,7 +388,7 @@ std::string Variant::toString() const {
 
             // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
             if (val) {
-                for (const Variant& item: *val) {
+                for (const Variant& item : *val) {
                     if (false == result.empty()) {
                         result.append(", ");
                     }
@@ -402,7 +403,7 @@ std::string Variant::toString() const {
 
             // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
             if (val) {
-                for (const Variant& item: *val) {
+                for (const Variant& item : *val) {
                     if (false == result.empty()) {
                         result.append(", ");
                     }
@@ -417,7 +418,7 @@ std::string Variant::toString() const {
 
             // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
             if (val) {
-                for (const auto& item: *val) {
+                for (const auto& item : *val) {
                     if (false == result.empty()) {
                         result.append(", ");
                     }
@@ -687,7 +688,7 @@ ByteArray_t Variant::toByteArray() const {
 
             // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
             if (data) {
-                for (const Variant& item: *data) {
+                for (const Variant& item : *data) {
                     const ByteArray_t curValue = item.toByteArray();
 
                     (void)result.insert(result.end(), curValue.begin(), curValue.end());
@@ -700,7 +701,7 @@ ByteArray_t Variant::toByteArray() const {
 
             // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
             if (data) {
-                for (const Variant& item: *data) {
+                for (const Variant& item : *data) {
                     const ByteArray_t curValue = item.toByteArray();
 
                     (void)result.insert(result.end(), curValue.begin(), curValue.end());

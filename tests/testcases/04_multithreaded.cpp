@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/ABCHsm.hpp"
 #ifndef WIN32
@@ -47,14 +47,14 @@ TEST_F(ABCHsm, multithreaded_entrypoint_cancelation) {
     // send new event with clearQueue=TRUE
     transitionWithQueueClear(AbcEvent::E2);
 
-    unblockNextStep();               // allow A::onExit to continue
+    unblockNextStep();                       // allow A::onExit to continue
     ASSERT_TRUE(waitAsyncOperation(false));  // wait for B state to activate
 
     // NOTE: this is the main validation point. In case of an error state would be C since we would never go into B
     ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
     unblockNextStep();  // allow B::onStateChanged to continue
 
-    ASSERT_TRUE(waitAsyncOperation()); // wait for C state to activate
+    ASSERT_TRUE(waitAsyncOperation());  // wait for C state to activate
 
     //-------------------------------------------
     // VALIDATION

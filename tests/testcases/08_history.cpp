@@ -1,10 +1,10 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #include "hsm/ABCHsm.hpp"
 #include "hsmcpp/HsmTypes.hpp"
 
 TEST_F(ABCHsm, history_simple) {
-    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_032");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_032,HSMCPP.SWR_HSM_136,HSMCPP.SWR_HSM_033");
     TEST_DESCRIPTION("simple history test; shallow, one level");
     // *F -> P1 {*A, B, H[x]} -> C -> H
 
@@ -151,7 +151,7 @@ TEST_F(ABCHsm, history_no_default) {
 }
 
 TEST_F(ABCHsm, history_deep) {
-    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_035,HSMCPP.SWR_HSM_036");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_035,HSMCPP.SWR_HSM_036,HSMCPP.SWR_HSM_137");
     TEST_DESCRIPTION(
         "when deep history is used, HSM should activate "
         "exact states which were active before exiting parent");
@@ -202,7 +202,7 @@ TEST_F(ABCHsm, history_deep) {
 }
 
 TEST_F(ABCHsm, history_shallow) {
-    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_032,HSMCPP.SWR_HSM_033");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_032,HSMCPP.SWR_HSM_033,HSMCPP.SWR_HSM_136");
     TEST_DESCRIPTION(
         "when shallow history is used, HSM should activate "
         "only direct child of the parent which owns history state");

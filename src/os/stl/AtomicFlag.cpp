@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Igor Krechetov
+// Copyright (C) 2023 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #include "hsmcpp/os/stl/AtomicFlag.hpp"
@@ -30,7 +30,8 @@ void AtomicFlag::wait(const bool old) noexcept {
     if (mValue.load() == old) {
         UniqueLock lk(mSync);
 
-        // cppcheck-suppress misra-c2012-15.5 ; false-positive. "return" statement belongs to lambda function, not parent function
+        // cppcheck-suppress misra-c2012-15.5 ; false-positive. "return" statement belongs to lambda function, not parent
+        // function
         mWaitCond.wait(lk, [&]() { return (mValue.load() != old); });
     }
 }

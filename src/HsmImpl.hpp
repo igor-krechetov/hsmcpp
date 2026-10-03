@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Igor Krechetov
+// Copyright (C) 2023 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_SRC_HSMIMPL_HPP
@@ -12,12 +12,12 @@
   #include <fstream>
 #endif
 
-#include "hsmcpp/hsm.hpp"
-#include "hsmcpp/os/Mutex.hpp"
-#include "hsmcpp/os/ConditionVariable.hpp"
-#include "hsmcpp/os/AtomicFlag.hpp"
-#include "hsmcpp/variant.hpp"
 #include "HsmImplTypes.hpp"
+#include "hsmcpp/hsm.hpp"
+#include "hsmcpp/os/AtomicFlag.hpp"
+#include "hsmcpp/os/ConditionVariable.hpp"
+#include "hsmcpp/os/Mutex.hpp"
+#include "hsmcpp/variant.hpp"
 
 namespace hsmcpp {
 
@@ -91,6 +91,7 @@ public:
 
     void transitionWithArgsArray(const EventID_t event, const VariantVector_t& args);
     void transitionWithArgsArray(const EventID_t event, VariantVector_t&& args);
+    /// @requirement HSMCPP.SWR_HSM_076, HSMCPP.SWR_HSM_132
     bool transitionExWithArgsArray(const EventID_t event,
                                    const bool clearQueue,
                                    const bool sync,
@@ -130,19 +131,19 @@ private:
                           const EventID_t eventCondition = INVALID_HSM_EVENT_ID,
                           HsmTransitionConditionCallback_t conditionCallback = nullptr,
                           const bool expectedConditionValue = true);
-    
-    /// @requirement HSMCPP.SWR_HSM_068, HSMCPP.SWR_HSM_069, HSMCPP.SWR_HSM_070
+
+    /// @requirement HSMCPP.SWR_HSM_068, HSMCPP.SWR_HSM_069, HSMCPP.SWR_HSM_070, HSMCPP.SWR_HSM_009
     void dispatchEvents();
-    /// @requirement HSMCPP.SWR_HSM_075
+    /// @requirement HSMCPP.SWR_HSM_080
     void dispatchTimerEvent(const TimerID_t id);
-    
+
     /// @requirement HSMCPP.SWR_HSM_059
     bool onStateExiting(const StateID_t state);
     /// @requirement HSMCPP.SWR_HSM_058
     bool onStateEntering(const StateID_t state, const VariantVector_t& args);
     /// @requirement HSMCPP.SWR_HSM_060
     void onStateChanged(const StateID_t state, const VariantVector_t& args);
-    
+
     /// @requirement HSMCPP.SWR_HSM_062, HSMCPP.SWR_HSM_063, HSMCPP.SWR_HSM_064, HSMCPP.SWR_HSM_065
     void executeStateAction(const StateID_t state, const StateActionTrigger actionTrigger);
 
@@ -159,11 +160,11 @@ private:
     bool getHistoryParent(const StateID_t historyState, StateID_t& outParent);
     /// @requirement HSMCPP.SWR_HSM_033, HSMCPP.SWR_HSM_036
     void updateHistory(const StateID_t topLevelState, const std::list<StateID_t>& exitedStates);
-    
+
     /// @requirement HSMCPP.SWR_HSM_048
     bool checkTransitionPossibility(const StateID_t fromState, const EventID_t event, const VariantVector_t& args);
-    
-    /// @requirement HSMCPP.SWR_HSM_048
+
+    /// @requirement HSMCPP.SWR_HSM_048, HSMCPP.SWR_HSM_026, HSMCPP.SWR_HSM_025
     bool findTransitionTarget(const StateID_t fromState,
                               const EventID_t event,
                               const VariantVector_t& transitionArgs,
@@ -174,11 +175,12 @@ private:
      * (determineTargetState), runs self-transitions, exit, and external
      * transition. Pure control-flow orchestration delegating to tagged helpers.
      *
-     * @requirement HSMCPP.SWR_HSM_045, HSMCPP.SWR_HSM_057
+     * @requirement HSMCPP.SWR_HSM_045, HSMCPP.SWR_HSM_057, HSMCPP.SWR_HSM_029
      */
     HsmEventStatus doTransition(const PendingEventInfo& event);
 
-    /// @requirement HSMCPP.SWR_HSM_054, HSMCPP.SWR_HSM_056
+    /// @requirement HSMCPP.SWR_HSM_054, HSMCPP.SWR_HSM_056, HSMCPP.SWR_HSM_027, HSMCPP.SWR_HSM_028, HSMCPP.SWR_HSM_030,
+    /// HSMCPP.SWR_HSM_031
     HsmEventStatus processExternalTransition(const PendingEventInfo& event,
                                              const StateID_t fromState,
                                              const TransitionInfo& curTransition,
@@ -192,20 +194,24 @@ private:
     bool determineTargetState(const PendingEventInfo& event,
                               const StateID_t fromState,
                               std::list<TransitionInfo>& outMatchingTransitions);
-    /// @requirement HSMCPP.SWR_HSM_043, HSMCPP.SWR_HSM_044
+    /// @requirement HSMCPP.SWR_HSM_043, HSMCPP.SWR_HSM_044, HSMCPP.SWR_HSM_133
     bool executeSelfTransitions(const PendingEventInfo& event, const std::list<TransitionInfo>& matchingTransitions);
     /// @requirement HSMCPP.SWR_HSM_055
     bool executeExitTransition(const PendingEventInfo& event,
                                const std::list<TransitionInfo>& matchingTransitions,
                                std::list<StateID_t>& outExitedStates);
 
-    /// @requirement HSMCPP.SWR_HSM_032, HSMCPP.SWR_HSM_035, HSMCPP.SWR_HSM_038
+    /// @requirement HSMCPP.SWR_HSM_136, HSMCPP.SWR_HSM_137
     bool processHistoryTransition(const PendingEventInfo& event, const StateID_t destinationState);
-    /// @requirement HSMCPP.SWR_HSM_032, HSMCPP.SWR_HSM_035
-    void transitionToPreviousActiveStates(std::list<StateID_t>& previousActiveStates, const PendingEventInfo& event, const StateID_t destinationState);
-    /// @requirement HSMCPP.SWR_HSM_038
-    void transitionToDefaultHistoryState(const StateID_t defaultTarget, const HsmTransitionCallback_t& defaultTargetTransitionCallback, const PendingEventInfo& event, const StateID_t destinationState);
-
+    /// @requirement HSMCPP.SWR_HSM_136, HSMCPP.SWR_HSM_137
+    void transitionToPreviousActiveStates(std::list<StateID_t>& previousActiveStates,
+                                          const PendingEventInfo& event,
+                                          const StateID_t destinationState);
+    /// @requirement HSMCPP.SWR_HSM_038, HSMCPP.SWR_HSM_134
+    void transitionToDefaultHistoryState(const StateID_t defaultTarget,
+                                         const HsmTransitionCallback_t& defaultTargetTransitionCallback,
+                                         const PendingEventInfo& event,
+                                         const StateID_t destinationState);
 
     /**
      * @details When a state's last non-final child reaches a final state, raises
@@ -215,14 +221,14 @@ private:
      *
      * TODO: need to rename this as it handles both exit points and final states.
      *
-     * @requirement HSMCPP.SWR_HSM_115, HSMCPP.SWR_HSM_128, HSMCPP.SWR_HSM_129
+     * @requirement HSMCPP.SWR_HSM_115, HSMCPP.SWR_HSM_128, HSMCPP.SWR_HSM_129, HSMCPP.SWR_HSM_014
      */
     bool processFinalStateTransition(const PendingEventInfo& event, const StateID_t destinationState);
     /**
      * @details Top-level per-state event handler: validates, selects target,
      * executes self/exit/external transition steps. Control-flow orchestration.
      *
-     * @requirement HSMCPP.SWR_HSM_054
+     * @requirement HSMCPP.SWR_HSM_054, HSMCPP.SWR_HSM_131, HSMCPP.SWR_HSM_027, HSMCPP.SWR_HSM_133
      */
     HsmEventStatus handleSingleTransition(const StateID_t fromState, const PendingEventInfo& event);
     /// @requirement HSMCPP.SWR_HSM_047
@@ -233,22 +239,30 @@ private:
     /// @no_requirement Internal state-tree query helper (no observable behavior).
     bool hasEntryPoint(const StateID_t state) const;
     // TODO: return enum instead of bool (no entrypoint registered, no matching entry, ok)
-    /// @requirement HSMCPP.SWR_HSM_020, HSMCPP.SWR_HSM_021, HSMCPP.SWR_HSM_022, HSMCPP.SWR_HSM_023, HSMCPP.SWR_HSM_024
+    /// @requirement HSMCPP.SWR_HSM_020, HSMCPP.SWR_HSM_021, HSMCPP.SWR_HSM_022, HSMCPP.SWR_HSM_023, HSMCPP.SWR_HSM_024,
+    /// HSMCPP.SWR_HSM_025
     bool getEntryPoints(const StateID_t state,
                         const EventID_t onEvent,
                         const VariantVector_t& transitionArgs,
                         std::list<StateID_t>& outEntryPoints) const;
 
-    // returns TRUE if newState was added to a list of active states
-    /// @no_requirement Internal active-state bookkeeping (no observable behavior).
+    /**
+     * returns TRUE if newState was added to a list of active states
+     * @requirement HSMCPP.SWR_HSM_028
+     */
     bool replaceActiveState(const StateID_t oldState, const StateID_t newState);
-    // returns TRUE if newState was added to a list of active states
-    /// @no_requirement Internal active-state bookkeeping (no observable behavior).
+    /**
+     * returns TRUE if newState was added to a list of active states
+     * @requirement HSMCPP.SWR_HSM_028
+     */
     bool addActiveState(const StateID_t newState);
 
 #ifdef HSM_ENABLE_SAFE_STRUCTURE
+    /// @requirement HSMCPP.SWR_HSM_017
     bool isTopState(const StateID_t state) const;
+    /// @requirement HSMCPP.SWR_HSM_017
     bool isSubstate(const StateID_t state) const;
+    /// @requirement HSMCPP.SWR_HSM_017
     bool hasParentState(const StateID_t state, StateID_t& outParent) const;
 #endif  // HSM_ENABLE_SAFE_STRUCTURE
 

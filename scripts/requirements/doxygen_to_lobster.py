@@ -434,16 +434,29 @@ def parse_compound(path, emit_all=False, enclosing_uids=None,
                     for u in method_uids.get("%s::%s" % (impl_iface, wrap), []):
                         if u not in inherited_from_wrapper:
                             inherited_from_wrapper.append(u)
-            # Effective requirements = class requirements UNION interface-method
-            # UIDs UNION wrapper-sibling UIDs UNION member's own, de-duplicated.
-            uids = list(dict.fromkeys(
-                class_uids + inherited_from_iface
-                + inherited_from_wrapper + own))
-            # Own justification wins over an inherited class justification; a
-            # justification never applies when the entity has requirement UIDs.
-            just = own_just or (None if uids else class_just)
-            if not (uids or just or emit_all):
-                continue
+            if is_function:
+                # Effective requirements = class requirements UNION
+                # interface-method UIDs UNION wrapper-sibling UIDs UNION the
+                # method's own, de-duplicated.
+                uids = list(dict.fromkeys(
+                    class_uids + inherited_from_iface
+                    + inherited_from_wrapper + own))
+                # Own justification wins over an inherited class justification; a
+                # justification never applies when the entity has UIDs.
+                just = own_just or (None if uids else class_just)
+                # Functions/methods also appear under --all for orphan analysis.
+                if not (uids or just or emit_all):
+                    continue
+            else:
+                # Data-definition members (typedef / enum / variable) are traced
+                # ONLY when they EXPLICITLY carry their own @requirement (or an
+                # own @no_requirement justification). They never inherit the
+                # enclosing class's requirements and are never emitted under
+                # --all, so untagged types/variables stay out of the report.
+                uids = list(dict.fromkeys(own))
+                just = own_just if not uids else None
+                if not (uids or just):
+                    continue
             qn = mdef.find("qualifiedname")
             nm = mdef.find("name")
             short = nm.text if nm is not None and nm.text else "?"

@@ -511,7 +511,7 @@ TEST_F(ABCHsm, parallel_transition_canceled_02) {
 }
 
 TEST_F(ABCHsm, parallel_transition_mult2one_01) {
-    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_030");
+    // TEST_REQUIREMENTS("HSMCPP.SWR_HSM_030");
     TEST_DESCRIPTION("A -> *B + *C -> A");
 
     //-------------------------------------------
@@ -541,7 +541,7 @@ TEST_F(ABCHsm, parallel_transition_mult2one_01) {
 }
 
 TEST_F(ABCHsm, parallel_transition_mult2one_02) {
-    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_030,HSMCPP.SWR_HSM_031");
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_030");
     TEST_DESCRIPTION("A -> *B + [*C] -> A");
 
     /*
@@ -601,6 +601,32 @@ TEST_F(ABCHsm, parallel_transition_mult2one_02) {
     //-------------------------------------------
     // VALIDATION
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+}
+
+TEST_F(ABCHsm, DISABLED_parallel_transition_mult2one_idempotent_entry) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_030");
+    // TODO: validate idempotent entry on convergence onto an already-active ATOMIC state.
+    // Scenario: A -> *B + *C, then B->C and C stays (two branches converge on C which is
+    // already active). The re-targeting branch's transition SHALL still run its guard,
+    // source-state exit callback, and transition callback, but C's entry callback and
+    // state-changed callback SHALL NOT run again, and C SHALL stay active.
+    // Must assert callback counters (not just the final active-state list):
+    //   - C enter callback executed exactly once (NOT re-run on re-target)
+    //   - C state-changed callback NOT executed on re-target
+    //   - re-targeting edge's guard / source-exit / transition callbacks DID execute
+}
+
+TEST_F(ABCHsm, DISABLED_parallel_transition_mult2one_preserve_substates) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_031");
+    // TODO: validate preservation of active substates when re-targeting an already-active
+    // COMPOSITE state. Scenario: a composite target whose inner state has already advanced
+    // PAST its initial substate; an unrelated branch then re-targets the composite.
+    // The composite and its entire active substate subtree SHALL remain unchanged - no
+    // re-enter, re-initialize, or reset of any state in the subtree (in particular, it
+    // SHALL NOT re-drill into the composite's initial substate).
+    // Must assert the inner substate configuration is preserved and that inner enter/exit
+    // callbacks did NOT fire on re-target (not just the top-level active-state list).
+    // Note: this does NOT apply to an external self-transition (SWR_HSM_044).
 }
 
 class ParamFixtureParallel1 : public ABCHsm, public ::testing::WithParamInterface<std::vector<hsmcpp::EventID_t>> {};

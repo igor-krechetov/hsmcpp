@@ -158,6 +158,26 @@ TEST_F(ABCHsm, substate_entrypoints_multiple_various) {
     // VALIDATION
 }
 
+TEST_F(ABCHsm, DISABLED_substate_entrypoints_registration_order) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_025");
+    // TODO: validate that eligible entry points are activated in REGISTRATION ORDER.
+    // Register multiple entry points on a parent that are all eligible for the same event,
+    // then assert the entry callbacks fire in the order the entry points were registered
+    // (e.g. record a call-order sequence and compare it against registration order).
+    // None of the existing SWR_HSM_025 tests assert ordering - they only check the final
+    // active-state set, which is order-independent.
+}
+
+TEST_F(ABCHsm, DISABLED_substate_entrypoints_all_unfiltered) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_025");
+    // TODO: validate resolution case (3): when NO entry point defines an event filter or a
+    // condition, ALL entry points SHALL be activated. Register several entry points that are
+    // all unconditional (no event filter, no condition) and assert every one activates
+    // (in registration order). This case is distinct from case (2) - here there are no
+    // filtered entry points at all, so the "fall back to unconditional" branch is not what
+    // is exercised.
+}
+
 TEST_F(ABCHsm, substate_entrypoints_behavioral_with_conditions) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_023");
     TEST_DESCRIPTION("entry point transitions can have both event filter and condition defined");

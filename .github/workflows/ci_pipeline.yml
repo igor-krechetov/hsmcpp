@@ -101,8 +101,9 @@ jobs:
       tag_version: ${{ needs.verify.outputs.commit_version }}
       # dont upload any binaries
       builds: ""
-      release_description: |
-        Release ${{ needs.verify.outputs.commit_version }}
+      # The reusable workflow generates the release body from CHANGELOG.md
+      # (header + changelog block). hsmcpp has no binary footer, so no
+      # release_description is supplied.
 
   # --------------------------------------------------------
   deploy:

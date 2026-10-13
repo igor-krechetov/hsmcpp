@@ -42,6 +42,18 @@ jobs:
       install_glibmm: 'ON'
 
   # --------------------------------------------------------
+  # Validate TRLC requirements, render the requirements HTML + LOBSTER coverage
+  # report, and upload them as a `pages-requirements` contribution artifact.
+  # Runs after test so it can reuse the test artifact; the actual Pages deploy
+  # is owned solely by the `pages` job below.
+  requirements:
+    needs: test
+    if: always() && (needs.test.result == 'success')
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/requirements.yml@main
+    with:
+      generate_coverage: 'ON'
+
+  # --------------------------------------------------------
   sast:
     needs: build
     if: always() && (needs.build.result == 'success')
@@ -56,7 +68,7 @@ jobs:
 
   # --------------------------------------------------------
   autotag:
-    needs: [verify, build, test, sast]
+    needs: [verify, build, requirements, sast]
     if: >
       (github.event_name == 'push' && github.ref_name == 'main') &&
       needs.build.result == 'success' &&
@@ -86,6 +98,20 @@ jobs:
       HSMCPP_BOT_TOKEN: ${{ secrets.HSMCPP_BOT_TOKEN }}
       BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
       BOT_GPG_PASSPHRASE: ${{ secrets.BOT_GPG_PASSPHRASE }}
+
+  # --------------------------------------------------------
+  # Single owner of the GitHub Pages deployment: merges every `pages-*`
+  # contribution (test badges + requirements + coverage) into one site and
+  # deploys it. Only on main.
+  pages:
+    needs: [test, requirements]
+    if: >
+      (github.event_name == 'push' && github.ref_name == 'main') &&
+      needs.test.result == 'success' &&
+      needs.requirements.result == 'success'
+    uses: igor-krechetov/hsm-github-workflows/.github/workflows/deploy-pages.yml@main
+    with:
+      site_title: "hsmcpp"
 
   # --------------------------------------------------------
   release:

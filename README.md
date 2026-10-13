@@ -359,3 +359,8 @@ There is no one-for-all library, so if hsmcpp doesn't fully suit your needs you 
 [![Tests: Glib](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_glib.svg)](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_glib.log)
 [![Tests: GLibmm](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_glibmm.svg)](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_glibmm.log)
 [![Tests: Qt](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_qt.svg)](https://igor-krechetov.github.io/hsmcpp/badges/tests_result_qt.log)
+
+## Requirements
+
+- 📋 [Requirements Specification](https://igor-krechetov.github.io/hsmcpp/requirements/)
+- ✅ [Requirements Traceability & Coverage Report](https://igor-krechetov.github.io/hsmcpp/coverage/)

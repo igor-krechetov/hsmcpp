@@ -56,6 +56,21 @@ one_test testname: build
 test_usecase testname usecase:
     {{BUILD_DIR}}/tests/{{testname}} {{usecase}} -maxwarnings 100000
 
+test_for_traceability:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    OUT={{BUILD_DIR}}/requirements
+    mkdir -p "$OUT"
+
+    # Produce GoogleTest's NATIVE xml per dispatcher binary (preserves the
+    # TEST_REQUIREMENTS RecordProperty entries that `ctest --output-junit` drops). Driven
+    # through ctest via the per-binary `<target>_trace` tests registered in
+    # tests/CMakeLists.txt, so ctest remains the test driver.
+    mkdir -p {{BUILD_DIR}}/gtest-xml
+    rm -f {{BUILD_DIR}}/gtest-xml/*.xml
+    # Run only the native-XML trace tests (one per dispatcher binary).
+    ctest --test-dir {{BUILD_DIR}} -R '_trace$' --output-on-failure
+
 # --------------------------------------------------
 # REQUIREMENTS
 
@@ -88,7 +103,7 @@ req_build mode="req":
         python3 scripts/requirements/render_html.py --no-trace "$OUT/hsmcpp_requirements.html"
     fi
 
-req_coverage: (req_build "full") test_trace
+req_coverage: (req_build "full") req_trace_tests
     #!/usr/bin/env bash
     set -euo pipefail
     OUT={{BUILD_DIR}}/requirements
@@ -119,27 +134,16 @@ req_coverage: (req_build "full") test_trace
     echo "Requirement doc:  $OUT/hsmcpp_requirements.html"
 
 
+req_coverage_build: build req_coverage
 
 # --------------------------------------------------
 # INTERNAL
 
-# Runtime coverage with EXECUTION EVIDENCE: build + run the suite, then read the
-# TEST_REQUIREMENTS tags from the GTest XML (proof the test actually ran) via
-# lobster-gtest, and feed that into the same report.
-test_trace: build
+req_trace_tests:
     #!/usr/bin/env bash
     set -euo pipefail
     OUT={{BUILD_DIR}}/requirements
     mkdir -p "$OUT"
-
-    # Produce GoogleTest's NATIVE xml per dispatcher binary (preserves the
-    # TEST_REQUIREMENTS RecordProperty entries that `ctest --output-junit` drops). Driven
-    # through ctest via the per-binary `<target>_trace` tests registered in
-    # tests/CMakeLists.txt, so ctest remains the test driver.
-    mkdir -p {{BUILD_DIR}}/gtest-xml
-    rm -f {{BUILD_DIR}}/gtest-xml/*.xml
-    # Run only the native-XML trace tests (one per dispatcher binary).
-    ctest --test-dir {{BUILD_DIR}} -R '_trace$' --output-on-failure
 
     # Merge the per-dispatcher native GTest XMLs into ONE deduplicated test trace,
     # keyed on the test's source file:line so a test compiled into every

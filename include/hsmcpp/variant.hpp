@@ -656,8 +656,6 @@ public:
     bool operator<=(const Variant& val) const;
 
 private:
-    Variant(std::shared_ptr<void> d, const Type t);
-
     template <typename T>
     Variant(const T& v, const Type t);
 

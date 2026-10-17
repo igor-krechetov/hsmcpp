@@ -65,10 +65,6 @@ Variant Variant::make(const char* binaryData, const size_t bytesCount) {
 
 // =================================================================================================================
 // Constructors
-Variant::Variant(std::shared_ptr<void> d, const Type t)
-    : data(std::move(d))
-    , type(t) {}
-
 Variant::~Variant() {
     freeMemory();
 }

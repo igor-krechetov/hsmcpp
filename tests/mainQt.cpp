@@ -18,6 +18,8 @@ int main(int argc, char** argv) {
 
         int result = RUN_ALL_TESTS();
 
+        cleanupGTest();
+
         // Separate thread is needed for QObject::deleteLater() to work correctly:
         // From Qt documentation:
         // Since Qt 4.8, if deleteLater() is called on an object that lives in a thread with no running event loop, the object

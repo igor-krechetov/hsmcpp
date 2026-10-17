@@ -1,16 +1,13 @@
 // Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 //
-// NOTE(reviewer): this file unit-tests the Variant utility container itself
-// (type storage, conversions, comparisons, lifetime). Variant underpins
-// transition data passing (SWR_HSM_050), but these tests verify the container's
-// own behavior, not a state-machine software requirement, so they are left
-// intentionally unlinked. Flagging here in case you want SWR_HSM_050 traced to
-// a Variant round-trip test instead.
+// This file unit-tests the Variant utility container itself (type storage,
+// conversions, comparisons, lifetime). The library provides its own Variant
+// container to store transition-associated data (SWR_HSM_139), so every case
+// here is linked to that requirement.
 #include <inttypes.h>
 
 #include "TestsCommon.hpp"
-#include "hsmcpp/variant.hpp"
 
 constexpr int gIndexValue = 0;
 constexpr int gIndexValueLess = 1;
@@ -898,6 +895,7 @@ INSTANTIATE_TEST_CASE_P(variant,
 
 // =================================================================================================================
 TEST_P(FixtureVariantAllTypes, constructors) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("variant constructors should support all basic types");
 
     //-------------------------------------------
@@ -915,6 +913,7 @@ TEST_P(FixtureVariantAllTypes, constructors) {
 }
 
 TEST_P(FixtureVariantAllTypes, make) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("it should be possible to create variant object using make() function");
 
     //-------------------------------------------
@@ -931,6 +930,7 @@ TEST_P(FixtureVariantAllTypes, make) {
 }
 
 TEST_P(FixtureVariantAllTypes, copy) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("variant objects should be copiable");
 
     //-------------------------------------------
@@ -949,6 +949,7 @@ TEST_P(FixtureVariantAllTypes, copy) {
 }
 
 TEST(variant, copy_constructor) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("create variant object from another object");
 
     //-------------------------------------------
@@ -967,6 +968,7 @@ TEST(variant, copy_constructor) {
 }
 
 TEST_P(FixtureVariantAllTypes, move) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("variant objects should be movable");
 
     //-------------------------------------------
@@ -992,6 +994,7 @@ TEST_P(FixtureVariantAllTypes, move) {
 }
 
 TEST(variant, move_ownership) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate memory ownership after move operation");
 
     //-------------------------------------------
@@ -1015,6 +1018,7 @@ TEST(variant, move_ownership) {
 }
 
 TEST_P(FixtureVariantAllTypes, assign) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("it should be possible to assign new value to Variant object");
 
     //-------------------------------------------
@@ -1033,6 +1037,7 @@ TEST_P(FixtureVariantAllTypes, assign) {
 }
 
 TEST_P(FixtureVariantAllTypes, compare) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate ==, <, >, <=, >= operators");
 
     //-------------------------------------------
@@ -1063,6 +1068,7 @@ TEST_P(FixtureVariantAllTypes, compare) {
 }
 
 TEST(variant, compare_different_types) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate that different numeric types are comparable");
 
     //-------------------------------------------
@@ -1082,6 +1088,7 @@ TEST(variant, compare_different_types) {
 }
 
 TEST(variant, variadic_arguments) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate that initializing variant arguments through variadic arguments works fine");
 
     //-------------------------------------------
@@ -1159,6 +1166,7 @@ TEST(variant, variadic_arguments) {
 }
 
 TEST(variant, empty) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("variant object can be empty and not contain any data");
 
     //-------------------------------------------
@@ -1183,6 +1191,7 @@ TEST(variant, empty) {
 }
 
 TEST(variant, copy_unknown) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("assigning not initialized variant object should reset current object");
 
     //-------------------------------------------
@@ -1204,6 +1213,7 @@ TEST(variant, copy_unknown) {
 }
 
 TEST(variant, compare_self) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("comparing variant to self should return true");
 
     //-------------------------------------------
@@ -1219,6 +1229,7 @@ TEST(variant, compare_self) {
 }
 
 TEST_P(FixtureVariantTypeConversion, convert) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("Variant should support type conversions");
 
     //-------------------------------------------
@@ -1237,6 +1248,7 @@ TEST_P(FixtureVariantTypeConversion, convert) {
 }
 
 TEST_P(FixtureVariantTypeConversion, convert_invalid_string) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("trying to convert from invalid string to a number should return 0");
 
     //-------------------------------------------
@@ -1264,6 +1276,7 @@ TEST_P(FixtureVariantTypeConversion, convert_invalid_string) {
 }
 
 TEST_P(FixtureVariantTypeCheck, isXXX) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate isXXX() methods for all types");
 
     //-------------------------------------------
@@ -1290,6 +1303,7 @@ TEST_P(FixtureVariantTypeCheck, isXXX) {
 }
 
 TEST(variant, bytearray) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate custom bytearray methods");
 
     //-------------------------------------------
@@ -1317,6 +1331,7 @@ TEST(variant, bytearray) {
 }
 
 TEST(variant, vector) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate support for Vector type");
 
     //-------------------------------------------
@@ -1363,6 +1378,7 @@ TEST(variant, vector) {
 }
 
 TEST(variant, list) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate support for List type");
 
     //-------------------------------------------
@@ -1409,6 +1425,7 @@ TEST(variant, list) {
 }
 
 TEST(variant, map) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate support for Map type");
 
     //-------------------------------------------
@@ -1440,6 +1457,7 @@ TEST(variant, map) {
 }
 
 TEST(variant, pair_conversion) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate converting pair value to custom std::pair object");
 
     //-------------------------------------------
@@ -1461,6 +1479,7 @@ TEST(variant, pair_conversion) {
 }
 
 TEST(variant, pair_constructors) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate custom pair constructors");
 
     //-------------------------------------------
@@ -1494,6 +1513,7 @@ TEST(variant, pair_constructors) {
 }
 
 TEST(variant, customtype_copy) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("it should be possible to copy variant instance which contains a value of a custom type");
 
     //-------------------------------------------
@@ -1526,6 +1546,7 @@ TEST(variant, customtype_copy) {
 }
 
 TEST(variant, customtype_memory_management) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("validate memory management when dealing with custom types");
 
     //-------------------------------------------
@@ -1572,6 +1593,7 @@ TEST(variant, customtype_memory_management) {
 }
 
 TEST(variant, customtype_move) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
     TEST_DESCRIPTION("custom type should be correctly moved without memory reallocation");
 
     //-------------------------------------------
@@ -1599,4 +1621,111 @@ TEST(variant, customtype_move) {
 
     v2.clear();
     ASSERT_TRUE(wasObjectDeleted);
+}
+
+// for any Variant whose Type is outside a converter's supported
+// set, the converter returns its defined default. Parameterized over the existing
+// allTypeValues table (19 representative types) so every converter's `default:` arm
+// is hit by at least one unsupported type.
+//
+// Supported-type sets below mirror the non-default `case` labels in src/variant.cpp:
+//   toInt64 / toUInt64 / toDouble : all numerics + BOOL + STRING  -> default 0 / 0 / 0.0
+//   toString                      : the above + BYTEARRAY/VECTOR/LIST/MAP/PAIR -> default ""
+//   toByteArray                   : numerics + BOOL + STRING + BYTEARRAY/VECTOR/LIST/PAIR -> default empty
+//   getVector / getList / getMap / getPair : only the exact matching container type -> default null (empty)
+static bool isSupportedByNumericConverter(const Variant::Type t) {
+    switch (t) {
+        case Variant::Type::BYTE_1:
+        case Variant::Type::BYTE_2:
+        case Variant::Type::BYTE_4:
+        case Variant::Type::BYTE_8:
+        case Variant::Type::UBYTE_1:
+        case Variant::Type::UBYTE_2:
+        case Variant::Type::UBYTE_4:
+        case Variant::Type::UBYTE_8:
+        case Variant::Type::DOUBLE:
+        case Variant::Type::BOOL:
+        case Variant::Type::STRING:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool isSupportedByToString(const Variant::Type t) {
+    switch (t) {
+        case Variant::Type::BYTEARRAY:
+        case Variant::Type::VECTOR:
+        case Variant::Type::LIST:
+        case Variant::Type::MAP:
+        case Variant::Type::PAIR:
+            return true;
+        default:
+            // numerics + BOOL + STRING are also supported by toString()
+            return isSupportedByNumericConverter(t);
+    }
+}
+
+static bool isSupportedByToByteArray(const Variant::Type t) {
+    switch (t) {
+        case Variant::Type::BYTEARRAY:
+        case Variant::Type::VECTOR:
+        case Variant::Type::LIST:
+        case Variant::Type::PAIR:
+            return true;
+        default:
+            // numerics + BOOL + STRING are also supported by toByteArray(); MAP is NOT
+            return isSupportedByNumericConverter(t);
+    }
+}
+
+TEST(variant, variant_converter_fallthrough_defaults) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_139");
+    TEST_DESCRIPTION("PROPERTY 4: converters return their defined default for any Variant "
+                     "whose type is outside the converter's supported set (default: fallthrough)");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    const auto& values = std::get<gIndexValue>(allTypeValues);
+
+    //-------------------------------------------
+    // ACTIONS + VALIDATION
+    // Walk every representative type in allTypeValues so each converter's default:
+    // branch is exercised by at least one unsupported type.
+    for (int i = 0; i < allTypeValuesSize; ++i) {
+        const Variant v = makeVariantFromTuple(i, values);
+        const Variant::Type t = v.getType();
+        const std::string typeName = variantTypeToStr(t);
+
+        // Numeric converters -> 0 when unsupported.
+        if (false == isSupportedByNumericConverter(t)) {
+            EXPECT_EQ(v.toInt64(), 0) << "toInt64 default for type " << typeName;
+            EXPECT_EQ(v.toUInt64(), 0u) << "toUInt64 default for type " << typeName;
+            EXPECT_DOUBLE_EQ(v.toDouble(), 0.0) << "toDouble default for type " << typeName;
+        }
+
+        // toString -> "" when unsupported (CUSTOM / UNKNOWN).
+        if (false == isSupportedByToString(t)) {
+            EXPECT_EQ(v.toString(), std::string()) << "toString default for type " << typeName;
+        }
+
+        // toByteArray -> empty when unsupported (MAP / CUSTOM / UNKNOWN).
+        if (false == isSupportedByToByteArray(t)) {
+            EXPECT_TRUE(v.toByteArray().empty()) << "toByteArray default for type " << typeName;
+        }
+
+        // Container getters return null (empty) for any type other than their own.
+        if (Variant::Type::VECTOR != t) {
+            EXPECT_EQ(v.getVector().get(), nullptr) << "getVector default for type " << typeName;
+        }
+        if (Variant::Type::LIST != t) {
+            EXPECT_EQ(v.getList().get(), nullptr) << "getList default for type " << typeName;
+        }
+        if (Variant::Type::MAP != t) {
+            EXPECT_EQ(v.getMap().get(), nullptr) << "getMap default for type " << typeName;
+        }
+        if (Variant::Type::PAIR != t) {
+            EXPECT_EQ(v.getPair().get(), nullptr) << "getPair default for type " << typeName;
+        }
+    }
 }

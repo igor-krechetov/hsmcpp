@@ -38,6 +38,13 @@ using namespace hsmcpp;
 // Utility functions
 void configureGTest(const std::string& name);
 
+// Global post-run cleanup for the test binary. Removes temporary artifacts that
+// tests may leave on disk (the fixed-path "./dump.hsmlog" produced by the debug
+// default-path case, and any stray "hsmcpp_test_*.hsmlog" temp files). Call once
+// after RUN_ALL_TESTS() from the dispatcher main(); individual tests do not need
+// to assert their own cleanup.
+void cleanupGTest();
+
 template <typename HsmStateEnum>
 bool compareStateLists(const std::list<HsmStateEnum>& l1, const std::list<HsmStateEnum>& l2) {
     bool equalLists = false;

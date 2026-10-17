@@ -53,6 +53,26 @@ section "Product Scope and Constraints" {
       parent      = SYS_HSM_003
     }
 
+    Software_Requirement SWR_HSM_140 {
+      summary     = "Event-Processing Start Control"
+      description = "The event-processing implementation SHALL provide an operation to start event delivery, after which it processes queued events and delivers them to the state machines bound to it. A custom application-provided event-processing implementation SHALL be able to supply this operation without modifying library source code."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "An application integrating hsmcpp into its own execution environment must be able to control when the event-processing loop begins delivering events, so that delivery starts only once the application's startup sequence has established the state machines bound to it."
+      parent      = SYS_HSM_003
+    }
+
+    Software_Requirement SWR_HSM_141 {
+      summary     = "Event-Processing Stop Control"
+      description = "The event-processing implementation SHALL provide an operation to stop event delivery, after which no further queued events are delivered until it is started again. Stopping SHALL leave the implementation in a state from which it can be started again. A custom application-provided event-processing implementation SHALL be able to supply this operation without modifying library source code."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "An application integrating hsmcpp into its own execution environment must be able to control when the event-processing loop ceases delivering events, so that delivery halts cleanly during the application's shutdown or reconfiguration sequence while leaving the loop reusable."
+      parent      = SYS_HSM_003
+    }
+
   }
 }
 section "State-Machine Execution" {
@@ -603,6 +623,16 @@ section "Transitions" {
     criticality = Criticality.NonSafety
     verification = Verification_Method.Test
     rationale   = "Defining the concrete set of supported data types bounds what applications may pass through a transition and what the Variant container must represent. The signed/unsigned integer widths, double, bool, string, byte array, the list/vector/map/pair composites and the custom escape hatch correspond to the types the Variant class exposes."
+    parent      = SYS_HSM_032
+  }
+
+  Software_Requirement SWR_HSM_139 {
+    summary     = "Library-Provided Variant Data Container"
+    description = "The library SHALL provide its own type-erased value container (the Variant type) for storing transition-associated data, and SHALL use this container to carry that data through transitions. The container SHALL store a single value together with its data type, allow the stored type to be queried at run time, and provide retrieval of the stored value."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "A library-owned container keeps the data-passing capability self-contained and portable across the supported C++ standards and toolchains, rather than depending on a specific standard-library facility that may be unavailable or behave differently on constrained targets."
     parent      = SYS_HSM_032
   }
 

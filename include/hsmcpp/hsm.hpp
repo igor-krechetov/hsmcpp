@@ -806,13 +806,6 @@ protected:
      * @threadsafe{ }
      *
      * @requirement HSMCPP.SWR_HSM_100
-     *
-     * NOTE(best-guess): the default implementations only stringify the numeric
-     * ID. SWR_HSM_100 ("human-readable identifier names") is really satisfied by
-     * the generated getStateName()/getEventName() overrides (scxml2gen) plus the
-     * logging that includes those names. These base virtuals are the extension
-     * point the requirement hangs on; please confirm the link belongs here vs
-     * the generated code / logging path.
      */
     virtual std::string getStateName(const StateID_t state) const;
 

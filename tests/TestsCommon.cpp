@@ -1,7 +1,9 @@
 #include "TestsCommon.hpp"
 
 #include <condition_variable>
+#include <filesystem>
 #include <mutex>
+#include <system_error>
 
 #include "ConfigurableEventListener.hpp"
 #include "utils/gtestbadge/BadgeEventListener.h"
@@ -59,6 +61,28 @@ void configureGTest(const std::string& name) {
     bel->setWarningRatio(0.3);
     // Google Test assumes the ownership of the listener (i.e. it will delete the listener when the test program finishes).
     listeners.Append(bel);
+}
+
+void cleanupGTest() {
+    namespace fs = std::filesystem;
+    std::error_code ec;
+
+    // Debug default-path case writes a fixed "./dump.hsmlog" in the working dir.
+    fs::remove("./dump.hsmlog", ec);
+
+    // Sweep any leftover TempHsmLog temp files. TempHsmLog cleans up after itself
+    // in its destructor; this is a best-effort safety net for files orphaned by an
+    // aborted run. Names: "hsmcpp_test_<pid>_<n>.hsmlog" under the system temp dir.
+    const fs::path tempDir = fs::temp_directory_path(ec);
+    if (!ec) {
+        for (fs::directory_iterator it(tempDir, ec), end; (!ec) && (it != end); it.increment(ec)) {
+            const std::string name = it->path().filename().string();
+            if ((name.rfind("hsmcpp_test_", 0) == 0) && (it->path().extension() == ".hsmlog")) {
+                std::error_code removeEc;
+                fs::remove(it->path(), removeEc);
+            }
+        }
+    }
 }
 
 #if defined(TEST_HSM_GLIB) || defined(TEST_HSM_GLIBMM) || defined(TEST_HSM_QT)

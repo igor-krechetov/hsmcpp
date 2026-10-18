@@ -13,17 +13,34 @@ clean:
     fi
 
 # TODO: use scripts
-configure:
+# coverage="on" adds instrumentation (all dispatchers + tests + examples +
+# HSMBUILD_CODECOVERAGE), as needed by `test_coverage`.
+# Configure the CMake build.
+configure coverage="off":
     #!/usr/bin/env bash
     set -euxo pipefail
     unset Qt5_DIR
-    export PATH=$PATH:~/Qt/6.3.0/gcc_64/bin
+    export PATH=$PATH:~/Qt/6.8.3/gcc_64/bin
     mkdir -p {{BUILD_DIR}}
     cd {{BUILD_DIR}}
-    {{CMAKE_TOOL}} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_INSTALL_PREFIX=/usr ..
+    cmake_args=(-DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_INSTALL_PREFIX=/usr)
+    if [ "{{coverage}}" = "on" ]; then
+        cmake_args+=(-DHSMBUILD_VERBOSE=OFF \
+                     -DHSMBUILD_DISPATCHER_GLIB=ON \
+                     -DHSMBUILD_DISPATCHER_GLIBMM=ON \
+                     -DHSMBUILD_DISPATCHER_STD=ON \
+                     -DHSMBUILD_DISPATCHER_QT=ON \
+                     -DHSMBUILD_TESTS=ON \
+                     -DHSMBUILD_EXAMPLES=OFF \
+                     -DHSMBUILD_DEBUGGING=ON \
+                     -DHSMBUILD_CODECOVERAGE=ON \
+                     -DHSMBUILD_CLANGTIDY=OFF)
+    fi
+    {{CMAKE_TOOL}} "${cmake_args[@]}" ..
 
 # TODO: use scripts
-build: configure
+# Pass coverage="on" to build with coverage instrumentation (see `configure`).
+build coverage="off": (configure coverage)
     #!/usr/bin/env bash
     set -euxo pipefail
     mkdir -p {{BUILD_DIR}}
@@ -56,6 +73,18 @@ one_test testname: build
 test_usecase testname usecase:
     {{BUILD_DIR}}/tests/{{testname}} {{usecase}} -maxwarnings 100000
 
+test_coverage: (build "on")
+    #!/usr/bin/env bash
+    set -euxo pipefail
+    SOURCE_DIR="$(pwd)"
+    cd {{BUILD_DIR}}
+    BUILD_DIR_ABS="$(pwd)"
+    "$SOURCE_DIR/scripts/test/ubuntu/test.sh" "$BUILD_DIR_ABS" "$SOURCE_DIR"
+    "$SOURCE_DIR/scripts/test/ubuntu/coverage.sh" "$BUILD_DIR_ABS"
+    genhtml ./coverage.info --output-directory out
+    echo ""
+    echo "Coverage report: $BUILD_DIR_ABS/out/index.html"
+
 test_for_traceability:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -70,6 +99,13 @@ test_for_traceability:
     rm -f {{BUILD_DIR}}/gtest-xml/*.xml
     # Run only the native-XML trace tests (one per dispatcher binary).
     ctest --test-dir {{BUILD_DIR}} -R '_trace$' --output-on-failure
+
+# --------------------------------------------------
+# UTILS
+format:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    ./scripts/local/format.sh ./
 
 # --------------------------------------------------
 # REQUIREMENTS

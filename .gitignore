@@ -17,3 +17,4 @@ test.plantuml
 *.cpp.dump
 strictdoc_*
 .kiro
+.agents

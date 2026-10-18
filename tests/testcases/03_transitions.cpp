@@ -4,6 +4,7 @@
 
 #include "hsm/ABCHsm.hpp"
 #include "hsm/TrafficLightHsm.hpp"
+#include "utils/RandomGenerators.hpp"
 
 TEST_F(TrafficLightHsm, simple_transition) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_040,HSMCPP.SWR_HSM_041");
@@ -634,3 +635,76 @@ TEST_F(ABCHsm, transition_sync_deadlock) {
 //     EXPECT_TRUE(compareStateLists(getActiveStates(), {TrafficLightState::OFF}));
 //     EXPECT_EQ(mTransitionCounterNextState, 1);
 // }
+
+
+// Property 2 (design): transitionWithArgsArray() delivers the argument vector to
+// the transition callback unchanged. SWR_HSM_050 ("Transition Data Passing")
+// requires the associated data to be delivered to the transition callback and to
+// retain the value provided at submission time. Confirmed present in
+// requirements/software_requirements.trlc.
+//
+// The argument vectors are produced by the shared deterministic generator.
+// The property is checked over >=100 iterations with a manual loop (no rapidcheck).
+
+TEST_F(ABCHsm, public_transition_with_args_array) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_050");
+    TEST_DESCRIPTION(
+        "transitionWithArgsArray() delivers the argument vector unchanged to the transition "
+        "callback across many generated inputs");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    // Args captured by the latest transition callback. transitionExWithArgsArray()
+    // is driven synchronously below, so it returns only after the transition (and
+    // its active-state bookkeeping) has fully settled -- the callback has already
+    // run by then and no handshake is required to observe it.
+    bool captured = false;
+    VariantVector_t capturedArgs;
+
+    registerState<ABCHsm>(AbcState::A);
+    // Self-transition A -> A on E1 so each loop iteration can trigger the callback
+    // again without needing to re-register or reset HSM state.
+    registerSelfTransition(
+        AbcState::A,
+        AbcEvent::E1,
+        TransitionType::EXTERNAL_TRANSITION,
+        [&](const VariantVector_t& args) {
+            capturedArgs = args;
+            captured = true;
+        },
+        nullptr);
+
+    INITIALIZE_HSM();
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+
+    //-------------------------------------------
+    // ACTIONS / VALIDATION
+    // Drive the array-based transition SYNCHRONOUSLY so each iteration completes
+    // (callback run + active-state list settled) before we observe anything.
+    // transitionExWithArgsArray(event, clearQueue=false, sync=true, timeoutMs, args)
+    // carries the same VariantVector_t payload as transitionWithArgsArray(), so the
+    // args-delivery property under test (R3.4 / SWR_HSM_050) is still exercised,
+    // but without the async race between the dispatcher thread settling the active
+    // states and the test thread reading getActiveStates().
+    constexpr int kIterations = 100;
+
+    for (int i = 0; i < kIterations; ++i) {
+        VariantVector_t inputArgs = makeRandomArgs(static_cast<unsigned int>(i) + 1u);
+        const VariantVector_t expectedArgs = inputArgs;  // keep a copy; inputArgs is moved below
+
+        captured = false;
+        capturedArgs.clear();
+
+        ASSERT_TRUE(transitionExWithArgsArray(AbcEvent::E1,
+                                              false,
+                                              true,
+                                              TIMEOUT_SYNC_TRANSITION,
+                                              std::move(inputArgs)))
+            << "synchronous transition did not complete at iteration " << i;
+
+        ASSERT_TRUE(captured) << "transition callback did not run at iteration " << i;
+        EXPECT_EQ(capturedArgs, expectedArgs) << "args not delivered unchanged at iteration " << i;
+
+        ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+    }
+}

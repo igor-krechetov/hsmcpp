@@ -19,6 +19,8 @@ gboolean runTests(gpointer user_data) {
 
         int result = RUN_ALL_TESTS();
 
+        cleanupGTest();
+
         g_main_loop_quit(gMainLoop);
 
         return result;

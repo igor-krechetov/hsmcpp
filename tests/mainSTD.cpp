@@ -9,6 +9,8 @@ int main(int argc, char** argv) {
 
     int rc = RUN_ALL_TESTS();
 
+    cleanupGTest();
+
     // NOTE: return 0 to avoid stoppic CI action
     return 0;
 }

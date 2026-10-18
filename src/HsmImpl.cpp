@@ -30,7 +30,7 @@
     #define F_OK 0
   #else
     #include <unistd.h>
-        // cppcheck-suppress misra-c2012-21.10
+    // cppcheck-suppress misra-c2012-21.10
     #include <ctime>
   #endif
 #endif

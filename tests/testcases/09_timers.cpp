@@ -732,4 +732,53 @@ TEST_F(ABCHsm, timers_singleshot_is_running) {
     EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
 }
 
-// TODO: start already running timer
+TEST_F(ABCHsm, timers_restart_update_branch) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_085,HSMCPP.SWR_HSM_083,HSMCPP.SWR_HSM_084");
+    TEST_DESCRIPTION(
+        "Starting an already running timer should update it in place (stop+start) and restartTimer "
+        "should reset the countdown; the timer must still fire and drive the expected transition");
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    const TimerID_t timer1 = 19;
+    const int timer1Duration = 100;
+
+    registerState<ABCHsm>(AbcState::A);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerTransition<ABCHsm>(AbcState::A, AbcState::B, AbcEvent::E1);
+    registerTimer(timer1, AbcEvent::E1);
+    initializeHsm();
+    
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+    ASSERT_FALSE(isTimerRunning(timer1));
+
+    //-------------------------------------------
+    // ACTIONS
+    // start the timer once
+    startTimer(timer1, timer1Duration, true);
+    ASSERT_TRUE(isTimerRunning(timer1));
+
+    // re-start the SAME timer id while it is still running: hits the
+    // "mActiveTimers.end() != it" update branch (stopTimerImpl + startTimerImpl)
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2));
+    startTimer(timer1, timer1Duration, true);
+    ASSERT_TRUE(isTimerRunning(timer1));
+    // countdown was reset, so it should not have fired yet
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+
+    // drive restartTimer: resets the countdown again from zero
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2));
+    restartTimer(timer1);
+    ASSERT_TRUE(isTimerRunning(timer1));
+    // still should not have fired right after the restart
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2));
+    ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
+
+    // wait for the remaining time so the timer finally expires
+    std::this_thread::sleep_for(std::chrono::milliseconds(timer1Duration / 2 + 50));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::B}));
+    EXPECT_EQ(mStateCounterB, 1);
+}

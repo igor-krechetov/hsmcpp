@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage:
-# ./format-all.sh [project_dir] [clang_format_config]
+# ./format.sh [project_dir] [clang_format_config]
 
 # Set the path to the root of your project (default is current directory)
 PROJECT_DIR=${1:-$(pwd)}

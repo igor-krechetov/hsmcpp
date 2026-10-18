@@ -19,6 +19,8 @@ include(GoogleTest)
 #      entries that lobster-gtest needs for requirement traceability.
 set(GTEST_XML_DIR ${CMAKE_BINARY_DIR}/gtest-xml)
 function(registerUnitTest _target)
+    # C++17 used for convenience. The library itself is built to the lower project standard.
+    target_compile_features(${_target} PRIVATE cxx_std_17)
     gtest_discover_tests(${_target}
                          DISCOVERY_MODE PRE_TEST
                          DISCOVERY_TIMEOUT 60)
@@ -50,7 +52,11 @@ set(SRC_UNITTESTS_COMMON ${CMAKE_CURRENT_SOURCE_DIR}/testcases/01_states.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/testcases/09_timers.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/testcases/10_state_actions.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/testcases/11_finalstate.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/12_debugging.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/13_public_api.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/testcases/20_variant.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/21_uniquelock.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/testcases/22_hsmimpltypes.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/testcases/99_regression_tests.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/TestsCommon.cpp
 
@@ -61,6 +67,11 @@ set(SRC_UNITTESTS_COMMON ${CMAKE_CURRENT_SOURCE_DIR}/testcases/01_states.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/utils/gtestbadge/Badge.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/utils/gtestbadge/BadgeEventListener.cpp
                          ${CMAKE_CURRENT_SOURCE_DIR}/utils/gtestbadge/BadgeTemplate.cpp
+
+                         ${CMAKE_CURRENT_SOURCE_DIR}/utils/RandomGenerators.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ScopedEnv.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/utils/ScopedFileGuard.cpp
+                         ${CMAKE_CURRENT_SOURCE_DIR}/utils/TempHsmLog.cpp
 )
 
 # ================================================
@@ -163,6 +174,19 @@ if (HSMBUILD_DISPATCHER_FREERTOS)
     target_link_libraries(${TEST_BIN_FREERTOS} PRIVATE ${HSMCPP_FREERTOS_LIB} gmock_main ${FREERTOS_LIBS})
     target_compile_options(${TEST_BIN_FREERTOS} PRIVATE ${HSMCPP_FREERTOS_CXX_FLAGS})
 endif()
+
+# ================================================
+# INTERNAL INCLUDE SCOPING
+# 22_hsmimpltypes.cpp needs the internal src/HsmImplTypes.hpp (not part of the
+# public include tree). Scope the private src/ include path to THAT one source
+# file via a SOURCE property so it applies to every dispatcher binary that
+# compiles it, without leaking src/ onto any other test translation unit or any
+# production target. Must come after the executables are defined so the source
+# file is already part of their build. Fallback if a generator ever rejects the
+# SOURCE property across the multi-target layout:
+#   foreach(_bin IN LISTS ... ) target_include_directories(${_bin} PRIVATE ${CMAKE_SOURCE_DIR}/src) endforeach()
+set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testcases/22_hsmimpltypes.cpp
+             APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/src)
 
 # ================================================
 # Used to compare binary size footprint (compared to 00_helloworld_std)

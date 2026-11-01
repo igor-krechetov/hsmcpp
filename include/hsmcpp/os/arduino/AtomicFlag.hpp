@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Igor Krechetov
+// Copyright (C) 2023 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_ARDUINO_ATOMICFLAG_HPP
 #define HSMCPP_OS_ARDUINO_ATOMICFLAG_HPP
@@ -7,7 +7,12 @@
 
 namespace hsmcpp {
 
-/// Arduino is single threaded so this is just a simple wrapper for a bool flag
+/**
+ * @brief AtomicFlag implementation for Arduino
+ * @details Arduino is single threaded so this is just a simple wrapper for a bool flag
+ *
+ * @requirement HSMCPP.SWR_HSM_109
+ */
 class AtomicFlag {
 public:
     AtomicFlag() = default;

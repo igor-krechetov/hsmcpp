@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [1.0.6] - 2026-11-01
+### Added
+- Add support for QNX 8.0
+
+## [1.0.4] - 2026-04-06
+### Fixed
+- Fixed potential race-conditions in dispatchers
+- Replaced copy with move operations in hsm 
+
+## [1.0.3] - 2026-04-06
+### Fixed
+- Fixed unused parameter compiler warnings/errors in generated code
+
 ## [1.0.2] - 2024-05-31
 ### Fixed
 - fixed handling of <xi:include> tags during code generation (transition targets were getting double prefix which was breaking the build)

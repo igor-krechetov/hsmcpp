@@ -1,13 +1,14 @@
-// Copyright (C) 2023 Igor Krechetov
+// Copyright (C) 2023 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 #ifndef HSMCPP_OS_COMMON_INTERRUPTSFREESECTION_HPP
 #define HSMCPP_OS_COMMON_INTERRUPTSFREESECTION_HPP
 
-namespace hsmcpp
-{
+namespace hsmcpp {
 
-class InterruptsFreeSection
-{
+/**
+ * @no_requirement Common platform abstraction primitive.
+ */
+class InterruptsFreeSection {
 public:
     InterruptsFreeSection();
     ~InterruptsFreeSection();
@@ -19,6 +20,6 @@ private:
     InterruptsFreeSection& operator=(InterruptsFreeSection&&) = delete;
 };
 
-} // namespace hsmcpp
+}  // namespace hsmcpp
 
-#endif // HSMCPP_OS_COMMON_INTERRUPTSFREESECTION_HPP
+#endif  // HSMCPP_OS_COMMON_INTERRUPTSFREESECTION_HPP

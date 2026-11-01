@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_IHSMEVENTDISPATCHER_HPP
@@ -65,6 +65,8 @@ using ActionHandlerFunc_t = std::function<void()>;
  *  \li registerEnqueuedEventHandler()
  *  \li unregisterEnqueuedEventHandler()
  *  \li enqueueEvent()
+ *
+ * @requirement HSMCPP.SWR_HSM_005
  */
 class IHsmEventDispatcher {
 public:

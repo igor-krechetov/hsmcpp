@@ -1,4 +1,4 @@
-// Copyright (C) 2022 Igor Krechetov
+// Copyright (C) 2022 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP
@@ -15,6 +15,7 @@ namespace hsmcpp {
  * @brief HsmEventDispatcherArduino provides dispatcher for Arduino platform.
  * @details Clients are supposed to call HsmEventDispatcherArduino::dispatchEvents() in loop() method of the application.
  * See @rstref{platforms-dispatcher-arduino} for details.
+ * @requirement HSMCPP.SWR_HSM_110
  */
 class HsmEventDispatcherArduino : public HsmEventDispatcherBase {
 private:

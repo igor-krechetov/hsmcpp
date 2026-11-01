@@ -1,9 +1,10 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_VARIANT_HPP
 #define HSMCPP_VARIANT_HPP
 
+#include <cstdint>
 #include <functional>
 #include <list>
 #include <map>
@@ -13,9 +14,27 @@
 #include <vector>
 
 namespace hsmcpp {
-
 class Variant;
+}  // namespace hsmcpp
 
+// Provide assignability trait specializations before Variant is complete to avoid
+// libc++ (QNX) eagerly evaluating them when instantiating the std::pair/std::map
+// aliases below over the still-incomplete Variant type. Variant declares both
+// copy- and (noexcept) move-assignment operators, so these specializations are
+// accurate; they only tell libc++ the answer up front instead of forcing it to
+// instantiate the traits on an incomplete type.
+namespace std {
+template <>
+struct is_copy_assignable<hsmcpp::Variant> : true_type {};
+template <>
+struct is_move_assignable<hsmcpp::Variant> : true_type {};
+template <>
+struct is_nothrow_copy_assignable<hsmcpp::Variant> : false_type {};
+template <>
+struct is_nothrow_move_assignable<hsmcpp::Variant> : true_type {};
+}  // namespace std
+
+namespace hsmcpp {
 using ByteArray_t = std::vector<unsigned char>;
 using VariantVector_t = std::vector<Variant>;
 using VariantList_t = std::list<Variant>;
@@ -32,9 +51,9 @@ using VariantPair_t = std::pair<Variant, Variant>;  ///< Provides a way to store
   /** @brief Assigns _val_type value to current variant object and changing it's type to _internal_type. */ \
   Variant& operator=(const _val_type v);
 
-#define DEF_MAKE_DOC(_internal_type)                                            \
-  /** @brief Creates a Variant object with a value of type _internal_type. */   \
-  /** @param v The value to assign to the Variant object.  */                   \
+#define DEF_MAKE_DOC(_internal_type)                                          \
+  /** @brief Creates a Variant object with a value of type _internal_type. */ \
+  /** @param v The value to assign to the Variant object.  */                 \
   /** @return Newly constructed Variant object.            */
 
 // cppcheck-suppress misra-c2012-20.7 ; parentheses are not needed
@@ -77,6 +96,8 @@ using VariantPair_t = std::pair<Variant, Variant>;  ///< Provides a way to store
  *      std::cout << "v > 2.0: " << (v > 2.0) << std::endl; // output: v > 2.0: 1
  * }
  * \endcode
+ *
+ * @requirement HSMCPP.SWR_HSM_124
  */
 class Variant {
 private:
@@ -546,9 +567,10 @@ public:
      * std::map<int, std::string> intStrData = {{1, "aa"}, {2, "bb"}, {3, "cc"}};
      * Variant v = Variant::make(intStrData);
      *
-     * std::map<int, std::string> intStrDataConverted = v.toMap<int, std::string>([](const Variant& key){ return key.toInt64(); },
-     *                                                                            [](const Variant& value){ return value.toString(); }));
-     * \endcode
+     * std::map<int, std::string> intStrDataConverted = v.toMap<int, std::string>([](const Variant& key){ return key.toInt64();
+     * },
+     *                                                                            [](const Variant& value){ return
+     * value.toString(); })); \endcode
      *
      * @param converterKey functor which will be called for each map key to convert it from Variant to requested type
      * @param converterValue functor which will be called for each map value to convert it from Variant to requested type
@@ -572,9 +594,10 @@ public:
      * std::pair<int, std::string> intStrData = {1, "aa"};
      * Variant v = Variant::make(intStrData);
      *
-     * std::pair<int, std::string> intStrDataConverted = v.toPair<int, std::string>([](const Variant& first){ return first.toInt64(); },
-     *                                                                              [](const Variant& second){ return second.toString(); }));
-     * \endcode
+     * std::pair<int, std::string> intStrDataConverted = v.toPair<int, std::string>([](const Variant& first){ return
+     * first.toInt64(); },
+     *                                                                              [](const Variant& second){ return
+     * second.toString(); })); \endcode
      *
      * @param converterFirst functor which will be called for first pair element to convert it from Variant to requested type
      * @param converterSecond functor which will be called for second pair element to convert it from Variant to requested type
@@ -652,8 +675,6 @@ public:
     bool operator<=(const Variant& val) const;
 
 private:
-    Variant(std::shared_ptr<void> d, const Type t);
-
     template <typename T>
     Variant(const T& v, const Type t);
 
@@ -754,7 +775,7 @@ Variant::Variant(const std::map<K, V>& v) {
 
 template <typename TFirst, typename TSecond>
 Variant::Variant(const TFirst& first, const TSecond& second)
-    // cppcheck-suppress misra-c2012-10.4 : false-positive. thinks that ':' is arithmetic operation
+    // cppcheck-suppress misra-c2012-10.4 ; false-positive. thinks that ':' is arithmetic operation
     : Variant(std::make_pair(Variant(first), Variant(second))) {}
 
 template <typename T>

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #include "hsmcpp/HsmEventDispatcherBase.hpp"
@@ -207,6 +207,7 @@ void HsmEventDispatcherBase::stopTimer(const TimerID_t timerID) {
 }
 
 bool HsmEventDispatcherBase::isTimerRunning(const TimerID_t timerID) {
+    LockGuard lck(mHandlersSync);
     return (mActiveTimers.find(timerID) != mActiveTimers.end());
 }
 

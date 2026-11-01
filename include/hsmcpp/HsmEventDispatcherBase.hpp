@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #ifndef HSMCPP_HSMEVENTDISPATCHERBASE_HPP
@@ -24,6 +24,7 @@ namespace hsmcpp {
  * @details Class contains all platform/framework independent logic for dispatchers. Even though it's not mandatory to use
  * HsmEventDispatcherBase when implementing your own dispatcher, it's highly probable that this class will be a better choice
  * than directly subclassing from IHsmEventDispatcher.
+ * @requirement HSMCPP.SWR_HSM_005
  */
 class HsmEventDispatcherBase : public IHsmEventDispatcher {
 protected:
@@ -50,6 +51,8 @@ public:
     /**
      * @brief See IHsmEventDispatcher::registerEventHandler()
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_010
      */
     HandlerID_t registerEventHandler(const EventHandlerFunc_t& handler) override;
 
@@ -68,6 +71,7 @@ public:
     /**
      * @brief See IHsmEventDispatcher::enqueueEvent()
      * @concurrencysafe{ }
+     * @requirement HSMCPP.SWR_HSM_052
      */
     bool enqueueEvent(const HandlerID_t handlerID, const EventID_t event) override;
 
@@ -80,6 +84,8 @@ public:
     /**
      * @brief See IHsmEventDispatcher::registerEnqueuedEventHandler()
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_010
      */
     HandlerID_t registerEnqueuedEventHandler(const EnqueuedEventHandlerFunc_t& handler) override;
 
@@ -92,6 +98,8 @@ public:
     /**
      * @brief See IHsmEventDispatcher::registerTimerHandler()
      * @threadsafe{ }
+     *
+     * @requirement HSMCPP.SWR_HSM_010
      */
     HandlerID_t registerTimerHandler(const TimerHandlerFunc_t& handler) override;
 
@@ -104,6 +112,7 @@ public:
     /**
      * @brief See IHsmEventDispatcher::startTimer()
      * @threadsafe{ }
+     * @requirement_wrapper startTimerImpl
      */
     void startTimer(const HandlerID_t handlerID,
                     const TimerID_t timerID,
@@ -132,6 +141,7 @@ protected:
     /**
      * @brief Default constructor.
      * @param eventsCacheSize size of the queue preallocated for delayed events
+     * @requirement HSMCPP.SWR_HSM_053, HSMCPP.SWR_HSM_130
      */
     // cppcheck-suppress misra-c2012-17.8 ; false positive. setting default parameter value is not parameter modification
     explicit HsmEventDispatcherBase(const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
@@ -202,6 +212,8 @@ protected:
      * @param intervalMs    timer interval in milliseconds
      * @param isSingleShot  true - timer will run only once and then will stop
      *                      false - timer will keep running until stopTimer() is called or dispatcher is destroyed
+     *
+     * @requirement HSMCPP.SWR_HSM_138
      */
     virtual void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot);
 

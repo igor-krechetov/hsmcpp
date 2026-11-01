@@ -43,6 +43,9 @@ void @CLASS_NAME@::configureActions() {
 void @CLASS_NAME@::onTransitionFailed(const std::list<hsmcpp::StateID_t>& activeStates,
                                       const hsmcpp::EventID_t event,
                                       const hsmcpp::VariantVector_t& args) {
+    (void) activeStates;
+    (void) event;
+    (void) args;
     // do nothing
 }
 

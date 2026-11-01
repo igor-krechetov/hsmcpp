@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Igor Krechetov
+// Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
 
 #include "HsmImpl.hpp"
@@ -18,22 +18,15 @@
 #ifdef HSMBUILD_DEBUGGING
   #include <array>
   #include <chrono>
+  #include <cstdio>
   #include <cstdlib>
   #include <cstring>
+  // cppcheck-suppress misra-c2012-21.10
+  #include <ctime>
 
-  #include "hsmcpp/os/Mutex.hpp"
   #include "hsmcpp/os/CriticalSection.hpp"
-
-// WIN, access
-  #ifdef WIN32
-    #include <io.h>
-    #define F_OK 0
-  #else
-    #include <unistd.h>
-    // cppcheck-suppress misra-c2012-21.10
-    #include <ctime>
-  #endif
-#endif
+  #include "hsmcpp/os/Mutex.hpp"
+#endif // HSMBUILD_DEBUGGING
 
 #ifndef HSM_DISABLE_DEBUG_TRACES
   #define DEBUG_DUMP_ACTIVE_STATES() dumpActiveStates()
@@ -347,6 +340,13 @@ bool HierarchicalStateMachine::Impl::registerStateAction(const StateID_t state,
     return result;
 }
 
+bool HierarchicalStateMachine::Impl::registerStateAction(const StateID_t state,
+                                                         const StateActionTrigger actionTrigger,
+                                                         const StateAction action,
+                                                         VariantVector_t&& args) {
+    return registerStateAction(state, actionTrigger, action, args);
+}
+
 void HierarchicalStateMachine::Impl::registerTransition(const StateID_t fromState,
                                                         const StateID_t toState,
                                                         const EventID_t onEvent,
@@ -395,6 +395,11 @@ bool HierarchicalStateMachine::Impl::isStateActive(const StateID_t state) const 
     return (std::find(mActiveStates.begin(), mActiveStates.end(), state) != mActiveStates.end());
 }
 
+void HierarchicalStateMachine::Impl::transitionWithArgsArray(const EventID_t event, const VariantVector_t& args) {
+    VariantVector_t argsCopy = args;
+    transitionWithArgsArray(event, std::move(argsCopy));
+}
+
 void HierarchicalStateMachine::Impl::transitionWithArgsArray(const EventID_t event, VariantVector_t&& args) {
     HSM_TRACE_CALL_DEBUG_ARGS("event=<%s>, args.size=%lu", getEventName(event).c_str(), args.size());
 
@@ -414,6 +419,8 @@ bool HierarchicalStateMachine::Impl::transitionExWithArgsArray(const EventID_t e
 
     bool status = false;
     auto dispatcherPtr = mDispatcher.lock();
+
+    // TODO: validate that sync transitions called from within a callback dont deadlock
 
     // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (dispatcherPtr) {
@@ -803,7 +810,8 @@ bool HierarchicalStateMachine::Impl::isSubstateOf(const StateID_t parent, const 
 
                 if (parent != curState) {
                     // check left siblings
-                    for (auto itSibling = itParent; (itSibling != mSubstates.begin()) && (itSibling->first == itParent->first); --itSibling) {
+                    for (auto itSibling = itParent; (itSibling != mSubstates.begin()) && (itSibling->first == itParent->first);
+                         --itSibling) {
                         if (itSibling->second == parent) {
                             stopSearch = true;
                             break;
@@ -811,7 +819,8 @@ bool HierarchicalStateMachine::Impl::isSubstateOf(const StateID_t parent, const 
                     }
 
                     // check right siblings
-                    for (auto itSibling = itParent; (itSibling != mSubstates.end()) && (itSibling->first == itParent->first); ++itSibling) {
+                    for (auto itSibling = itParent; (itSibling != mSubstates.end()) && (itSibling->first == itParent->first);
+                         ++itSibling) {
                         if (itSibling->second == parent) {
                             stopSearch = true;
                             break;
@@ -1125,7 +1134,7 @@ HsmEventStatus HierarchicalStateMachine::Impl::processExternalTransition(const P
                  false,
                  event.getArgs());
 
-    // cppcheck-suppress misra-c2012-14.4 : false-positive. std::shared_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (curTransition.onTransition) {
         curTransition.onTransition(event.getArgs());
     }
@@ -1478,7 +1487,7 @@ bool HierarchicalStateMachine::Impl::processFinalStateTransition(const PendingEv
 
                 {
                     HSM_SYNC_EVENTS_QUEUE();
-                    mPendingEvents.push_front(finalStateEvent);
+                    mPendingEvents.push_front(std::move(finalStateEvent));
                 }
             }
         }
@@ -1657,7 +1666,14 @@ bool HierarchicalStateMachine::Impl::enableHsmDebugging() {
 bool HierarchicalStateMachine::Impl::enableHsmDebugging(const std::string& dumpPath) {
 #ifdef HSMBUILD_DEBUGGING
     bool res = false;
-    bool isNewLog = (access(dumpPath.c_str(), F_OK) != 0);
+    // cppcheck-suppress misra-c2012-21.6 ; std::fopen is used only for a debugging-build existence check
+    std::FILE* existingLog = std::fopen(dumpPath.c_str(), "r");
+    bool isNewLog = (nullptr == existingLog);
+
+    if (nullptr != existingLog) {
+        // cppcheck-suppress misra-c2012-21.6
+        static_cast<void>(std::fclose(existingLog));
+    }
 
     if (nullptr != mHsmLogFile.open(dumpPath.c_str(), std::ios::out | std::ios::app)) {
         mHsmLog = std::make_shared<std::ostream>(&mHsmLogFile);

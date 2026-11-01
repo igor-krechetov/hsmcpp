@@ -1141,7 +1141,7 @@ HsmEventStatus HierarchicalStateMachine::Impl::processExternalTransition(const P
                  false,
                  event.getArgs());
 
-    // cppcheck-suppress misra-c2012-14.4 : false-positive. std::shared_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (curTransition.onTransition) {
         curTransition.onTransition(event.getArgs());
     }

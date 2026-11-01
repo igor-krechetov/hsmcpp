@@ -757,7 +757,7 @@ Variant::Variant(const std::map<K, V>& v) {
 
 template <typename TFirst, typename TSecond>
 Variant::Variant(const TFirst& first, const TSecond& second)
-    // cppcheck-suppress misra-c2012-10.4 : false-positive. thinks that ':' is arithmetic operation
+    // cppcheck-suppress misra-c2012-10.4 ; false-positive. thinks that ':' is arithmetic operation
     : Variant(std::make_pair(Variant(first), Variant(second))) {}
 
 template <typename T>

@@ -95,11 +95,11 @@ IMPL_CONSTRUCTOR(VariantMap_t&, Type::MAP)
 IMPL_CONSTRUCTOR(VariantPair_t&, Type::PAIR)
 
 Variant::Variant(const char* v)
-    // cppcheck-suppress misra-c2012-10.4 : false-positive. thinks that ':' is arithmetic operation
+    // cppcheck-suppress misra-c2012-10.4 ; false-positive. thinks that ':' is arithmetic operation
     : Variant(std::string(v)) {}
 
 Variant::Variant(const char* binaryData, const size_t bytesCount)
-    // cppcheck-suppress misra-c2012-10.4 : false-positive. thinks that ':' is arithmetic operation
+    // cppcheck-suppress misra-c2012-10.4 ; false-positive. thinks that ':' is arithmetic operation
     : Variant(ByteArray_t(binaryData, &binaryData[bytesCount])) {}  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
 // =================================================================================================================
@@ -206,7 +206,7 @@ bool Variant::operator==(const Variant& val) const {
             if (isNumeric() && val.isNumeric()) {
                 if ((Type::DOUBLE == type) || (Type::DOUBLE == val.type)) {
                     // compare with precision for double
-                    // cppcheck-suppress misra-c2012-10.4 : false positive. both operands have type double
+                    // cppcheck-suppress misra-c2012-10.4 ; false positive. both operands have type double
                     equal = (fabs(toDouble() - val.toDouble()) < comparePrecision);
                 } else if (isUnsignedNumeric() || val.isUnsignedNumeric()) {
                     equal = (toUInt64() == val.toUInt64());

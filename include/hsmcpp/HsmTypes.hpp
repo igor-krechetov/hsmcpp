@@ -8,6 +8,7 @@
 #ifndef HSMCPP_HSMTYPES_HPP
 #define HSMCPP_HSMTYPES_HPP
 
+#include <cstdint>
 #include <functional>
 
 #include "variant.hpp"

@@ -1,22 +1,22 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE)
-[![Changelog](https://img.shields.io/badge/changelog-v1.0.4-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
-[![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
-
-# Releases
-[![Latest Release](https://img.shields.io/github/v/tag/igor-krechetov/hsmcpp?label=latest%20release)](https://github.com/igor-krechetov/hsmcpp/tags)
+[![Latest Release](https://img.shields.io/github/v/tag/igor-krechetov/hsmcpp?label=release)](https://github.com/igor-krechetov/hsmcpp/tags)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/igor-krechetov/library/hsmcpp.svg)](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp)
 [![arduino-library-badge](https://www.ardu-badge.com/badge/hsmcpp.svg?)](https://www.ardu-badge.com/hsmcpp)
+[![Changelog](https://img.shields.io/badge/changelog-view-green.svg)](https://github.com/igor-krechetov/hsmcpp/blob/main/CHANGELOG.md)
+[![Documentation Status](https://readthedocs.org/projects/hsmcpp/badge/?version=latest)](https://hsmcpp.readthedocs.io/en/latest/?badge=latest)
 
 
 # hsmcpp — Hierarchical State Machines for Embedded & Event-Driven C++
 A C++ library for building scalable, maintainable hierarchical state machines for embedded and event-driven systems.
 
 * Embedded-ready (Linux, QNX, FreeRTOS, Arduino)
-* SCXML-based code generation + visual tooling
+* SCXML-based code generation + [visual editor](https://github.com/igor-krechetov/hsm-ide/)
 * Thread-safe, async/sync execution  
-* MISRA C++ checks enforced in CI
+* Built for reliability — requirements, traceability & tests to support safety-critical use
 
 Eliminate fragile switch-case FSMs and replace them with scalable, testable state machines that work across embedded and multi-threaded systems.
+
+**Design visually, generate production C++.** Draw your hierarchical state machine in [hsm-ide](https://github.com/igor-krechetov/hsm-ide/) — the dedicated open-source editor — and generate production-grade C++. It's text-based and git-friendly: the SCXML lives in your repo, not in a binary model file.
 
 ## Why hsmcpp for embedded systems?
 - Manage complex state logic without spaghetti code
@@ -124,7 +124,7 @@ int main(const int argc, const char**argv)
     return 0;
 }
 ```
-For complete code see [examples/00_helloworld/00_helloworld_std.cpp](https://github.com/igor-krechetov/hsmcpp/blob/codex/test-and-fix-conan-build-for-examples/examples/00_helloworld/00_helloworld_std.cpp).
+For complete code see [examples/00_helloworld/00_helloworld_std.cpp](https://github.com/igor-krechetov/hsmcpp/blob/main/examples/00_helloworld/00_helloworld_std.cpp).
 
 ## Minimal SCXML-based example
 
@@ -201,7 +201,7 @@ Explore more examples in [/examples](https://github.com/igor-krechetov/hsmcpp/tr
 | Windows | ✅ | STD, Qt |  |
 
 ## Generic
-- visual state machine editors (through [thirdparty editors](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html))
+- [visual state machine editor (hsm-ide)](https://github.com/igor-krechetov/hsm-ide/)
 - [code generation](https://hsmcpp.readthedocs.io/en/latest/code-generation/code-generation.html) based on [W3C SCXML format](https://www.w3.org/TR/scxml/)
 - PlantUML diagrams generation (from SCXML files)
 - asynchronous / synchronous execution
@@ -227,26 +227,40 @@ Explore more examples in [/examples](https://github.com/igor-krechetov/hsmcpp/tr
 - support for std::function and lambdas as callbacks
 
 
+# Reliability & Safety-Critical Use
+
+hsmcpp was designed with automotive-grade rigor in mind, and works for any embedded or event-driven system where reliability matters.
+
+It is **not itself a certified safety component** — certification is project- and context-specific. What it does provide is the engineering groundwork a safety case builds on, with the artifacts to back it up:
+
+- **Formal requirements** — system & software requirements maintained as text ([TRLC](https://github.com/bmw-software-engineering/trlc))
+- **Full traceability** — requirements ↔ code ↔ tests, published as a coverage report
+- **Automated unit tests** across every supported dispatcher, with coverage tracking
+- **Static analysis** ([Coverity](https://scan.coverity.com/projects/igor-krechetov-hsmcpp)) enforced in CI
+
+If you need to make a safety argument, these artifacts are meant to *help* with that process — see the live [Requirements Specification](https://igor-krechetov.github.io/hsmcpp/requirements/) and [Traceability & Coverage Report](https://igor-krechetov.github.io/hsmcpp/coverage/).
+
+
 # Installation
 
 ## Building from source
 ```bash
 git clone https://github.com/igor-krechetov/hsmcpp.git
 cd ./hsmcpp
-./srcipts/build.sh
-cd ./build
-make install
+cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Release
+cmake --build ./build -j
+cmake --install ./build        # optional, may require sudo
 ```
 
-By default, this builds core library components, tests, and examples. You can disable unneeded components with CMake options. See [Getting started](https://hsmcpp.readthedocs.io/en/latest/getting-started/getting-started.html#building-the-library) page for details and more options.
+By default, this builds core library components, tests, and examples. You can disable unneeded components with CMake options. See the [Getting started](https://hsmcpp.readthedocs.io/en/latest/getting-started/getting-started.html#building-the-library) page for details and more options.
 
 ## Supported package managers
 | Package manager | Status |
 | --- | --- |
 | [PlatformIO](https://registry.platformio.org/libraries/igor-krechetov/hsmcpp) | ✅ |
 | [Arduino library registry](https://www.ardu-badge.com/hsmcpp) | ✅ |
-| [Conan](https://conan.io) | TODO |
-| Ubuntu (TBD) | TODO |
+| [Conan](https://conan.io) | Planned |
+| Ubuntu | Planned |
 
 ## Dependencies
 - For library:
@@ -276,20 +290,18 @@ Documentation is available at [hsmcpp.readthedocs.io](https://hsmcpp.readthedocs
 
 # Tooling
 
+
+## Visual Editor — hsm-ide
+[hsm-ide](https://github.com/igor-krechetov/hsm-ide/) is the dedicated open-source visual editor for hsmcpp: draw your hierarchical state machine, generate production-grade C++. It is text-based and git-friendly — the SCXML it produces lives in your repo as text, not in a binary model file, so it fits straight into your existing C++ / CI / git workflow.
+
+See the [editors documentation](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html) to learn more about the visual workflow.
+
+![Editing an HSM in hsm-ide](https://raw.githubusercontent.com/igor-krechetov/hsm-ide/main/doc/_images/hsm-ide/overview.png)
+
 ## hsmdebugger
 [Read documentation](https://hsmcpp.readthedocs.io/en/latest/tools/hsmdebugger/hsmdebugger.html) for details on how to use debugger.
 
 ![hsmdebugger demo](https://hsmcpp.readthedocs.io/en/latest/_images/hsmdebugger_demo.gif)
-
-## SCXML GUI Editors
-Check out [documentation](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html) to learn more about available editors.
-
-> **Note:** the dedicated editor [hsm-ide](https://github.com/igor-krechetov/hsm-ide/) is under active development and will be available soon.
-
-![Editing HSM in Qt Creator](https://hsmcpp.readthedocs.io/en/latest/_images/editor_qt.png)
-
-![Editing HSM in scxmlgui](https://hsmcpp.readthedocs.io/en/latest/_images/editor_scxmlgui.png)
-
 
 # Why should you use Statecharts?
 
@@ -364,3 +376,8 @@ There is no one-for-all library, so if hsmcpp doesn't fully suit your needs you 
 
 - 📋 [Requirements Specification](https://igor-krechetov.github.io/hsmcpp/requirements/)
 - ✅ [Requirements Traceability & Coverage Report](https://igor-krechetov.github.io/hsmcpp/coverage/)
+
+
+# License
+
+hsmcpp is released under the [MIT License](https://github.com/igor-krechetov/hsmcpp/blob/main/LICENSE) — use it freely in commercial, closed-source, and open-source products.

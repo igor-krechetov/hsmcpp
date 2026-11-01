@@ -144,6 +144,7 @@ jobs:
       commit_version: ${{ needs.verify.outputs.commit_version }}
       target_repo: igor-krechetov/hsmcpp
       platformio_target_branch: platformio_library
+      arduinoide_target_repo: igor-krechetov/hsmcpp-arduinoide
     secrets:
       HSMCPP_BOT_TOKEN: ${{ secrets.HSMCPP_BOT_TOKEN }}
       BOT_GPG_PRIVATE_KEY: ${{ secrets.BOT_GPG_PRIVATE_KEY }}

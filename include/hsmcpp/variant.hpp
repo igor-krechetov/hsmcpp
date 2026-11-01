@@ -4,6 +4,7 @@
 #ifndef HSMCPP_VARIANT_HPP
 #define HSMCPP_VARIANT_HPP
 
+#include <cstdint>
 #include <functional>
 #include <list>
 #include <map>
@@ -13,9 +14,27 @@
 #include <vector>
 
 namespace hsmcpp {
-
 class Variant;
+}  // namespace hsmcpp
 
+// Provide assignability trait specializations before Variant is complete to avoid
+// libc++ (QNX) eagerly evaluating them when instantiating the std::pair/std::map
+// aliases below over the still-incomplete Variant type. Variant declares both
+// copy- and (noexcept) move-assignment operators, so these specializations are
+// accurate; they only tell libc++ the answer up front instead of forcing it to
+// instantiate the traits on an incomplete type.
+namespace std {
+template <>
+struct is_copy_assignable<hsmcpp::Variant> : true_type {};
+template <>
+struct is_move_assignable<hsmcpp::Variant> : true_type {};
+template <>
+struct is_nothrow_copy_assignable<hsmcpp::Variant> : false_type {};
+template <>
+struct is_nothrow_move_assignable<hsmcpp::Variant> : true_type {};
+}  // namespace std
+
+namespace hsmcpp {
 using ByteArray_t = std::vector<unsigned char>;
 using VariantVector_t = std::vector<Variant>;
 using VariantList_t = std::list<Variant>;
@@ -756,7 +775,7 @@ Variant::Variant(const std::map<K, V>& v) {
 
 template <typename TFirst, typename TSecond>
 Variant::Variant(const TFirst& first, const TSecond& second)
-    // cppcheck-suppress misra-c2012-10.4 : false-positive. thinks that ':' is arithmetic operation
+    // cppcheck-suppress misra-c2012-10.4 ; false-positive. thinks that ':' is arithmetic operation
     : Variant(std::make_pair(Variant(first), Variant(second))) {}
 
 template <typename T>

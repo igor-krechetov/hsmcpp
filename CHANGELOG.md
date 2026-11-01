@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [1.0.6] - 2026-11-01
+### Added
+- Support for QNX 7.1 and 8.0
+
 ## [1.0.4] - 2026-04-06
 ### Fixed
 - Fixed potential race-conditions in dispatchers

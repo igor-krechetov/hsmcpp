@@ -18,22 +18,15 @@
 #ifdef HSMBUILD_DEBUGGING
   #include <array>
   #include <chrono>
+  #include <cstdio>
   #include <cstdlib>
   #include <cstring>
+  // cppcheck-suppress misra-c2012-21.10
+  #include <ctime>
 
   #include "hsmcpp/os/CriticalSection.hpp"
   #include "hsmcpp/os/Mutex.hpp"
-
-// WIN, access
-  #ifdef WIN32
-    #include <io.h>
-    #define F_OK 0
-  #else
-    #include <unistd.h>
-    // cppcheck-suppress misra-c2012-21.10
-    #include <ctime>
-  #endif
-#endif
+#endif // HSMBUILD_DEBUGGING
 
 #ifndef HSM_DISABLE_DEBUG_TRACES
   #define DEBUG_DUMP_ACTIVE_STATES() dumpActiveStates()
@@ -1141,7 +1134,7 @@ HsmEventStatus HierarchicalStateMachine::Impl::processExternalTransition(const P
                  false,
                  event.getArgs());
 
-    // cppcheck-suppress misra-c2012-14.4 : false-positive. std::shared_ptr has a bool() operator
+    // cppcheck-suppress misra-c2012-14.4 ; false-positive. std::shared_ptr has a bool() operator
     if (curTransition.onTransition) {
         curTransition.onTransition(event.getArgs());
     }
@@ -1673,7 +1666,14 @@ bool HierarchicalStateMachine::Impl::enableHsmDebugging() {
 bool HierarchicalStateMachine::Impl::enableHsmDebugging(const std::string& dumpPath) {
 #ifdef HSMBUILD_DEBUGGING
     bool res = false;
-    bool isNewLog = (access(dumpPath.c_str(), F_OK) != 0);
+    // cppcheck-suppress misra-c2012-21.6 ; std::fopen is used only for a debugging-build existence check
+    std::FILE* existingLog = std::fopen(dumpPath.c_str(), "r");
+    bool isNewLog = (nullptr == existingLog);
+
+    if (nullptr != existingLog) {
+        // cppcheck-suppress misra-c2012-21.6
+        static_cast<void>(std::fclose(existingLog));
+    }
 
     if (nullptr != mHsmLogFile.open(dumpPath.c_str(), std::ios::out | std::ios::app)) {
         mHsmLog = std::make_shared<std::ostream>(&mHsmLogFile);

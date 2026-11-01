@@ -4,6 +4,7 @@
 #ifndef HSMCPP_VARIANT_HPP
 #define HSMCPP_VARIANT_HPP
 
+#include <cstdint>
 #include <functional>
 #include <list>
 #include <map>

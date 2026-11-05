@@ -46,7 +46,7 @@ flowchart LR
     subgraph Modeling
         REQ[Requirements]
         SCXML[SCXML Definition]
-        IDE[Visual Editor]
+        IDE[hsm-ide]
     end
 
     subgraph Generation
@@ -88,25 +88,27 @@ flowchart LR
 
 ```C++
 #include <chrono>
-#include <thread>
+#include <cstdio>
 #include <memory>
-#include <hsmcpp/hsm.hpp>
+#include <thread>
 #include <hsmcpp/HsmEventDispatcherSTD.hpp>
+#include <hsmcpp/hsm.hpp>
 
-enum class States { OFF, ON };
-enum class Events { SWITCH };
+enum States { OFF, ON };
+enum Events { SWITCH };
 
-int main(const int argc, const char**argv)
-{
+int main(const int argc, const char** argv) {
     std::shared_ptr<hsmcpp::HsmEventDispatcherSTD> dispatcher = hsmcpp::HsmEventDispatcherSTD::create();
-    hsmcpp::HierarchicalStateMachine<States, Events> hsm(States::OFF);
+    hsmcpp::HierarchicalStateMachine hsm(States::OFF);
 
     // Register states
-    hsm.registerState(States::OFF, [&hsm](const VariantList_t& args) {
+    hsm.registerState(States::OFF, [&hsm](const hsmcpp::VariantVector_t& args) {
+        std::printf("Off\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
     });
-    hsm.registerState(States::ON, [&hsm](const VariantList_t& args) {
+    hsm.registerState(States::ON, [&hsm](const hsmcpp::VariantVector_t& args) {
+        std::printf("On\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         hsm.transition(Events::SWITCH);
     });
@@ -115,11 +117,10 @@ int main(const int argc, const char**argv)
     hsm.registerTransition(States::OFF, States::ON, Events::SWITCH);
     hsm.registerTransition(States::ON, States::OFF, Events::SWITCH);
 
-    // Initialize HSM
-    hsm.initialize(dispatcher);
-
-    // Start dispatcher and block
-    dispatcher->join();
+    // Initialize HSM and block until dispatcher stops
+    if (true == hsm.initialize(dispatcher)) {
+        dispatcher->join();
+    }
 
     return 0;
 }
@@ -146,7 +147,11 @@ For complete code see [examples/00_helloworld/00_helloworld_std.cpp](https://git
 Minimal C++ code to use the generated `BlinkHsmBase`:
 
 ```C++
+#include <hsmcpp/HsmEventDispatcherSTD.hpp>
+
 #include "gen/BlinkHsmBase.hpp"
+
+using namespace hsmcpp;
 
 class BlinkHsm : public BlinkHsmBase {
 protected:
@@ -195,7 +200,7 @@ Explore more examples in [/examples](https://github.com/igor-krechetov/hsmcpp/tr
 | Platform | Support | Dispatchers | Notes |
 | --- | --- | --- | --- |
 | Linux | ✅ | STD, GLib, GLibmm, Qt |  |
-| QNX | ✅ | STD | Custom dispatcher planned |
+| QNX | ✅ | STD | QNX 7.1 and 8.0. Custom dispatcher planned |
 | Arduino | ✅ | Arduino |  |
 | FreeRTOS | ✅ | FreeRTOS | V10.3.1+ |
 | Windows | ✅ | STD, Qt |  |
@@ -283,7 +288,7 @@ By default, this builds core library components, tests, and examples. You can di
 Documentation is available at [hsmcpp.readthedocs.io](https://hsmcpp.readthedocs.io).
 
 - [Getting Started](https://hsmcpp.readthedocs.io/en/latest/getting-started/getting-started.html)
-- [SCXML workflows](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html)
+- [SCXML workflows](https://hsmcpp.readthedocs.io/en/latest/tools/editors/editors.html)
 - [Platform integration](https://hsmcpp.readthedocs.io/en/latest/platforms/platforms.html)
 - [API reference](https://hsmcpp.readthedocs.io/en/latest/api/api.html)
 
@@ -294,7 +299,7 @@ Documentation is available at [hsmcpp.readthedocs.io](https://hsmcpp.readthedocs
 ## Visual Editor — hsm-ide
 [hsm-ide](https://github.com/igor-krechetov/hsm-ide/) is the dedicated open-source visual editor for hsmcpp: draw your hierarchical state machine, generate production-grade C++. It is text-based and git-friendly — the SCXML it produces lives in your repo as text, not in a binary model file, so it fits straight into your existing C++ / CI / git workflow.
 
-See the [editors documentation](https://hsmcpp.readthedocs.io/en/latest/code-generation/editors/editors.html) to learn more about the visual workflow.
+See the [editors documentation](https://hsmcpp.readthedocs.io/en/latest/tools/editors/editors.html) to learn more about the visual workflow.
 
 ![Editing an HSM in hsm-ide](https://raw.githubusercontent.com/igor-krechetov/hsm-ide/main/doc/_images/hsm-ide/overview.png)
 

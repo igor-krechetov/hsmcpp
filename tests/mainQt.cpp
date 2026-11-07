@@ -33,7 +33,6 @@ int main(int argc, char** argv) {
     });
 
     t1.detach();
-    app.exec();
 
-    return 0;
+    return app.exec();
 }

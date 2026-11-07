@@ -708,3 +708,193 @@ TEST_F(ABCHsm, public_transition_with_args_array) {
         ASSERT_TRUE(compareStateLists(getActiveStates(), {AbcState::A}));
     }
 }
+
+// NOTE: SWR_HSM_019 is NOT IMPLEMENTED yet (see TODO in HierarchicalStateMachine::initialize()).
+// The "invalid structure" tests below are EXPECTED TO FAIL until transition target validation is added.
+// The requirement applies only when structure validation is enabled (HSMBUILD_STRUCTURE_VALIDATION).
+// "Rejected" is observed as: initialize() returns FALSE (see initializeHsmExpectFail()).
+
+TEST_F(ABCHsm, DISABLED_transition_target_validation_different_parent_scope) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_019");
+    TEST_DESCRIPTION("transition between states which do not share a common parent scope must be rejected");
+    /*
+    @startuml
+    left to right direction
+    title transition_target_validation_different_parent_scope
+
+    A #orange -[#green,bold]-> P1: E1
+    state P1 {
+        [*] --> B
+    }
+    state P2 {
+        [*] --> C
+    }
+    B -[#red]-> C : E2 (invalid)
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
+
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B));
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P2, AbcState::C));
+
+    registerTransition(AbcState::A, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::B, AbcState::C, AbcEvent::E2);  // B (in P1) -> C (in P2)
+
+    //-------------------------------------------
+    // ACTIONS / VALIDATION
+    // invalid structure must be detected during initialization
+    initializeHsmExpectFail();
+}
+
+TEST_F(ABCHsm, DISABLED_transition_target_validation_nested_substate) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_019");
+    TEST_DESCRIPTION("transition which targets a substate nested within a composite state must be rejected");
+    /*
+    @startuml
+    left to right direction
+    title transition_target_validation_nested_substate
+
+    A #orange -[#red]-> C : E1 (invalid)
+    state P1 {
+        [*] --> B
+        B --> C
+    }
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
+
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B));
+    EXPECT_TRUE(registerSubstate(AbcState::P1, AbcState::C));
+
+    registerTransition(AbcState::A, AbcState::C, AbcEvent::E1);  // C is an interior substate of P1
+
+    //-------------------------------------------
+    // ACTIONS / VALIDATION
+    // invalid structure must be detected during initialization
+    initializeHsmExpectFail();
+}
+
+TEST_F(ABCHsm, DISABLED_transition_target_validation_entry_point) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_019");
+    TEST_DESCRIPTION("transition which names an entry point as its target must be rejected");
+    /*
+    @startuml
+    left to right direction
+    title transition_target_validation_entry_point
+
+    A #orange -[#red]-> C : E1 (invalid)
+    state P1 {
+        [*] --> B : E2
+        [*] --> C : E3
+    }
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
+
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B, AbcEvent::E2));
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::C, AbcEvent::E3));
+
+    registerTransition(AbcState::A, AbcState::C, AbcEvent::E1);  // C is an entry point of P1
+
+    //-------------------------------------------
+    // ACTIONS / VALIDATION
+    // invalid structure must be detected during initialization
+    initializeHsmExpectFail();
+}
+
+TEST_F(ABCHsm, DISABLED_transition_target_validation_substate_to_top_level) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_019");
+    TEST_DESCRIPTION("transition from a second level state (substate) to a top level state must be rejected");
+    /*
+    @startuml
+    left to right direction
+    title transition_target_validation_substate_to_top_level
+
+    A -> P1
+    state P1 {
+        [*] --> B
+        B -[#red]-> A : E1 (invalid)
+    }
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::B));
+
+    registerTransition(AbcState::B, AbcState::A, AbcEvent::E1);  // B (in P1) -> A (top level)
+
+    //-------------------------------------------
+    // ACTIONS / VALIDATION
+    // invalid structure must be detected during initialization
+    initializeHsmExpectFail();
+}
+
+TEST_F(ABCHsm, transition_target_validation_history_allowed) {
+    TEST_REQUIREMENTS("HSMCPP.SWR_HSM_019");
+    TEST_DESCRIPTION("a history state may be named as a transition target (not rejected by target validation)");
+    /*
+    @startuml
+    left to right direction
+    title transition_target_validation_history_allowed
+
+    *F -> P1 : E1
+    state P1 {
+        [*] --> A
+        A --> B : E1
+        H[x]
+    }
+    P1 --> C : E2
+    C --> H : E3
+    @enduml
+    */
+
+    //-------------------------------------------
+    // PRECONDITIONS
+    setInitialState(AbcState::F);
+
+    registerState<ABCHsm>(AbcState::F);
+    registerState<ABCHsm>(AbcState::A, this, &ABCHsm::onA);
+    registerState<ABCHsm>(AbcState::B, this, &ABCHsm::onB);
+    registerState<ABCHsm>(AbcState::C, this, &ABCHsm::onC);
+
+    EXPECT_TRUE(registerSubstateEntryPoint(AbcState::P1, AbcState::A));
+    EXPECT_TRUE(registerSubstate(AbcState::P1, AbcState::B));
+    registerHistory(AbcState::P1, AbcState::H);
+
+    registerTransition(AbcState::F, AbcState::P1, AbcEvent::E1);
+    registerTransition(AbcState::A, AbcState::B, AbcEvent::E1);
+    registerTransition(AbcState::P1, AbcState::C, AbcEvent::E2);
+    registerTransition(AbcState::C, AbcState::H, AbcEvent::E3);
+
+    initializeHsm();
+
+    //-------------------------------------------
+    // ACTIONS
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
+    ASSERT_TRUE(transitionSync(AbcEvent::E1, TIMEOUT_SYNC_TRANSITION));
+    ASSERT_TRUE(transitionSync(AbcEvent::E2, TIMEOUT_SYNC_TRANSITION));
+    ASSERT_TRUE(transitionSync(AbcEvent::E3, TIMEOUT_SYNC_TRANSITION));
+
+    //-------------------------------------------
+    // VALIDATION
+    EXPECT_TRUE(compareStateLists(getActiveStates(), {AbcState::P1, AbcState::B}));
+}

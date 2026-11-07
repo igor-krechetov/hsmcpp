@@ -150,6 +150,17 @@ if (!gDispatcher) {                                                             
 return initialize(gDispatcher);                                                             \
   }))
 
+// Same as INITIALIZE_HSM(), but expects initialize() to FAIL (return false).
+// Used to verify structure validation. NOTE: executeOnMainThread() also returns false if the
+// call itself could not be executed, so this can't distinguish that from a rejected structure.
+#define INITIALIZE_HSM_EXPECT_FAIL()                                                        \
+  ASSERT_FALSE(executeOnMainThread([this]() {                                               \
+if (!gDispatcher) {                                                                         \
+  gDispatcher = std::static_pointer_cast<hsmcpp::IHsmEventDispatcher>(CREATE_DISPATCHER()); \
+}                                                                                           \
+return initialize(gDispatcher);                                                             \
+  }))
+
 #define RELEASE_HSM() ASSERT_TRUE(executeOnMainThread([this]() { return true; }))
 
 // ======================================================

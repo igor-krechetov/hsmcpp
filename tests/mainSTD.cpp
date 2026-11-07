@@ -11,6 +11,5 @@ int main(int argc, char** argv) {
 
     cleanupGTest();
 
-    // NOTE: return 0 to avoid stoppic CI action
-    return 0;
+    return rc;
 }

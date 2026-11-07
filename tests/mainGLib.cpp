@@ -39,6 +39,5 @@ int main(int argc, char** argv) {
     g_main_loop_run(gMainLoop);
     g_main_loop_unref(gMainLoop);
 
-    // return gUnitTestResult.get();
-    return 0;
+    return gUnitTestResult.get();
 }

@@ -106,3 +106,7 @@ void ABCHsm::TearDown() {}
 void ABCHsm::initializeHsm() {
     INITIALIZE_HSM();
 }
+
+void ABCHsm::initializeHsmExpectFail() {
+    INITIALIZE_HSM_EXPECT_FAIL();
+}

@@ -71,6 +71,8 @@ public:
     bool conditionTrue(const VariantVector_t& args);
 
     void initializeHsm();
+    /// Expects initialize() to fail (returns false), e.g. because of an invalid HSM structure.
+    void initializeHsmExpectFail();
 
     std::string getStateName(const hsmcpp::StateID_t state) const override;
     std::string getEventName(const hsmcpp::EventID_t event) const override;

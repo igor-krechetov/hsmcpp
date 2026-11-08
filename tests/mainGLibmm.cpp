@@ -29,6 +29,5 @@ int main(int argc, char** argv) {
 
     glibMainLoop->run();
 
-    // return unitTestResult.get();
-    return 0;
+    return unitTestResult.get();
 }

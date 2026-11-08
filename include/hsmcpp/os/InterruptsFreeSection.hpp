@@ -5,16 +5,8 @@
 
 #include "os.hpp"
 
-#if defined(FREERTOS_AVAILABLE)
-  #include "freertos/InterruptsFreeSection.hpp"
-#elif defined(PLATFORM_ARDUINO)
-  #include "common/InterruptsFreeSection.hpp"
-#elif defined(POSIX_AVAILABLE)
-  #include "posix/InterruptsFreeSection.hpp"
-#elif defined(PLATFORM_WINDOWS)
-  #include "common/InterruptsFreeSection.hpp"
-#else
-  #error PLATFORM not supported
-#endif
+// Resolves to backends/interrupts/<backend>/InterruptsFreeSection.hpp (see os.hpp).
+// The interrupts backend always follows the real platform and is never no-op'd.
+#include HSM_INTERRUPTS_HEADER(InterruptsFreeSection.hpp)
 
 #endif  // HSMCPP_OS_INTERRUPTSFREESECTION_HPP

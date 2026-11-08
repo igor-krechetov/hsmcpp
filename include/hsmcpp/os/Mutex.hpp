@@ -5,14 +5,7 @@
 
 #include "os.hpp"
 
-#if defined(FREERTOS_AVAILABLE)
-  #include "freertos/Mutex.hpp"
-#elif defined(PLATFORM_ARDUINO)
-  #include "arduino/Mutex.hpp"
-#elif defined(STL_AVAILABLE)
-  #include "stl/Mutex.hpp"
-#else
-  #error PLATFORM not supported
-#endif
+// Resolves to backends/threading/<backend>/Mutex.hpp (see os.hpp).
+#include HSM_THREADING_HEADER(Mutex.hpp)
 
 #endif  // HSMCPP_OS_MUTEX_HPP

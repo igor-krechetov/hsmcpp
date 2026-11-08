@@ -5,7 +5,7 @@
 #include "hsmcpp/logging.hpp"
 #include "hsmcpp/os/ConditionVariable.hpp"
 #include "hsmcpp/os/InterruptsFreeSection.hpp"
-#include "hsmcpp/os/freertos/FreeRtosPort.hpp"
+#include "hsmcpp/os/backends/threading/freertos/FreeRtosPort.hpp"
 
 #if (INCLUDE_xTaskGetCurrentTaskHandle != 1)
   #error INCLUDE_xTaskGetCurrentTaskHandle feature is required

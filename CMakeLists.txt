@@ -93,9 +93,9 @@ set (LIBRARY_SRC ${HSM_SRC_ROOT}/hsm.cpp
                  ${HSM_SRC_ROOT}/variant.cpp
                  ${HSM_SRC_ROOT}/logging.cpp
                  ${HSM_SRC_ROOT}/HsmEventDispatcherBase.cpp
-                 ${HSM_SRC_ROOT}/os/common/LockGuard.cpp
-                 ${HSM_SRC_ROOT}/os/common/UniqueLock.cpp
-                 ${HSM_SRC_ROOT}/os/common/CriticalSection.cpp)
+                 ${HSM_SRC_ROOT}/os/backends/common/LockGuard.cpp
+                 ${HSM_SRC_ROOT}/os/backends/common/UniqueLock.cpp
+                 ${HSM_SRC_ROOT}/os/backends/common/CriticalSection.cpp)
 
 set (LIBRARY_HEADERS ${HSM_INCLUDES_ROOT}/hsm.hpp
                      ${HSM_INCLUDES_ROOT}/HsmTypes.hpp
@@ -111,10 +111,9 @@ set (LIBRARY_HEADERS ${HSM_INCLUDES_ROOT}/hsm.hpp
                      ${HSM_INCLUDES_ROOT}/os/AtomicFlag.hpp
                      ${HSM_INCLUDES_ROOT}/os/os.hpp
                      ${HSM_INCLUDES_ROOT}/os/UniqueLock.hpp
-                     ${HSM_INCLUDES_ROOT}/os/common/LockGuard.hpp
-                     ${HSM_INCLUDES_ROOT}/os/common/UniqueLock.hpp
-                     ${HSM_INCLUDES_ROOT}/os/common/CriticalSection.hpp
-                     ${HSM_INCLUDES_ROOT}/os/common/InterruptsFreeSection.hpp
+                     ${HSM_INCLUDES_ROOT}/os/backends/common/LockGuard.hpp
+                     ${HSM_INCLUDES_ROOT}/os/backends/common/UniqueLock.hpp
+                     ${HSM_INCLUDES_ROOT}/os/backends/common/CriticalSection.hpp
                      ${CMAKE_BINARY_DIR}/version.hpp)
 
 set(FILES_SCXML2GEN ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/scxml2gen.py
@@ -123,47 +122,76 @@ set(FILES_SCXML2GEN ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/scxml2gen.py
                     ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/__init__.py
                     ${CMAKE_CURRENT_SOURCE_DIR}/tools/__init__.py)
 
-# add platform specific files
-if (HSMBUILD_PLATFORM STREQUAL "freertos")
-    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/freertos/Mutex.cpp
-                                    ${HSM_SRC_ROOT}/os/freertos/ConditionVariable.cpp
-                                    ${HSM_SRC_ROOT}/os/freertos/AtomicFlag.cpp
-                                    ${HSM_SRC_ROOT}/os/freertos/InterruptsFreeSection.cpp
-                                    ${HSM_SRC_ROOT}/os/freertos/FreeRtosPort.cpp
-                                    ${HSM_SRC_ROOT}/HsmEventDispatcherFreeRTOS.cpp)
-    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/freertos/ConditionVariable.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/freertos/AtomicFlag.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/freertos/InterruptsFreeSection.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/freertos/FreeRTOSConfig.h
-                                            ${HSM_INCLUDES_ROOT}/os/freertos/FreeRtosPort.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/freertos/Mutex.hpp
-                                            ${HSM_INCLUDES_ROOT}/HsmEventDispatcherFreeRTOS.hpp)
+# ================================================================================================
+# OS abstraction backends (see include/hsmcpp/os/os.hpp for the matching compile-time resolver)
+#
+# Two orthogonal axes:
+#   * THREADING backend  -- stl / freertos / arduino, OR overridden to the single-threaded no-op
+#                           backend when HSMBUILD_THREAD_SAFETY=OFF. The singlethread backend is
+#                           header-only, so it contributes headers but no sources.
+#   * INTERRUPTS backend -- always follows the real platform and is NEVER replaced by singlethread,
+#                           because an ISR can still preempt a single-threaded program.
+# The per-platform dispatcher sources are selected alongside.
+
+set(HSM_THREADING_INC "${HSM_INCLUDES_ROOT}/os/backends/threading")
+set(HSM_THREADING_SRC "${HSM_SRC_ROOT}/os/backends/threading")
+set(HSM_INTERRUPTS_INC "${HSM_INCLUDES_ROOT}/os/backends/interrupts")
+set(HSM_INTERRUPTS_SRC "${HSM_SRC_ROOT}/os/backends/interrupts")
+
+# ---- threading backend selection ----
+if (NOT HSMBUILD_THREAD_SAFETY)
+    # Single-threaded: header-only no-op backend, no sources.
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_THREADING_INC}/singlethread/Mutex.hpp
+                                            ${HSM_THREADING_INC}/singlethread/AtomicFlag.hpp
+                                            ${HSM_THREADING_INC}/singlethread/ConditionVariable.hpp)
+elseif (HSMBUILD_PLATFORM STREQUAL "freertos")
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_THREADING_SRC}/freertos/Mutex.cpp
+                                    ${HSM_THREADING_SRC}/freertos/ConditionVariable.cpp
+                                    ${HSM_THREADING_SRC}/freertos/AtomicFlag.cpp
+                                    ${HSM_THREADING_SRC}/freertos/FreeRtosPort.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_THREADING_INC}/freertos/Mutex.hpp
+                                            ${HSM_THREADING_INC}/freertos/ConditionVariable.hpp
+                                            ${HSM_THREADING_INC}/freertos/AtomicFlag.hpp
+                                            ${HSM_THREADING_INC}/freertos/FreeRtosPort.hpp
+                                            ${HSM_THREADING_INC}/freertos/FreeRTOSConfig.h)
 elseif (HSMBUILD_PLATFORM STREQUAL "arduino")
-    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/arduino/ConditionVariable.cpp
-                                    ${HSM_SRC_ROOT}/os/arduino/InterruptsFreeSection.cpp
-                                    ${HSM_SRC_ROOT}/os/arduino/AtomicFlag.cpp
-                                    ${HSM_SRC_ROOT}/HsmEventDispatcherArduino.cpp)
-    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/arduino/ConditionVariable.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/arduino/AtomicFlag.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/arduino/Mutex.hpp
-                                            ${HSM_INCLUDES_ROOT}/HsmEventDispatcherArduino.hpp)
-elseif (HSMBUILD_PLATFORM STREQUAL "posix" OR HSMBUILD_PLATFORM STREQUAL "qnx")
-    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/posix/InterruptsFreeSection.cpp
-                                    ${HSM_SRC_ROOT}/os/stl/ConditionVariable.cpp
-                                    ${HSM_SRC_ROOT}/os/stl/AtomicFlag.cpp)
-    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/posix/InterruptsFreeSection.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/stl/ConditionVariable.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/stl/AtomicFlag.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/stl/Mutex.hpp)
-elseif (HSMBUILD_PLATFORM STREQUAL "windows")
-    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/os/windows/InterruptsFreeSection.cpp
-                                    ${HSM_SRC_ROOT}/os/stl/ConditionVariable.cpp
-                                    ${HSM_SRC_ROOT}/os/stl/AtomicFlag.cpp)
-    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/os/stl/ConditionVariable.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/stl/AtomicFlag.hpp
-                                            ${HSM_INCLUDES_ROOT}/os/stl/Mutex.hpp)
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_THREADING_SRC}/arduino/ConditionVariable.cpp
+                                    ${HSM_THREADING_SRC}/arduino/AtomicFlag.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_THREADING_INC}/arduino/Mutex.hpp
+                                            ${HSM_THREADING_INC}/arduino/ConditionVariable.hpp
+                                            ${HSM_THREADING_INC}/arduino/AtomicFlag.hpp)
+elseif (HSMBUILD_PLATFORM STREQUAL "posix" OR HSMBUILD_PLATFORM STREQUAL "qnx" OR HSMBUILD_PLATFORM STREQUAL "windows")
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_THREADING_SRC}/stl/ConditionVariable.cpp
+                                    ${HSM_THREADING_SRC}/stl/AtomicFlag.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_THREADING_INC}/stl/Mutex.hpp
+                                            ${HSM_THREADING_INC}/stl/ConditionVariable.hpp
+                                            ${HSM_THREADING_INC}/stl/AtomicFlag.hpp)
 else()
     message(FATAL_ERROR "Unsupported HSMBUILD_PLATFORM=${HSMBUILD_PLATFORM}")
+endif()
+
+# ---- interrupts backend selection (always platform, never no-op'd) ----
+if (HSMBUILD_PLATFORM STREQUAL "freertos")
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_INTERRUPTS_SRC}/freertos/InterruptsFreeSection.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INTERRUPTS_INC}/freertos/InterruptsFreeSection.hpp)
+elseif (HSMBUILD_PLATFORM STREQUAL "arduino")
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_INTERRUPTS_SRC}/arduino/InterruptsFreeSection.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INTERRUPTS_INC}/common/InterruptsFreeSection.hpp)
+elseif (HSMBUILD_PLATFORM STREQUAL "posix" OR HSMBUILD_PLATFORM STREQUAL "qnx")
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_INTERRUPTS_SRC}/posix/InterruptsFreeSection.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INTERRUPTS_INC}/posix/InterruptsFreeSection.hpp)
+elseif (HSMBUILD_PLATFORM STREQUAL "windows")
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_INTERRUPTS_SRC}/windows/InterruptsFreeSection.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INTERRUPTS_INC}/common/InterruptsFreeSection.hpp)
+endif()
+
+# ---- per-platform dispatcher ----
+if (HSMBUILD_PLATFORM STREQUAL "freertos")
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/HsmEventDispatcherFreeRTOS.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/HsmEventDispatcherFreeRTOS.hpp)
+elseif (HSMBUILD_PLATFORM STREQUAL "arduino")
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/HsmEventDispatcherArduino.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/HsmEventDispatcherArduino.hpp)
 endif()
 
 # ================================================================================================

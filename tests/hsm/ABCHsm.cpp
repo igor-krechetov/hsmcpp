@@ -101,7 +101,9 @@ std::string ABCHsm::getEventName(const hsmcpp::EventID_t event) const {
 
 void ABCHsm::SetUp() {}
 
-void ABCHsm::TearDown() {}
+void ABCHsm::TearDown() {
+    RELEASE_HSM();
+}
 
 void ABCHsm::initializeHsm() {
     INITIALIZE_HSM();

@@ -6,6 +6,7 @@
 #endif
 
 TEST_F(ABCHsm, multithreaded_entrypoint_cancelation) {
+    SKIP_IF_SINGLETHREAD();
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_076");
     TEST_DESCRIPTION("entrypoint transitions should be atomic and can't be canceled");
     /*
@@ -72,6 +73,7 @@ void sigHandler(int signo, siginfo_t *info, void *context) {
 }
 
 TEST_F(ABCHsm, multithreaded_transition_from_interrupt) {
+    SKIP_IF_SINGLETHREAD();
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_077");
     TEST_DESCRIPTION("Simple transition from interrupts");
 

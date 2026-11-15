@@ -13,10 +13,16 @@ clean:
     fi
 
 # TODO: use scripts
-# coverage="on" adds instrumentation (all dispatchers + tests + examples +
-# HSMBUILD_CODECOVERAGE), as needed by `test_coverage`.
 # Configure the CMake build.
-configure coverage="off":
+#   mode="default"         the project defaults (STD dispatcher + tests),
+#                          leaving every CMake option at its own default.
+#   mode="all_dispatchers" enable EVERY dispatcher (GLib, GLibmm, std,
+#                          single-threaded, Qt) with tests, so `test_all`
+#                          exercises the whole matrix in one build.
+#   mode="coverage"        all_dispatchers + HSMBUILD_CODECOVERAGE
+#                          instrumentation (no examples), as needed by
+#                          `test_coverage`.
+configure mode="default":
     #!/usr/bin/env bash
     set -euxo pipefail
     unset Qt5_DIR
@@ -24,23 +30,34 @@ configure coverage="off":
     mkdir -p {{BUILD_DIR}}
     cd {{BUILD_DIR}}
     cmake_args=(-DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_INSTALL_PREFIX=/usr)
-    if [ "{{coverage}}" = "on" ]; then
-        cmake_args+=(-DHSMBUILD_VERBOSE=OFF \
-                     -DHSMBUILD_DISPATCHER_GLIB=ON \
-                     -DHSMBUILD_DISPATCHER_GLIBMM=ON \
-                     -DHSMBUILD_DISPATCHER_STD=ON \
-                     -DHSMBUILD_DISPATCHER_QT=ON \
-                     -DHSMBUILD_TESTS=ON \
-                     -DHSMBUILD_EXAMPLES=OFF \
-                     -DHSMBUILD_DEBUGGING=ON \
-                     -DHSMBUILD_CODECOVERAGE=ON \
-                     -DHSMBUILD_CLANGTIDY=OFF)
-    fi
+    case "{{mode}}" in
+        default)
+            ;;
+        all_dispatchers | coverage)
+            cmake_args+=(-DHSMBUILD_VERBOSE=OFF \
+                         -DHSMBUILD_DISPATCHER_GLIB=ON \
+                         -DHSMBUILD_DISPATCHER_GLIBMM=ON \
+                         -DHSMBUILD_DISPATCHER_STD=ON \
+                         -DHSMBUILD_DISPATCHER_SINGLETHREAD=ON \
+                         -DHSMBUILD_DISPATCHER_QT=ON \
+                         -DHSMBUILD_TESTS=ON \
+                         -DHSMBUILD_DEBUGGING=ON \
+                         -DHSMBUILD_CLANGTIDY=OFF)
+            if [ "{{mode}}" = "coverage" ]; then
+                cmake_args+=(-DHSMBUILD_EXAMPLES=OFF \
+                             -DHSMBUILD_CODECOVERAGE=ON)
+            fi
+            ;;
+        *)
+            echo "Unknown mode '{{mode}}' (expected: default | coverage | all_dispatchers)" >&2
+            exit 1
+            ;;
+    esac
     {{CMAKE_TOOL}} "${cmake_args[@]}" ..
 
 # TODO: use scripts
-# Pass coverage="on" to build with coverage instrumentation (see `configure`).
-build coverage="off": (configure coverage)
+# Pass a configure mode (default | coverage | all_dispatchers); see `configure`.
+build mode="default": (configure mode)
     #!/usr/bin/env bash
     set -euxo pipefail
     mkdir -p {{BUILD_DIR}}
@@ -61,6 +78,11 @@ clean_build: clean build
 test: build
     ctest --test-dir {{BUILD_DIR}}
 
+# Build EVERY dispatcher (GLib, GLibmm, std, single-threaded, Qt) with tests and
+# run the full ctest suite across all of them in one build.
+test_all: (build "all_dispatchers")
+    ctest --test-dir {{BUILD_DIR}} --output-on-failure
+
 list_tests:
     ctest --test-dir {{BUILD_DIR}} -N
 
@@ -73,7 +95,7 @@ one_test testname: build
 test_usecase testname usecase:
     {{BUILD_DIR}}/tests/{{testname}} {{usecase}} -maxwarnings 100000
 
-test_coverage: (build "on")
+test_coverage: (build "coverage")
     #!/usr/bin/env bash
     set -euxo pipefail
     SOURCE_DIR="$(pwd)"

@@ -130,6 +130,7 @@ TEST(HsmImplTypes, pendingeventinfo_releaselock) {
 // uses a plain HierarchicalStateMachine instance created on the main thread, mirroring
 // the instance-driven convention in 06_dispatchers.cpp.
 TEST(HsmImplTypes, sync_wait_path_public_transitionsync) {
+    SKIP_IF_SINGLETHREAD();
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_046");
     TEST_DESCRIPTION("a synchronous transition whose callback completes returns true after the callback has run "
                      "(caller resumed via the PendingEventInfo wait() path, public transitionSync route)");

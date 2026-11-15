@@ -65,12 +65,132 @@ section "Product Scope and Constraints" {
 
     Software_Requirement SWR_HSM_141 {
       summary     = "Event-Processing Stop Control"
-      description = "The event-processing implementation SHALL provide an operation to stop event delivery, after which no further queued events are delivered until it is started again. Stopping SHALL leave the implementation in a state from which it can be started again. A custom application-provided event-processing implementation SHALL be able to supply this operation without modifying library source code."
+      description = "The event-processing implementation SHALL provide an operation to stop event delivery, after which no further queued events are delivered. A custom application-provided event-processing implementation SHALL be able to supply this operation without modifying library source code."
       nature      = Nature.Functional
       criticality = Criticality.NonSafety
       verification = Verification_Method.Test
-      rationale   = "An application integrating hsmcpp into its own execution environment must be able to control when the event-processing loop ceases delivering events, so that delivery halts cleanly during the application's shutdown or reconfiguration sequence while leaving the loop reusable."
+      rationale   = "An application integrating hsmcpp into its own execution environment must be able to control when the event-processing loop ceases delivering events, so that delivery halts cleanly during the application's shutdown sequence."
       parent      = SYS_HSM_003
+    }
+
+    Software_Requirement SWR_HSM_142 {
+      summary     = "Non-Blocking Event-Processing Start"
+      description = "The start operation of an event-processing implementation SHALL return to its caller without waiting for event delivery to end, regardless of how the implementation is driven. Starting an implementation that is already started SHALL report success."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Start is invoked by the library during state-machine initialization, so it must never hold the initializing thread; repeated starts happen naturally when several state machines share one implementation."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_143 {
+      summary     = "Event-Processing Mode Selection"
+      description = "An event-processing implementation that can be driven either by its own execution context or by its caller SHALL allow the application to select the mode when the implementation is created. Processing in its own execution context SHALL be the default. The selected mode SHALL NOT be changeable after creation."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Applications that own their main loop need a blocking mode, while existing applications rely on the self-driven behavior. Start is invoked during initialization, before any later mode change could take effect, so the mode is fixed at creation."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_144 {
+      summary     = "Blocking Event-Processing Run"
+      description = "An event-processing implementation that supports caller-driven processing SHALL provide a run operation that delivers queued events in the execution context of its caller and does not return until event delivery is stopped. State-machine callbacks triggered by those events SHALL execute in that execution context."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Applications that want the state machine to act as their main loop, or that need callbacks on a specific thread, need processing to happen where they call it."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_145 {
+      summary     = "Deferred Event Delivery Until Run"
+      description = "While an event-processing implementation is driven by its caller, it SHALL accept and queue events from the moment it is started and SHALL NOT deliver them to state machines before the run operation begins."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Nothing is processing events until the application enters the run operation, so earlier events, including the initial-state entry, have to wait in the queue instead of being lost or executed on an unexpected thread."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_146 {
+      summary     = "Run Operation for Self-Driven Processing"
+      description = "When an event-processing implementation processes events in its own execution context, its run operation SHALL block the caller until that execution context has finished and SHALL NOT deliver events in the caller's execution context."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Applications using a self-driven implementation still need a way to keep their main thread alive for as long as events are being processed, with the same calling sequence as in the caller-driven mode."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_147 {
+      summary     = "Run Exclusivity"
+      description = "Invoking the run operation while another invocation on the same implementation is active SHALL report failure to the caller and SHALL NOT affect the active invocation."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Two concurrent run loops over one queue would break the ordering and single-context guarantees."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_148 {
+      summary     = "Single-Pass Event Delivery"
+      description = "An event-processing implementation that supports polling SHALL provide an operation that delivers the events currently pending and returns without waiting for further events."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Cooperative environments with their own main loop, such as Arduino-style firmware, must be able to give the state machine bounded slices of execution time."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_149 {
+      summary     = "Non-Blocking Stop From Any Context"
+      description = "The stop operation SHALL request that event delivery stops and SHALL return immediately without reporting a result. It SHALL be safe to invoke from any execution context, including from within a state-machine callback, and SHALL have no effect when the implementation has not been started or has already been stopped."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Applications stop event processing from shutdown handlers, other threads or the state machine's own callbacks and must not need to know whether delivery is active. The request is always asynchronous because waiting for delivery to stop from within the delivering context could never complete."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_150 {
+      summary     = "Unsupported Run or Single-Pass Delivery Failure"
+      description = "When the run operation or the single-pass event-delivery operation is invoked on an implementation that does not provide it, the invocation SHALL report failure to the caller and SHALL NOT change the state of the implementation."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Operations are supported only by some implementations, and invoking an unsupported one is an application design error that must surface observably instead of being silently ignored."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_151 {
+      summary     = "Build Rejection of Unsupported Event-Processing Selection"
+      description = "The library build configuration SHALL fail with an error when an event-processing implementation is selected that is not supported on the selected target platform."
+      nature      = Nature.NonFunctional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Detecting the mismatch while configuring the build is cheaper and clearer than discovering it at run time on the target device."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_152 {
+      summary     = "Application-Driven Event-Processing Implementation"
+      description = "The library SHALL provide an event-processing implementation that creates no execution context of its own and delivers events only in the execution context of the application, either inside the run operation or when the application invokes the single-pass delivery operation."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "Single-threaded applications, including those built without thread-safety overhead, need event processing that runs only where the application calls it."
+      parent      = SYS_HSM_037
+    }
+
+    Software_Requirement SWR_HSM_153 {
+      summary     = "Stopped Event-Processing Implementation Is Final"
+      description = "After event delivery has been stopped, the event-processing implementation SHALL release the state machines bound to it, SHALL report failure for further start and run operations, and SHALL reject event submissions. A stopped implementation SHALL NOT be reusable."
+      nature      = Nature.Functional
+      criticality = Criticality.NonSafety
+      verification = Verification_Method.Test
+      rationale   = "A stop ends the lifetime of the implementation and the state machines bound to it. Defining that end state as final avoids a half-restartable implementation with no state machines attached, and makes shutdown behavior identical regardless of whether processing had begun."
+      parent      = SYS_HSM_037
     }
 
   }
@@ -1332,6 +1452,56 @@ section "Platform Support" {
     parent      = SYS_HSM_070
   }
 
+
+  Software_Requirement SWR_HSM_154 {
+    summary     = "STD Dispatcher Supported Processing Modes"
+    description = "The standard-library event-processing dispatcher SHALL support processing events in an execution context created by the dispatcher, which SHALL be the default, and SHALL support processing events in the execution context of the caller of the run operation when that mode is selected at creation. It SHALL report failure when the single-pass delivery operation is invoked."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Applications on platforms with standard threading either want the library to own the processing thread or want to run the state machine on a thread they already control. Single-pass delivery is meant for cooperative environments and has no role when the dispatcher can block or run its own thread."
+    parent      = SYS_HSM_037
+  }
+
+  Software_Requirement SWR_HSM_155 {
+    summary     = "FreeRTOS Dispatcher Supported Processing Modes"
+    description = "The FreeRTOS event-processing dispatcher SHALL support processing events in a task created by the dispatcher, which SHALL be the default, and SHALL support processing events in the task of the caller of the run operation when that mode is selected at creation. It SHALL report failure when the single-pass delivery operation is invoked."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "FreeRTOS applications either let the library own a dedicated task or dedicate one of their own tasks to the state machine. Single-pass delivery is not needed because a task can block while waiting for events."
+    parent      = SYS_HSM_037
+  }
+
+  Software_Requirement SWR_HSM_156 {
+    summary     = "GLib Dispatcher Supported Processing Mode"
+    description = "The GLib event-processing dispatcher SHALL deliver events through the GLib main loop of the application and SHALL NOT create an execution context of its own. It SHALL report failure when the run operation or the single-pass delivery operation is invoked."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "In a GLib application the main loop already owns event processing, so a second processing loop or thread would break the application's single-threaded callback model."
+    parent      = SYS_HSM_037
+  }
+
+  Software_Requirement SWR_HSM_157 {
+    summary     = "Glibmm Dispatcher Supported Processing Mode"
+    description = "The Glibmm event-processing dispatcher SHALL deliver events through the Glib main loop of the application using Glibmm facilities and SHALL NOT create an execution context of its own. It SHALL report failure when the run operation or the single-pass delivery operation is invoked."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "Glibmm applications use the same host loop as GLib applications, so event delivery must follow the same model through the C++ wrapper."
+    parent      = SYS_HSM_037
+  }
+
+  Software_Requirement SWR_HSM_158 {
+    summary     = "Qt Dispatcher Supported Processing Mode"
+    description = "The Qt event-processing dispatcher SHALL deliver events through the Qt event loop of the application and SHALL NOT create an execution context of its own. It SHALL report failure when the run operation or the single-pass delivery operation is invoked."
+    nature      = Nature.Functional
+    criticality = Criticality.NonSafety
+    verification = Verification_Method.Test
+    rationale   = "In a Qt application the event loop already owns event processing, so state-machine callbacks must be delivered through it to stay in the application's thread model."
+    parent      = SYS_HSM_037
+  }
 }
 section "Exit Points" {
   Software_Requirement SWR_HSM_115 {

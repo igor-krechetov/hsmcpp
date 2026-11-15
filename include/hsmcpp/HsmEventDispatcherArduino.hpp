@@ -4,10 +4,12 @@
 #ifndef HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP
 #define HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP
 
-#include <map>
-#include <vector>
+#ifndef HSM_DISABLE_THREADSAFETY
+#error "HsmEventDispatcherArduino requires thread-safety support to be disabled (Arduino has no threads). "\
+       "Build hsmcpp with HSMBUILD_THREAD_SAFETY=OFF or define HSM_DISABLE_THREADSAFETY."
+#endif
 
-#include "HsmEventDispatcherBase.hpp"
+#include "HsmEventDispatcherSingleThread.hpp"
 
 namespace hsmcpp {
 
@@ -15,15 +17,12 @@ namespace hsmcpp {
  * @brief HsmEventDispatcherArduino provides dispatcher for Arduino platform.
  * @details Clients are supposed to call HsmEventDispatcherArduino::dispatchEvents() in loop() method of the application.
  * See @rstref{platforms-dispatcher-arduino} for details.
+ *
+ * It is a thin specialization of HsmEventDispatcherSingleThread: the only Arduino-specific behavior is the monotonic
+ * clock source (millis()); all queue and timer logic is inherited from the base.
  * @requirement HSMCPP.SWR_HSM_110
  */
-class HsmEventDispatcherArduino : public HsmEventDispatcherBase {
-private:
-    struct RunningTimerInfo {
-        unsigned long startedAt;    // monotonic time when timer was started (ms)
-        unsigned long elapseAfter;  // monotonic time when timer should elapse next time (ms)
-    };
-
+class HsmEventDispatcherArduino : public HsmEventDispatcherSingleThread {
 public:
     /**
      * @brief Create dispatcher instance.
@@ -36,30 +35,9 @@ public:
     static std::shared_ptr<HsmEventDispatcherArduino> create(
         const size_t eventsCacheSize = DISPATCHER_DEFAULT_EVENTS_CACHESIZE);
 
-    /**
-     * @brief See IHsmEventDispatcher::start()
-     * @concurrencysafe{ }
-     */
-    bool start() override;
-
-    /**
-     * @brief See IHsmEventDispatcher::emitEvent()
-     * @threadsafe{ }
-     */
-    void emitEvent(const HandlerID_t handlerID) override;
-
-    /**
-     * @brief Dispatch pending events.
-     * @details Applications must call this method in Android's loop() function as often as possible. It does nothing and
-     * returns quickly if there are no pending events.
-     *
-     * @threadsafe{ }
-     */
-    void dispatchEvents();
-
 protected:
     /**
-     * @copydoc HsmEventDispatcherBase::HsmEventDispatcherBase()
+     * @copydoc HsmEventDispatcherSingleThread::HsmEventDispatcherSingleThread()
      */
     explicit HsmEventDispatcherArduino(const size_t eventsCacheSize);
 
@@ -69,27 +47,10 @@ protected:
     virtual ~HsmEventDispatcherArduino();
 
     /**
-     * @copydoc HsmEventDispatcherBase::deleteSafe()
+     * @brief Monotonic time in milliseconds, provided by Arduino's millis().
+     * @copydoc HsmEventDispatcherSingleThread::getTickMs()
      */
-    bool deleteSafe() override;
-
-    void notifyDispatcherAboutEvent() override;
-
-    /**
-     * @brief See HsmEventDispatcherBase::startTimerImpl()
-     * @interruptsafe{ }
-     */
-    void startTimerImpl(const TimerID_t timerID, const unsigned int intervalMs, const bool isSingleShot) override;
-    /**
-     * @brief See HsmEventDispatcherBase::stopTimerImpl()
-     * @interruptsafe{ }
-     */
-    void stopTimerImpl(const TimerID_t timerID) override;
-
-    void handleTimers();
-
-private:
-    std::map<TimerID_t, RunningTimerInfo> mRunningTimers;
+    unsigned long getTickMs() const override;
 };
 
 }  // namespace hsmcpp

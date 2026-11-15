@@ -15,6 +15,12 @@
 #elif defined(TEST_HSM_QT)
   #include <QCoreApplication>
   #include <QTimer>
+#elif defined(TEST_HSM_SINGLETHREAD)
+  #include <atomic>
+  #include <chrono>
+  #include <thread>
+
+  #include "hsmcpp/HsmEventDispatcherSingleThread.hpp"
 #endif
 
 std::shared_ptr<hsmcpp::IHsmEventDispatcher> gDispatcher;
@@ -24,6 +30,68 @@ std::condition_variable gMainThreadCallDoneEvent;
 std::function<bool()> gFunc;
 bool gCallDone;
 bool gCallResult;
+
+#if defined(TEST_HSM_SINGLETHREAD)
+// The single-threaded dispatcher owns no worker thread -- the application is responsible for
+// calling dispatchEvents() from its own loop. The existing suite, however, is built on blocking
+// helpers (transitionSync() and the BaseAsyncHsm rendezvous) that park the test thread waiting
+// for the dispatcher to run callbacks on *another* thread. To reuse that suite verbatim we give
+// the dispatcher a harness-owned pump thread that plays the role of the application loop.
+//
+// This binary is therefore built with thread-safety ON: the test thread and the pump thread both
+// touch the HSM, so the real synchronization primitives must be present. It validates the
+// dispatcher's event/timer/queue logic. The no-op-sync (HSMBUILD_THREAD_SAFETY=OFF) ship
+// configuration is covered separately by the inline single-threaded tests, which use no pump
+// thread at all.
+static std::thread gPumpThread;
+static std::atomic<bool> gPumpStop{false};
+static std::atomic<bool> gPumpStarted{false};
+
+static void startSingleThreadPumpIfNeeded() {
+    if ((false == gPumpStarted.load()) && gDispatcher) {
+        auto st = std::static_pointer_cast<hsmcpp::HsmEventDispatcherSingleThread>(gDispatcher);
+        gPumpStop = false;
+        gPumpThread = std::thread([st]() {
+            while (false == gPumpStop.load()) {
+                st->dispatchEvents();
+                // yield rather than sleep: the single-threaded dispatcher is not self-driving, so
+                // the pump must sample at full resolution for repeating-timer tests to observe the
+                // same number of fires a self-driving dispatcher would produce.
+                std::this_thread::yield();
+            }
+        });
+        gPumpStarted = true;
+    }
+}
+
+static void stopSingleThreadPump() {
+    if (true == gPumpStarted.load()) {
+        gPumpStop = true;
+        if (true == gPumpThread.joinable()) {
+            gPumpThread.join();
+        }
+        gPumpStarted = false;
+    }
+}
+#endif  // TEST_HSM_SINGLETHREAD
+
+// Stop the pump before an HSM is torn down. For the single-threaded flavour this is called from
+// RELEASE_HSM() (fixture TearDown), so the pump is never dispatching into an HSM whose destructor
+// is running. The next INITIALIZE_HSM() restarts it. No-op for all other dispatchers.
+void releaseSingleThreadDispatcher() {
+#if defined(TEST_HSM_SINGLETHREAD)
+    stopSingleThreadPump();
+#endif
+}
+
+// Start the harness pump thread for the single-threaded flavour. Called from INITIALIZE_HSM()
+// after the dispatcher exists, so transitions/timers enqueued during the test are dispatched.
+// No-op for all other dispatchers.
+void ensureSingleThreadDispatcherPump() {
+#if defined(TEST_HSM_SINGLETHREAD)
+    startSingleThreadPumpIfNeeded();
+#endif
+}
 
 void configureGTest(const std::string& name) {
     testing::TestEventListeners& listeners = testing::UnitTest::GetInstance()->listeners();
@@ -67,6 +135,11 @@ void cleanupGTest() {
     namespace fs = std::filesystem;
     std::error_code ec;
 
+#if defined(TEST_HSM_SINGLETHREAD)
+    // Stop the harness pump thread before the static dispatcher is torn down at process exit.
+    stopSingleThreadPump();
+#endif
+
     // Debug default-path case writes a fixed "./dump.hsmlog" in the working dir.
     fs::remove("./dump.hsmlog", ec);
 
@@ -107,6 +180,12 @@ void mainThreadCallback()
 bool executeOnMainThread(std::function<bool()> func) {
     // in case of some dispatchers we can just call func()
 #if defined(TEST_HSM_STD) || defined(TEST_HSM_FREERTOS)
+    return func();
+#elif defined(TEST_HSM_SINGLETHREAD)
+    // Run func() directly on the test thread (thread-safety is ON for this binary, so the queue
+    // lock protects concurrent access with the pump thread). The pump is started/stopped
+    // explicitly by INITIALIZE_HSM() / RELEASE_HSM(), not here, so RELEASE's func() can stop the
+    // pump without this path immediately restarting it.
     return func();
 #else
     std::unique_lock<std::mutex> lck(gSyncCall);

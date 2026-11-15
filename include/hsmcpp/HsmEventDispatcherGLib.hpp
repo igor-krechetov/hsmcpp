@@ -4,6 +4,11 @@
 #ifndef HSMCPP_HSMEVENTDISPATCHERGLIB_HPP
 #define HSMCPP_HSMEVENTDISPATCHERGLIB_HPP
 
+#ifdef HSM_DISABLE_THREADSAFETY
+#error "HsmEventDispatcherGLib requires thread-safety support. Build hsmcpp with HSMBUILD_THREAD_SAFETY=ON "\
+       "(do not define HSM_DISABLE_THREADSAFETY) or use HsmEventDispatcherSingleThread."
+#endif
+
 #include <glib.h>
 
 #include <condition_variable>

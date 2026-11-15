@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to project will be documented in this file.
 
+## [1.1.0] - 2026-11-01
+### Added
+- `HsmEventDispatcherSingleThread`: application-driven dispatcher that creates no threads. Events are processed in the application's thread by calling `dispatchEvents()`. Enable with `HSMBUILD_DISPATCHER_SINGLETHREAD`. It is the only built-in dispatcher that can be used with `HSMBUILD_THREAD_SAFETY=OFF` (also available through pkg-config as `hsmcpp_singlethread`).
+- Build-time checks for thread-safety: CMake configuration fails if `HSMBUILD_THREAD_SAFETY=OFF` is combined with the STD, GLib, Glibmm, Qt or FreeRTOS dispatchers. The same dispatchers also fail to compile if `HSM_DISABLE_THREADSAFETY` is defined.
+- Unit tests for `HsmEventDispatcherSingleThread`, both with thread-safety enabled (full test suite) and disabled (inline, ship configuration). Both build in a single CMake configuration.
+- Software requirements `SWR_HSM_142` to `SWR_HSM_158` describing dispatcher start/stop/run/dispatchEvents behavior and the modes supported by each dispatcher. `DispatchMode` and `run()` described there are not implemented yet.
+
+### Updated
+- `HsmEventDispatcherArduino` is now a thin specialization of `HsmEventDispatcherSingleThread`.
+- **Arduino builds now require thread-safety to be disabled.** CMake fails for `HSMBUILD_PLATFORM=arduino` unless `HSMBUILD_THREAD_SAFETY=OFF`, and `HsmEventDispatcherArduino.hpp` fails to compile unless `HSM_DISABLE_THREADSAFETY` is defined. PlatformIO builds define it automatically. Arduino IDE users must add `-DHSM_DISABLE_THREADSAFETY` to the compiler flags.
+
 ## [1.0.6] - 2026-11-01
 ### Added
 - Support for QNX 7.1 and 8.0

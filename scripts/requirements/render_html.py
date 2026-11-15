@@ -241,7 +241,7 @@ function secKey(path){{return path.join(' \u203a ');}}
 
 function rowSys(r){{
   const derived = r.derived.length
-    ? `<span class="derived">${{r.derived.map(id=>`<span class="link" onclick="jump('sw','${{id}}')">${{id}}</span>`).join('')}}</span>`
+    ? `<span class="derived">${{Array.from({{length: Math.ceil(r.derived.length / 3)}}, (_, i) => r.derived.slice(i * 3, i * 3 + 3).map(id=>`<span class="link" onclick="jump('sw','${{id}}')">${{id}}</span>`).join('')).map(row=>`<div>${{row}}</div>`).join('')}}</span>`
     : '<span class="none">&mdash;</span>';
   return `<tr class="req" data-id="${{r.id}}" data-sec="${{secKey(r.section)}}"><td><strong>${{r.id}}</strong></td><td>${{r.summary}}</td><td>${{natBadge(r.nature)}}</td><td class="desc">${{r.description}}${{r.rationale?`<div class="rat"><em>Rationale:</em> ${{r.rationale}}</div>`:''}}</td><td>${{derived}}</td></tr>`;
 }}

@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(hsmcpp)
 
-set(PROJECT_VERSION "1.0.6")
+set(PROJECT_VERSION "1.1.0")
 set(PROJECT_DESCRIPTION "C++ library for hierarchical state machines / finite state machines. Provides a code-free visual approach for defining state machine logic using GUI editors with automatic code and diagram generation. Check out https://hsmcpp.readthedocs.io for detailed documentation.")
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -27,6 +27,7 @@ option(HSMBUILD_DEBUGGING "Enable/disable HSM debugging" ON)
 option(HSMBUILD_DISPATCHER_GLIB "Enable GLib dispatcher" OFF)
 option(HSMBUILD_DISPATCHER_GLIBMM "Enable GLibmm dispatcher" OFF)
 option(HSMBUILD_DISPATCHER_STD "Enable std::thread based dispatcher" ON)
+option(HSMBUILD_DISPATCHER_SINGLETHREAD "Enable single-threaded (application-driven) dispatcher" OFF)
 option(HSMBUILD_DISPATCHER_QT "Enable Qt based dispatcher" OFF)
 option(HSMBUILD_TESTS "Build unittests" ON)
 option(HSMBUILD_EXAMPLES "Build examples" ON)
@@ -52,6 +53,7 @@ message("HSMBUILD_DEBUGGING = ${HSMBUILD_DEBUGGING}")
 message("HSMBUILD_DISPATCHER_GLIB = ${HSMBUILD_DISPATCHER_GLIB}")
 message("HSMBUILD_DISPATCHER_GLIBMM = ${HSMBUILD_DISPATCHER_GLIBMM}")
 message("HSMBUILD_DISPATCHER_STD = ${HSMBUILD_DISPATCHER_STD}")
+message("HSMBUILD_DISPATCHER_SINGLETHREAD = ${HSMBUILD_DISPATCHER_SINGLETHREAD}")
 message("HSMBUILD_DISPATCHER_QT = ${HSMBUILD_DISPATCHER_QT}")
 message("HSMBUILD_DISPATCHER_FREERTOS = ${HSMBUILD_DISPATCHER_FREERTOS}")
 message("HSMBUILD_TESTS = ${HSMBUILD_TESTS}")
@@ -66,6 +68,32 @@ if (HSMBUILD_PLATFORM STREQUAL "freertos")
     message("HSMBUILD_FREERTOS_DEFAULT_ISR_DETECT = ${HSMBUILD_FREERTOS_DEFAULT_ISR_DETECT}")
 endif()
 message("--------------------------------------")
+
+# ================================================================================================
+# Dispatchers that process events on a different thread than the one emitting them (or on a host
+# event loop) can't work without thread-safety support.
+# Arduino has no threads, so thread-safety support must be turned off for it.
+if (HSMBUILD_PLATFORM STREQUAL "arduino" AND HSMBUILD_THREAD_SAFETY)
+    message(FATAL_ERROR "HSMBUILD_PLATFORM=arduino requires HSMBUILD_THREAD_SAFETY=OFF (Arduino has no threads). "
+                        "Set HSMBUILD_THREAD_SAFETY=OFF and disable HSMBUILD_DISPATCHER_STD (ON by default).")
+endif()
+
+if (NOT HSMBUILD_THREAD_SAFETY)
+    set(HSM_DISPATCHERS_REQUIRING_THREADSAFETY "")
+    foreach(HSM_DISPATCHER GLIB GLIBMM STD QT FREERTOS)
+        if (HSMBUILD_DISPATCHER_${HSM_DISPATCHER})
+            list(APPEND HSM_DISPATCHERS_REQUIRING_THREADSAFETY HSMBUILD_DISPATCHER_${HSM_DISPATCHER})
+        endif()
+    endforeach()
+
+    if (HSM_DISPATCHERS_REQUIRING_THREADSAFETY)
+        string(REPLACE ";" ", " HSM_DISPATCHERS_REQUIRING_THREADSAFETY_STR "${HSM_DISPATCHERS_REQUIRING_THREADSAFETY}")
+        message(FATAL_ERROR
+            "HSMBUILD_THREAD_SAFETY=OFF is not compatible with: ${HSM_DISPATCHERS_REQUIRING_THREADSAFETY_STR}. "
+            "These dispatchers require thread-safety support. Either set HSMBUILD_THREAD_SAFETY=ON or disable "
+            "them (note: HSMBUILD_DISPATCHER_STD is ON by default) and enable HSMBUILD_DISPATCHER_SINGLETHREAD.")
+    endif()
+endif()
 
 # ================================================================================================
 # Code Coverage support
@@ -190,8 +218,12 @@ if (HSMBUILD_PLATFORM STREQUAL "freertos")
     set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/HsmEventDispatcherFreeRTOS.cpp)
     set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/HsmEventDispatcherFreeRTOS.hpp)
 elseif (HSMBUILD_PLATFORM STREQUAL "arduino")
-    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/HsmEventDispatcherArduino.cpp)
-    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/HsmEventDispatcherArduino.hpp)
+    # Arduino is a thin specialization of HsmEventDispatcherSingleThread, so the base source
+    # is compiled into the core library alongside it.
+    set (LIBRARY_SRC ${LIBRARY_SRC} ${HSM_SRC_ROOT}/HsmEventDispatcherSingleThread.cpp
+                                    ${HSM_SRC_ROOT}/HsmEventDispatcherArduino.cpp)
+    set (LIBRARY_HEADERS ${LIBRARY_HEADERS} ${HSM_INCLUDES_ROOT}/HsmEventDispatcherSingleThread.hpp
+                                            ${HSM_INCLUDES_ROOT}/HsmEventDispatcherArduino.hpp)
 endif()
 
 # ================================================================================================

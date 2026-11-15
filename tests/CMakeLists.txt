@@ -139,7 +139,13 @@ endif()
 # dispatcher's event/timer/queue logic. The no-op-sync ship configuration is covered by the
 # INLINE flavour below, which compiles its own copy of the core with thread-safety OFF so BOTH
 # suites build in a single pass (no separate HSMBUILD_THREAD_SAFETY=OFF configure needed).
-if (HSMBUILD_DISPATCHER_SINGLETHREAD)
+# When the whole tree is configured with HSMBUILD_THREAD_SAFETY=OFF this flavour is skipped: it
+# depends on real synchronization primitives, so only the INLINE flavour is meaningful there.
+if (HSMBUILD_DISPATCHER_SINGLETHREAD AND NOT HSMBUILD_THREAD_SAFETY)
+    message("[SKIP] hsmUnitTestsSingleThread: requires HSMBUILD_THREAD_SAFETY=ON (covered by the inline flavour)")
+endif()
+
+if (HSMBUILD_DISPATCHER_SINGLETHREAD AND HSMBUILD_THREAD_SAFETY)
     set(TEST_BIN_SINGLETHREAD ${TEST_BIN_NAME_TEMPLATE}SingleThread)
 
     add_executable(${TEST_BIN_SINGLETHREAD} mainSingleThread.cpp ${SRC_UNITTESTS_COMMON})

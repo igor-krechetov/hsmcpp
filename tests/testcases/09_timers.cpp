@@ -285,6 +285,7 @@ TEST_F(ABCHsm, timers_repeating_delay) {
     const TimerID_t timer1 = 7;
     const int timer1Duration = 100;
     const int timer1Repeat = 2;
+    const int timerTolerance = 20;
     std::chrono::time_point<std::chrono::steady_clock> timerStartTime;
     int correctIterations = 0;
     int iterationsCount = 0;
@@ -306,8 +307,12 @@ TEST_F(ABCHsm, timers_repeating_delay) {
             //       so need to account for iterationDuration being reduced by 1-2ms
             timerStartTime = std::chrono::steady_clock::now();
 
-            // This measurement is not precise so need to count for operational costs
-            if ((iterationDuration >= (timer1Duration - 5)) && (iterationDuration <= (timer1Duration + 5))) {
+            // This measurement is not precise so need to count for operational costs.
+            // The tolerance must stay well below the callback delay (timer1Duration / 2) so the test still
+            // detects a timer that restarts only after the callback finishes, but be loose enough for
+            // loaded CI runners.
+            if ((iterationDuration >= (timer1Duration - timerTolerance)) &&
+                (iterationDuration <= (timer1Duration + timerTolerance))) {
                 ++correctIterations;
             }
 

@@ -1,0 +1,104 @@
+# Build matrix for scripts/build/posix/matrix.py
+#
+# Every configuration is built in its own directory and, unless it expects a CMake failure, its unit
+# tests are executed. Dispatchers are separate libraries/test binaries that do not interact, so they
+# are covered individually ("dispatchers" group). The core options are covered with one threaded
+# (STD) and one application-driven (SingleThread) dispatcher instead of the full cross product.
+#
+# Schema
+#   groups.<name>                    CI runs one job per group
+#     build_type                     default build type of the group (Debug | Release), default: Debug
+#     options                        CMake options applied to every configuration of the group
+#     configs[]
+#       name                         unique; used as build directory name and in reports
+#       build_type                   overrides the group's build type
+#       options                      CMake options (merged over the group's); passed as -D<NAME>=<VALUE>.
+#                                    YAML booleans are converted back to ON/OFF.
+#       expect_failure               regex. When set, CMake configuration MUST fail and its (whitespace
+#                                    normalized) output MUST match the regex; nothing is built.
+#
+# Examples are always OFF, tests are ON unless a configuration overrides HSMBUILD_TESTS.
+# NOTE: HSMBUILD_DISPATCHER_STD is ON by default, so it must be turned off explicitly.
+
+groups:
+  dispatchers:
+    # thread-safety ON, everything else default
+    configs:
+      - name: disp-std
+        options: {HSMBUILD_DISPATCHER_STD: ON}
+      - name: disp-glib
+        options: {HSMBUILD_DISPATCHER_STD: OFF, HSMBUILD_DISPATCHER_GLIB: ON}
+      - name: disp-glibmm
+        options: {HSMBUILD_DISPATCHER_STD: OFF, HSMBUILD_DISPATCHER_GLIBMM: ON}
+      - name: disp-qt
+        options: {HSMBUILD_DISPATCHER_STD: OFF, HSMBUILD_DISPATCHER_QT: ON}
+      - name: disp-singlethread
+        options: {HSMBUILD_DISPATCHER_STD: OFF, HSMBUILD_DISPATCHER_SINGLETHREAD: ON}
+      - name: disp-all
+        build_type: Release
+        options:
+          HSMBUILD_DISPATCHER_GLIB: ON
+          HSMBUILD_DISPATCHER_GLIBMM: ON
+          HSMBUILD_DISPATCHER_STD: ON
+          HSMBUILD_DISPATCHER_QT: ON
+          HSMBUILD_DISPATCHER_SINGLETHREAD: ON
+
+  core-std:
+    # structure validation x debugging with the STD dispatcher.
+    # (validation ON + debugging ON is covered by disp-std)
+    options: {HSMBUILD_DISPATCHER_STD: ON}
+    configs:
+      - name: core-std-sv0-dbg1
+        options: {HSMBUILD_STRUCTURE_VALIDATION: OFF, HSMBUILD_DEBUGGING: ON}
+      - name: core-std-sv1-dbg0
+        options: {HSMBUILD_STRUCTURE_VALIDATION: ON, HSMBUILD_DEBUGGING: OFF}
+      - name: core-std-sv0-dbg0
+        options: {HSMBUILD_STRUCTURE_VALIDATION: OFF, HSMBUILD_DEBUGGING: OFF}
+
+  core-singlethread:
+    # thread-safety x structure validation x debugging with the SingleThread dispatcher
+    options: {HSMBUILD_DISPATCHER_STD: OFF, HSMBUILD_DISPATCHER_SINGLETHREAD: ON}
+    configs:
+      - name: core-st-ts1-sv1-dbg1
+        options: {HSMBUILD_THREAD_SAFETY: ON, HSMBUILD_STRUCTURE_VALIDATION: ON, HSMBUILD_DEBUGGING: ON}
+      - name: core-st-ts1-sv1-dbg0
+        options: {HSMBUILD_THREAD_SAFETY: ON, HSMBUILD_STRUCTURE_VALIDATION: ON, HSMBUILD_DEBUGGING: OFF}
+      - name: core-st-ts1-sv0-dbg1
+        options: {HSMBUILD_THREAD_SAFETY: ON, HSMBUILD_STRUCTURE_VALIDATION: OFF, HSMBUILD_DEBUGGING: ON}
+      - name: core-st-ts1-sv0-dbg0
+        options: {HSMBUILD_THREAD_SAFETY: ON, HSMBUILD_STRUCTURE_VALIDATION: OFF, HSMBUILD_DEBUGGING: OFF}
+      - name: core-st-ts0-sv1-dbg1
+        options: {HSMBUILD_THREAD_SAFETY: OFF, HSMBUILD_STRUCTURE_VALIDATION: ON, HSMBUILD_DEBUGGING: ON}
+      - name: core-st-ts0-sv1-dbg0
+        options: {HSMBUILD_THREAD_SAFETY: OFF, HSMBUILD_STRUCTURE_VALIDATION: ON, HSMBUILD_DEBUGGING: OFF}
+      - name: core-st-ts0-sv0-dbg1
+        options: {HSMBUILD_THREAD_SAFETY: OFF, HSMBUILD_STRUCTURE_VALIDATION: OFF, HSMBUILD_DEBUGGING: ON}
+      - name: core-st-ts0-sv0-dbg0
+        options: {HSMBUILD_THREAD_SAFETY: OFF, HSMBUILD_STRUCTURE_VALIDATION: OFF, HSMBUILD_DEBUGGING: OFF}
+
+  misc:
+    configs:
+      # ship configuration of the application-driven dispatcher
+      - name: rel-st-ts0
+        build_type: Release
+        options: {HSMBUILD_DISPATCHER_STD: OFF, HSMBUILD_DISPATCHER_SINGLETHREAD: ON, HSMBUILD_THREAD_SAFETY: OFF}
+      # verbose logging mode must compile (library only, no tests)
+      - name: verbose-on
+        options: {HSMBUILD_DISPATCHER_STD: ON, HSMBUILD_VERBOSE: ON, HSMBUILD_TESTS: OFF}
+
+      # invalid combinations: CMake configuration must be rejected
+      - name: neg-ts0-std
+        expect_failure: "not compatible with: HSMBUILD_DISPATCHER_STD"
+        options: {HSMBUILD_THREAD_SAFETY: OFF, HSMBUILD_DISPATCHER_STD: ON}
+      - name: neg-ts0-glib
+        expect_failure: "not compatible with: HSMBUILD_DISPATCHER_GLIB"
+        options: {HSMBUILD_THREAD_SAFETY: OFF, HSMBUILD_DISPATCHER_STD: OFF, HSMBUILD_DISPATCHER_GLIB: ON}
+      - name: neg-ts0-glibmm
+        expect_failure: "not compatible with: HSMBUILD_DISPATCHER_GLIBMM"
+        options: {HSMBUILD_THREAD_SAFETY: OFF, HSMBUILD_DISPATCHER_STD: OFF, HSMBUILD_DISPATCHER_GLIBMM: ON}
+      - name: neg-ts0-qt
+        expect_failure: "not compatible with: HSMBUILD_DISPATCHER_QT"
+        options: {HSMBUILD_THREAD_SAFETY: OFF, HSMBUILD_DISPATCHER_STD: OFF, HSMBUILD_DISPATCHER_QT: ON}
+      - name: neg-arduino-ts1
+        expect_failure: "requires HSMBUILD_THREAD_SAFETY=OFF"
+        options: {HSMBUILD_PLATFORM: arduino, HSMBUILD_THREAD_SAFETY: ON}

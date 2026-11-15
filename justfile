@@ -55,6 +55,11 @@ configure mode="default":
     esac
     {{CMAKE_TOOL}} "${cmake_args[@]}" ..
 
+# Build and test the option combinations listed in scripts/build/posix/matrix.yaml (same as CI).
+# Examples: just test_matrix --list | just test_matrix --group core-std | just test_matrix --only disp-std
+test_matrix *args:
+    python3 ./scripts/build/posix/matrix.py {{args}}
+
 # TODO: use scripts
 # Pass a configure mode (default | coverage | all_dispatchers); see `configure`.
 build mode="default": (configure mode)

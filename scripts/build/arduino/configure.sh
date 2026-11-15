@@ -8,5 +8,5 @@ src_dir="$4"
 build_tests="$5"
 
 cmake -S "$src_dir" -B "$build_dir" -DCMAKE_BUILD_TYPE="$build_type" \
-  -DHSMBUILD_TARGET=arduinoide -DHSMBUILD_PLATFORM=arduino -DHSMBUILD_TESTS="$build_tests" \
+  -DHSMBUILD_TARGET=arduinoide -DHSMBUILD_PLATFORM=arduino -DHSMBUILD_THREAD_SAFETY=OFF -DHSMBUILD_DISPATCHER_STD=OFF -DHSMBUILD_TESTS="$build_tests" \
   $cmake_args

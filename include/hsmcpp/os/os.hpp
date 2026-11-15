@@ -29,6 +29,14 @@
 // backend always follows the real platform and is never no-op'd -- an ISR can still preempt a
 // single-threaded program, so interrupt masking must stay real.
 
+// Arduino has no threads, so thread-safety support is always disabled there. Arduino IDE gives
+// library authors no way to pass compiler defines, so it is set here. Every hsmcpp translation
+// unit (library sources and application code) includes this header before reading the macro, so
+// the definition stays consistent. Non-Arduino builds must be configured explicitly (CMake checks).
+#if defined(ARDUINO) && !defined(HSM_DISABLE_THREADSAFETY)
+  #define HSM_DISABLE_THREADSAFETY (1)
+#endif
+
 // ---- threading backend (mutex / atomic flag / condition variable) ----
 #if defined(HSM_DISABLE_THREADSAFETY)
   #define HSM_THREADING_BACKEND_DIR singlethread

@@ -4,6 +4,8 @@
 #ifndef HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP
 #define HSMCPP_HSMEVENTDISPATCHERARDUINO_HPP
 
+#include "os/os.hpp"
+
 #ifndef HSM_DISABLE_THREADSAFETY
 #error "HsmEventDispatcherArduino requires thread-safety support to be disabled (Arduino has no threads). "\
        "Build hsmcpp with HSMBUILD_THREAD_SAFETY=OFF or define HSM_DISABLE_THREADSAFETY."

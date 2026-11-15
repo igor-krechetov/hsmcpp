@@ -538,7 +538,11 @@ TEST_F(ABCHsm, substate_safe_registration) {
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_017");
     TEST_DESCRIPTION(
         "If HSM is compiled with safety check then it should prevent cyclic and multiple inclusions of substates. "
-        "This test will fail if HSM_ENABLE_SAFE_STRUCTURE is not defined");
+        "This test is skipped if HSM_ENABLE_SAFE_STRUCTURE is not defined");
+
+#ifndef HSM_ENABLE_SAFE_STRUCTURE
+    GTEST_SKIP() << "HSM_ENABLE_SAFE_STRUCTURE is not defined (HSMBUILD_STRUCTURE_VALIDATION=OFF)";
+#endif
 
     //-------------------------------------------
     // PRECONDITIONS

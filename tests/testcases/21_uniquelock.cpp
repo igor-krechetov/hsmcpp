@@ -1,5 +1,14 @@
 // Copyright (C) 2021 Ihor Krechetov
 // Distributed under MIT license. See file LICENSE for details
+
+// These tests validate UniqueLock ownership against a REAL mutex: they assert actual mutual
+// exclusion (a worker thread failing to acquire, try_lock() failing while held) and reach into
+// Mutex::nativeHandle(). None of that is meaningful in a single-threaded build, where the mutex
+// is a no-op and has no native handle. Compile the whole suite out when thread safety is disabled.
+#include "hsmcpp/os/os.hpp"
+
+#ifndef HSM_DISABLE_THREADSAFETY
+
 #include <thread>
 
 #include "TestsCommon.hpp"
@@ -138,3 +147,5 @@ TEST(uniquelock, uniquelock_release) {
     EXPECT_TRUE(m.nativeHandle().try_lock());
     m.nativeHandle().unlock();
 }
+
+#endif  // HSM_DISABLE_THREADSAFETY

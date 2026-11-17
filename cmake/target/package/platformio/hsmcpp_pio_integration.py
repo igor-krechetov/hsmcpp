@@ -6,7 +6,7 @@ import os
 from tools.scxml2gen import scxml2gen
 
 # Modify project environment (files located in the `src` folder)
-projenv.Append(CPPDEFINES=[("PLATFORM_ARDUINO", 1), ("HSM_BUILD_HSMBUILD_DISPATCHER_ARDUINO", 1)])
+projenv.Append(CPPDEFINES=[("PLATFORM_ARDUINO", 1), ("HSM_BUILD_HSMBUILD_DISPATCHER_ARDUINO", 1), ("HSM_DISABLE_THREADSAFETY", 1)])
 
 
 # HSM files generation

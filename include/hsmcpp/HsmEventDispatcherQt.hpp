@@ -4,6 +4,11 @@
 #ifndef HSMCPP_HSMEVENTDISPATCHERQT_HPP
 #define HSMCPP_HSMEVENTDISPATCHERQT_HPP
 
+#ifdef HSM_DISABLE_THREADSAFETY
+#error "HsmEventDispatcherQt requires thread-safety support. Build hsmcpp with HSMBUILD_THREAD_SAFETY=ON "\
+       "(do not define HSM_DISABLE_THREADSAFETY) or use HsmEventDispatcherSingleThread."
+#endif
+
 #include <QEvent>
 #include <QObject>
 #include <QTimer>

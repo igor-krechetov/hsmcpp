@@ -123,6 +123,7 @@ TEST(dispatchers, release_sync) {
 #ifndef TEST_HSM_FREERTOS
 
 TEST(dispatchers, stresstest_create_destroy_hsm_later) {
+    SKIP_IF_SINGLETHREAD();
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_127");
     TEST_DESCRIPTION("check that it's possible to destroy HSM and disconnect from dispatcher when there are pending events");
     // The idea behild this test is to make sure that HSM is not deleted while being inside one of it's callbacks
@@ -225,6 +226,7 @@ TEST(dispatchers, stresstest_create_destroy_hsm_later) {
 #endif  // TEST_HSM_FREERTOS
 
 TEST(dispatchers, stresstest_create_destroy_dispatcher) {
+    SKIP_IF_SINGLETHREAD();
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_127");
     TEST_DESCRIPTION("check that it's possible to destroy dispatcher when there are pending events");
 
@@ -313,6 +315,7 @@ TEST(dispatchers, destroy_without_starting) {
 }
 
 TEST(dispatchers, stop) {
+    SKIP_IF_SINGLETHREAD();
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_140,HSMCPP.SWR_HSM_141");
     TEST_DESCRIPTION("check that it's possible to stop running dispatcher");
 
@@ -354,6 +357,7 @@ TEST(dispatchers, stop) {
 }
 
 TEST(dispatchers, create_hsm_from_callback) {
+    SKIP_IF_SINGLETHREAD();
     TEST_REQUIREMENTS("HSMCPP.SWR_HSM_010");
     TEST_DESCRIPTION("check that it's possible create a statemachine inside another HSM callback");
 

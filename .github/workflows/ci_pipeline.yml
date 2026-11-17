@@ -32,6 +32,73 @@ jobs:
       package: false
 
   # --------------------------------------------------------
+  # Build and test the key combinations of build options (thread-safety, structure validation,
+  # debugging, dispatchers) listed in scripts/build/posix/matrix.yaml, plus checks that invalid
+  # combinations are rejected. One job per matrix group; every configuration of a group is built
+  # in its own directory by scripts/build/posix/matrix.py, a failure does not stop the remaining
+  # configurations, and a summary table is added to the job summary.
+  # Run locally with: just test_matrix [--group <name>] [--only <name>]
+  build_matrix:
+    name: "Build matrix (${{ matrix.group }})"
+    needs: verify
+    if: always() && (needs.verify.result == 'success' || needs.verify.result == 'skipped')
+    # Same image as the build job
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # needs GLib, Glibmm and Qt
+          - group: dispatchers
+            install_dispatcher_deps: true
+          - group: core-std
+            install_dispatcher_deps: false
+          - group: core-singlethread
+            install_dispatcher_deps: false
+          - group: misc
+            install_dispatcher_deps: false
+    env:
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: 'recursive'
+
+      - name: Install GLib/Glibmm
+        if: ${{ matrix.install_dispatcher_deps }}
+        uses: awalsh128/cache-apt-pkgs-action@v1.6.0
+        with:
+          packages: libglibmm-2.4-dev
+          version: 1.0
+
+      - name: Install Qt
+        if: ${{ matrix.install_dispatcher_deps }}
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'linux_gcc_64'
+          modules: ''
+          cache: 'true'
+          cache-key-prefix: 'install-qt-action-linux'
+          set-env: 'true'
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: build-matrix-${{ matrix.group }}
+
+      # Installed right before use so it lands in the python3 that is active after the Qt step
+      - name: Install PyYAML
+        run: python3 -m pip install --user pyyaml
+
+      - name: Build and test (${{ matrix.group }})
+        run: python3 ./scripts/build/posix/matrix.py --group "${{ matrix.group }}"
+
+  # --------------------------------------------------------
   test:
     needs: build
     if: always() && (needs.build.result == 'success')
@@ -68,7 +135,7 @@ jobs:
 
   # --------------------------------------------------------
   autotag:
-    needs: [verify, build, requirements, sast]
+    needs: [verify, build, build_matrix, requirements, sast]
     if: >
       (github.event_name == 'push' && github.ref_name == 'main') &&
       needs.build.result == 'success' &&
@@ -104,7 +171,7 @@ jobs:
   # contribution (test badges + requirements + coverage) into one site and
   # deploys it. Only on main.
   pages:
-    needs: [test, requirements]
+    needs: autotag
     if: >
       (github.event_name == 'push' && github.ref_name == 'main') &&
       needs.test.result == 'success' &&

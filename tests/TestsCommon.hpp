@@ -117,6 +117,16 @@ extern std::shared_ptr<hsmcpp::IHsmEventDispatcher> gDispatcher;
 // implementation depends on used dispatcher
 bool executeOnMainThread(std::function<bool()> func);
 
+// Single-threaded flavour only: stop the harness pump thread. No-op for every other dispatcher.
+// Called from RELEASE_HSM() (i.e. from fixture TearDown, before the HSM destructor detaches from
+// the dispatcher) so the pump is never dispatching into an HSM that is being torn down. The pump
+// is lazily restarted by the next INITIALIZE_HSM().
+void releaseSingleThreadDispatcher();
+
+// Single-threaded flavour only: start the harness pump thread (called from INITIALIZE_HSM after
+// the dispatcher is created). No-op for every other dispatcher.
+void ensureSingleThreadDispatcherPump();
+
 #if defined(TEST_HSM_GLIB)
   #include "hsmcpp/HsmEventDispatcherGLib.hpp"
 
@@ -129,6 +139,10 @@ bool executeOnMainThread(std::function<bool()> func);
   #include "hsmcpp/HsmEventDispatcherSTD.hpp"
 
   #define CREATE_DISPATCHER() HsmEventDispatcherSTD::create()
+#elif defined(TEST_HSM_SINGLETHREAD)
+  #include "hsmcpp/HsmEventDispatcherSingleThread.hpp"
+
+  #define CREATE_DISPATCHER() HsmEventDispatcherSingleThread::create()
 #elif defined(TEST_HSM_QT)
   #include "hsmcpp/HsmEventDispatcherQt.hpp"
 
@@ -142,12 +156,36 @@ bool executeOnMainThread(std::function<bool()> func);
   #error HSM Dispatcher not specified
 #endif
 
+// ======================================================
+// Single-threaded contract trait.
+//
+// The single-threaded dispatcher models a program that drives the HSM from one thread only.
+// A handful of tests validate genuine cross-thread behavior (concurrent access, interrupt-driven
+// transitions, native-mutex ownership). Those model interleaving that does not exist under the
+// single-threaded contract, so they are skipped for the SINGLETHREAD flavour rather than forced
+// to pass. Use SKIP_IF_SINGLETHREAD() at the very top of such a test body.
+#if defined(TEST_HSM_SINGLETHREAD)
+  #define HSM_TEST_SINGLE_THREAD_CONTRACT 1
+#else
+  #define HSM_TEST_SINGLE_THREAD_CONTRACT 0
+#endif
+
+#define SKIP_IF_SINGLETHREAD()                                                                   \
+  do {                                                                                           \
+    if (HSM_TEST_SINGLE_THREAD_CONTRACT) {                                                       \
+      TEST_EXCLUDE("requires cross-thread access; excluded by the single-threaded contract");    \
+      GTEST_SKIP() << "single-threaded flavour: test exercises cross-thread behavior";           \
+    }                                                                                            \
+  } while (0)
+
 #define INITIALIZE_HSM()                                                                    \
   ASSERT_TRUE(executeOnMainThread([this]() {                                                \
 if (!gDispatcher) {                                                                         \
   gDispatcher = std::static_pointer_cast<hsmcpp::IHsmEventDispatcher>(CREATE_DISPATCHER()); \
 }                                                                                           \
-return initialize(gDispatcher);                                                             \
+const bool initResult = initialize(gDispatcher);                                            \
+ensureSingleThreadDispatcherPump();                                                         \
+return initResult;                                                                          \
   }))
 
 // Same as INITIALIZE_HSM(), but expects initialize() to FAIL (return false).
@@ -161,7 +199,11 @@ if (!gDispatcher) {                                                             
 return initialize(gDispatcher);                                                             \
   }))
 
-#define RELEASE_HSM() ASSERT_TRUE(executeOnMainThread([this]() { return true; }))
+#define RELEASE_HSM()                             \
+  ASSERT_TRUE(executeOnMainThread([this]() {      \
+    releaseSingleThreadDispatcher();              \
+    return true;                                  \
+  }))
 
 // ======================================================
 #define DEF_EXIT_ACTION_IMPL(_state, _ret)        \

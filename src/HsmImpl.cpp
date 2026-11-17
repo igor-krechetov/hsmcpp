@@ -11,7 +11,7 @@
 #include "hsmcpp/os/LockGuard.hpp"
 #include "hsmcpp/os/os.hpp"
 
-#if !defined(HSM_DISABLE_THREADSAFETY) && defined(FREERTOS_AVAILABLE)
+#if defined(FREERTOS_AVAILABLE)
   #include "hsmcpp/os/InterruptsFreeSection.hpp"
 #endif
 
@@ -54,13 +54,15 @@ constexpr const char* HSM_TRACE_CLASS = "HierarchicalStateMachine";
 // If performance is critical and it's ensured that HSM is used only from a single thread,
 // then synchronization could be disabled during compilation.
 // #define HSM_DISABLE_THREADSAFETY                     1
-#ifdef HSM_DISABLE_THREADSAFETY
-  #define HSM_SYNC_EVENTS_QUEUE()
-#elif defined(FREERTOS_AVAILABLE)
+// NOTE: queue protection. On FreeRTOS this is interrupt masking and must stay real even in a
+// single-threaded build (an ISR can still enqueue events) -- interrupts are never no-op'd. On
+// other platforms it is a mutex, which the threading backend turns into a no-op when
+// HSM_DISABLE_THREADSAFETY is set, so no per-call #ifdef is needed here.
+#if defined(FREERTOS_AVAILABLE)
   #define HSM_SYNC_EVENTS_QUEUE() InterruptsFreeSection lck
 #else
   #define HSM_SYNC_EVENTS_QUEUE() LockGuard lck(mEventsSync)
-#endif  // HSM_DISABLE_THREADSAFETY
+#endif
 
 // NOLINTEND(cppcoreguidelines-macro-usage)
 
@@ -81,7 +83,7 @@ HierarchicalStateMachine::Impl::~Impl() {
 }
 
 void HierarchicalStateMachine::Impl::resetParent() {
-#ifndef HSM_DISABLE_THREADSAFETY
+#if !defined(HSM_DISABLE_DEBUG_TRACES)
     LockGuard lk(mParentSync);
 #endif
 
@@ -1806,9 +1808,7 @@ void HierarchicalStateMachine::Impl::dumpActiveStates() {
 
 std::string HierarchicalStateMachine::Impl::getStateName(const StateID_t state) {
     std::string res;
-  #ifndef HSM_DISABLE_THREADSAFETY
     LockGuard lk(mParentSync);
-  #endif
 
     if (nullptr != mParent) {
         res = mParent->getStateName(state);
@@ -1819,9 +1819,7 @@ std::string HierarchicalStateMachine::Impl::getStateName(const StateID_t state) 
 
 std::string HierarchicalStateMachine::Impl::getEventName(const EventID_t event) {
     std::string res;
-  #ifndef HSM_DISABLE_THREADSAFETY
     LockGuard lk(mParentSync);
-  #endif
 
     if (nullptr != mParent) {
         res = mParent->getEventName(event);

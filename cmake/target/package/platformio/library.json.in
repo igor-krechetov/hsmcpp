@@ -20,6 +20,6 @@
     "platforms": "*",
     "build": {
         "extraScript": "hsmcpp_pio_integration.py",
-        "flags": ["-D PLATFORM_ARDUINO=1", "-D HSM_BUILD_HSMBUILD_DISPATCHER_ARDUINO=1"]
+        "flags": ["-D PLATFORM_ARDUINO=1", "-D HSM_BUILD_HSMBUILD_DISPATCHER_ARDUINO=1", "-D HSM_DISABLE_THREADSAFETY=1"]
     }
 }

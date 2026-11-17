@@ -1,0 +1,14 @@
+// Copyright (C) 2023 Ihor Krechetov
+// Distributed under MIT license. See file LICENSE for details
+#include "hsmcpp/os/backends/interrupts/common/InterruptsFreeSection.hpp"
+
+namespace hsmcpp {
+InterruptsFreeSection::InterruptsFreeSection() {
+    // do nothing
+}
+
+InterruptsFreeSection::~InterruptsFreeSection() {
+    // do nothing
+}
+
+}  // namespace hsmcpp

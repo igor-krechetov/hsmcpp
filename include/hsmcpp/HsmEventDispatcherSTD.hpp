@@ -4,6 +4,11 @@
 #ifndef HSMCPP_HSMEVENTDISPATCHERSTD_HPP
 #define HSMCPP_HSMEVENTDISPATCHERSTD_HPP
 
+#ifdef HSM_DISABLE_THREADSAFETY
+#error "HsmEventDispatcherSTD requires thread-safety support. Build hsmcpp with HSMBUILD_THREAD_SAFETY=ON "\
+       "(do not define HSM_DISABLE_THREADSAFETY) or use HsmEventDispatcherSingleThread."
+#endif
+
 #include <chrono>
 #include <map>
 #include <thread>

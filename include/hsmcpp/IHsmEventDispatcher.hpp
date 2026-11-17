@@ -88,6 +88,7 @@ public:
      *
      * @retval true dispatching was successfully started or it is already running
      * @retval false failed to start events dispatching
+     * @requirement HSMCPP.SWR_HSM_140, HSMCPP.SWR_HSM_142
      */
     virtual bool start() = 0;
 
@@ -96,6 +97,7 @@ public:
      * @details Future calls to dispatchEvents() will have no effect.
      * @remark Operation is performed asynchronously. It does not interrupt currently handled event, but will cancel all other
      * pending events.
+     * @requirement HSMCPP.SWR_HSM_141, HSMCPP.SWR_HSM_149
      */
     virtual void stop() = 0;
 

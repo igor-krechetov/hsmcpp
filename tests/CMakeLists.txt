@@ -131,6 +131,74 @@ if (HSMBUILD_DISPATCHER_STD)
 endif()
 
 # ================================================
+# SOURCE CODE (Dispatcher: SingleThread -- driver-thread flavour, reuses the full suite)
+# Built against the normal (thread-safety ON) core library. A harness-owned pump thread plays the
+# role of the application loop so the blocking suite (transitionSync / BaseAsyncHsm rendezvous)
+# can be reused verbatim; the test thread and the pump thread both touch the HSM, which is why
+# this flavour needs the real synchronization primitives. It validates the single-threaded
+# dispatcher's event/timer/queue logic. The no-op-sync ship configuration is covered by the
+# INLINE flavour below, which compiles its own copy of the core with thread-safety OFF so BOTH
+# suites build in a single pass (no separate HSMBUILD_THREAD_SAFETY=OFF configure needed).
+# When the whole tree is configured with HSMBUILD_THREAD_SAFETY=OFF this flavour is skipped: it
+# depends on real synchronization primitives, so only the INLINE flavour is meaningful there.
+if (HSMBUILD_DISPATCHER_SINGLETHREAD AND NOT HSMBUILD_THREAD_SAFETY)
+    message("[SKIP] hsmUnitTestsSingleThread: requires HSMBUILD_THREAD_SAFETY=ON (covered by the inline flavour)")
+endif()
+
+if (HSMBUILD_DISPATCHER_SINGLETHREAD AND HSMBUILD_THREAD_SAFETY)
+    set(TEST_BIN_SINGLETHREAD ${TEST_BIN_NAME_TEMPLATE}SingleThread)
+
+    add_executable(${TEST_BIN_SINGLETHREAD} mainSingleThread.cpp ${SRC_UNITTESTS_COMMON})
+    target_compile_definitions(${TEST_BIN_SINGLETHREAD} PUBLIC -DTEST_HSM_SINGLETHREAD)
+    target_include_directories(${TEST_BIN_SINGLETHREAD} PRIVATE ${HSMCPP_SINGLETHREAD_INCLUDE})
+    target_link_libraries(${TEST_BIN_SINGLETHREAD} PRIVATE ${HSMCPP_SINGLETHREAD_LIB} gmock_main)
+    target_compile_options(${TEST_BIN_SINGLETHREAD} PRIVATE ${HSMCPP_SINGLETHREAD_CXX_FLAGS})
+    # the harness pump thread needs pthreads even though the dispatcher itself does not
+    find_package(Threads REQUIRED)
+    target_link_libraries(${TEST_BIN_SINGLETHREAD} PRIVATE Threads::Threads)
+    registerUnitTest(${TEST_BIN_SINGLETHREAD})
+endif()
+
+# ================================================
+# SOURCE CODE (Dispatcher: SingleThread -- INLINE flavour, the real ship config)
+# Exercises the ACTUAL shipping configuration of the single-threaded dispatcher: thread-safety
+# OFF, no-op synchronization backend, no pump thread. Drives the dispatcher inline on a single
+# thread via transition() + dispatchEvents().
+#
+# Thread-safety is a whole-translation-unit property (it selects the Mutex/AtomicFlag/CondVar
+# backend used *inside* HsmImpl and the public headers), so this binary cannot link the tree's
+# thread-safety-ON core library -- that would be an ODR violation. Instead we compile a
+# TEST-INTERNAL copy of the exact core sources with a TARGET-SCOPED -DHSM_DISABLE_THREADSAFETY.
+# This keeps the no-op build entirely inside the test target (it is never installed and never
+# leaks onto any other target) and lets both single-threaded suites build in one pass.
+if (HSMBUILD_DISPATCHER_SINGLETHREAD)
+    # Test-internal no-op-sync core library: the same core translation units as the shipped
+    # hsmcpp library (${LIBRARY_SRC}, propagated from the root scope) plus the single-threaded
+    # dispatcher source, all compiled with HSM_DISABLE_THREADSAFETY.
+    set(HSM_ST_NOTS_LIB hsmcpp_st_core_nothreadsafety)
+    add_library(${HSM_ST_NOTS_LIB} STATIC
+                ${LIBRARY_SRC}
+                ${CMAKE_SOURCE_DIR}/src/HsmEventDispatcherSingleThread.cpp)
+    # PUBLIC so the define also applies to the inline test TU that links this lib -- both must
+    # resolve the os/ headers to the same (no-op) backend.
+    target_compile_definitions(${HSM_ST_NOTS_LIB} PUBLIC -DHSM_DISABLE_THREADSAFETY)
+    # mirror the base definitions and private include scoping the core library itself uses
+    target_compile_definitions(${HSM_ST_NOTS_LIB} PRIVATE ${HSMCPP_DEFINITIONS})
+    target_include_directories(${HSM_ST_NOTS_LIB} PUBLIC ${CMAKE_SOURCE_DIR}/include
+                               PRIVATE ${CMAKE_SOURCE_DIR}/include/hsmcpp/os ${CMAKE_BINARY_DIR})
+    if (NOT WIN32)
+        target_compile_options(${HSM_ST_NOTS_LIB} PUBLIC "-fPIC")
+    endif()
+
+    set(TEST_BIN_SINGLETHREAD_INLINE ${TEST_BIN_NAME_TEMPLATE}SingleThreadInline)
+
+    add_executable(${TEST_BIN_SINGLETHREAD_INLINE} singlethread_inline_tests.cpp)
+    target_compile_definitions(${TEST_BIN_SINGLETHREAD_INLINE} PUBLIC -DTEST_HSM_SINGLETHREAD)
+    target_link_libraries(${TEST_BIN_SINGLETHREAD_INLINE} PRIVATE ${HSM_ST_NOTS_LIB} gmock_main)
+    registerUnitTest(${TEST_BIN_SINGLETHREAD_INLINE})
+endif()
+
+# ================================================
 # SOURCE CODE (Dispatcher: Qt)
 if (HSMBUILD_DISPATCHER_QT)
     set(TEST_BIN_QT ${TEST_BIN_NAME_TEMPLATE}Qt)

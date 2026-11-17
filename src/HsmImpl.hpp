@@ -313,13 +313,11 @@ private:
     std::list<StateID_t> mTopLevelStates;  // list of states which are not substates and dont have substates of their own
 #endif
 
-#ifndef HSM_DISABLE_THREADSAFETY
     AtomicFlag mIsDispatching;
     Mutex mEventsSync;
   #if !defined(HSM_DISABLE_DEBUG_TRACES)
     Mutex mParentSync;
   #endif
-#endif  // HSM_DISABLE_THREADSAFETY
 
 #ifdef HSMBUILD_DEBUGGING
     std::filebuf mHsmLogFile;

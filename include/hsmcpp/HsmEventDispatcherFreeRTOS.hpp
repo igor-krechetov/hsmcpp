@@ -4,6 +4,11 @@
 #ifndef HSMCPP_HSMEVENTDISPATCHERFREERTOS_HPP
 #define HSMCPP_HSMEVENTDISPATCHERFREERTOS_HPP
 
+#ifdef HSM_DISABLE_THREADSAFETY
+#error "HsmEventDispatcherFreeRTOS requires thread-safety support. Build hsmcpp with HSMBUILD_THREAD_SAFETY=ON "\
+       "(do not define HSM_DISABLE_THREADSAFETY) or use HsmEventDispatcherSingleThread."
+#endif
+
 #include <FreeRTOS.h>
 #include <task.h>
 #include <timers.h>

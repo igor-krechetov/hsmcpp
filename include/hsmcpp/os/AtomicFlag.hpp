@@ -5,14 +5,7 @@
 
 #include "os.hpp"
 
-#if defined(FREERTOS_AVAILABLE)
-  #include "freertos/AtomicFlag.hpp"
-#elif defined(PLATFORM_ARDUINO)
-  #include "arduino/AtomicFlag.hpp"
-#elif defined(STL_AVAILABLE)
-  #include "stl/AtomicFlag.hpp"
-#else
-  #error PLATFORM not supported
-#endif
+// Resolves to backends/threading/<backend>/AtomicFlag.hpp (see os.hpp).
+#include HSM_THREADING_HEADER(AtomicFlag.hpp)
 
 #endif  // HSMCPP_OS_ATOMICFLAG_HPP

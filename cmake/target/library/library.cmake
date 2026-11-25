@@ -12,7 +12,6 @@ foreach(ITEM ${LIBRARY_HEADERS})
     get_filename_component(ITEM_NAME ${ITEM} NAME)
     file(RELATIVE_PATH ITEM_PATH_RELATIVE "${HSM_INCLUDES_ROOT}" "${ITEM_PATH}")
     if (ITEM_PATH_RELATIVE MATCHES "^\\.\\.")
-        # generated file outside the include tree (e.g. version.hpp)
         set(ITEM_PATH_RELATIVE "")
     endif()
 
@@ -39,5 +38,3 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/CMakeLists.txt
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${HSM_LIBRARY_NAME}/scxml2gen)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/install.cmake)
-
-

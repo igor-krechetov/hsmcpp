@@ -10,13 +10,12 @@ set (DEPLOY_FILES ${LIBRARY_HEADERS}
 foreach(ITEM ${LIBRARY_HEADERS})
     get_filename_component(ITEM_PATH ${ITEM} DIRECTORY)
     get_filename_component(ITEM_NAME ${ITEM} NAME)
-    string(REPLACE ${CMAKE_CURRENT_SOURCE_DIR} "" ITEM_PATH_RELATIVE ${ITEM_PATH})
-    if (ITEM_PATH_RELATIVE)
-        string(REPLACE "/build" "/" ITEM_PATH_RELATIVE ${ITEM_PATH_RELATIVE})
-        string(REPLACE ${CMAKE_INSTALL_INCLUDEDIR} "/" ITEM_PATH_RELATIVE ${ITEM_PATH_RELATIVE})
+    file(RELATIVE_PATH ITEM_PATH_RELATIVE "${HSM_INCLUDES_ROOT}" "${ITEM_PATH}")
+    if (ITEM_PATH_RELATIVE MATCHES "^\\.\\.")
+        set(ITEM_PATH_RELATIVE "")
     endif()
 
-    install(FILES ${ITEM} DESTINATION ${DEPLOY_DIR}/${ITEM_PATH_RELATIVE}/)
+    install(FILES ${ITEM} DESTINATION ${DEPLOY_DIR}/${ITEM_PATH_RELATIVE})
 endforeach()
 
 
@@ -39,5 +38,3 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/tools/scxml2gen/CMakeLists.txt
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${HSM_LIBRARY_NAME}/scxml2gen)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/install.cmake)
-
-

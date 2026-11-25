@@ -239,8 +239,9 @@ elseif (HSMBUILD_TARGET STREQUAL "arduinoide")
 elseif (HSMBUILD_TARGET STREQUAL "library")
     # =============================================
     # Common modules
-    if (NOT WIN32)
+    if (NOT WIN32 AND (HSMBUILD_DISPATCHER_GLIB OR HSMBUILD_DISPATCHER_GLIBMM))
         find_package(PkgConfig REQUIRED)
+
     endif()
 
     set(THREADS_PREFER_PTHREAD_FLAG TRUE)
